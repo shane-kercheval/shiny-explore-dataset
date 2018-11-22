@@ -16,6 +16,7 @@ shinyUI(fluidPage(theme = "custom.css",
                 column(7, uiOutput('selected_target_variable_UI'))
             ),
             tags$br(),
+            tags$h3('First 500 Records of Dataset:'),
             tags$div(class='results-table', dataTableOutput(outputId='dataset_head_table'))
         ),
         tabPanel(
