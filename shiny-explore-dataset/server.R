@@ -85,9 +85,6 @@ shinyServer(function(input, output, session) {
                     size = NULL)
     })
 
-
-
-
     output$selected_variable_plot_variable_UI <- renderUI({
         selectInput(inputId='selected_variable_plot_variable',
                     label = 'Variable',
@@ -128,18 +125,46 @@ shinyServer(function(input, output, session) {
             if(is.numeric(dataset()[, variable_local])) {
 
                 shinyjs::hide(id='div_variable_plots_group_barchar_controls')
+                
                 shinyjs::show(id='div_variable_plots_group_y_zoom_controls')
+                shinyjs::show(id='selected_variable_plot_numeric_graph_type')
 
-                rt_explore_plot_boxplot(dataset=dataset(),
-                                          variable=variable_local,
-                                          comparison_variable=comparison_variable_local,
-                                          y_zoom_min=input$selected_variable_plots_y_zoom_min,
-                                          y_zoom_max=input$selected_variable_plots_y_zoom_max,
-                                          base_size=input$selected_variable_plot_base_size)
+                if(input$selected_variable_plot_numeric_graph_type == 'Boxplot') {
+
+                    shinyjs::show(id='selected_variable_plot_comparison_UI')
+
+                    shinyjs::show(id='div_variable_plots_group_y_zoom_controls')
+                    shinyjs::hide(id='div_variable_plots_group_x_zoom_controls')
+                    shinyjs::hide(id='div_variable_plots_histogram_group')
+
+                    rt_explore_plot_boxplot(dataset=dataset(),
+                                            variable=variable_local,
+                                            comparison_variable=comparison_variable_local,
+                                            y_zoom_min=input$selected_variable_plots_y_zoom_min,
+                                            y_zoom_max=input$selected_variable_plots_y_zoom_max,
+                                            base_size=input$selected_variable_plot_base_size)
+                } else {
+
+                    shinyjs::hide(id='selected_variable_plot_comparison_UI')
+
+                    shinyjs::hide(id='div_variable_plots_group_y_zoom_controls')
+                    shinyjs::show(id='div_variable_plots_group_x_zoom_controls')
+                    shinyjs::show(id='div_variable_plots_histogram_group')
+
+                    rt_explore_plot_histogram(dataset=dataset(),
+                                                  variable=variable_local,
+                                                  num_bins=input$selected_variable_plots_histogram_bins,
+                                                  x_zoom_min=input$selected_variable_plots_x_zoom_min,
+                                                  x_zoom_max=input$selected_variable_plots_x_zoom_max,
+                                                  base_size=input$selected_variable_plot_base_size)
+                }
+
             } else {
                 
                 shinyjs::show(id='div_variable_plots_group_barchar_controls')
+
                 shinyjs::hide(id='div_variable_plots_group_y_zoom_controls')
+                shinyjs::hide(id='selected_variable_plot_numeric_graph_type')
 
                 rt_explore_plot_unique_values(dataset=dataset(),
                                               variable=variable_local,
