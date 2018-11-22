@@ -51,7 +51,7 @@ shinyUI(fluidPage(theme = "custom.css",
                     sliderTextInput(inputId='selected_correlation_base_size',
                                     label='Text Size',
                                     choices = seq(6, 20, 1),
-                                    selected = 13,
+                                    selected = 15,
                                     grid = TRUE)
                     )
             ),
@@ -76,7 +76,7 @@ shinyUI(fluidPage(theme = "custom.css",
                     sliderTextInput(inputId='selected_variable_plot_base_size',
                                     label='Text Size',
                                     choices = seq(6, 20, 1),
-                                    selected = 13,
+                                    selected = 15,
                                     grid = TRUE)
                 )
             ),

@@ -2,10 +2,6 @@
     font-size: 85%;
     width: 70%;
 }
-/*.custom-plot {
-    height:90vh !important;
-}
-*/
 .input-control-style {
     background-color: #f5f5f5;
     padding: 10px;
@@ -13,11 +9,7 @@
     border: 1px solid #e3e3e3;
     border-radius: 4px
 }
-/*.col-sm-3 {
-    padding-left: 0px;
-}*/
 .column-input-control-style {
     margin-left: 0px;
     padding-left: 0px;
 }
-
