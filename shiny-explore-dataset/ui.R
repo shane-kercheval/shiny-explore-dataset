@@ -1,9 +1,12 @@
 library(shiny)
 library(shinyWidgets)
+library(shinyjs)
 source('definitions.R')
 
 shinyUI(fluidPage(theme = "custom.css",
   
+    useShinyjs(),
+
     titlePanel('Explore Dataset'),
     navlistPanel(
         tabPanel(
@@ -62,23 +65,30 @@ shinyUI(fluidPage(theme = "custom.css",
         tabPanel(
             'Variable Plots',
             column(3,
-                class='column-input-control-style',
-                tags$div(
-                    class='input-control-style',
+                class='column-input-control-style; input-control-style',
                     uiOutput('selected_variable_plot_variable_UI'),
                     uiOutput('selected_variable_plot_comparison_UI'),
-                    checkboxInput(inputId='selected_variable_plot_order_by_count',
-                                  label='Order By Totals', value = TRUE, width = NULL),
-                    checkboxInput(inputId='selected_variable_plot_show_variable_totals',
-                                  label='Show Variable Totals', value = TRUE, width = NULL),
-                    checkboxInput(inputId='selected_variable_plot_show_comparison_totals',
-                                  label='Show Comparison Totals', value = TRUE, width = NULL),
+                    shinyjs::hidden(tags$div(id='div_variable_plots_group_barchar_controls',
+                         checkboxInput(inputId='selected_variable_plot_order_by_count',
+                                       label='Order By Totals', value = TRUE, width = NULL),
+                         checkboxInput(inputId='selected_variable_plot_show_variable_totals',
+                                       label='Show Variable Totals', value = TRUE, width = NULL),
+                         checkboxInput(inputId='selected_variable_plot_show_comparison_totals',
+                                       label='Show Comparison Totals', value = TRUE, width = NULL)
+                    )),
+                    shinyjs::hidden(tags$div(id='div_variable_plots_group_y_zoom_controls',
+                         numericInput(inputId='selected_variable_plots_y_zoom_min',
+                                      label='Y-Axis Zoom Min',
+                                      value=NULL),
+                         numericInput(inputId='selected_variable_plots_y_zoom_max',
+                                      label='Y-Axis Zoom Max',
+                                      value=NULL)                         
+                    )),
                     sliderTextInput(inputId='selected_variable_plot_base_size',
                                     label='Text Size',
                                     choices = seq(6, 20, 1),
                                     selected = 15,
                                     grid = TRUE)
-                )
             ),
             column(9,
                 plotOutput(outputId='variable_plot')

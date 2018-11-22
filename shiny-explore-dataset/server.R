@@ -125,13 +125,30 @@ shinyServer(function(input, output, session) {
                 comparison_variable_local <- NULL
             }
 
-            rt_explore_plot_unique_values(dataset=dataset(),
+            if(is.numeric(dataset()[, variable_local])) {
+
+                shinyjs::hide(id='div_variable_plots_group_barchar_controls')
+                shinyjs::show(id='div_variable_plots_group_y_zoom_controls')
+
+                rt_explore_plot_boxplot(dataset=dataset(),
                                           variable=variable_local,
                                           comparison_variable=comparison_variable_local,
-                                          order_by_count=input$selected_variable_plot_order_by_count,
-                                          show_group_totals=input$selected_variable_plot_show_variable_totals,
-                                          show_comparison_totals=input$selected_variable_plot_show_comparison_totals,
+                                          y_zoom_min=input$selected_variable_plots_y_zoom_min,
+                                          y_zoom_max=input$selected_variable_plots_y_zoom_max,
                                           base_size=input$selected_variable_plot_base_size)
+            } else {
+                
+                shinyjs::show(id='div_variable_plots_group_barchar_controls')
+                shinyjs::hide(id='div_variable_plots_group_y_zoom_controls')
+
+                rt_explore_plot_unique_values(dataset=dataset(),
+                                              variable=variable_local,
+                                              comparison_variable=comparison_variable_local,
+                                              order_by_count=input$selected_variable_plot_order_by_count,
+                                              show_group_totals=input$selected_variable_plot_show_variable_totals,
+                                              show_comparison_totals=input$selected_variable_plot_show_comparison_totals,
+                                              base_size=input$selected_variable_plot_base_size)
+            }
         } else {
 
             NULL
