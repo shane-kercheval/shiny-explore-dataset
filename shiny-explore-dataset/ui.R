@@ -64,7 +64,35 @@ shinyUI(fluidPage(theme = "custom.css",
         ),
         tabPanel(
             'Variable Plots',
-            tableOutput("table4")
+            tags$div(
+                style=input_control_style,
+                fluidRow(
+                    column(6, uiOutput('selected_variable_plot_variable_UI')),
+                    column(6, uiOutput('selected_variable_plot_comparison_UI'))
+                ),
+                fluidRow(
+                    column(2,
+                           checkboxInput(inputId='selected_variable_plot_order_by_count',
+                                         label='Order By Totals', value = TRUE, width = NULL)
+                    ),
+                    column(2,
+                           checkboxInput(inputId='selected_variable_plot_show_variable_totals',
+                                         label='Show Variable Totals', value = TRUE, width = NULL)
+                    ),
+                    column(2,
+                           checkboxInput(inputId='selected_variable_plot_show_comparison_totals',
+                                         label='Show Comparison Totals', value = TRUE, width = NULL)
+                    ),
+                    column(6,
+                           sliderTextInput(inputId='selected_variable_plot_base_size',
+                                           label='Text Size',
+                                           choices = seq(6, 20, 1),
+                                           selected = 11,
+                                           grid = TRUE)
+                    )
+                )
+            ),
+            plotOutput(outputId='variable_plot')
         ),
         widths=c(3,9)
     )
