@@ -5,7 +5,7 @@ library(ggplot2)
 source('definitions.R')
 
 # Define server logic required to draw a histogram
-shinyServer(function(input, output) {
+shinyServer(function(input, output, session) {
 
     dataset <- reactive({
         uploaded_file_local <- input$uploadFile$datapath
@@ -69,6 +69,8 @@ shinyServer(function(input, output) {
                                      p_value_threshold=input$selected_correlation_p_value_threshold,
                                      base_size=input$selected_correlation_base_size,
                                      type='pearson')
+    }, height = function() {
+        session$clientData$output_correlation_plot_width * 0.80  # set height to % of width
     })
 
 
@@ -134,5 +136,7 @@ shinyServer(function(input, output) {
 
             NULL
         }
+    }, height = function() {
+        session$clientData$output_variable_plot_width * 0.66  # set height to % of width
     })
 })

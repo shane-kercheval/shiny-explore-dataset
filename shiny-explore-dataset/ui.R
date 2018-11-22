@@ -56,7 +56,7 @@ shinyUI(fluidPage(theme = "custom.css",
                     )
             ),
             column(10,
-                   div_custom(output=plotOutput(outputId='correlation_plot', height = '100%'))
+                   plotOutput(outputId='correlation_plot')
             )
         ),
         tabPanel(
@@ -81,7 +81,7 @@ shinyUI(fluidPage(theme = "custom.css",
                 )
             ),
             column(9,
-                div_custom(output=plotOutput(outputId='variable_plot', height = '100%'))
+                plotOutput(outputId='variable_plot')
             )
         ),
         widths=c(2,10)
