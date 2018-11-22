@@ -21,7 +21,10 @@ shinyUI(fluidPage(theme = "custom.css",
         ),
         tabPanel(
             'Numeric Summary',
-            column(2, tags$div(style=input_control_style, uiOutput('selected_numeric_summary_options_UI'))),
+            column(2,
+                   class='column-input-control-style',
+                   tags$div(class='input-control-style', uiOutput('selected_numeric_summary_options_UI'))
+            ),
             column(10, tags$div(class='results-table', dataTableOutput(outputId='numeric_summary_table')))
         ),
         tabPanel(
@@ -30,70 +33,60 @@ shinyUI(fluidPage(theme = "custom.css",
         ),
         tabPanel(
             'Correlations',
-            tags$div(
-                style=input_control_style,
-                fluidRow(
-                    column(6,
-                           sliderTextInput(inputId='selected_correlation_corr_threshold',
-                                           label='Min Correlation Threshold', ## percent increase
-                                           choices = seq(0, 1, 0.05),
-                                           selected = 0,
-                                           grid = TRUE)
-                    ),
-                    column(6,
-                           sliderTextInput(inputId='selected_correlation_p_value_threshold',
-                                           label='Max P-Value Treshold',
-                                           choices = seq(0, 1, 0.05),
-                                           selected = 1,
-                                           grid = TRUE)
+            column(
+                2,
+                class='column-input-control-style',
+                tags$div(
+                    class='input-control-style',
+                    sliderTextInput(inputId='selected_correlation_corr_threshold',
+                                    label='Min Correlation Threshold', ## percent increase
+                                    choices = seq(0, 1, 0.05),
+                                    selected = 0,
+                                    grid = TRUE),
+                    sliderTextInput(inputId='selected_correlation_p_value_threshold',
+                                    label='Max P-Value Treshold',
+                                    choices = seq(0, 1, 0.05),
+                                    selected = 1,
+                                    grid = TRUE),
+                    sliderTextInput(inputId='selected_correlation_base_size',
+                                    label='Text Size',
+                                    choices = seq(6, 20, 1),
+                                    selected = 13,
+                                    grid = TRUE)
                     )
-                ),
-                fluidRow(
-                    column(6,
-                           sliderTextInput(inputId='selected_correlation_base_size',
-                                           label='Text Size',
-                                           choices = seq(6, 20, 1),
-                                           selected = 11,
-                                           grid = TRUE)
-                    )
-                )
             ),
-            plotOutput(outputId='correlation_plot')#, width = '900px', height = '700px')
+            column(10,
+                   div_custom(output=plotOutput(outputId='correlation_plot', height = '100%'))#, width = '900px', height = '700px')
+            #plotOutput(outputId='correlation_plot', height = "100%")
                        # height='500px',
                        # width='850px')
+            )
         ),
         tabPanel(
             'Variable Plots',
-            tags$div(
-                style=input_control_style,
-                fluidRow(
-                    column(6, uiOutput('selected_variable_plot_variable_UI')),
-                    column(6, uiOutput('selected_variable_plot_comparison_UI'))
-                ),
-                fluidRow(
-                    column(2,
-                           checkboxInput(inputId='selected_variable_plot_order_by_count',
-                                         label='Order By Totals', value = TRUE, width = NULL)
-                    ),
-                    column(2,
-                           checkboxInput(inputId='selected_variable_plot_show_variable_totals',
-                                         label='Show Variable Totals', value = TRUE, width = NULL)
-                    ),
-                    column(2,
-                           checkboxInput(inputId='selected_variable_plot_show_comparison_totals',
-                                         label='Show Comparison Totals', value = TRUE, width = NULL)
-                    ),
-                    column(6,
-                           sliderTextInput(inputId='selected_variable_plot_base_size',
-                                           label='Text Size',
-                                           choices = seq(6, 20, 1),
-                                           selected = 11,
-                                           grid = TRUE)
-                    )
+            column(3,
+                class='column-input-control-style',
+                tags$div(
+                    class='input-control-style',
+                    uiOutput('selected_variable_plot_variable_UI'),
+                    uiOutput('selected_variable_plot_comparison_UI'),
+                    checkboxInput(inputId='selected_variable_plot_order_by_count',
+                                  label='Order By Totals', value = TRUE, width = NULL),
+                    checkboxInput(inputId='selected_variable_plot_show_variable_totals',
+                                  label='Show Variable Totals', value = TRUE, width = NULL),
+                    checkboxInput(inputId='selected_variable_plot_show_comparison_totals',
+                                  label='Show Comparison Totals', value = TRUE, width = NULL),
+                    sliderTextInput(inputId='selected_variable_plot_base_size',
+                                    label='Text Size',
+                                    choices = seq(6, 20, 1),
+                                    selected = 13,
+                                    grid = TRUE)
                 )
             ),
-            plotOutput(outputId='variable_plot')
+            column(9,
+                div_custom(output=plotOutput(outputId='variable_plot', height = '100%'))
+            )
         ),
-        widths=c(3,9)
+        widths=c(2,10)
     )
 ))
