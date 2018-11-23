@@ -59,7 +59,7 @@ shinyServer(function(input, output, session) {
     })
     output$dataset_types_table <- renderDataTable({
 
-        types <- sapply(dataset(), class)
+        types <- apply(dataset(), 2, class)
         data.frame(variable=names(types), type=types)
     })
     output$dataset_head_table <- renderDataTable({
@@ -87,11 +87,13 @@ shinyServer(function(input, output, session) {
         rt_explore_categoric_summary(dataset=dataset())
     })
     output$correlation_plot <- renderPlot({
+        withProgress(value=1/2, message='Calculating Correlations',{
         rt_explore_plot_correlations(dataset=dataset(),
                                      corr_threshold=input$selected_correlation_corr_threshold,
                                      p_value_threshold=input$selected_correlation_p_value_threshold,
                                      base_size=input$selected_correlation_base_size,
                                      type='pearson')
+        })
     }, height = function() {
         session$clientData$output_correlation_plot_width * 0.80  # set height to % of width
     })

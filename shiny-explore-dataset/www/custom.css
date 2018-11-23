@@ -1,3 +1,24 @@
+.shiny-notification {
+    height: 100%;
+    width: 100%;
+    position:fixed;
+    top: 0;
+    left: 0;
+}
+.shiny-notification-content {
+    height: 100px;
+    width: 800px;
+    position:fixed;
+    top: calc(50% - 50px);
+    left: calc(50% - 400px);
+}
+.shiny-notification-close { 
+    visibility: hidden; 
+}
+.progress-text {
+    text-align: center;
+    font-size: 18px;
+}
 .results-table {
     font-size: 85%;
     width: 70%;
