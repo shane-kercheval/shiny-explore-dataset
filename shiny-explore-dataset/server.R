@@ -1,7 +1,10 @@
+devtools::install_github('shane-kercheval/rtools')
+
 library(shiny)
 library(shinyWidgets)
 library(rtools)
 library(ggplot2)
+library(stringr)
 source('definitions.R')
 
 # Define server logic required to draw a histogram
@@ -12,12 +15,31 @@ shinyServer(function(input, output, session) {
         
         print(uploaded_file_local)
         if(is.null(uploaded_file_local)) {
-    
-            read.csv("example_datasets/credit.csv", header=TRUE)
-            
+            if(file.exists("example_datasets/credit.csv")) {
+
+                read.csv("example_datasets/credit.csv", header=TRUE)
+                    
+            } else {
+                iris
+            }
+
         } else {
 
-            read.csv(uploaded_file_local, header=TRUE)
+            if(str_sub(uploaded_file_local, -4) == '.csv') {
+                
+                read.csv(uploaded_file_local, header=TRUE)
+
+            } else if(str_sub(uploaded_file_local, -4) == '.RDS') {
+            
+                readRDS(file=uploaded_file_local)
+
+            } else {
+                showModal(modalDialog(
+                        title = 'Unknown File Type',
+                        'Only `.csv` and `.RDS` files are supported at this time.'
+                        ))
+                NULL
+            }
         }
     })
     numeric_summary_data <- reactive({
