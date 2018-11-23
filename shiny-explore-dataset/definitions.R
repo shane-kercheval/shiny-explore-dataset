@@ -25,5 +25,7 @@ log_message_generic <- function(message, description) {
 
 log_message_block_start <- function(message) {
 
-    log_message(paste0('\n\n##########################\n', message, '\n##########################\n'))
+    log_message(paste0('\n\n#############################################\n',
+                       message,
+                       '\n#############################################\n'))
 }
