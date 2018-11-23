@@ -20,6 +20,7 @@ shinyServer(function(input, output, session) {
                 read.csv("example_datasets/credit.csv", header=TRUE)
                     
             } else {
+
                 iris
             }
 
@@ -134,7 +135,7 @@ shinyServer(function(input, output, session) {
         
         # scatterplot
 
-        shinyjs::show('selected_variable_plots_alpha')
+        shinyjs::show('div_variable_plots_group_scatter_controls')
         shinyjs::show('div_variable_plots_group_x_zoom_controls')
         shinyjs::show('div_variable_plots_group_y_zoom_controls')
         shinyjs::show('selected_variable_plot_base_size')
@@ -155,7 +156,7 @@ shinyServer(function(input, output, session) {
         shinyjs::show('selected_variable_plot_numeric_graph_type')
 
         shinyjs::hide('div_variable_plots_group_x_zoom_controls')
-        shinyjs::hide('selected_variable_plots_alpha')
+        shinyjs::hide('div_variable_plots_group_scatter_controls')
         shinyjs::hide('selected_variable_plots_histogram_bins')
         shinyjs::hide('div_variable_plots_group_barchar_controls')
     }
@@ -170,7 +171,7 @@ shinyServer(function(input, output, session) {
         shinyjs::show('selected_variable_plot_base_size')
 
         shinyjs::hide('div_variable_plots_group_x_zoom_controls')
-        shinyjs::hide('selected_variable_plots_alpha')
+        shinyjs::hide('div_variable_plots_group_scatter_controls')
         shinyjs::hide('selected_variable_plots_histogram_bins')
         shinyjs::hide('div_variable_plots_group_barchar_controls')
         shinyjs::hide('selected_variable_plot_numeric_graph_type')
@@ -187,7 +188,7 @@ shinyServer(function(input, output, session) {
 
         shinyjs::hide('div_variable_plots_group_x_zoom_controls')
         shinyjs::hide('div_variable_plots_group_y_zoom_controls')
-        shinyjs::hide('selected_variable_plots_alpha')
+        shinyjs::hide('div_variable_plots_group_scatter_controls')
         shinyjs::hide('selected_variable_plots_histogram_bins')
         shinyjs::hide('selected_variable_plot_numeric_graph_type')
     }
@@ -224,6 +225,7 @@ shinyServer(function(input, output, session) {
                                             variable=variable_local,
                                             comparison_variable=comparison_variable_local,
                                             alpha=input$selected_variable_plots_alpha,
+                                            jitter=input$selected_variable_plot_jitter,
                                             x_zoom_min=input$selected_variable_plots_x_zoom_min,
                                             x_zoom_max=input$selected_variable_plots_x_zoom_max,
                                             y_zoom_min=input$selected_variable_plots_y_zoom_min,

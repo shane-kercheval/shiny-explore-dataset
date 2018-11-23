@@ -83,13 +83,15 @@ shinyUI(fluidPage(theme = "custom.css",
                          checkboxInput(inputId='selected_variable_plot_show_comparison_totals',
                                        label='Show Comparison Totals', value = TRUE, width = NULL)
                     )),
-                    shinyjs::hidden(
+                    shinyjs::hidden(tags$div(id='div_variable_plots_group_scatter_controls',
                         sliderTextInput(inputId='selected_variable_plots_alpha',
-                                    label='Alp',
+                                    label='Alpha',
                                     choices = seq(0.1, 1, 0.1),
                                     selected = 0.3,
-                                    grid = TRUE)
-                    ),
+                                    grid = TRUE),
+                        checkboxInput(inputId='selected_variable_plot_jitter',
+                                       label='Jitter', value = FALSE, width = NULL)
+                    )),
                     shinyjs::hidden(tags$div(id='div_variable_plots_group_x_zoom_controls',
                          numericInput(inputId='selected_variable_plots_x_zoom_min',
                                       label='X-Axis Zoom Min',
