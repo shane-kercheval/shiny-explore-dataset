@@ -122,6 +122,9 @@ shinyServer(function(input, output, session) {
                 comparison_variable_local <- NULL
             }
 
+            ##################################################################################################
+            # Numeric Primary Variable
+            ##################################################################################################
             if(is.numeric(dataset()[, variable_local])) {
 
                 shinyjs::hide(id='div_variable_plots_group_barchar_controls')
@@ -129,36 +132,65 @@ shinyServer(function(input, output, session) {
                 shinyjs::show(id='div_variable_plots_group_y_zoom_controls')
                 shinyjs::show(id='selected_variable_plot_numeric_graph_type')
 
-                if(input$selected_variable_plot_numeric_graph_type == 'Boxplot') {
+                ##############################################################################################
+                # Numeric Secondary Variable
+                ##############################################################################################
+                if(!is.null(comparison_variable_local) && is.numeric(dataset()[, comparison_variable_local])) {
 
-                    shinyjs::show(id='selected_variable_plot_comparison_UI')
-
-                    shinyjs::show(id='div_variable_plots_group_y_zoom_controls')
-                    shinyjs::hide(id='div_variable_plots_group_x_zoom_controls')
-                    shinyjs::hide(id='div_variable_plots_histogram_group')
-
-                    rt_explore_plot_boxplot(dataset=dataset(),
+                    #shinyjs::hide(id='selected_variable_plot_numeric_graph_type')
+                    shinyjs::show(id='div_variable_plots_alpha')
+                    rt_explore_plot_scatter(dataset=dataset(),
                                             variable=variable_local,
                                             comparison_variable=comparison_variable_local,
+                                            alpha=input$selected_variable_plots_alpha,
+                                            x_zoom_min=input$selected_variable_plots_x_zoom_min,
+                                            x_zoom_max=input$selected_variable_plots_x_zoom_max,
                                             y_zoom_min=input$selected_variable_plots_y_zoom_min,
                                             y_zoom_max=input$selected_variable_plots_y_zoom_max,
                                             base_size=input$selected_variable_plot_base_size)
+
+                ##############################################################################################
+                # NULL Or Categoric Secondary Variable
+                ##############################################################################################
                 } else {
 
-                    shinyjs::hide(id='selected_variable_plot_comparison_UI')
+                    shinyjs::hide(id='div_variable_plots_alpha')
+                    shinyjs::show(id='selected_variable_plot_numeric_graph_type')
 
-                    shinyjs::hide(id='div_variable_plots_group_y_zoom_controls')
-                    shinyjs::show(id='div_variable_plots_group_x_zoom_controls')
-                    shinyjs::show(id='div_variable_plots_histogram_group')
+                    if(input$selected_variable_plot_numeric_graph_type == 'Boxplot') {
 
-                    rt_explore_plot_histogram(dataset=dataset(),
-                                                  variable=variable_local,
-                                                  num_bins=input$selected_variable_plots_histogram_bins,
-                                                  x_zoom_min=input$selected_variable_plots_x_zoom_min,
-                                                  x_zoom_max=input$selected_variable_plots_x_zoom_max,
-                                                  base_size=input$selected_variable_plot_base_size)
+                        shinyjs::show(id='selected_variable_plot_comparison_UI')
+
+                        shinyjs::show(id='div_variable_plots_group_y_zoom_controls')
+                        shinyjs::hide(id='div_variable_plots_group_x_zoom_controls')
+                        shinyjs::hide(id='div_variable_plots_histogram_group')
+
+                        rt_explore_plot_boxplot(dataset=dataset(),
+                                                variable=variable_local,
+                                                comparison_variable=comparison_variable_local,
+                                                y_zoom_min=input$selected_variable_plots_y_zoom_min,
+                                                y_zoom_max=input$selected_variable_plots_y_zoom_max,
+                                                base_size=input$selected_variable_plot_base_size)
+                    } else {
+
+                        shinyjs::hide(id='selected_variable_plot_comparison_UI')
+
+                        shinyjs::hide(id='div_variable_plots_group_y_zoom_controls')
+                        shinyjs::show(id='div_variable_plots_group_x_zoom_controls')
+                        shinyjs::show(id='div_variable_plots_histogram_group')
+
+                        rt_explore_plot_histogram(dataset=dataset(),
+                                                      variable=variable_local,
+                                                      num_bins=input$selected_variable_plots_histogram_bins,
+                                                      x_zoom_min=input$selected_variable_plots_x_zoom_min,
+                                                      x_zoom_max=input$selected_variable_plots_x_zoom_max,
+                                                      base_size=input$selected_variable_plot_base_size)
+                    }
                 }
 
+            ##################################################################################################
+            # Categoric Primary Variable
+            ##################################################################################################
             } else {
                 
                 shinyjs::show(id='div_variable_plots_group_barchar_controls')
