@@ -5,6 +5,8 @@ library(shinyWidgets)
 library(rtools)
 library(ggplot2)
 library(stringr)
+library(tidyverse)
+
 source('definitions.R')
 
 # Define server logic required to draw a histogram
@@ -61,8 +63,10 @@ shinyServer(function(input, output, session) {
     })
     output$dataset_types_table <- renderDataTable({
         withProgress(value=1/2, message='Loading Types',{
-            types <- apply(dataset(), 2, class)
-            data.frame(variable=names(types), type=types)
+            
+            dataset_local <- dataset()
+            types <- map_chr(colnames(dataset_local), ~ class(dataset_local[, .]))
+            data.frame(variable=colnames(dataset_local), type=types)
         })
     })
     output$dataset_head_table <- renderDataTable({

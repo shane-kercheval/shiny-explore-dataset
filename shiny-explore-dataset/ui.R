@@ -12,8 +12,7 @@ shinyUI(fluidPage(theme = "custom.css",
         tabPanel(
             'Load Dataset',
             fluidRow(
-                column(5, fileInput(inputId='uploadFile', 'Upload data (.csv/.RDS)')),
-                column(7, uiOutput('selected_target_variable_UI'))
+                column(5, fileInput(inputId='uploadFile', 'Upload data (.csv/.RDS)'))
             ),
             tags$br(),
             tags$h3('First 500 Records of Dataset:'),
