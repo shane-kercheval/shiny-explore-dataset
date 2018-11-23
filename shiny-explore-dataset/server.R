@@ -12,69 +12,96 @@ source('definitions.R')
 # Define server logic required to draw a histogram
 shinyServer(function(input, output, session) {
 
+    ##########################################################################################################
+    ##########################################################################################################
+    # REACTIVE DATASETS
+    ##########################################################################################################
+    ##########################################################################################################
+
+    ##########################################################################################################
+    # main dataset
+    # initialize with small default dataset or upload from file, by user
+    ##########################################################################################################
     dataset <- reactive({
-        uploaded_file_local <- input$uploadFile$datapath
-        
-        print(uploaded_file_local)
-        if(is.null(uploaded_file_local)) {
-            if(file.exists("example_datasets/credit.csv")) {
 
-                read.csv("example_datasets/credit.csv", header=TRUE)
-                    
-            } else {
+        # reactive data
+        upload_file_path <- input$uploadFile$datapath
 
-                iris
-            }
+        log_message_block_start('Loading Dataset')
+        log_message_variable('upload_file_path', upload_file_path)
+
+        if(is.null(upload_file_path)) {
+            
+            # only need to show progress when uploading the initial dataset (file upload has it's own progress)
+            withProgress(value=1/2, message='Uploading Data',{
+
+                if(file.exists("example_datasets/credit.csv")) {
+
+                    read.csv("example_datasets/credit.csv", header=TRUE)
+
+                } else {
+
+                    iris
+                }
+            })
 
         } else {
 
-            if(str_sub(uploaded_file_local, -4) == '.csv') {
+            if(str_sub(upload_file_path, -4) == '.csv') {
                 
-                read.csv(uploaded_file_local, header=TRUE)
+                read.csv(upload_file_path, header=TRUE)
 
-            } else if(str_sub(uploaded_file_local, -4) == '.RDS') {
+            } else if(str_sub(upload_file_path, -4) == '.RDS') {
             
-                readRDS(file=uploaded_file_local)
+                readRDS(file=upload_file_path)
 
             } else {
-                showModal(modalDialog(
-                        title = 'Unknown File Type',
-                        'Only `.csv` and `.RDS` files are supported at this time.'
-                        ))
+
+                showModal(
+                    modalDialog(title = 'Unknown File Type',
+                                'Only `.csv` and `.RDS` files are supported at this time.'))
                 NULL
             }
         }
     })
+
+    ##########################################################################################################
+    # calculate the numeric summary; it is an expensive operation for large datasets
+    ##########################################################################################################    
     numeric_summary_data <- reactive({
+
+        # typically I would do the progress in the while rendering the UI, but this is used while updating
+        # the summary options and i'm not sure which will be called first
         withProgress(value=1/2, message='Calculating Numeric Summary',{
+
+            log_message_block_start('Calculating Numeric Summary')
             rt_explore_numeric_summary(dataset=dataset())
         })
     })
-    
-    output$selected_target_variable_UI <- renderUI({
-        selectInput(inputId='selected_target_variable',
-                    label = 'Target Variable',
-                    choices = c(select_target_variable, colnames(dataset())),
-                    selected = select_target_variable,
-                    multiple = FALSE,
-                    selectize = TRUE,
-                    width = 500,
-                    size = NULL)
-    })
-    output$dataset_types_table <- renderDataTable({
-        withProgress(value=1/2, message='Loading Types',{
-            
-            dataset_local <- dataset()
-            types <- map_chr(colnames(dataset_local), ~ class(dataset_local[, .]))
-            data.frame(variable=colnames(dataset_local), type=types)
+
+    ##########################################################################################################
+    # calculate the categoric summary; it is an expensive operation for large datasets
+    ##########################################################################################################    
+    categoric_summary_data <- reactive({
+
+        withProgress(value=1/2, message='Calculating Categoric Summary',{
+
+            log_message_block_start('Calculating Categoric Summary')
+            rt_explore_categoric_summary(dataset=dataset())
         })
     })
-    output$dataset_head_table <- renderDataTable({
 
-        head(dataset(), 500)
-    })
+    ##########################################################################################################
+    ##########################################################################################################
+    # REACTIVE UI
+    ##########################################################################################################
+    ##########################################################################################################
+
     output$selected_numeric_summary_options_UI <- renderUI({
+
+        # reactive data
         option_values <- colnames(numeric_summary_data())
+
         option_values <- option_values[option_values != 'feature']
         checkboxGroupInput(inputId='selected_numeric_summary_options',
                            label='Options',
@@ -84,41 +111,9 @@ shinyServer(function(input, output, session) {
                            inline=FALSE,
                            width=NULL)
     })
-    output$numeric_summary_table <- renderDataTable({
-
-        results <- numeric_summary_data()
-        results[, c('feature', input$selected_numeric_summary_options)]
-    })
-    output$categoric_summary_table <- renderDataTable({
-        withProgress(value=1/2, message='Calculating Categoric Summary',{
-            rt_explore_categoric_summary(dataset=dataset())
-        })
-    })
-    output$correlation_plot <- renderPlot({
-        withProgress(value=1/2, message='Calculating Correlations',{
-            rt_explore_plot_correlations(dataset=dataset(),
-                                         corr_threshold=input$selected_correlation_corr_threshold,
-                                         p_value_threshold=input$selected_correlation_p_value_threshold,
-                                         base_size=input$selected_correlation_base_size,
-                                         type='pearson')
-        })
-    }, height = function() {
-        session$clientData$output_correlation_plot_width * 0.80  # set height to % of width
-    })
-
-
-    output$selected_target_variable_UI <- renderUI({
-        selectInput(inputId='selected_target_variable',
-                    label = 'Target Variable',
-                    choices = c(select_target_variable, colnames(dataset())),
-                    selected = select_target_variable,
-                    multiple = FALSE,
-                    selectize = TRUE,
-                    width = 500,
-                    size = NULL)
-    })
 
     output$selected_variable_plot_variable_UI <- renderUI({
+
         selectInput(inputId='selected_variable_plot_variable',
                     label = 'Variable',
                     choices = c(select_variable, colnames(dataset())),
@@ -130,6 +125,7 @@ shinyServer(function(input, output, session) {
     })
 
     output$selected_variable_plot_comparison_UI <- renderUI({
+
         selectInput(inputId='selected_variable_plot_comparison',
                     label = 'Comparison Variable',
                     choices = c(select_comparison_variable_optional, colnames(dataset())),
@@ -139,6 +135,69 @@ shinyServer(function(input, output, session) {
                     width = 500,
                     size = NULL)
     })
+
+    ##########################################################################################################
+    ##########################################################################################################
+    # RENDER OUTPUT
+    ##########################################################################################################
+    ##########################################################################################################
+
+    output$dataset_head_table <- renderDataTable({
+
+        head(dataset(), 500)
+    })
+
+    output$dataset_types_table <- renderDataTable({
+
+        withProgress(value=1/2, message='Loading Types',{
+
+            # reactive data            
+            dataset_local <- dataset()
+
+            types <- map_chr(colnames(dataset_local), ~ class(dataset_local[, .]))
+            data.frame(variable=colnames(dataset_local), type=types)
+        })
+    })
+
+    output$numeric_summary_table <- renderDataTable({
+
+        # reactive data
+        numeric_summary_local <- numeric_summary_data()
+        selected_numeric_options_local <- input$selected_numeric_summary_options
+
+        numeric_summary_local[, c('feature', selected_numeric_options_local)]
+    })
+
+    output$categoric_summary_table <- renderDataTable({
+        
+        categoric_summary_data()
+
+    })
+
+    output$correlation_plot <- renderPlot({
+
+        withProgress(value=1/2, message='Calculating Correlations',{
+
+            log_message_block_start('Calculating Correlations & Creating Plot')
+            log_message_variable('selected_correlation_corr_threshold', input$selected_correlation_corr_threshold)
+            log_message_variable('selected_correlation_p_value_threshold', input$selected_correlation_p_value_threshold)
+            log_message_variable('selected_correlation_base_size', input$selected_correlation_base_size)
+
+            rt_explore_plot_correlations(dataset=dataset(),
+                                         corr_threshold=input$selected_correlation_corr_threshold,
+                                         p_value_threshold=input$selected_correlation_p_value_threshold,
+                                         base_size=input$selected_correlation_base_size,
+                                         type='pearson')
+        })
+    }, height = function() {
+
+        session$clientData$output_correlation_plot_width * 0.80  # set height to % of width
+
+    })
+
+    ##########################################################################################################
+    # Variable Plot & Helper Functions
+    ##########################################################################################################
     hide_show_numeric_numeric <- function() {
 
         log_message('hide_show_numeric_numeric')
@@ -148,7 +207,7 @@ shinyServer(function(input, output, session) {
         shinyjs::show('div_variable_plots_group_scatter_controls')
         shinyjs::show('div_variable_plots_group_x_zoom_controls')
         shinyjs::show('div_variable_plots_group_y_zoom_controls')
-        shinyjs::show('selected_variable_plot_base_size')
+        shinyjs::show('selected_variable_plots_base_size')
 
         shinyjs::hide('selected_variable_plots_histogram_bins')
         shinyjs::hide('div_variable_plots_group_barchar_controls')
@@ -159,10 +218,10 @@ shinyServer(function(input, output, session) {
         
         log_message('hide_show_numeric_categoric')
         
-        # boxplot
+        # multi-boxplot
 
         shinyjs::show('div_variable_plots_group_y_zoom_controls')
-        shinyjs::show('selected_variable_plot_base_size')
+        shinyjs::show('selected_variable_plots_base_size')
         shinyjs::show('selected_variable_plot_numeric_graph_type')
 
         shinyjs::hide('div_variable_plots_group_x_zoom_controls')
@@ -175,10 +234,10 @@ shinyServer(function(input, output, session) {
         
         log_message('hide_show_categoric_numeric')
         
-        # scatterplot
+        # multi-boxplot
 
         shinyjs::show('div_variable_plots_group_y_zoom_controls')
-        shinyjs::show('selected_variable_plot_base_size')
+        shinyjs::show('selected_variable_plots_base_size')
 
         shinyjs::hide('div_variable_plots_group_x_zoom_controls')
         shinyjs::hide('div_variable_plots_group_scatter_controls')
@@ -191,10 +250,10 @@ shinyServer(function(input, output, session) {
 
         log_message('hide_show_categoric_categoric')
         
-        # scatterplot
+        # grouped barchart
 
         shinyjs::show('div_variable_plots_group_barchar_controls')
-        shinyjs::show('selected_variable_plot_base_size')
+        shinyjs::show('selected_variable_plots_base_size')
 
         shinyjs::hide('div_variable_plots_group_x_zoom_controls')
         shinyjs::hide('div_variable_plots_group_y_zoom_controls')
@@ -208,101 +267,150 @@ shinyServer(function(input, output, session) {
         req(input$selected_variable_plot_variable)
         req(input$selected_variable_plot_comparison)
 
-        variable_local <- input$selected_variable_plot_variable
+        # reactive data
+        dataset_local <- dataset()
+        primary_variable_local <- input$selected_variable_plot_variable
         comparison_variable_local <- input$selected_variable_plot_comparison
+        selected_variable_plots_alpha_local <- input$selected_variable_plots_alpha
+        selected_variable_plots_base_size_local <- input$selected_variable_plots_base_size
+        selected_variable_plots_histogram_bins_local <- input$selected_variable_plots_histogram_bins
+        selected_variable_plots_jitter_local <- input$selected_variable_plots_jitter
+        selected_variable_plots_order_by_count_local <- input$selected_variable_plots_order_by_count
+        selected_variable_plots_show_variable_totals_local <- input$selected_variable_plots_show_variable_totals
+        selected_variable_plots_show_comparison_totals_local <- input$selected_variable_plots_show_comparison_totals
+        selected_variable_plots_x_zoom_min_local <- input$selected_variable_plots_x_zoom_min
+        selected_variable_plots_x_zoom_max_local <- input$selected_variable_plots_x_zoom_max
+        selected_variable_plots_y_zoom_min_local <- input$selected_variable_plots_y_zoom_min
+        selected_variable_plots_y_zoom_max_local <- input$selected_variable_plots_y_zoom_max                                         
 
-        if(variable_local != select_variable) {
+
+        if(primary_variable_local != select_variable) {
 
             withProgress(value=1/2, message='Plotting Graph',{
+
+                log_message_block_start('Plotting Variable Graph')
+                log_message_variable('primary_variable', primary_variable_local)
+                log_message_variable('comparison_variable', comparison_variable_local)
+                log_message_variable('selected_variable_plots_base_size', selected_variable_plots_base_size_local)
 
                 if(comparison_variable_local == select_comparison_variable_optional) {
 
                     comparison_variable_local <- NULL
                 }
 
-                ##################################################################################################
+                ##############################################################################################
                 # Numeric Primary Variable
-                ##################################################################################################
-                if(is.numeric(dataset()[, variable_local])) {
+                ##############################################################################################
+                if(is.numeric(dataset_local[, primary_variable_local])) {
 
-                    ##############################################################################################
+                    ##########################################################################################
                     # Numeric Secondary Variable
-                    ##############################################################################################
-                    if(!is.null(comparison_variable_local) && is.numeric(dataset()[, comparison_variable_local])) {
+                    ##########################################################################################
+                    if(!is.null(comparison_variable_local) && is.numeric(dataset_local[, comparison_variable_local])) {
 
                         hide_show_numeric_numeric()
 
-                        #shinyjs::hide(id='selected_variable_plot_numeric_graph_type')
-                        rt_explore_plot_scatter(dataset=dataset(),
-                                                variable=variable_local,
-                                                comparison_variable=comparison_variable_local,
-                                                alpha=input$selected_variable_plots_alpha,
-                                                jitter=input$selected_variable_plot_jitter,
-                                                x_zoom_min=input$selected_variable_plots_x_zoom_min,
-                                                x_zoom_max=input$selected_variable_plots_x_zoom_max,
-                                                y_zoom_min=input$selected_variable_plots_y_zoom_min,
-                                                y_zoom_max=input$selected_variable_plots_y_zoom_max,
-                                                base_size=input$selected_variable_plot_base_size)
+                        log_message('**numeric numeric**')
 
-                    ##############################################################################################
+                        log_message_variable('selected_variable_plots_alpha', selected_variable_plots_alpha_local)
+                        log_message_variable('selected_variable_plots_jitter', selected_variable_plots_jitter_local)
+                        log_message_variable('selected_variable_plots_x_zoom_min', selected_variable_plots_x_zoom_min_local)
+                        log_message_variable('selected_variable_plots_x_zoom_max', selected_variable_plots_x_zoom_max_local)
+                        log_message_variable('selected_variable_plots_y_zoom_min', selected_variable_plots_y_zoom_min_local)
+                        log_message_variable('selected_variable_plots_y_zoom_max', selected_variable_plots_y_zoom_max_local)
+
+                        rt_explore_plot_scatter(dataset=dataset_local,
+                                                variable=primary_variable_local,
+                                                comparison_variable=comparison_variable_local,
+                                                alpha=selected_variable_plots_alpha_local,
+                                                jitter=selected_variable_plots_jitter_local,
+                                                x_zoom_min=selected_variable_plots_x_zoom_min_local,
+                                                x_zoom_max=selected_variable_plots_x_zoom_max_local,
+                                                y_zoom_min=selected_variable_plots_y_zoom_min_local,
+                                                y_zoom_max=selected_variable_plots_y_zoom_max_local,
+                                                base_size=selected_variable_plots_base_size_local)
+
+                    ##########################################################################################
                     # NULL Or Categoric Secondary Variable
-                    ##############################################################################################
+                    ##########################################################################################
                     } else {
 
                         hide_show_numeric_categoric()
 
                         if(input$selected_variable_plot_numeric_graph_type == 'Boxplot') {
 
-                            rt_explore_plot_boxplot(dataset=dataset(),
-                                                    variable=variable_local,
+                            log_message('**numeric null/categoric - boxplot**')
+
+                            log_message_variable('selected_variable_plots_y_zoom_min', selected_variable_plots_y_zoom_min_local)
+                            log_message_variable('selected_variable_plots_y_zoom_max', selected_variable_plots_y_zoom_max_local)
+
+                            rt_explore_plot_boxplot(dataset=dataset_local,
+                                                    variable=primary_variable_local,
                                                     comparison_variable=comparison_variable_local,
-                                                    y_zoom_min=input$selected_variable_plots_y_zoom_min,
-                                                    y_zoom_max=input$selected_variable_plots_y_zoom_max,
-                                                    base_size=input$selected_variable_plot_base_size)
+                                                    y_zoom_min=selected_variable_plots_y_zoom_min_local,
+                                                    y_zoom_max=selected_variable_plots_y_zoom_max_local,
+                                                    base_size=selected_variable_plots_base_size_local)
                         } else {
 
-                            rt_explore_plot_histogram(dataset=dataset(),
-                                                          variable=variable_local,
-                                                          num_bins=input$selected_variable_plots_histogram_bins,
-                                                          x_zoom_min=input$selected_variable_plots_x_zoom_min,
-                                                          x_zoom_max=input$selected_variable_plots_x_zoom_max,
-                                                          base_size=input$selected_variable_plot_base_size)
+                            log_message('**numeric null/categoric - histogram**')
+
+                            log_message_variable('selected_variable_plots_histogram_bins', selected_variable_plots_histogram_bins_local)
+                            log_message_variable('selected_variable_plots_x_zoom_min', selected_variable_plots_x_zoom_min_local)
+                            log_message_variable('selected_variable_plots_x_zoom_max', selected_variable_plots_x_zoom_max_local)
+
+                            rt_explore_plot_histogram(dataset=dataset_local,
+                                                      variable=primary_variable_local,
+                                                      num_bins=selected_variable_plots_histogram_bins_local,
+                                                      x_zoom_min=selected_variable_plots_x_zoom_min_local,
+                                                      x_zoom_max=selected_variable_plots_x_zoom_max_local,
+                                                      base_size=selected_variable_plots_base_size_local)
                         }
                     }
 
-                ##################################################################################################
+                ##############################################################################################
                 # Categoric Primary Variable
-                ##################################################################################################
+                ##############################################################################################
                 } else {
 
-                    ##############################################################################################
+                    ##########################################################################################
                     # Numeric Secondary Variable
-                    ##############################################################################################
-                    if(!is.null(comparison_variable_local) && is.numeric(dataset()[, comparison_variable_local])) {
+                    ##########################################################################################
+                    if(!is.null(comparison_variable_local) && is.numeric(dataset_local[, comparison_variable_local])) {
 
                         hide_show_categoric_numeric()
 
-                        #shinyjs::hide(id='selected_variable_plot_numeric_graph_type')
-                        rt_explore_plot_boxplot(dataset=dataset(),
-                                                    variable=comparison_variable_local,
-                                                    comparison_variable=variable_local,
-                                                    y_zoom_min=input$selected_variable_plots_y_zoom_min,
-                                                    y_zoom_max=input$selected_variable_plots_y_zoom_max,
-                                                    base_size=input$selected_variable_plot_base_size)
+                        log_message('**categoric numeric**')
 
-                    ##############################################################################################
+                        log_message_variable('selected_variable_plots_y_zoom_min', selected_variable_plots_y_zoom_min_local)
+                        log_message_variable('selected_variable_plots_y_zoom_max', selected_variable_plots_y_zoom_max_local)
+
+                        rt_explore_plot_boxplot(dataset=dataset_local,
+                                                variable=comparison_variable_local,
+                                                comparison_variable=primary_variable_local,
+                                                y_zoom_min=selected_variable_plots_y_zoom_min_local,
+                                                y_zoom_max=selected_variable_plots_y_zoom_max_local,
+                                                base_size=selected_variable_plots_base_size_local)
+
+                    ##########################################################################################
                     # NULL Or Categoric Secondary Variable
-                    ##############################################################################################
+                    ##########################################################################################
                     } else {
                     
                         hide_show_categoric_categoric()
-                        rt_explore_plot_unique_values(dataset=dataset(),
-                                                      variable=variable_local,
+
+                        log_message('**categoric null/categoric**')
+
+                        log_message_variable('selected_variable_plots_order_by_count', selected_variable_plots_order_by_count_local)
+                        log_message_variable('selected_variable_plots_show_variable_totals', selected_variable_plots_show_variable_totals_local)
+                        log_message_variable('selected_variable_plots_show_comparison_totals', selected_variable_plots_show_comparison_totals_local)
+
+                        rt_explore_plot_unique_values(dataset=dataset_local,
+                                                      variable=primary_variable_local,
                                                       comparison_variable=comparison_variable_local,
-                                                      order_by_count=input$selected_variable_plot_order_by_count,
-                                                      show_group_totals=input$selected_variable_plot_show_variable_totals,
-                                                      show_comparison_totals=input$selected_variable_plot_show_comparison_totals,
-                                                      base_size=input$selected_variable_plot_base_size)
+                                                      order_by_count=selected_variable_plots_order_by_count_local,
+                                                      show_group_totals=selected_variable_plots_show_variable_totals_local,
+                                                      show_comparison_totals=selected_variable_plots_show_comparison_totals_local,
+                                                      base_size=selected_variable_plots_base_size_local)
                     }
                 }
             })
@@ -311,6 +419,7 @@ shinyServer(function(input, output, session) {
             NULL
         }
     }, height = function() {
+
         session$clientData$output_variable_plot_width * 0.66  # set height to % of width
     })
 })
