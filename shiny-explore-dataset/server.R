@@ -106,6 +106,69 @@ shinyServer(function(input, output, session) {
                     width = 500,
                     size = NULL)
     })
+    hide_show_numeric_numeric <- function() {
+
+        log_message('hide_show_numeric_numeric')
+        
+        # scatterplot
+
+        shinyjs::show('selected_variable_plots_alpha')
+        shinyjs::show('div_variable_plots_group_x_zoom_controls')
+        shinyjs::show('div_variable_plots_group_y_zoom_controls')
+        shinyjs::show('selected_variable_plot_base_size')
+
+        shinyjs::hide('selected_variable_plots_histogram_bins')
+        shinyjs::hide('div_variable_plots_group_barchar_controls')
+        shinyjs::hide('selected_variable_plot_numeric_graph_type')
+    }
+
+    hide_show_numeric_categoric <- function() {
+        
+        log_message('hide_show_numeric_categoric')
+        
+        # boxplot
+
+        shinyjs::show('div_variable_plots_group_y_zoom_controls')
+        shinyjs::show('selected_variable_plot_base_size')
+        shinyjs::show('selected_variable_plot_numeric_graph_type')
+
+        shinyjs::hide('div_variable_plots_group_x_zoom_controls')
+        shinyjs::hide('selected_variable_plots_alpha')
+        shinyjs::hide('selected_variable_plots_histogram_bins')
+        shinyjs::hide('div_variable_plots_group_barchar_controls')
+    }
+
+    hide_show_categoric_numeric <- function() {
+        
+        log_message('hide_show_categoric_numeric')
+        
+        # scatterplot
+
+        shinyjs::show('div_variable_plots_group_y_zoom_controls')
+        shinyjs::show('selected_variable_plot_base_size')
+
+        shinyjs::hide('div_variable_plots_group_x_zoom_controls')
+        shinyjs::hide('selected_variable_plots_alpha')
+        shinyjs::hide('selected_variable_plots_histogram_bins')
+        shinyjs::hide('div_variable_plots_group_barchar_controls')
+        shinyjs::hide('selected_variable_plot_numeric_graph_type')
+    }
+
+    hide_show_categoric_categoric <- function() {
+
+        log_message('hide_show_categoric_categoric')
+        
+        # scatterplot
+
+        shinyjs::show('div_variable_plots_group_barchar_controls')
+        shinyjs::show('selected_variable_plot_base_size')
+
+        shinyjs::hide('div_variable_plots_group_x_zoom_controls')
+        shinyjs::hide('div_variable_plots_group_y_zoom_controls')
+        shinyjs::hide('selected_variable_plots_alpha')
+        shinyjs::hide('selected_variable_plots_histogram_bins')
+        shinyjs::hide('selected_variable_plot_numeric_graph_type')
+    }
 
     output$variable_plot <- renderPlot({
 
@@ -127,18 +190,14 @@ shinyServer(function(input, output, session) {
             ##################################################################################################
             if(is.numeric(dataset()[, variable_local])) {
 
-                shinyjs::hide(id='div_variable_plots_group_barchar_controls')
-                
-                shinyjs::show(id='div_variable_plots_group_y_zoom_controls')
-                shinyjs::show(id='selected_variable_plot_numeric_graph_type')
-
                 ##############################################################################################
                 # Numeric Secondary Variable
                 ##############################################################################################
                 if(!is.null(comparison_variable_local) && is.numeric(dataset()[, comparison_variable_local])) {
 
+                    hide_show_numeric_numeric()
+
                     #shinyjs::hide(id='selected_variable_plot_numeric_graph_type')
-                    shinyjs::show(id='div_variable_plots_alpha')
                     rt_explore_plot_scatter(dataset=dataset(),
                                             variable=variable_local,
                                             comparison_variable=comparison_variable_local,
@@ -154,16 +213,9 @@ shinyServer(function(input, output, session) {
                 ##############################################################################################
                 } else {
 
-                    shinyjs::hide(id='div_variable_plots_alpha')
-                    shinyjs::show(id='selected_variable_plot_numeric_graph_type')
+                    hide_show_numeric_categoric()
 
                     if(input$selected_variable_plot_numeric_graph_type == 'Boxplot') {
-
-                        shinyjs::show(id='selected_variable_plot_comparison_UI')
-
-                        shinyjs::show(id='div_variable_plots_group_y_zoom_controls')
-                        shinyjs::hide(id='div_variable_plots_group_x_zoom_controls')
-                        shinyjs::hide(id='div_variable_plots_histogram_group')
 
                         rt_explore_plot_boxplot(dataset=dataset(),
                                                 variable=variable_local,
@@ -172,12 +224,6 @@ shinyServer(function(input, output, session) {
                                                 y_zoom_max=input$selected_variable_plots_y_zoom_max,
                                                 base_size=input$selected_variable_plot_base_size)
                     } else {
-
-                        shinyjs::hide(id='selected_variable_plot_comparison_UI')
-
-                        shinyjs::hide(id='div_variable_plots_group_y_zoom_controls')
-                        shinyjs::show(id='div_variable_plots_group_x_zoom_controls')
-                        shinyjs::show(id='div_variable_plots_histogram_group')
 
                         rt_explore_plot_histogram(dataset=dataset(),
                                                       variable=variable_local,
@@ -192,19 +238,36 @@ shinyServer(function(input, output, session) {
             # Categoric Primary Variable
             ##################################################################################################
             } else {
+
+                ##############################################################################################
+                # Numeric Secondary Variable
+                ##############################################################################################
+                if(!is.null(comparison_variable_local) && is.numeric(dataset()[, comparison_variable_local])) {
+
+                    hide_show_categoric_numeric()
+
+                    #shinyjs::hide(id='selected_variable_plot_numeric_graph_type')
+                    rt_explore_plot_boxplot(dataset=dataset(),
+                                                variable=comparison_variable_local,
+                                                comparison_variable=variable_local,
+                                                y_zoom_min=input$selected_variable_plots_y_zoom_min,
+                                                y_zoom_max=input$selected_variable_plots_y_zoom_max,
+                                                base_size=input$selected_variable_plot_base_size)
+
+                ##############################################################################################
+                # NULL Or Categoric Secondary Variable
+                ##############################################################################################
+                } else {
                 
-                shinyjs::show(id='div_variable_plots_group_barchar_controls')
-
-                shinyjs::hide(id='div_variable_plots_group_y_zoom_controls')
-                shinyjs::hide(id='selected_variable_plot_numeric_graph_type')
-
-                rt_explore_plot_unique_values(dataset=dataset(),
-                                              variable=variable_local,
-                                              comparison_variable=comparison_variable_local,
-                                              order_by_count=input$selected_variable_plot_order_by_count,
-                                              show_group_totals=input$selected_variable_plot_show_variable_totals,
-                                              show_comparison_totals=input$selected_variable_plot_show_comparison_totals,
-                                              base_size=input$selected_variable_plot_base_size)
+                    hide_show_categoric_categoric()
+                    rt_explore_plot_unique_values(dataset=dataset(),
+                                                  variable=variable_local,
+                                                  comparison_variable=comparison_variable_local,
+                                                  order_by_count=input$selected_variable_plot_order_by_count,
+                                                  show_group_totals=input$selected_variable_plot_show_variable_totals,
+                                                  show_comparison_totals=input$selected_variable_plot_show_comparison_totals,
+                                                  base_size=input$selected_variable_plot_base_size)
+                    }
             }
         } else {
 

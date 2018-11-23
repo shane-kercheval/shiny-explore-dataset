@@ -83,13 +83,13 @@ shinyUI(fluidPage(theme = "custom.css",
                          checkboxInput(inputId='selected_variable_plot_show_comparison_totals',
                                        label='Show Comparison Totals', value = TRUE, width = NULL)
                     )),
-                    shinyjs::hidden(tags$div(id='div_variable_plots_alpha',
+                    shinyjs::hidden(
                         sliderTextInput(inputId='selected_variable_plots_alpha',
                                     label='Alp',
                                     choices = seq(0.1, 1, 0.1),
                                     selected = 0.3,
                                     grid = TRUE)
-                    )),
+                    ),
                     shinyjs::hidden(tags$div(id='div_variable_plots_group_x_zoom_controls',
                          numericInput(inputId='selected_variable_plots_x_zoom_min',
                                       label='X-Axis Zoom Min',
@@ -106,11 +106,11 @@ shinyUI(fluidPage(theme = "custom.css",
                                       label='Y-Axis Zoom Max',
                                       value=NULL)                         
                     )),
-                    shinyjs::hidden(tags$div(id='div_variable_plots_histogram_group',
+                    shinyjs::hidden(
                          numericInput(inputId='selected_variable_plots_histogram_bins',
                                       label='Number of Bins',
                                       value=30)                 
-                    )),
+                    ),
                     sliderTextInput(inputId='selected_variable_plot_base_size',
                                     label='Text Size',
                                     choices = seq(6, 20, 1),
