@@ -100,12 +100,18 @@ shinyUI(fluidPage(theme = "custom.css",
                         ),
                         shinyjs::hidden(tags$div(id='div_variable_plots_group_scatter_controls',
                             sliderTextInput(inputId='selected_variable_plots_alpha',
-                                        label='Transparency',
-                                        choices = seq(0.1, 1, 0.1),
-                                        selected = 0.3,
-                                        grid = TRUE),
+                                            label='Transparency',
+                                            choices = seq(0.1, 1, 0.1),
+                                            selected = 0.3,
+                                            grid = TRUE),
                             checkboxInput(inputId='selected_variable_plots_jitter',
-                                           label='Jitter', value = FALSE, width = NULL)
+                                          label='Jitter', value = FALSE, width = NULL),
+                            radioButtons(inputId='selected_variable_plots_trend_line',
+                                                    label='Trend Line:',
+                                                    choices=c('None', 'Straight', 'Smooth'),
+                                                    selected = 'None',
+                                                    inline = TRUE,
+                                                    width = NULL)
                         )),
                         shinyjs::hidden(tags$div(id='div_variable_plots_group_x_zoom_controls',
                              checkboxInput(inputId='selected_variable_plots_scale_x_log_base_10',
@@ -137,10 +143,10 @@ shinyUI(fluidPage(theme = "custom.css",
                                         selected = 15,
                                         grid = TRUE),
                         checkboxInput(inputId='selected_variable_plots_pretty_text',
-                                           label='Pretty Text', value = FALSE, width = NULL),
+                                      label='Pretty Text', value = FALSE, width = NULL),
                         shinyjs::hidden(
                            checkboxInput(inputId='selected_variable_plots_annotate_points',
-                                                 label='Annotate Points', value = FALSE, width = NULL)
+                                         label='Annotate Points', value = FALSE, width = NULL)
                         ),
                         style='default'
                     )

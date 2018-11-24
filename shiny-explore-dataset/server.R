@@ -205,11 +205,12 @@ shinyServer(function(input, output, session) {
             log_message_variable('selected_correlation_base_size', input$selected_correlation_base_size)
             log_message_variable('selected_correlation_pretty_text', input$selected_correlation_pretty_text)
 
-            rt_explore_plot_correlations(dataset=dataset_local,
-                                         corr_threshold=input$selected_correlation_corr_threshold,
-                                         p_value_threshold=input$selected_correlation_p_value_threshold,
-                                         base_size=input$selected_correlation_base_size,
-                                         type='pearson')
+            # see note about why I use print, in `variable plot` section below.
+            print(rt_explore_plot_correlations(dataset=dataset_local,
+                                              corr_threshold=input$selected_correlation_corr_threshold,
+                                              p_value_threshold=input$selected_correlation_p_value_threshold,
+                                              base_size=input$selected_correlation_base_size,
+                                              type='pearson'))
         })
     }, height = function() {
 
@@ -218,114 +219,12 @@ shinyServer(function(input, output, session) {
     })
 
     ##########################################################################################################
-    # Variable Plot & Helper Functions
+    # Variable Plot
+    # NOTE: i use `print(xxx_plot)` because ggplot does some sort of lazy evaluation, which means that the 
+    # withProgress finishes but the plot is still rendering and if the plot takes a long time to render, the
+    # shiny app is still working/blocking but no progress is shown. `print` seems to force evaluation while
+    # not affecting return of the plot from the function or it being displayed in shiny
     ##########################################################################################################
-    hide_show_numeric_numeric <- function() {
-
-        log_message('hide_show_numeric_numeric')
-        
-        # scatterplot
-
-        shinyjs::show('div_variable_plots_group_scatter_controls')
-        shinyjs::show('div_variable_plots_group_x_zoom_controls')
-        shinyjs::show('div_variable_plots_group_y_zoom_controls')
-        shinyjs::show('selected_variable_plots_base_size')
-        shinyjs::show('selected_variable_plots_annotate_points')
-
-        shinyjs::hide('selected_variable_plots_histogram_bins')
-        shinyjs::hide('div_variable_plots_group_barchar_controls')
-        shinyjs::hide('selected_variable_plot_numeric_graph_type')
-    }
-
-    hide_show_numeric_categoric <- function() {
-        
-        log_message('hide_show_numeric_categoric')
-        
-        # multi-boxplot
-
-        shinyjs::show('div_variable_plots_group_y_zoom_controls')
-        shinyjs::show('selected_variable_plots_base_size')
-        shinyjs::show('selected_variable_plot_numeric_graph_type')
-
-        shinyjs::hide('div_variable_plots_group_x_zoom_controls')
-        # if we are hiding the x-controls, uncheck the scale_x_log10 option so it isn't carried over
-        updateCheckboxInput(session, 'selected_variable_plots_scale_x_log_base_10', value=FALSE)
-        
-        shinyjs::hide('div_variable_plots_group_scatter_controls')
-        shinyjs::hide('selected_variable_plots_histogram_bins')
-        shinyjs::hide('div_variable_plots_group_barchar_controls')
-        shinyjs::hide('selected_variable_plots_annotate_points')
-    }
-
-    hide_show_categoric_numeric <- function() {
-        
-        log_message('hide_show_categoric_numeric')
-        
-        # multi-boxplot
-
-        shinyjs::show('div_variable_plots_group_y_zoom_controls')
-        shinyjs::show('selected_variable_plots_base_size')
-
-        shinyjs::hide('div_variable_plots_group_x_zoom_controls')
-        # if we are hiding the x-controls, uncheck the scale_x_log10 option so it isn't carried over
-        updateCheckboxInput(session, 'selected_variable_plots_scale_x_log_base_10', value=FALSE)
-        
-        shinyjs::hide('div_variable_plots_group_scatter_controls')
-        shinyjs::hide('selected_variable_plots_histogram_bins')
-        shinyjs::hide('div_variable_plots_group_barchar_controls')
-        shinyjs::hide('selected_variable_plot_numeric_graph_type')
-        shinyjs::hide('selected_variable_plots_annotate_points')
-    }
-
-    hide_show_categoric_categoric <- function() {
-
-        log_message('hide_show_categoric_categoric')
-        
-        # grouped barchart
-
-        shinyjs::show('div_variable_plots_group_barchar_controls')
-        shinyjs::show('selected_variable_plots_base_size')
-
-        shinyjs::hide('div_variable_plots_group_x_zoom_controls')
-        shinyjs::hide('div_variable_plots_group_y_zoom_controls')
-        # if we are hiding the x/y-controls, uncheck the scale_x/y_log10 option so it isn't carried over
-        updateCheckboxInput(session, 'selected_variable_plots_scale_x_log_base_10', value=FALSE)
-        updateCheckboxInput(session, 'selected_variable_plots_scale_y_log_base_10', value=FALSE)
-        
-
-        shinyjs::hide('div_variable_plots_group_scatter_controls')
-        shinyjs::hide('selected_variable_plots_histogram_bins')
-        shinyjs::hide('selected_variable_plot_numeric_graph_type')
-        shinyjs::hide('selected_variable_plots_annotate_points')
-    }
-
-    prettyfy_plot <- function(plot, dataset, comparison_variable, annotate_points=FALSE) {
-
-        # annotate_points requires a y-axis i.e. comparison_variable
-        if(annotate_points && !is.null(comparison_variable) ) {
-
-            plot <- plot + 
-                geom_text(aes(label=dataset[, comparison_variable]), check_overlap=TRUE, vjust=1, hjust=1)
-        }
-
-        return (plot)
-    }
-    
-    scale_axes_log10 <- function(plot, scale_x, scale_y) {
-        
-        if(scale_x) {
-            
-            plot <- plot +  scale_x_log10(labels=comma_format())
-        }
-        if(scale_y) {
-            
-            plot <- plot + scale_y_log10(labels=comma_format())
-        }
-        
-        return (plot)
-    }
-    
-
     output$variable_plot <- renderPlot({
 
         req(input$selected_variable_plot_variable)
@@ -349,6 +248,8 @@ shinyServer(function(input, output, session) {
 
         selected_variable_plots_scale_x_log_base_10_local <- input$selected_variable_plots_scale_x_log_base_10
         selected_variable_plots_scale_y_log_base_10_local <- input$selected_variable_plots_scale_y_log_base_10
+
+        selected_variable_plots_trend_line_local <- input$selected_variable_plots_trend_line
 
         selected_variable_plots_x_zoom_min_local <- input$selected_variable_plots_x_zoom_min
         selected_variable_plots_x_zoom_max_local <- input$selected_variable_plots_x_zoom_max
@@ -403,12 +304,13 @@ shinyServer(function(input, output, session) {
                     ##########################################################################################
                     if(!is.null(comparison_variable_local) && is.numeric(dataset_local[, comparison_variable_local])) {
 
-                        hide_show_numeric_numeric()
+                        hide_show_numeric_numeric(session)
 
                         log_message('**numeric numeric**')
 
                         log_message_variable('selected_variable_plots_alpha', selected_variable_plots_alpha_local)
                         log_message_variable('selected_variable_plots_jitter', selected_variable_plots_jitter_local)
+                        log_message_variable('selected_variable_plots_trend_line', selected_variable_plots_trend_line_local)
                         log_message_variable('selected_variable_plots_x_zoom_min', selected_variable_plots_x_zoom_min_local)
                         log_message_variable('selected_variable_plots_x_zoom_max', selected_variable_plots_x_zoom_max_local)
                         log_message_variable('selected_variable_plots_y_zoom_min', selected_variable_plots_y_zoom_min_local)
@@ -432,17 +334,20 @@ shinyServer(function(input, output, session) {
                                                          scale_x=selected_variable_plots_scale_x_log_base_10_local,
                                                          scale_y=selected_variable_plots_scale_y_log_base_10_local)
 
-                        prettyfy_plot(plot=scatter_plot,
+                        scatter_plot <- add_trend_line(scatter_plot, selected_variable_plots_trend_line_local)
+                        
+                        scatter_plot <- prettyfy_plot(plot=scatter_plot,
                                       dataset=dataset_local,
                                       comparison_variable=comparison_variable_local,
                                       annotate_points=selected_variable_plots_annotate_points_local)
-
+                        
+                        print(scatter_plot)
                     ##########################################################################################
                     # NULL Or Categoric Secondary Variable
                     ##########################################################################################
                     } else {
 
-                        hide_show_numeric_categoric()
+                        hide_show_numeric_categoric(session)
 
                         if(input$selected_variable_plot_numeric_graph_type == 'Boxplot') {
 
@@ -459,10 +364,11 @@ shinyServer(function(input, output, session) {
                                                                 y_zoom_min=selected_variable_plots_y_zoom_min_local,
                                                                 y_zoom_max=selected_variable_plots_y_zoom_max_local,
                                                                 base_size=selected_variable_plots_base_size_local)
+                            box_plot <- scale_axes_log10(plot=box_plot,
+                                                         scale_x=FALSE,
+                                                         scale_y=selected_variable_plots_scale_y_log_base_10_local)
 
-                            scale_axes_log10(plot=box_plot,
-                                             scale_x=FALSE,
-                                             scale_y=selected_variable_plots_scale_y_log_base_10_local)
+                            print(box_plot)
 
 
                         } else {
@@ -481,9 +387,11 @@ shinyServer(function(input, output, session) {
                                                                         x_zoom_max=selected_variable_plots_x_zoom_max_local,
                                                                         base_size=selected_variable_plots_base_size_local)
 
-                            scale_axes_log10(plot=histogram_plot,
-                                         scale_x=selected_variable_plots_scale_x_log_base_10_local,
-                                         scale_y=FALSE)
+                            histogram_plot <- scale_axes_log10(plot=histogram_plot,
+                                                               scale_x=selected_variable_plots_scale_x_log_base_10_local,
+                                                               scale_y=FALSE)
+
+                            print(histogram_plot)
                         }
                     }
 
@@ -497,7 +405,7 @@ shinyServer(function(input, output, session) {
                     ##########################################################################################
                     if(!is.null(comparison_variable_local) && is.numeric(dataset_local[, comparison_variable_local])) {
 
-                        hide_show_categoric_numeric()
+                        hide_show_categoric_numeric(session)
 
                         log_message('**categoric numeric**')
 
@@ -512,16 +420,18 @@ shinyServer(function(input, output, session) {
                                                             y_zoom_max=selected_variable_plots_y_zoom_max_local,
                                                             base_size=selected_variable_plots_base_size_local)
 
-                        scale_axes_log10(plot=box_plot,
-                                         scale_x=FALSE,
-                                         scale_y=selected_variable_plots_scale_y_log_base_10_local)
+                        box_plot <- scale_axes_log10(plot=box_plot,
+                                                     scale_x=FALSE,
+                                                     scale_y=selected_variable_plots_scale_y_log_base_10_local)
+
+                        print(box_plot)
 
                     ##########################################################################################
                     # NULL Or Categoric Secondary Variable
                     ##########################################################################################
                     } else {
                     
-                        hide_show_categoric_categoric()
+                        hide_show_categoric_categoric(session)
 
                         log_message('**categoric null/categoric**')
 
@@ -529,13 +439,15 @@ shinyServer(function(input, output, session) {
                         log_message_variable('selected_variable_plots_show_variable_totals', selected_variable_plots_show_variable_totals_local)
                         log_message_variable('selected_variable_plots_show_comparison_totals', selected_variable_plots_show_comparison_totals_local)
 
-                        rt_explore_plot_unique_values(dataset=dataset_local,
-                                                      variable=primary_variable_local,
-                                                      comparison_variable=comparison_variable_local,
-                                                      order_by_count=selected_variable_plots_order_by_count_local,
-                                                      show_group_totals=selected_variable_plots_show_variable_totals_local,
-                                                      show_comparison_totals=selected_variable_plots_show_comparison_totals_local,
-                                                      base_size=selected_variable_plots_base_size_local)
+                        unique_values_plot <- rt_explore_plot_unique_values(dataset=dataset_local,
+                                                                            variable=primary_variable_local,
+                                                                            comparison_variable=comparison_variable_local,
+                                                                            order_by_count=selected_variable_plots_order_by_count_local,
+                                                                            show_group_totals=selected_variable_plots_show_variable_totals_local,
+                                                                            show_comparison_totals=selected_variable_plots_show_comparison_totals_local,
+                                                                            base_size=selected_variable_plots_base_size_local)
+
+                        print(unique_values_plot)
                     }
                 }
             })
