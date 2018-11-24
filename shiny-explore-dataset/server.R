@@ -242,15 +242,13 @@ shinyServer(function(input, output, session) {
         selected_variable_plots_histogram_bins_local <- input$selected_variable_plots_histogram_bins
         selected_variable_plots_jitter_local <- input$selected_variable_plots_jitter
         selected_variable_plots_order_by_count_local <- input$selected_variable_plots_order_by_count
+        selected_variable_plots_numeric_graph_type_local <- input$selected_variable_plots_numeric_graph_type
         selected_variable_plots_pretty_text_local <- input$selected_variable_plots_pretty_text
-        selected_variable_plots_show_variable_totals_local <- input$selected_variable_plots_show_variable_totals
-        selected_variable_plots_show_comparison_totals_local <- input$selected_variable_plots_show_comparison_totals
-
         selected_variable_plots_scale_x_log_base_10_local <- input$selected_variable_plots_scale_x_log_base_10
         selected_variable_plots_scale_y_log_base_10_local <- input$selected_variable_plots_scale_y_log_base_10
-
+        selected_variable_plots_show_variable_totals_local <- input$selected_variable_plots_show_variable_totals
+        selected_variable_plots_show_comparison_totals_local <- input$selected_variable_plots_show_comparison_totals
         selected_variable_plots_trend_line_local <- input$selected_variable_plots_trend_line
-
         selected_variable_plots_x_zoom_min_local <- input$selected_variable_plots_x_zoom_min
         selected_variable_plots_x_zoom_max_local <- input$selected_variable_plots_x_zoom_max
         selected_variable_plots_y_zoom_min_local <- input$selected_variable_plots_y_zoom_min
@@ -347,9 +345,11 @@ shinyServer(function(input, output, session) {
                     ##########################################################################################
                     } else {
 
-                        hide_show_numeric_categoric(session)
+                        show_boxplot <- selected_variable_plots_numeric_graph_type_local == 'Boxplot'
 
-                        if(input$selected_variable_plot_numeric_graph_type == 'Boxplot') {
+                        hide_show_numeric_categoric(session=session, show_y_controls=show_boxplot)
+
+                        if(show_boxplot) {
 
                             log_message('**numeric null/categoric - boxplot**')
 

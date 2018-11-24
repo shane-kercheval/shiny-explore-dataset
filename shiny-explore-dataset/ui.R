@@ -80,7 +80,7 @@ shinyUI(fluidPage(theme = "custom.css",
                     bsCollapsePanel(
                         'Plot Options',
                         shinyjs::hidden(
-                            selectInput(inputId='selected_variable_plot_numeric_graph_type',
+                            selectInput(inputId='selected_variable_plots_numeric_graph_type',
                                     label='Type',
                                     choices=c('Boxplot', 'Histogram'),
                                     selected='Boxplot')

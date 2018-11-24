@@ -102,23 +102,33 @@ hide_show_numeric_numeric <- function(session) {
 
     shinyjs::hide('selected_variable_plots_histogram_bins')
     shinyjs::hide('div_variable_plots_group_barchar_controls')
-    shinyjs::hide('selected_variable_plot_numeric_graph_type')
+    shinyjs::hide('selected_variable_plots_numeric_graph_type')
 }
 
-hide_show_numeric_categoric <- function(session) {
+hide_show_numeric_categoric <- function(session, show_y_controls) {
     
     log_message('hide_show_numeric_categoric')
     
-    # multi-boxplot
+    # could be a boxplot or a histogram; if it is a boxplot, we want to show y-axis-controls, otherwise x-axis
+    if(show_y_controls) {
 
-    shinyjs::show('div_variable_plots_group_y_zoom_controls')
-    shinyjs::show('selected_variable_plots_base_size')
-    shinyjs::show('selected_variable_plot_numeric_graph_type')
-
-    shinyjs::hide('div_variable_plots_group_x_zoom_controls')
-    # if we are hiding the x-controls, uncheck the scale_x_log10 option so it isn't carried over
-    updateCheckboxInput(session, 'selected_variable_plots_scale_x_log_base_10', value=FALSE)
+        shinyjs::show('div_variable_plots_group_y_zoom_controls')
+        shinyjs::hide('div_variable_plots_group_x_zoom_controls')
+        # if we are hiding the x-controls, uncheck the scale_x_log10 option so it isn't carried over
+        updateCheckboxInput(session, 'selected_variable_plots_scale_x_log_base_10', value=FALSE)
     
+
+    } else {
+
+        shinyjs::hide('div_variable_plots_group_y_zoom_controls')
+        shinyjs::show('div_variable_plots_group_x_zoom_controls')
+        # if we are hiding the y-controls, uncheck the scale_y_log10 option so it isn't carried over
+        updateCheckboxInput(session, 'selected_variable_plots_scale_y_log_base_10', value=FALSE)
+    }
+
+    shinyjs::show('selected_variable_plots_base_size')
+    shinyjs::show('selected_variable_plots_numeric_graph_type')
+
     shinyjs::hide('div_variable_plots_group_scatter_controls')
     shinyjs::hide('selected_variable_plots_histogram_bins')
     shinyjs::hide('div_variable_plots_group_barchar_controls')
@@ -141,7 +151,7 @@ hide_show_categoric_numeric <- function(session) {
     shinyjs::hide('div_variable_plots_group_scatter_controls')
     shinyjs::hide('selected_variable_plots_histogram_bins')
     shinyjs::hide('div_variable_plots_group_barchar_controls')
-    shinyjs::hide('selected_variable_plot_numeric_graph_type')
+    shinyjs::hide('selected_variable_plots_numeric_graph_type')
     shinyjs::hide('selected_variable_plots_annotate_points')
 }
 
@@ -163,6 +173,6 @@ hide_show_categoric_categoric <- function(session) {
 
     shinyjs::hide('div_variable_plots_group_scatter_controls')
     shinyjs::hide('selected_variable_plots_histogram_bins')
-    shinyjs::hide('selected_variable_plot_numeric_graph_type')
+    shinyjs::hide('selected_variable_plots_numeric_graph_type')
     shinyjs::hide('selected_variable_plots_annotate_points')
 }
