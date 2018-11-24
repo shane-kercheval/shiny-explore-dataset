@@ -55,7 +55,9 @@ shinyUI(fluidPage(theme = "custom.css",
                                     label='Text Size',
                                     choices = seq(6, 20, 1),
                                     selected = 15,
-                                    grid = TRUE)
+                                    grid = TRUE),
+                    checkboxInput(inputId='selected_correlation_pretty_text',
+                                       label='Pretty Text', value = FALSE, width = NULL)
                     )
             ),
             column(10,
@@ -116,7 +118,9 @@ shinyUI(fluidPage(theme = "custom.css",
                                     label='Text Size',
                                     choices = seq(6, 20, 1),
                                     selected = 15,
-                                    grid = TRUE)
+                                    grid = TRUE),
+                    checkboxInput(inputId='selected_variable_plots_pretty_text',
+                                       label='Pretty Text', value = FALSE, width = NULL)
             ),
             column(9,
                 plotOutput(outputId='variable_plot')

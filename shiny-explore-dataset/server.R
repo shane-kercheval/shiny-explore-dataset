@@ -178,12 +178,20 @@ shinyServer(function(input, output, session) {
 
         withProgress(value=1/2, message='Calculating Correlations',{
 
+            dataset_local <- dataset()
+
+            if(input$selected_correlation_pretty_text) {
+
+                dataset_local <- rt_pretty_dataset(dataset_local)
+            }
+
             log_message_block_start('Calculating Correlations & Creating Plot')
             log_message_variable('selected_correlation_corr_threshold', input$selected_correlation_corr_threshold)
             log_message_variable('selected_correlation_p_value_threshold', input$selected_correlation_p_value_threshold)
             log_message_variable('selected_correlation_base_size', input$selected_correlation_base_size)
+            log_message_variable('selected_correlation_pretty_text', input$selected_correlation_pretty_text)
 
-            rt_explore_plot_correlations(dataset=dataset(),
+            rt_explore_plot_correlations(dataset=dataset_local,
                                          corr_threshold=input$selected_correlation_corr_threshold,
                                          p_value_threshold=input$selected_correlation_p_value_threshold,
                                          base_size=input$selected_correlation_base_size,
@@ -262,10 +270,42 @@ shinyServer(function(input, output, session) {
         shinyjs::hide('selected_variable_plot_numeric_graph_type')
     }
 
+    # e.g. turns e.g. `THIS_VALUE` to `This Value`
+    prettyfy_dataset <- function(dataset, primary_variable, comparison_variable, pretty_labels) {
+
+        dataset[, primary_variable] <- rt_pretty_text(dataset[, primary_variable])
+
+        if(!is.null(comparison_variable)) {
+
+            dataset[, comparison_variable] <- rt_pretty_text(dataset[, comparison_variable])
+        }
+
+        # AFTER we update the values, update the column names
+        # (can't do it before or the column names wouldn't be found)
+
+        colnames(dataset) <- rt_pretty_text(colnames(dataset))
+
+        return (dataset)
+    }
+
+    prettyfy_plot <- function(plot, dataset, comparison_variable, annotate_points=FALSE) {
+
+        # annotate_points requires a y-axis i.e. comparison_variable
+        if(annotate_points && !is.null(comparison_variable) ) {
+
+            plot <- plot + 
+                geom_text(aes(label=dataset[, comparison_variable]), check_overlap=TRUE, vjust=1, hjust=1)
+        }
+
+        return (plot)
+    }
+
     output$variable_plot <- renderPlot({
 
         req(input$selected_variable_plot_variable)
         req(input$selected_variable_plot_comparison)
+        
+        log_message_variable('selected_variable_plots_pretty_text', input$selected_variable_plots_pretty_text)
 
         # reactive data
         dataset_local <- dataset()
@@ -276,6 +316,7 @@ shinyServer(function(input, output, session) {
         selected_variable_plots_histogram_bins_local <- input$selected_variable_plots_histogram_bins
         selected_variable_plots_jitter_local <- input$selected_variable_plots_jitter
         selected_variable_plots_order_by_count_local <- input$selected_variable_plots_order_by_count
+        selected_variable_plots_pretty_text_local <- input$selected_variable_plots_pretty_text
         selected_variable_plots_show_variable_totals_local <- input$selected_variable_plots_show_variable_totals
         selected_variable_plots_show_comparison_totals_local <- input$selected_variable_plots_show_comparison_totals
         selected_variable_plots_x_zoom_min_local <- input$selected_variable_plots_x_zoom_min
@@ -283,20 +324,42 @@ shinyServer(function(input, output, session) {
         selected_variable_plots_y_zoom_min_local <- input$selected_variable_plots_y_zoom_min
         selected_variable_plots_y_zoom_max_local <- input$selected_variable_plots_y_zoom_max                                         
 
-
         if(primary_variable_local != select_variable) {
 
             withProgress(value=1/2, message='Plotting Graph',{
 
                 log_message_block_start('Plotting Variable Graph')
-                log_message_variable('primary_variable', primary_variable_local)
-                log_message_variable('comparison_variable', comparison_variable_local)
-                log_message_variable('selected_variable_plots_base_size', selected_variable_plots_base_size_local)
-
+    
                 if(comparison_variable_local == select_comparison_variable_optional) {
 
                     comparison_variable_local <- NULL
                 }
+
+                log_message_variable('primary_variable', primary_variable_local)
+                log_message_variable('comparison_variable', comparison_variable_local)
+                log_message_variable('selected_variable_plots_base_size', selected_variable_plots_base_size_local)
+                log_message_variable('selected_variable_plots_pretty_text', selected_variable_plots_pretty_text_local)
+                
+                
+                if(selected_variable_plots_pretty_text_local) {
+                    # if we change to pretty text, it will update the columns and all values to be "pretty",
+                    # but that means we have to take the variables they selected and change them to be
+                    # "pretty" as well so subsetting by them finds the correct column
+
+                    dataset_local <- rt_pretty_dataset(dataset=dataset_local)
+
+                    # R uses the "`My Variable`" syntax for variables with spaces which dplyr's xxx_() relies on
+                    primary_variable_local <- rt_pretty_text(primary_variable_local)
+                    if(!is.null(comparison_variable_local)) {
+
+                        comparison_variable_local <- rt_pretty_text(comparison_variable_local)
+                    }
+
+                    log_message_variable('updated primary_variable', primary_variable_local)
+                    log_message_variable('updated comparison_variable', comparison_variable_local)
+                    log_message_generic('column names', paste0(colnames(dataset_local), collapse = '; '))
+                }
+
 
                 ##############################################################################################
                 # Numeric Primary Variable
