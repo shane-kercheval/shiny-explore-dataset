@@ -120,7 +120,12 @@ shinyUI(fluidPage(theme = "custom.css",
                                     selected = 15,
                                     grid = TRUE),
                     checkboxInput(inputId='selected_variable_plots_pretty_text',
-                                       label='Pretty Text', value = FALSE, width = NULL)
+                                       label='Pretty Text', value = FALSE, width = NULL),
+                    shinyjs::hidden(
+                       checkboxInput(inputId='selected_variable_plots_annotate_points',
+                                             label='Annotate Points', value = FALSE, width = NULL)
+                    )
+
             ),
             column(9,
                 plotOutput(outputId='variable_plot')

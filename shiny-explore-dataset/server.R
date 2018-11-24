@@ -216,6 +216,7 @@ shinyServer(function(input, output, session) {
         shinyjs::show('div_variable_plots_group_x_zoom_controls')
         shinyjs::show('div_variable_plots_group_y_zoom_controls')
         shinyjs::show('selected_variable_plots_base_size')
+        shinyjs::show('selected_variable_plots_annotate_points')
 
         shinyjs::hide('selected_variable_plots_histogram_bins')
         shinyjs::hide('div_variable_plots_group_barchar_controls')
@@ -236,6 +237,7 @@ shinyServer(function(input, output, session) {
         shinyjs::hide('div_variable_plots_group_scatter_controls')
         shinyjs::hide('selected_variable_plots_histogram_bins')
         shinyjs::hide('div_variable_plots_group_barchar_controls')
+        shinyjs::hide('selected_variable_plots_annotate_points')
     }
 
     hide_show_categoric_numeric <- function() {
@@ -252,6 +254,7 @@ shinyServer(function(input, output, session) {
         shinyjs::hide('selected_variable_plots_histogram_bins')
         shinyjs::hide('div_variable_plots_group_barchar_controls')
         shinyjs::hide('selected_variable_plot_numeric_graph_type')
+        shinyjs::hide('selected_variable_plots_annotate_points')
     }
 
     hide_show_categoric_categoric <- function() {
@@ -268,24 +271,7 @@ shinyServer(function(input, output, session) {
         shinyjs::hide('div_variable_plots_group_scatter_controls')
         shinyjs::hide('selected_variable_plots_histogram_bins')
         shinyjs::hide('selected_variable_plot_numeric_graph_type')
-    }
-
-    # e.g. turns e.g. `THIS_VALUE` to `This Value`
-    prettyfy_dataset <- function(dataset, primary_variable, comparison_variable, pretty_labels) {
-
-        dataset[, primary_variable] <- rt_pretty_text(dataset[, primary_variable])
-
-        if(!is.null(comparison_variable)) {
-
-            dataset[, comparison_variable] <- rt_pretty_text(dataset[, comparison_variable])
-        }
-
-        # AFTER we update the values, update the column names
-        # (can't do it before or the column names wouldn't be found)
-
-        colnames(dataset) <- rt_pretty_text(colnames(dataset))
-
-        return (dataset)
+        shinyjs::hide('selected_variable_plots_annotate_points')
     }
 
     prettyfy_plot <- function(plot, dataset, comparison_variable, annotate_points=FALSE) {
@@ -312,6 +298,7 @@ shinyServer(function(input, output, session) {
         primary_variable_local <- input$selected_variable_plot_variable
         comparison_variable_local <- input$selected_variable_plot_comparison
         selected_variable_plots_alpha_local <- input$selected_variable_plots_alpha
+        selected_variable_plots_annotate_points_local <- input$selected_variable_plots_annotate_points
         selected_variable_plots_base_size_local <- input$selected_variable_plots_base_size
         selected_variable_plots_histogram_bins_local <- input$selected_variable_plots_histogram_bins
         selected_variable_plots_jitter_local <- input$selected_variable_plots_jitter
@@ -339,6 +326,7 @@ shinyServer(function(input, output, session) {
                 log_message_variable('comparison_variable', comparison_variable_local)
                 log_message_variable('selected_variable_plots_base_size', selected_variable_plots_base_size_local)
                 log_message_variable('selected_variable_plots_pretty_text', selected_variable_plots_pretty_text_local)
+                log_message_variable('selected_variable_plots_annotate_points', selected_variable_plots_annotate_points_local)
                 
                 
                 if(selected_variable_plots_pretty_text_local) {
@@ -381,8 +369,9 @@ shinyServer(function(input, output, session) {
                         log_message_variable('selected_variable_plots_x_zoom_max', selected_variable_plots_x_zoom_max_local)
                         log_message_variable('selected_variable_plots_y_zoom_min', selected_variable_plots_y_zoom_min_local)
                         log_message_variable('selected_variable_plots_y_zoom_max', selected_variable_plots_y_zoom_max_local)
+                        log_message_variable('selected_variable_plots_annotate_points', selected_variable_plots_annotate_points_local)
 
-                        rt_explore_plot_scatter(dataset=dataset_local,
+                        scatter_plot <- rt_explore_plot_scatter(dataset=dataset_local,
                                                 variable=primary_variable_local,
                                                 comparison_variable=comparison_variable_local,
                                                 alpha=selected_variable_plots_alpha_local,
@@ -392,6 +381,11 @@ shinyServer(function(input, output, session) {
                                                 y_zoom_min=selected_variable_plots_y_zoom_min_local,
                                                 y_zoom_max=selected_variable_plots_y_zoom_max_local,
                                                 base_size=selected_variable_plots_base_size_local)
+
+                        prettyfy_plot(plot=scatter_plot,
+                                      dataset=dataset_local,
+                                      comparison_variable=comparison_variable_local,
+                                      annotate_points=selected_variable_plots_annotate_points_local)
 
                     ##########################################################################################
                     # NULL Or Categoric Secondary Variable
