@@ -401,9 +401,9 @@ shinyServer(function(input, output, session) {
                                                        color_variable=local_point_color)
                         
                         scatter_plot <- prettyfy_plot(plot=scatter_plot,
-                                      dataset=local_dataset,
-                                      comparison_variable=local_comparison_variable,
-                                      annotate_points=local_annotate_points)
+                                                      dataset=local_dataset,
+                                                      comparison_variable=local_comparison_variable,
+                                                      annotate_points=local_annotate_points)
                         
                         print(scatter_plot)
                     ##########################################################################################
