@@ -36,21 +36,25 @@ log_message_block_start <- function(message) {
 ##############################################################################################################
 # UI HELPERS
 ##############################################################################################################
-add_trend_line <- function(plot, selected_trend_line) {
+add_trend_line <- function(plot, trend_line_type, confidence_interval=TRUE, color_variable=NULL) {
 
-    if(selected_trend_line == 'None') {
+    if(trend_line_type == 'None') {
 
         return (plot)
 
     } else {
 
-        if(selected_trend_line == 'Straight') {
+        if(trend_line_type == 'Straight') {
         
-            return (plot + geom_smooth(method='lm'))
+            return (plot + geom_smooth(method='lm',
+                                       se=confidence_interval,
+                                       mapping=aes_string(color=color_variable)))
             
-        } else if(selected_trend_line == 'Smooth') {
+        } else if(trend_line_type == 'Smooth') {
         
-            return (plot + geom_smooth(method='loess'))
+            return (plot + geom_smooth(method='loess',
+                                       se=confidence_interval,
+                                       mapping=aes_string(color=color_variable)))
             
         } else {
             # this function isn't aware of the value which is an error   

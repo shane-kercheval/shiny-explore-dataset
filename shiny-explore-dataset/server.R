@@ -285,6 +285,7 @@ shinyServer(function(input, output, session) {
         selected_variable_plots_show_variable_totals_local <- input$selected_variable_plots_show_variable_totals
         selected_variable_plots_show_comparison_totals_local <- input$selected_variable_plots_show_comparison_totals
         selected_variable_plots_trend_line_local <- input$selected_variable_plots_trend_line
+        selected_variable_plots_trend_line_se_local <- input$selected_variable_plots_trend_line_se
         selected_variable_plots_x_zoom_min_local <- input$selected_variable_plots_x_zoom_min
         selected_variable_plots_x_zoom_max_local <- input$selected_variable_plots_x_zoom_max
         selected_variable_plots_y_zoom_min_local <- input$selected_variable_plots_y_zoom_min
@@ -371,6 +372,8 @@ shinyServer(function(input, output, session) {
                         log_message_variable('selected_variable_plots_alpha', selected_variable_plots_alpha_local)
                         log_message_variable('selected_variable_plots_jitter', selected_variable_plots_jitter_local)
                         log_message_variable('selected_variable_plots_trend_line', selected_variable_plots_trend_line_local)
+                        log_message_variable('selected_variable_plots_trend_line_se', selected_variable_plots_trend_line_se_local)
+
                         log_message_variable('selected_variable_plots_x_zoom_min', selected_variable_plots_x_zoom_min_local)
                         log_message_variable('selected_variable_plots_x_zoom_max', selected_variable_plots_x_zoom_max_local)
                         log_message_variable('selected_variable_plots_y_zoom_min', selected_variable_plots_y_zoom_min_local)
@@ -396,7 +399,12 @@ shinyServer(function(input, output, session) {
                                                          scale_x=selected_variable_plots_scale_x_log_base_10_local,
                                                          scale_y=selected_variable_plots_scale_y_log_base_10_local)
 
-                        scatter_plot <- add_trend_line(scatter_plot, selected_variable_plots_trend_line_local)
+                        add_confidence_interval <- !is.null(selected_variable_plots_trend_line_se_local) && 
+                            selected_variable_plots_trend_line_se_local == 'Yes'
+                        scatter_plot <- add_trend_line(plot=scatter_plot,
+                                                       trend_line_type=selected_variable_plots_trend_line_local,
+                                                       confidence_interval=add_confidence_interval,
+                                                       color_variable=selected_variable_plot_point_color_local)
                         
                         scatter_plot <- prettyfy_plot(plot=scatter_plot,
                                       dataset=dataset_local,
