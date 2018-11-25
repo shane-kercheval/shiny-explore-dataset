@@ -1,7 +1,7 @@
 should_log_message <- TRUE
 
 select_variable <- "<Select>"
-select_comparison_variable_optional <- "<Select (optional)>"
+select_variable_optional <- "<Select (optional)>"
 
 theme_base_size <- 16
 
@@ -94,6 +94,9 @@ hide_show_numeric_numeric <- function(session) {
     
     # scatterplot
 
+    shinyjs::show('selected_variable_plot_point_size_UI')
+    shinyjs::show('selected_variable_plot_point_color_UI')
+
     shinyjs::show('div_variable_plots_group_scatter_controls')
     shinyjs::show('div_variable_plots_group_x_zoom_controls')
     shinyjs::show('div_variable_plots_group_y_zoom_controls')
@@ -128,6 +131,9 @@ hide_show_numeric_categoric <- function(session, showing_boxplot) {
         updateCheckboxInput(session, 'selected_variable_plots_scale_y_log_base_10', value=FALSE)
     }
 
+    shinyjs::hide('selected_variable_plot_point_size_UI')
+    shinyjs::hide('selected_variable_plot_point_color_UI')
+
     shinyjs::show('selected_variable_plots_base_size')
     shinyjs::show('selected_variable_plots_numeric_graph_type')
 
@@ -141,6 +147,8 @@ hide_show_categoric_numeric <- function(session) {
     log_message('hide_show_categoric_numeric')
     
     # multi-boxplot
+    shinyjs::hide('selected_variable_plot_point_size_UI')
+    shinyjs::hide('selected_variable_plot_point_color_UI')
 
     shinyjs::show('div_variable_plots_group_y_zoom_controls')
     shinyjs::show('selected_variable_plots_base_size')
@@ -148,7 +156,7 @@ hide_show_categoric_numeric <- function(session) {
     shinyjs::hide('div_variable_plots_group_x_zoom_controls')
     # if we are hiding the x-controls, uncheck the scale_x_log10 option so it isn't carried over
     updateCheckboxInput(session, 'selected_variable_plots_scale_x_log_base_10', value=FALSE)
-    
+
     shinyjs::hide('div_variable_plots_group_scatter_controls')
     shinyjs::hide('selected_variable_plots_histogram_bins')
     shinyjs::hide('div_variable_plots_group_barchar_controls')
@@ -161,6 +169,9 @@ hide_show_categoric_categoric <- function(session) {
     log_message('hide_show_categoric_categoric')
     
     # grouped barchart
+
+    shinyjs::hide('selected_variable_plot_point_size_UI')
+    shinyjs::hide('selected_variable_plot_point_color_UI')
 
     shinyjs::show('div_variable_plots_group_barchar_controls')
     shinyjs::show('selected_variable_plots_base_size')

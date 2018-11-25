@@ -75,6 +75,8 @@ shinyUI(fluidPage(theme = "custom.css",
                         'Variables',
                         uiOutput('selected_variable_plot_variable_UI'),
                         uiOutput('selected_variable_plot_comparison_UI'),
+                        uiOutput('selected_variable_plot_point_color_UI'),
+                        uiOutput('selected_variable_plot_point_size_UI'),
                         style='default'
                     ),
                     bsCollapsePanel(

@@ -130,8 +130,32 @@ shinyServer(function(input, output, session) {
 
         selectInput(inputId='selected_variable_plot_comparison',
                     label = 'Comparison Variable',
-                    choices = c(select_comparison_variable_optional, colnames(dataset())),
-                    selected = select_comparison_variable_optional,
+                    choices = c(select_variable_optional, colnames(dataset())),
+                    selected = select_variable_optional,
+                    multiple = FALSE,
+                    selectize = TRUE,
+                    width = 500,
+                    size = NULL)
+    })
+
+    output$selected_variable_plot_point_color_UI <- renderUI({
+
+        selectInput(inputId='selected_variable_plot_point_color',
+                    label = 'Color Variable',
+                    choices = c(select_variable_optional, colnames(dataset())),
+                    selected = select_variable_optional,
+                    multiple = FALSE,
+                    selectize = TRUE,
+                    width = 500,
+                    size = NULL)
+    })
+
+    output$selected_variable_plot_point_size_UI <- renderUI({
+
+        selectInput(inputId='selected_variable_plot_point_size',
+                    label = 'Size Variable',
+                    choices = c(select_variable_optional, colnames(dataset())),
+                    selected = select_variable_optional,
                     multiple = FALSE,
                     selectize = TRUE,
                     width = 500,
@@ -143,8 +167,17 @@ shinyServer(function(input, output, session) {
         req(input$selected_variable_plot_variable)
         req(input$selected_variable_plot_comparison)
 
-        if(input$selected_variable_plot_variable != select_variable ||
-           input$selected_variable_plot_comparison != select_comparison_variable_optional) {
+        primary_variable_local <- input$selected_variable_plot_variable
+        comparison_variable_local <- input$selected_variable_plot_comparison
+
+        if(primary_variable_local == select_variable || comparison_variable_local == select_variable_optional) {
+
+            shinyjs::hide('selected_variable_plot_point_size_UI')
+            shinyjs::hide('selected_variable_plot_point_color_UI')
+
+        }
+
+        if(primary_variable_local != select_variable || comparison_variable_local != select_variable_optional) {
 
             updateCollapse(session, 'collapse_variable_plot_controls', open='Plot Options')
         }
@@ -229,13 +262,16 @@ shinyServer(function(input, output, session) {
 
         req(input$selected_variable_plot_variable)
         req(input$selected_variable_plot_comparison)
-        
+
         log_message_variable('selected_variable_plots_pretty_text', input$selected_variable_plots_pretty_text)
 
         # reactive data
         dataset_local <- dataset()
         primary_variable_local <- input$selected_variable_plot_variable
         comparison_variable_local <- input$selected_variable_plot_comparison
+        selected_variable_plot_point_size_local <- input$selected_variable_plot_point_size
+        selected_variable_plot_point_color_local <- input$selected_variable_plot_point_color
+
         selected_variable_plots_alpha_local <- input$selected_variable_plots_alpha
         selected_variable_plots_annotate_points_local <- input$selected_variable_plots_annotate_points
         selected_variable_plots_base_size_local <- input$selected_variable_plots_base_size
@@ -260,13 +296,29 @@ shinyServer(function(input, output, session) {
 
                 log_message_block_start('Plotting Variable Graph')
     
-                if(comparison_variable_local == select_comparison_variable_optional) {
+                # if there isn't a selection for these variables, then set them to NULL, because they will be
+                # passed to rtools functions (and if they aren't null, rtools expects column names)
+                if(comparison_variable_local == select_variable_optional) {
 
                     comparison_variable_local <- NULL
+                }
+                # these can actually be NULL (unlike comparison_variable_local which is req)
+                # these can't be req because they aren't even shown initially
+                if(is.null(selected_variable_plot_point_size_local) || 
+                    selected_variable_plot_point_size_local == select_variable_optional) {
+
+                    selected_variable_plot_point_size_local <- NULL
+                }
+                if(is.null(selected_variable_plot_point_color_local) ||
+                    selected_variable_plot_point_color_local == select_variable_optional) {
+
+                    selected_variable_plot_point_color_local <- NULL
                 }
 
                 log_message_variable('primary_variable', primary_variable_local)
                 log_message_variable('comparison_variable', comparison_variable_local)
+                log_message_variable('selected_variable_plot_point_size', selected_variable_plot_point_size_local)
+                log_message_variable('selected_variable_plot_point_color', selected_variable_plot_point_color_local)
                 log_message_variable('selected_variable_plots_base_size', selected_variable_plots_base_size_local)
                 log_message_variable('selected_variable_plots_pretty_text', selected_variable_plots_pretty_text_local)
                 log_message_variable('selected_variable_plots_annotate_points', selected_variable_plots_annotate_points_local)
@@ -285,9 +337,19 @@ shinyServer(function(input, output, session) {
 
                         comparison_variable_local <- rt_pretty_text(comparison_variable_local)
                     }
+                    if(!is.null(selected_variable_plot_point_size_local)) {
+
+                        selected_variable_plot_point_size_local <- rt_pretty_text(selected_variable_plot_point_size_local)
+                    }
+                    if(!is.null(selected_variable_plot_point_color_local)) {
+
+                        selected_variable_plot_point_color_local <- rt_pretty_text(selected_variable_plot_point_color_local)
+                    }
 
                     log_message_variable('updated primary_variable', primary_variable_local)
                     log_message_variable('updated comparison_variable', comparison_variable_local)
+                    log_message_variable('updated selected_variable_plot_point_size', selected_variable_plot_point_size_local)
+                    log_message_variable('updated selected_variable_plot_point_color', selected_variable_plot_point_color_local)
                     log_message_generic('column names', paste0(colnames(dataset_local), collapse = '; '))
                 }
 
@@ -320,6 +382,8 @@ shinyServer(function(input, output, session) {
                         scatter_plot <- rt_explore_plot_scatter(dataset=dataset_local,
                                                 variable=primary_variable_local,
                                                 comparison_variable=comparison_variable_local,
+                                                color_variable=selected_variable_plot_point_color_local,
+                                                size_variable=selected_variable_plot_point_size_local,
                                                 alpha=selected_variable_plots_alpha_local,
                                                 jitter=selected_variable_plots_jitter_local,
                                                 x_zoom_min=selected_variable_plots_x_zoom_min_local,
