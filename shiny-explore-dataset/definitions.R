@@ -1,7 +1,7 @@
 should_log_message <- TRUE
 
-select_variable <- "<Select variable>"
-select_comparison_variable_optional <- "<Select comparison variable (optional)>"
+select_variable <- "<Select>"
+select_comparison_variable_optional <- "<Select (optional)>"
 
 theme_base_size <- 16
 
