@@ -347,7 +347,7 @@ shinyServer(function(input, output, session) {
 
                         show_boxplot <- selected_variable_plots_numeric_graph_type_local == 'Boxplot'
 
-                        hide_show_numeric_categoric(session=session, show_y_controls=show_boxplot)
+                        hide_show_numeric_categoric(session=session, showing_boxplot=show_boxplot)
 
                         if(show_boxplot) {
 
@@ -382,6 +382,7 @@ shinyServer(function(input, output, session) {
                             
                             histogram_plot <- rt_explore_plot_histogram(dataset=dataset_local,
                                                                         variable=primary_variable_local,
+                                                                        comparison_variable=comparison_variable_local,
                                                                         num_bins=selected_variable_plots_histogram_bins_local,
                                                                         x_zoom_min=selected_variable_plots_x_zoom_min_local,
                                                                         x_zoom_max=selected_variable_plots_x_zoom_max_local,

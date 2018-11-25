@@ -105,13 +105,14 @@ hide_show_numeric_numeric <- function(session) {
     shinyjs::hide('selected_variable_plots_numeric_graph_type')
 }
 
-hide_show_numeric_categoric <- function(session, show_y_controls) {
+hide_show_numeric_categoric <- function(session, showing_boxplot) {
     
     log_message('hide_show_numeric_categoric')
     
     # could be a boxplot or a histogram; if it is a boxplot, we want to show y-axis-controls, otherwise x-axis
-    if(show_y_controls) {
+    if(showing_boxplot) {
 
+        shinyjs::hide('selected_variable_plots_histogram_bins')
         shinyjs::show('div_variable_plots_group_y_zoom_controls')
         shinyjs::hide('div_variable_plots_group_x_zoom_controls')
         # if we are hiding the x-controls, uncheck the scale_x_log10 option so it isn't carried over
@@ -120,6 +121,7 @@ hide_show_numeric_categoric <- function(session, show_y_controls) {
 
     } else {
 
+        shinyjs::show('selected_variable_plots_histogram_bins')
         shinyjs::hide('div_variable_plots_group_y_zoom_controls')
         shinyjs::show('div_variable_plots_group_x_zoom_controls')
         # if we are hiding the y-controls, uncheck the scale_y_log10 option so it isn't carried over
@@ -130,7 +132,6 @@ hide_show_numeric_categoric <- function(session, show_y_controls) {
     shinyjs::show('selected_variable_plots_numeric_graph_type')
 
     shinyjs::hide('div_variable_plots_group_scatter_controls')
-    shinyjs::hide('selected_variable_plots_histogram_bins')
     shinyjs::hide('div_variable_plots_group_barchar_controls')
     shinyjs::hide('selected_variable_plots_annotate_points')
 }
