@@ -36,6 +36,20 @@ log_message_block_start <- function(message) {
 ##############################################################################################################
 # UI HELPERS
 ##############################################################################################################
+dplyr_friendly_variable <- function(x) {
+    # used because if there is a column that is named in the form of "My Column", then aes_string requireds
+    # "`My Column`". Wrapping a variable name such as "`my_column`" still works, so we wrap for all variables 
+
+    if (is.null(x)) {
+
+        return (NULL)
+
+    } else {
+
+        return (paste0('`', x, '`'))
+    }
+}
+
 add_trend_line <- function(plot, trend_line_type, confidence_interval=TRUE, color_variable=NULL) {
 
     if(trend_line_type == 'None') {
@@ -48,13 +62,13 @@ add_trend_line <- function(plot, trend_line_type, confidence_interval=TRUE, colo
         
             return (plot + geom_smooth(method='lm',
                                        se=confidence_interval,
-                                       mapping=aes_string(color=color_variable)))
+                                       mapping=aes_string(color=dplyr_friendly_variable(color_variable))))
             
         } else if(trend_line_type == 'Smooth') {
         
             return (plot + geom_smooth(method='loess',
                                        se=confidence_interval,
-                                       mapping=aes_string(color=color_variable)))
+                                       mapping=aes_string(color=dplyr_friendly_variable(color_variable))))
             
         } else {
             # this function isn't aware of the value which is an error   
