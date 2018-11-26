@@ -178,11 +178,14 @@ shinyUI(fluidPage(theme="custom.css",
                         'Variables',
                         uiOutput('regression_selected_dependent_variable_UI'),
                         uiOutput('regression_selected_independent_variables_UI'),
+                        actionButton(inputId='regression_toggle_all_ind_variables',
+                                     label='Toggle All Variables'),
                         style='default'
                     ),
                     bsCollapsePanel(
-                        'Interaction Shit',
-                        uiOutput('tbd'),
+                        'Interaction Effects',
+                        uiOutput('regression_selected_interaction_term1_UI'),
+                        uiOutput('regression_selected_interaction_term2_UI'),
                         style='default'
                     )
                 )

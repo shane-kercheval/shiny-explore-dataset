@@ -103,11 +103,27 @@ shinyServer(function(input, output, session) {
             return (NULL)
         }
 
+        local_interaction_term1 <- input$regression_selected_interaction_term1
+        local_interaction_term2 <- input$regression_selected_interaction_term2
+
         withProgress(value=1/2, message='Running Regression',{
+
+            interaction_variables <- NULL
+
+            if(!is.null(local_interaction_term1) && local_interaction_term1 != select_variable &&
+               !is.null(local_interaction_term2) && local_interaction_term2 != select_variable) {
+
+                interaction_variables <- list(c(local_interaction_term1,
+                                                local_interaction_term2))
+            }
+
             # updates to reactive variables will not trigger an update here, only regression_run_button
             results <- easy_regression(dataset=dataset(),
                                        dependent_variable=input$regression_selected_dependent_variable,
-                                       independent_variables=input$regression_selected_independent_variables)
+                                       independent_variables=input$regression_selected_independent_variables,
+                                       # list of vectors, each element in the list is a pair of interaction terms
+                                       # only supporting two interaction variables at the moment
+                                       interaction_variables=interaction_variables)
 
             shinyjs::show('regression_formula_header')
             shinyjs::show('regression_summary_header')
@@ -241,8 +257,64 @@ shinyServer(function(input, output, session) {
                            inline=FALSE,
                            width=NULL)
     })
+    observeEvent(input$regression_toggle_all_ind_variables, {
 
+        # if none selected, select all, otherwise (if any selected); unselect all
+        if(length(input$regression_selected_independent_variables) == 0) {
 
+            column_names <- colnames(dataset())
+            possible_variables <- column_names[! column_names %in% input$regression_selected_dependent_variable]        
+
+            updateCheckboxGroupInput(session=session,
+                                     inputId='regression_selected_independent_variables',
+                                     selected=possible_variables)
+
+        } else {
+
+            updateCheckboxGroupInput(session=session,
+                                     inputId='regression_selected_independent_variables',
+                                     selected=character(0))
+        }
+
+    })
+
+    output$regression_selected_interaction_term1_UI <- renderUI({
+
+        req(input$regression_selected_dependent_variable)
+
+        # cannot select dependent_variable
+        column_names <- colnames(dataset())
+        possible_variables <- column_names[! column_names %in% input$regression_selected_dependent_variable]
+
+        selectInput(inputId='regression_selected_interaction_term1',
+                    label='Interaction Variable 1',
+                    choices=c(select_variable, possible_variables),
+                    selected=select_variable,
+                    multiple=FALSE,
+                    selectize=TRUE,
+                    width=500,
+                    size=NULL)
+    })
+
+    output$regression_selected_interaction_term2_UI <- renderUI({
+
+        req(input$regression_selected_dependent_variable)
+        req(input$regression_selected_interaction_term1)
+
+        # cannot select dependent_variable or the first term
+        column_names <- colnames(dataset())
+        possible_variables <- column_names[! column_names %in% c(input$regression_selected_dependent_variable,
+                                                                 input$regression_selected_interaction_term1)]
+
+        selectInput(inputId='regression_selected_interaction_term2',
+                    label='Interaction Variable 2',
+                    choices=c(select_variable, possible_variables),
+                    selected=select_variable,
+                    multiple=FALSE,
+                    selectize=TRUE,
+                    width=500,
+                    size=NULL)
+    })
 
 
     ##########################################################################################################

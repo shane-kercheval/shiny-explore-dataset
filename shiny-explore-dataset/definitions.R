@@ -211,10 +211,31 @@ hide_show_categoric_categoric <- function(session) {
 easy_regression <- function(dataset,
                             dependent_variable,
                             independent_variables,
-                            interaction_effects=NULL,
+                            interaction_variables=NULL,
                             polynomial=NULL) {
 
-    formula <- paste(dependent_variable, '~', paste(independent_variables, collapse =' + '))
+    if(is.null(interaction_variables)) {
+        
+        interaction_variables_formula <- ''
+    
+    } else {
+
+        interaction_variables_formula <- paste(map_chr(interaction_variables, ~ paste(., collapse =' * ')),
+                                                   collapse = ' + ')
+    }
+    
+    if(is.null(independent_variables) || length(independent_variables) == 0) {
+
+        independent_variables_formula <- interaction_variables_formula
+
+    } else {
+        
+        independent_variables_formula <- paste(interaction_variables_formula,
+                                               '+',
+                                               paste(independent_variables, collapse =' + '))
+    }
+
+    formula <- paste(dependent_variable, '~', independent_variables_formula)
     lm_result <- lm(formula, data=dataset, na.action = na.exclude)
 
     return (
@@ -224,14 +245,33 @@ easy_regression <- function(dataset,
     )
 }
 
-# dataset <- read.csv("example_datasets/housing.csv", header=TRUE)
-# dependent_variable <- 'median_house_value'
-# independent_variables <- c('longitude', 'latitude', 'housing_median_age', 'total_rooms', 'total_bedrooms', 'population', 'households', 'median_income', 'ocean_proximity')
-# results <- easy_regression(dataset, dependent_variable, independent_variables)
-# summary(results$regression_results)
-#plot(results$regression_results, which=c(1, 2, 3, 4, 5, 6))
-# plot(results$regression_results, which=c(1, 2, 3, 4))
+# # dataset <- read.csv("example_datasets/housing.csv", header=TRUE)
+# # dependent_variable <- 'median_house_value'
+# # independent_variables <- c('longitude', 'latitude', 'housing_median_age', 'total_rooms', 'total_bedrooms', 'population', 'households', 'median_income', 'ocean_proximity')
+# # results <- easy_regression(dataset, dependent_variable, independent_variables)
+# # summary(results$results)
+# # plot(results$results, which=c(1, 2, 3, 4, 5, 6))
+# # plot(results$results, which=c(1, 2, 3, 4))
+# # 
+# # summary(lm(median_house_value ~ housing_median_age * total_rooms + housing_median_age + total_rooms, data=dataset))
 # 
-# 
-# 
-# 
+# #interaction_variables <- list(c('housing_median_age', 'total_rooms'), c('total_rooms', 'housing_median_age'))
+# interaction_variables <- list(c('housing_median_age', 'total_rooms'))
+# paste(' ', paste(map_chr(interaction_variables, ~ paste(., collapse =' * ')), collapse = ' + '), '+ ')
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
