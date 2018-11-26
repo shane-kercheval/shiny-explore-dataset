@@ -102,11 +102,13 @@ shinyServer(function(input, output, session) {
         if(input$regression_selected_dependent_variable == select_variable) {
             return (NULL)
         }
-
-        # updates to reactive variables will not trigger an update here, only regression_run_button
-        easy_regression(dataset=dataset(),
-                        dependent_variable=input$regression_selected_dependent_variable,
-                        independent_variables=input$regression_selected_independent_variables)
+        
+        withProgress(value=1/2, message='Running Regression',{
+            # updates to reactive variables will not trigger an update here, only regression_run_button
+            easy_regression(dataset=dataset(),
+                            dependent_variable=input$regression_selected_dependent_variable,
+                            independent_variables=input$regression_selected_independent_variables)
+        })
     })
 
 
@@ -602,59 +604,32 @@ shinyServer(function(input, output, session) {
         paste('Number of missing/removed rows from dataset:', number_rows_missing)
     })
 
-    output$regression_diagnostic_residuals_vs_fitted <- renderPlot({
+    render_diagnostic_plot <- function(graph_index, graph_width_function) {
 
-        req(regression_results())
+        return (
+            renderPlot({
 
-        withProgress(value=1/2, message='Creating Regression Diagnostic Graph',{
+                req(regression_results())
 
-            plot(regression_results()$regression_results, which=1)
-        })
-    })
-    output$regression_diagnostic_normal_qq <- renderPlot({
+                withProgress(value=1/2, message='Creating Regression Diagnostic Graph',{
 
-        req(regression_results())
+                    plot(regression_results()$regression_results, which=graph_index)
+                })
+        
+            }, height = graph_width_function)
+        )
+    }
 
-        withProgress(value=1/2, message='Creating Regression Diagnostic Graph',{
-
-            plot(regression_results()$regression_results, which=2)
-        })
-    })
-    output$regression_diagnostic_scale_location <- renderPlot({
-
-        req(regression_results())
-
-        withProgress(value=1/2, message='Creating Regression Diagnostic Graph',{
-
-            plot(regression_results()$regression_results, which=3)
-        })
-    })
-    output$regression_diagnostic_cooks_distance <- renderPlot({
-
-        req(regression_results())
-
-        withProgress(value=1/2, message='Creating Regression Diagnostic Graph',{
-
-            plot(regression_results()$regression_results, which=4)
-        })
-    })
-    output$regression_diagnostic_residuals_vs_leverage <- renderPlot({
-
-        req(regression_results())
-
-        withProgress(value=1/2, message='Creating Regression Diagnostic Graph',{
-
-            plot(regression_results()$regression_results, which=5)
-        })
-    })
-    output$regression_diagnostic_cooks_distance_vs_leverage <- renderPlot({
-
-        req(regression_results())
-
-        withProgress(value=1/2, message='Creating Regression Diagnostic Graph',{
-
-            plot(regression_results()$regression_results, which=6)
-        })
-    })
-
+    output$regression_diagnostic_residuals_vs_fitted <- render_diagnostic_plot(graph_index=1,
+        graph_width_function=function() {0.66 * session$clientData$output_regression_diagnostic_residuals_vs_fitted_width})
+    output$regression_diagnostic_normal_qq <- render_diagnostic_plot(graph_index=2,
+        graph_width_function=function() {0.66 * session$clientData$output_regression_diagnostic_normal_qq_width})
+    output$regression_diagnostic_scale_location <- render_diagnostic_plot(graph_index=3,
+        graph_width_function=function() {0.66 * session$clientData$output_regression_diagnostic_scale_location_width})
+    output$regression_diagnostic_cooks_distance <- render_diagnostic_plot(graph_index=4,
+        graph_width_function=function() {0.66 * session$clientData$output_regression_diagnostic_cooks_distance_width})
+    output$regression_diagnostic_residuals_vs_leverage <- render_diagnostic_plot(graph_index=5,
+        graph_width_function=function() {0.66 * session$clientData$output_regression_diagnostic_residuals_vs_leverage_width})
+    output$regression_diagnostic_cooks_distance_vs_leverage <- render_diagnostic_plot(graph_index=6,
+        graph_width_function=function() {0.66 * session$clientData$output_regression_diagnostic_cooks_distance_vs_leverage_width})
 })

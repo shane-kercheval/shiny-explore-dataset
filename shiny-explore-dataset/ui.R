@@ -197,27 +197,21 @@ shinyUI(fluidPage(theme="custom.css",
                         tags$br(),
                         tabsetPanel(type="tabs",
                             tabPanel("Residuals vs Fittted",
-                                tags$br(),
                                 plotOutput(outputId='regression_diagnostic_residuals_vs_fitted')
                             ),
                             tabPanel("Normal Q-Q",
-                                tags$br(),
                                 plotOutput(outputId='regression_diagnostic_normal_qq')
                             ),
                             tabPanel("Scale-Location",
-                                tags$br(),
                                 plotOutput(outputId='regression_diagnostic_scale_location')
                             ),
                             tabPanel("Cooks Distance",
-                                tags$br(),
                                 plotOutput(outputId='regression_diagnostic_cooks_distance')
                             ),
                             tabPanel("Residuals vs. Leverage",
-                                tags$br(),
                                 plotOutput(outputId='regression_diagnostic_residuals_vs_leverage')
                             ),
                             tabPanel("Cooks Distance vs Leverage",
-                                tags$br(),
                                 plotOutput(outputId='regression_diagnostic_cooks_distance_vs_leverage')
                             )
                         )
