@@ -102,12 +102,18 @@ shinyServer(function(input, output, session) {
         if(input$regression_selected_dependent_variable == select_variable) {
             return (NULL)
         }
-        
+
         withProgress(value=1/2, message='Running Regression',{
             # updates to reactive variables will not trigger an update here, only regression_run_button
-            easy_regression(dataset=dataset(),
-                            dependent_variable=input$regression_selected_dependent_variable,
-                            independent_variables=input$regression_selected_independent_variables)
+            results <- easy_regression(dataset=dataset(),
+                                       dependent_variable=input$regression_selected_dependent_variable,
+                                       independent_variables=input$regression_selected_independent_variables)
+
+            shinyjs::show('regression_formula_header')
+            shinyjs::show('regression_summary_header')
+            shinyjs::show('regression_vif_header')
+            
+            return (results)
         })
     })
 
@@ -614,7 +620,14 @@ shinyServer(function(input, output, session) {
 
         req(regression_results())
 
-        paste('Formula:', regression_results()$formula)
+        regression_results()$formula
+    })
+
+    output$regression_summary_vif <- renderPrint({
+
+        req(regression_results())
+
+        car::vif(regression_results()$results)
     })
 
     render_diagnostic_plot <- function(graph_index, graph_width_function) {
