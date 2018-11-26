@@ -93,12 +93,32 @@ shinyServer(function(input, output, session) {
         })
     })
 
+
+    ##########################################################################################################
+    # Run Regression when user clicks Run button
+    ##########################################################################################################    
+    regression_results <- eventReactive(input$regression_run_button, {
+
+        if(input$regression_selected_dependent_variable == select_variable) {
+            return (NULL)
+        }
+
+        # updates to reactive variables will not trigger an update here, only regression_run_button
+        easy_regression(dataset=dataset(),
+                        dependent_variable=input$regression_selected_dependent_variable,
+                        independent_variables=input$regression_selected_independent_variables)
+    })
+
+
     ##########################################################################################################
     ##########################################################################################################
     # REACTIVE UI
     ##########################################################################################################
     ##########################################################################################################
 
+    ##########################################################################################################
+    # Variable Plot Reactive UI
+    ##########################################################################################################
     output$selected_numeric_summary_options_UI <- renderUI({
 
         # reactive data
@@ -183,12 +203,49 @@ shinyServer(function(input, output, session) {
         }
     })
 
+
+    ##########################################################################################################
+    # Regression Reactive UI
+    ##########################################################################################################
+    output$regression_selected_dependent_variable_UI <- renderUI({
+
+        selectInput(inputId='regression_selected_dependent_variable',
+                    label='Dependent Variable',
+                    choices=c(select_variable, colnames(dataset())),
+                    selected=select_variable,
+                    multiple=FALSE,
+                    selectize=TRUE,
+                    width=500,
+                    size=NULL)
+    })
+
+    output$regression_selected_independent_variables_UI <- renderUI({
+
+        req(input$regression_selected_dependent_variable)
+
+        column_names <- colnames(dataset())
+        possible_variables <- column_names[! column_names %in% input$regression_selected_dependent_variable]        
+
+        checkboxGroupInput(inputId='regression_selected_independent_variables',
+                           label='Independent Variables',
+                           choices=possible_variables,
+                           selected=possible_variables,
+                           inline=FALSE,
+                           width=NULL)
+    })
+
+
+
+
     ##########################################################################################################
     ##########################################################################################################
     # RENDER OUTPUT
     ##########################################################################################################
     ##########################################################################################################
 
+    ##########################################################################################################
+    # Variable Plot Output
+    ##########################################################################################################
     output$dataset_head_table <- renderDataTable({
 
         head(dataset(), 500)
@@ -525,4 +582,79 @@ shinyServer(function(input, output, session) {
 
         session$clientData$output_variable_plot_width * 0.66  # set height to % of width
     })
+
+    ##########################################################################################################
+    # Regression Output
+    ##########################################################################################################
+    output$regression_summary_output <- renderPrint({
+
+        req(regression_results())
+
+        summary(regression_results()$regression_results)
+    })
+
+    output$regression_number_of_rows_missing_removed <- renderText({
+
+        req(regression_results())
+
+        number_rows_missing <- length(regression_results()$rows_excluded)
+
+        paste('Number of missing/removed rows from dataset:', number_rows_missing)
+    })
+
+    output$regression_diagnostic_residuals_vs_fitted <- renderPlot({
+
+        req(regression_results())
+
+        withProgress(value=1/2, message='Creating Regression Diagnostic Graph',{
+
+            plot(regression_results()$regression_results, which=1)
+        })
+    })
+    output$regression_diagnostic_normal_qq <- renderPlot({
+
+        req(regression_results())
+
+        withProgress(value=1/2, message='Creating Regression Diagnostic Graph',{
+
+            plot(regression_results()$regression_results, which=2)
+        })
+    })
+    output$regression_diagnostic_scale_location <- renderPlot({
+
+        req(regression_results())
+
+        withProgress(value=1/2, message='Creating Regression Diagnostic Graph',{
+
+            plot(regression_results()$regression_results, which=3)
+        })
+    })
+    output$regression_diagnostic_cooks_distance <- renderPlot({
+
+        req(regression_results())
+
+        withProgress(value=1/2, message='Creating Regression Diagnostic Graph',{
+
+            plot(regression_results()$regression_results, which=4)
+        })
+    })
+    output$regression_diagnostic_residuals_vs_leverage <- renderPlot({
+
+        req(regression_results())
+
+        withProgress(value=1/2, message='Creating Regression Diagnostic Graph',{
+
+            plot(regression_results()$regression_results, which=5)
+        })
+    })
+    output$regression_diagnostic_cooks_distance_vs_leverage <- renderPlot({
+
+        req(regression_results())
+
+        withProgress(value=1/2, message='Creating Regression Diagnostic Graph',{
+
+            plot(regression_results()$regression_results, which=6)
+        })
+    })
+
 })

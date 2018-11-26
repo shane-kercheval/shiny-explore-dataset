@@ -4,7 +4,7 @@ library(shinyjs)
 library(shinyBS)
 source('definitions.R')
 
-shinyUI(fluidPage(theme = "custom.css",
+shinyUI(fluidPage(theme="custom.css",
   
     useShinyjs(),
 
@@ -44,21 +44,21 @@ shinyUI(fluidPage(theme = "custom.css",
                     class='input-control-style',
                     sliderTextInput(inputId='selected_correlation_corr_threshold',
                                     label='Min Correlation Threshold', ## percent increase
-                                    choices = seq(0, 1, 0.05),
-                                    selected = 0,
-                                    grid = TRUE),
+                                    choices=seq(0, 1, 0.05),
+                                    selected=0,
+                                    grid=TRUE),
                     sliderTextInput(inputId='selected_correlation_p_value_threshold',
                                     label='Max P-Value Treshold',
-                                    choices = seq(0, 1, 0.05),
-                                    selected = 1,
-                                    grid = TRUE),
+                                    choices=seq(0, 1, 0.05),
+                                    selected=1,
+                                    grid=TRUE),
                     sliderTextInput(inputId='selected_correlation_base_size',
                                     label='Text Size',
-                                    choices = seq(6, 20, 1),
-                                    selected = 15,
-                                    grid = TRUE),
+                                    choices=seq(6, 20, 1),
+                                    selected=15,
+                                    grid=TRUE),
                     checkboxInput(inputId='selected_correlation_pretty_text',
-                                       label='Pretty Text', value = FALSE, width = NULL)
+                                  label='Pretty Text', value=FALSE, width=NULL)
                     )
             ),
             column(10,
@@ -70,7 +70,7 @@ shinyUI(fluidPage(theme = "custom.css",
             column(3,
                 class='column-input-control-style',
 
-                bsCollapse(id='collapse_variable_plot_controls', open = 'Variables', multiple = TRUE,
+                bsCollapse(id='collapse_variable_plot_controls', open='Variables', multiple=TRUE,
                     bsCollapsePanel(
                         'Variables',
                         uiOutput('selected_variable_plot_variable_UI'),
@@ -89,11 +89,11 @@ shinyUI(fluidPage(theme = "custom.css",
                         ),
                         shinyjs::hidden(tags$div(id='div_variable_plots_group_barchar_controls',
                              checkboxInput(inputId='selected_variable_plots_order_by_count',
-                                           label='Order By Totals', value = TRUE, width = NULL),
+                                           label='Order By Totals', value=TRUE, width=NULL),
                              checkboxInput(inputId='selected_variable_plots_show_variable_totals',
-                                           label='Show Variable Totals', value = TRUE, width = NULL),
+                                           label='Show Variable Totals', value=TRUE, width=NULL),
                              checkboxInput(inputId='selected_variable_plots_show_comparison_totals',
-                                           label='Show Comparison Totals', value = TRUE, width = NULL)
+                                           label='Show Comparison Totals', value=TRUE, width=NULL)
                         )),
                         shinyjs::hidden(
                              numericInput(inputId='selected_variable_plots_histogram_bins',
@@ -103,27 +103,27 @@ shinyUI(fluidPage(theme = "custom.css",
                         shinyjs::hidden(tags$div(id='div_variable_plots_group_scatter_controls',
                             sliderTextInput(inputId='selected_variable_plots_alpha',
                                             label='Transparency',
-                                            choices = seq(0.1, 1, 0.1),
-                                            selected = 0.3,
-                                            grid = TRUE),
+                                            choices=seq(0.1, 1, 0.1),
+                                            selected=0.3,
+                                            grid=TRUE),
                             checkboxInput(inputId='selected_variable_plots_jitter',
-                                          label='Jitter', value = FALSE, width = NULL),
+                                          label='Jitter', value=FALSE, width=NULL),
                             radioButtons(inputId='selected_variable_plots_trend_line',
-                                                    label='Trend Line:',
-                                                    choices=c('None', 'Straight', 'Smooth'),
-                                                    selected = 'None',
-                                                    inline = TRUE,
-                                                    width = NULL),
+                                         label='Trend Line:',
+                                         choices=c('None', 'Straight', 'Smooth'),
+                                         selected='None',
+                                         inline=TRUE,
+                                         width=NULL),
                             radioButtons(inputId='selected_variable_plots_trend_line_se',
-                                                    label='Trend Confidence Interval:',
-                                                    choices=c('No', 'Yes'),
-                                                    selected = 'Yes',
-                                                    inline = TRUE,
-                                                    width = NULL)
+                                         label='Trend Confidence Interval:',
+                                         choices=c('No', 'Yes'),
+                                         selected='Yes',
+                                         inline=TRUE,
+                                         width=NULL)
                         )),
                         shinyjs::hidden(tags$div(id='div_variable_plots_group_x_zoom_controls',
                              checkboxInput(inputId='selected_variable_plots_scale_x_log_base_10',
-                                           label='Scale X-Axis Log 10', value = FALSE, width = NULL),
+                                           label='Scale X-Axis Log 10', value=FALSE, width=NULL),
                              numericInput(inputId='selected_variable_plots_x_zoom_min',
                                           label='X-Axis Zoom Min',
                                           value=NULL),
@@ -133,7 +133,7 @@ shinyUI(fluidPage(theme = "custom.css",
                         )),
                         shinyjs::hidden(tags$div(id='div_variable_plots_group_y_zoom_controls',
                              checkboxInput(inputId='selected_variable_plots_scale_y_log_base_10',
-                                           label='Scale Y-Axis Log 10', value = FALSE, width = NULL),
+                                           label='Scale Y-Axis Log 10', value=FALSE, width=NULL),
                              numericInput(inputId='selected_variable_plots_y_zoom_min',
                                           label='Y-Axis Zoom Min',
                                           value=NULL),
@@ -147,14 +147,14 @@ shinyUI(fluidPage(theme = "custom.css",
                         'Pretty Options',
                         sliderTextInput(inputId='selected_variable_plots_base_size',
                                         label='Text Size',
-                                        choices = seq(6, 20, 1),
-                                        selected = 15,
-                                        grid = TRUE),
+                                        choices=seq(6, 20, 1),
+                                        selected=15,
+                                        grid=TRUE),
                         checkboxInput(inputId='selected_variable_plots_pretty_text',
-                                      label='Pretty Text', value = FALSE, width = NULL),
+                                      label='Pretty Text', value=FALSE, width=NULL),
                         shinyjs::hidden(
                            checkboxInput(inputId='selected_variable_plots_annotate_points',
-                                         label='Annotate Points', value = FALSE, width = NULL)
+                                         label='Annotate Points', value=FALSE, width=NULL)
                         ),
                         style='default'
                     )
@@ -162,6 +162,67 @@ shinyUI(fluidPage(theme = "custom.css",
             ),
             column(9,
                 plotOutput(outputId='variable_plot')
+            )
+        ),
+        tabPanel(
+            'Regression',
+            column(3,
+                class='column-input-control-style',
+
+                bsCollapse(id='collapse_variable_plot_controls', open='Variables', multiple=TRUE,
+                    bsCollapsePanel(
+                        'Variables',
+                        uiOutput('regression_selected_dependent_variable_UI'),
+                        uiOutput('regression_selected_independent_variables_UI'),
+                        style='default'
+                    ),
+                    bsCollapsePanel(
+                        'Interaction Shit',
+                        uiOutput('tbd'),
+                        style='default'
+                    )
+                )
+            ),
+            column(9,
+                tabsetPanel(type="tabs",
+                    tabPanel("Output",
+                        tags$br(),
+                        actionButton(inputId='regression_run_button', label='Run Regression'),
+                        tags$br(),tags$br(),
+                        verbatimTextOutput(outputId='regression_number_of_rows_missing_removed'),
+                        tags$br(),
+                        verbatimTextOutput(outputId='regression_summary_output')
+                    ),
+                    tabPanel("Diagnostic Plots",
+                        tags$br(),
+                        tabsetPanel(type="tabs",
+                            tabPanel("Residuals vs Fittted",
+                                tags$br(),
+                                plotOutput(outputId='regression_diagnostic_residuals_vs_fitted')
+                            ),
+                            tabPanel("Normal Q-Q",
+                                tags$br(),
+                                plotOutput(outputId='regression_diagnostic_normal_qq')
+                            ),
+                            tabPanel("Scale-Location",
+                                tags$br(),
+                                plotOutput(outputId='regression_diagnostic_scale_location')
+                            ),
+                            tabPanel("Cooks Distance",
+                                tags$br(),
+                                plotOutput(outputId='regression_diagnostic_cooks_distance')
+                            ),
+                            tabPanel("Residuals vs. Leverage",
+                                tags$br(),
+                                plotOutput(outputId='regression_diagnostic_residuals_vs_leverage')
+                            ),
+                            tabPanel("Cooks Distance vs Leverage",
+                                tags$br(),
+                                plotOutput(outputId='regression_diagnostic_cooks_distance_vs_leverage')
+                            )
+                        )
+                    )
+                )   
             )
         ),
         widths=c(2,10)

@@ -206,3 +206,33 @@ hide_show_categoric_categoric <- function(session) {
     shinyjs::hide('selected_variable_plots_numeric_graph_type')
     shinyjs::hide('selected_variable_plots_annotate_points')
 }
+
+
+easy_regression <- function(dataset,
+                            dependent_variable,
+                            independent_variables,
+                            interaction_effects=NULL,
+                            polynomial=NULL) {
+
+    formula <- paste(dependent_variable, '~', paste(independent_variables, collapse =' + '))
+
+    lm_result <- lm(formula, data=dataset, na.action = na.exclude)
+
+
+    return (
+        list(rows_excluded=which(!complete.cases(dataset[, independent_variables])),
+             regression_results=lm_result)
+    )
+}
+
+# dataset <- read.csv("example_datasets/housing.csv", header=TRUE)
+# dependent_variable <- 'median_house_value'
+# independent_variables <- c('longitude', 'latitude', 'housing_median_age', 'total_rooms', 'total_bedrooms', 'population', 'households', 'median_income', 'ocean_proximity')
+# results <- easy_regression(dataset, dependent_variable, independent_variables)
+# summary(results$regression_results)
+#plot(results$regression_results, which=c(1, 2, 3, 4, 5, 6))
+# plot(results$regression_results, which=c(1, 2, 3, 4))
+# 
+# 
+# 
+# 
