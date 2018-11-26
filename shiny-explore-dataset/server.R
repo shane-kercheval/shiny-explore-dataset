@@ -126,13 +126,12 @@ shinyServer(function(input, output, session) {
                                        interaction_variables=interaction_variables)
 
             shinyjs::show('regression_formula_header')
-            shinyjs::show('regression_summary_header')
+            shinyjs::show('regression_summary_header_UI')
             shinyjs::show('regression_vif_header')
             
             return (results)
         })
     })
-
 
     ##########################################################################################################
     ##########################################################################################################
@@ -257,6 +256,25 @@ shinyServer(function(input, output, session) {
                            inline=FALSE,
                            width=NULL)
     })
+
+    output$regression_summary_header_UI <- renderUI({
+
+        req(regression_results())
+
+        local_regression_results <- regression_results()
+
+        if(is.null(local_regression_results$reference)) {  # reference is filled for logistic regression
+
+            reference <- ''            
+
+        } else {
+
+            reference <- paste0('(reference: `', local_regression_results$reference, '`)')
+        }
+
+        tags$h4(paste(regression_results()$type, 'Summary', reference))
+    })
+
     observeEvent(input$regression_toggle_all_ind_variables, {
 
         # if none selected, select all, otherwise (if any selected); unselect all

@@ -199,7 +199,7 @@ shinyUI(fluidPage(theme="custom.css",
                         hidden(tags$h4(id='regression_formula_header', 'Formula')),
                         verbatimTextOutput(outputId='regression_formula'),
                         tags$br(),
-                        hidden(tags$h4(id='regression_summary_header', 'Summary')),
+                        hidden(uiOutput('regression_summary_header_UI')),
                         verbatimTextOutput(outputId='regression_number_of_rows_missing_removed'),
                         tags$br(),
                         verbatimTextOutput(outputId='regression_summary_output')
