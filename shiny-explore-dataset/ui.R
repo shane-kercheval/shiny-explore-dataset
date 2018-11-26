@@ -33,7 +33,10 @@ shinyUI(fluidPage(theme="custom.css",
         ),
         tabPanel(
             'Categoric Summary',
-            tags$div(class='results-table', dataTableOutput(outputId='categoric_summary_table'))
+            tags$div(class='results-table', dataTableOutput(outputId='categoric_summary_table')),
+            tags$br(),
+            h4('Summary of Values'),
+            tags$div(style='width: 800px', verbatimTextOutput(outputId='categoric_summary_text'))
         ),
         tabPanel(
             'Correlations',

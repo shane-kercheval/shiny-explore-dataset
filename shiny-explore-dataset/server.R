@@ -277,6 +277,13 @@ shinyServer(function(input, output, session) {
 
     })
 
+    output$categoric_summary_text <- renderPrint({
+        
+        # get R's summary of the categoric data
+        summary(dataset()[, as.character(categoric_summary_data()$feature)])
+
+    })
+
     output$correlation_plot <- renderPlot({
 
         withProgress(value=1/2, message='Calculating Correlations', {
