@@ -16,12 +16,16 @@ shinyUI(fluidPage(theme="custom.css",
                 column(5, fileInput(inputId='uploadFile', 'Upload data (.csv/.RDS)'))
             ),
             tags$br(),
-            tags$h3('First 500 Records of Dataset:'),
-            tags$div(class='results-table', dataTableOutput(outputId='dataset_head_table'))
-        ),
-        tabPanel(
-            'Variable Types',
-            tags$div(class='results-table', dataTableOutput(outputId='dataset_types_table'))
+            tabsetPanel(type='tabs',
+                tabPanel(
+                    "First 500 Records of Dataset",
+                    tags$div(class='results-table', dataTableOutput(outputId='dataset_head_table'))
+                ),
+                tabPanel(
+                    'Variable Types',
+                    tags$div(class='results-table', dataTableOutput(outputId='dataset_types_table'))
+                )
+            )
         ),
         tabPanel(
             'Numeric Summary',
