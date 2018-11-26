@@ -211,8 +211,14 @@ shinyUI(fluidPage(theme="custom.css",
                     tabPanel("Diagnostic Plots",
                         tags$br(),
                         tabsetPanel(type="tabs",
+                            tabPanel("Actual vs Predicted",
+                                plotOutput(outputId='regression_diagnostic_actual_vs_predicted')
+                            ),
                             tabPanel("Residuals vs Fittted",
                                 plotOutput(outputId='regression_diagnostic_residuals_vs_fitted')
+                            ),
+                            tabPanel("Actual vs Observed",
+                                plotOutput(outputId='regression_diagnostic_actual_vs_observed')
                             ),
                             tabPanel("Normal Q-Q",
                                 plotOutput(outputId='regression_diagnostic_normal_qq')

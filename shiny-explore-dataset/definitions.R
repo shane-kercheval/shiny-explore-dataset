@@ -284,7 +284,17 @@ easy_regression <- function(dataset,
 # names(results$results)
 # plot(results$results, which=c(1, 2, 3, 4, 5, 6))
 # plot(results$results, which=c(1, 2, 3, 4))
+
+# library(lattice)
+# xyplot(dataset[, dependent_variable] ~ predict(results$results),
+#        type=c('p', 'g'),
+#        xlab='Predicted', ylab='Actual')
 # 
+# 
+# library(lattice)
+# xyplot(predict(results$results) ~ 1:nrow(dataset),
+#        type=c('p', 'g'),
+#        xlab='Observation Number', ylab='Predicted')
 # 
 # predict(results$results, type='response')
 # contrasts(dataset[, dependent_variable])
