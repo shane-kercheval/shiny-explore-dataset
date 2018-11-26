@@ -328,7 +328,7 @@ shinyServer(function(input, output, session) {
         local_point_size <- input$selected_variable_plot_point_size
         local_point_color <- input$selected_variable_plot_point_color
 
-        local_alpha <- input$selected_variable_plots_alpha
+        local_transparency <- input$selected_variable_plots_transparency / 100
         local_annotate_points <- input$selected_variable_plots_annotate_points
         local_base_size <- input$selected_variable_plots_base_size
         local_histogram_bins <- input$selected_variable_plots_histogram_bins
@@ -423,7 +423,7 @@ shinyServer(function(input, output, session) {
 
                         log_message('**numeric numeric**')
 
-                        log_message_variable('selected_variable_plots_alpha', local_alpha)
+                        log_message_variable('selected_variable_plots_transparency', local_transparency)
                         log_message_variable('selected_variable_plots_jitter', local_jitter)
                         log_message_variable('selected_variable_plots_trend_line', local_trend_line)
                         log_message_variable('selected_variable_plots_trend_line_se', local_trend_line_se)
@@ -441,7 +441,8 @@ shinyServer(function(input, output, session) {
                                                                 comparison_variable=local_comparison_variable,
                                                                 color_variable=local_point_color,
                                                                 size_variable=local_point_size,
-                                                                alpha=local_alpha,
+                                                                # alpha is a measure of opacity which is the opposite of transparency, but transparency is more user-friendly
+                                                                alpha= 1 - local_transparency,
                                                                 jitter=local_jitter,
                                                                 x_zoom_min=local_x_zoom_min,
                                                                 x_zoom_max=local_x_zoom_max,
