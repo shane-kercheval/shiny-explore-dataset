@@ -593,16 +593,21 @@ shinyServer(function(input, output, session) {
 
         req(regression_results())
 
-        summary(regression_results()$regression_results)
+        summary(regression_results()$results)
     })
 
     output$regression_number_of_rows_missing_removed <- renderText({
 
         req(regression_results())
 
-        number_rows_missing <- length(regression_results()$rows_excluded)
+        paste('Number of missing/removed rows from dataset:', length(regression_results()$rows_excluded))
+    })
 
-        paste('Number of missing/removed rows from dataset:', number_rows_missing)
+    output$regression_formula <- renderText({
+
+        req(regression_results())
+
+        paste('Formula:', regression_results()$formula)
     })
 
     render_diagnostic_plot <- function(graph_index, graph_width_function) {
@@ -614,7 +619,7 @@ shinyServer(function(input, output, session) {
 
                 withProgress(value=1/2, message='Creating Regression Diagnostic Graph',{
 
-                    plot(regression_results()$regression_results, which=graph_index)
+                    plot(regression_results()$results, which=graph_index)
                 })
         
             }, height = graph_width_function)

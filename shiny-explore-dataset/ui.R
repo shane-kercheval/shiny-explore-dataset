@@ -192,6 +192,8 @@ shinyUI(fluidPage(theme="custom.css",
                         tags$br(),tags$br(),
                         verbatimTextOutput(outputId='regression_number_of_rows_missing_removed'),
                         tags$br(),
+                        verbatimTextOutput(outputId='regression_formula'),
+                        tags$br(),
                         verbatimTextOutput(outputId='regression_summary_output')
                     ),
                     tabPanel("Diagnostic Plots",

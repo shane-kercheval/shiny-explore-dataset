@@ -215,13 +215,12 @@ easy_regression <- function(dataset,
                             polynomial=NULL) {
 
     formula <- paste(dependent_variable, '~', paste(independent_variables, collapse =' + '))
-
     lm_result <- lm(formula, data=dataset, na.action = na.exclude)
-
 
     return (
         list(rows_excluded=which(!complete.cases(dataset[, independent_variables])),
-             regression_results=lm_result)
+             formula=formula,
+             results=lm_result)
     )
 }
 
