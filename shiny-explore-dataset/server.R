@@ -71,6 +71,10 @@ shinyServer(function(input, output, session) {
 
                 return (data.frame(iris))
 
+            } else if(local_selected_preloaded_dataset == 'Diamonds') {
+
+                return (data.frame(diamonds))
+
             } else if(local_selected_preloaded_dataset == 'Flights') {
 
                 return (

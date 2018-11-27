@@ -19,6 +19,7 @@ shinyUI(fluidPage(theme="custom.css",
                                                 'Housing',
                                                 'Insurance',
                                                 'Iris',
+                                                'Diamonds',
                                                 'Flights',
                                                 'Gapminder'),
                                       selected='Credit')
