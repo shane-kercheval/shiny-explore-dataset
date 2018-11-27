@@ -69,7 +69,7 @@ shinyServer(function(input, output, session) {
 
             } else if(local_selected_preloaded_dataset == 'Iris') {
 
-                return (iris)
+                return (data.frame(iris))
 
             } else if(local_selected_preloaded_dataset == 'Flights') {
 
@@ -81,7 +81,7 @@ shinyServer(function(input, output, session) {
 
             } else if(local_selected_preloaded_dataset == 'Gapminder') {
 
-                return (gapminder::gapminder)
+                return (data.frame(gapminder::gapminder))
 
             } else {
 
