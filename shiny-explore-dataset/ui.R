@@ -5,7 +5,7 @@ library(shinyBS)
 source('definitions.R')
 
 shinyUI(fluidPage(theme="custom.css",
-  
+
     useShinyjs(),
 
     titlePanel('Explore Dataset'),
@@ -13,6 +13,16 @@ shinyUI(fluidPage(theme="custom.css",
         tabPanel(
             'Load Dataset',
             fluidRow(
+                column(4, selectInput(inputId='selected_preloaded_dataset',
+                                      label='Preloaded Datasets',
+                                      choices=c('Credit',
+                                                'Housing',
+                                                'Insurance',
+                                                'Iris',
+                                                'Flights',
+                                                'Gapminder'),
+                                      selected='Credit')
+                ),
                 column(5, fileInput(inputId='uploadFile', 'Upload data (.csv/.RDS)'))
             ),
             tags$br(),

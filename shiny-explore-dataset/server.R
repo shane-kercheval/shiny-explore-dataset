@@ -9,6 +9,7 @@ library(stringr)
 library(tidyverse)
 library(scales)
 library(lattice)
+library(lubridate)
 
 source('definitions.R')
 
@@ -25,29 +26,67 @@ shinyServer(function(input, output, session) {
     # main dataset
     # initialize with small default dataset or upload from file, by user
     ##########################################################################################################
+    dataset_or_null <- function(file) {
+        
+        withProgress(value=1/2, message='Uploading Data',{
+
+            if(file.exists(file)) {
+
+                return (read.csv(file, header=TRUE))
+
+            } else {
+
+                return (NULL)
+            }
+        })
+    }
+
     dataset <- reactive({
+
+        req(input$selected_preloaded_dataset)
 
         # reactive data
         upload_file_path <- input$uploadFile$datapath
+        local_selected_preloaded_dataset <- input$selected_preloaded_dataset
 
         log_message_block_start('Loading Dataset')
         log_message_variable('upload_file_path', upload_file_path)
+        log_message_variable('selected_preloaded_dataset', local_selected_preloaded_dataset)
 
         if(is.null(upload_file_path)) {
             
-            # only need to show progress when uploading the initial dataset (file upload has it's own progress)
-            withProgress(value=1/2, message='Uploading Data',{
+            if(local_selected_preloaded_dataset == 'Credit') {
 
-                if(file.exists("example_datasets/credit.csv")) {
+                dataset_or_null('example_datasets/credit.csv')
 
-                    read.csv("example_datasets/credit.csv", header=TRUE)
+            } else if(local_selected_preloaded_dataset == 'Housing') {
 
-                } else {
+                dataset_or_null('example_datasets/housing.csv')
 
-                    iris
-                }
-            })
+            } else if(local_selected_preloaded_dataset == 'Insurance') {
 
+                dataset_or_null('example_datasets/insurance.csv')
+
+            } else if(local_selected_preloaded_dataset == 'Iris') {
+
+                return (iris)
+
+            } else if(local_selected_preloaded_dataset == 'Flights') {
+
+                return (
+                    data.frame(nycflights13::flights %>%
+                        mutate(date = make_date(year, month, day)) %>%
+                        select(-year, -month, -day) %>%
+                        select(date, everything())))
+
+            } else if(local_selected_preloaded_dataset == 'Gapminder') {
+
+                return (gapminder::gapminder)
+
+            } else {
+
+                return (NULL)
+            }
         } else {
 
             if(str_sub(upload_file_path, -4) == '.csv') {
@@ -356,8 +395,8 @@ shinyServer(function(input, output, session) {
 
             local_dataset <- dataset()
 
-            types <- map_chr(colnames(local_dataset), ~ class(local_dataset[, .]))
-            data.frame(variable=colnames(local_dataset), type=types)
+            types <- map_chr(colnames(local_dataset), ~ class(local_dataset[, .])[1])
+            return (data.frame(variable=colnames(local_dataset), type=types))
         })
     })
 

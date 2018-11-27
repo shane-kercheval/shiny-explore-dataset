@@ -17,3 +17,13 @@ So, if you want to run locally, among the other libraries that are imported, you
 ```
 devtools::install_github('shane-kercheval/rtools')
 ```
+
+
+## Tidy Datasets
+
+- this app expects tidy datasets
+
+
+
+
+
