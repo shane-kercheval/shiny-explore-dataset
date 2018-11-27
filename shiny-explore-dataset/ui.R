@@ -96,6 +96,17 @@ shinyUI(fluidPage(theme="custom.css",
                         uiOutput('selected_variable_plot_point_size_UI'),
                         style='default'
                     ),
+                    #  bsCollapsePanel(
+                    #     'Filters',
+                    #     # uiOutput('selected_filter_variable1_UI'),
+                    #     # uiOutput('selected_filter_numeric1_UI'),
+                    #     # # date? uiOutput('selected_filter_numeric1_UI'),
+                    #     # uiOutput('selected_filter_categoric1_UI'),
+
+                    #     ######
+
+                    #     style='default'
+                    # ),
                     bsCollapsePanel(
                         'Plot Options',
                         shinyjs::hidden(
@@ -174,6 +185,9 @@ shinyUI(fluidPage(theme="custom.css",
                            checkboxInput(inputId='selected_variable_plots_annotate_points',
                                          label='Annotate Points', value=FALSE, width=NULL)
                         ),
+                        numericInput(inputId='selected_filter_factor_lump_number',
+                                     label='Top N Categories',
+                                     value=NULL),
                         style='default'
                     )
                 )

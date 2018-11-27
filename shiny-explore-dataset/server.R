@@ -133,7 +133,6 @@ shinyServer(function(input, output, session) {
         })
     })
 
-
     ##########################################################################################################
     # Run Regression when user clicks Run button
     ##########################################################################################################    
@@ -257,7 +256,6 @@ shinyServer(function(input, output, session) {
 
             shinyjs::hide('selected_variable_plot_point_size_UI')
             shinyjs::hide('selected_variable_plot_point_color_UI')
-
         }
 
         if(local_primary_variable != select_variable || local_comparison_variable != select_variable_optional) {
@@ -450,6 +448,29 @@ shinyServer(function(input, output, session) {
 
     })
 
+
+    null_if_select_variable_optional <- function(value) {
+
+        if(is.null(value) || value == select_variable_optional) {
+
+            value <- NULL
+        }
+
+        return (value)
+    }
+
+    custom_filter <- function(dataset, factor_lump_number=NULL) {
+
+        if(!is.na(factor_lump_number)) {
+
+            dataset <- dataset %>%
+                mutate_if(is.character, as.factor) %>%
+                mutate_if(is.factor, ~fct_lump(.x, n=factor_lump_number))
+        }
+
+        return (dataset)
+    }
+
     ##########################################################################################################
     # Variable Plot
     # NOTE: i use `print(xxx_plot)` because ggplot does some sort of lazy evaluation, which means that the 
@@ -461,8 +482,6 @@ shinyServer(function(input, output, session) {
 
         req(input$selected_variable_plot_variable)
         req(input$selected_variable_plot_comparison)
-
-        log_message_variable('selected_variable_plots_pretty_text', input$selected_variable_plots_pretty_text)
 
         # reactive data
         local_dataset <- dataset()
@@ -488,7 +507,9 @@ shinyServer(function(input, output, session) {
         local_x_zoom_min <- input$selected_variable_plots_x_zoom_min
         local_x_zoom_max <- input$selected_variable_plots_x_zoom_max
         local_y_zoom_min <- input$selected_variable_plots_y_zoom_min
-        local_y_zoom_max <- input$selected_variable_plots_y_zoom_max                                         
+        local_y_zoom_max <- input$selected_variable_plots_y_zoom_max
+
+        local_filter_factor_lump_number <- input$selected_filter_factor_lump_number
 
         if(local_primary_variable != select_variable) {
 
@@ -498,19 +519,16 @@ shinyServer(function(input, output, session) {
     
                 # if there isn't a selection for these variables, then set them to NULL, because they will be
                 # passed to rtools functions (and if they aren't null, rtools expects column names)
-                if(local_comparison_variable == select_variable_optional) {
-
-                    local_comparison_variable <- NULL
-                }
+                local_comparison_variable <- null_if_select_variable_optional(local_comparison_variable)
                 # these can actually be NULL (unlike local_comparison_variable which is req)
                 # these can't be req because they aren't even shown initially
-                if(is.null(local_point_size) || local_point_size == select_variable_optional) {
+                local_point_size <- null_if_select_variable_optional(local_point_size)
+                local_point_color <- null_if_select_variable_optional(local_point_color)
+                local_comparison_variable <- null_if_select_variable_optional(local_comparison_variable)
 
-                    local_point_size <- NULL
-                }
-                if(is.null(local_point_color) || local_point_color == select_variable_optional) {
+                if(is.na(local_filter_factor_lump_number) || local_filter_factor_lump_number == 0) {
 
-                    local_point_color <- NULL
+                    local_filter_factor_lump_number <- NA
                 }
 
                 log_message_variable('primary_variable', local_primary_variable)
@@ -520,7 +538,7 @@ shinyServer(function(input, output, session) {
                 log_message_variable('selected_variable_plots_base_size', local_base_size)
                 log_message_variable('selected_variable_plots_pretty_text', local_pretty_text)
                 log_message_variable('selected_variable_plots_annotate_points', local_annotate_points)
-                
+                log_message_variable('selected_filter_factor_lump_number', local_filter_factor_lump_number)
                 
                 if(local_pretty_text) {
                     # if we change to pretty text, it will update the columns and all values to be "pretty",
@@ -579,36 +597,31 @@ shinyServer(function(input, output, session) {
                         log_message_variable('selected_variable_plots_scale_x_log_base_10', local_scale_x_log_base_10)
                         log_message_variable('selected_variable_plots_scale_y_log_base_10', local_scale_y_log_base_10)
 
-                        scatter_plot <- rt_explore_plot_scatter(dataset=local_dataset,
-                                                                variable=local_primary_variable,
-                                                                comparison_variable=local_comparison_variable,
-                                                                color_variable=local_point_color,
-                                                                size_variable=local_point_size,
-                                                                # alpha is a measure of opacity which is the opposite of transparency, but transparency is more user-friendly
-                                                                alpha= 1 - local_transparency,
-                                                                jitter=local_jitter,
-                                                                x_zoom_min=local_x_zoom_min,
-                                                                x_zoom_max=local_x_zoom_max,
-                                                                y_zoom_min=local_y_zoom_min,
-                                                                y_zoom_max=local_y_zoom_max,
-                                                                base_size=local_base_size)
-
-                        scatter_plot <- scale_axes_log10(plot=scatter_plot,
-                                                         scale_x=local_scale_x_log_base_10,
-                                                         scale_y=local_scale_y_log_base_10)
-
                         add_confidence_interval <- !is.null(local_trend_line_se) && local_trend_line_se == 'Yes'
-                        scatter_plot <- add_trend_line(plot=scatter_plot,
-                                                       trend_line_type=local_trend_line,
-                                                       confidence_interval=add_confidence_interval,
-                                                       color_variable=local_point_color)
-                        
-                        scatter_plot <- prettyfy_plot(plot=scatter_plot,
-                                                      dataset=local_dataset,
-                                                      comparison_variable=local_comparison_variable,
-                                                      annotate_points=local_annotate_points)
-                        
-                        print(scatter_plot)
+
+
+                        local_dataset %>% 
+                            custom_filter(factor_lump_number=local_filter_factor_lump_number) %>%
+                            rt_explore_plot_scatter(variable=local_primary_variable,
+                                                    comparison_variable=local_comparison_variable,
+                                                    color_variable=local_point_color,
+                                                    size_variable=local_point_size,
+                                                    # alpha is a measure of opacity which is the opposite of transparency, but transparency is more user-friendly
+                                                    alpha= 1 - local_transparency,
+                                                    jitter=local_jitter,
+                                                    x_zoom_min=local_x_zoom_min,
+                                                    x_zoom_max=local_x_zoom_max,
+                                                    y_zoom_min=local_y_zoom_min,
+                                                    y_zoom_max=local_y_zoom_max,
+                                                    base_size=local_base_size) %>%
+                            scale_axes_log10(scale_x=local_scale_x_log_base_10,
+                                             scale_y=local_scale_y_log_base_10) %>%
+                            add_trend_line(trend_line_type=local_trend_line,
+                                           confidence_interval=add_confidence_interval,
+                                           color_variable=local_point_color) %>% 
+                            prettyfy_plot(comparison_variable=local_comparison_variable,
+                                          annotate_points=local_annotate_points) %>%
+                            print()
                     ##########################################################################################
                     # NULL Or Categoric Secondary Variable
                     ##########################################################################################
@@ -626,17 +639,16 @@ shinyServer(function(input, output, session) {
                             log_message_variable('selected_variable_plots_y_zoom_max', local_y_zoom_max)
                             log_message_variable('selected_variable_plots_scale_y_log_base_10', local_scale_y_log_base_10)
 
-                            box_plot <- rt_explore_plot_boxplot(dataset=local_dataset,
-                                                                variable=local_primary_variable,
-                                                                comparison_variable=local_comparison_variable,
-                                                                y_zoom_min=local_y_zoom_min,
-                                                                y_zoom_max=local_y_zoom_max,
-                                                                base_size=local_base_size)
-                            box_plot <- scale_axes_log10(plot=box_plot,
-                                                         scale_x=FALSE,
-                                                         scale_y=local_scale_y_log_base_10)
-
-                            print(box_plot)
+                            local_dataset %>%
+                                custom_filter(factor_lump_number=local_filter_factor_lump_number) %>%
+                                rt_explore_plot_boxplot(variable=local_primary_variable,
+                                                        comparison_variable=local_comparison_variable,
+                                                        y_zoom_min=local_y_zoom_min,
+                                                        y_zoom_max=local_y_zoom_max,
+                                                        base_size=local_base_size) %>%
+                                scale_axes_log10(scale_x=FALSE,
+                                                 scale_y=local_scale_y_log_base_10) %>%
+                            print()
 
 
                         } else {
@@ -648,19 +660,18 @@ shinyServer(function(input, output, session) {
                             log_message_variable('selected_variable_plots_x_zoom_max', local_x_zoom_max)
                             log_message_variable('selected_variable_plots_scale_x_log_base_10', local_scale_x_log_base_10)
                             
-                            histogram_plot <- rt_explore_plot_histogram(dataset=local_dataset,
-                                                                        variable=local_primary_variable,
-                                                                        comparison_variable=local_comparison_variable,
-                                                                        num_bins=local_histogram_bins,
-                                                                        x_zoom_min=local_x_zoom_min,
-                                                                        x_zoom_max=local_x_zoom_max,
-                                                                        base_size=local_base_size)
 
-                            histogram_plot <- scale_axes_log10(plot=histogram_plot,
-                                                               scale_x=local_scale_x_log_base_10,
-                                                               scale_y=FALSE)
-
-                            print(histogram_plot)
+                            local_dataset %>%
+                                custom_filter(factor_lump_number=local_filter_factor_lump_number) %>%
+                                rt_explore_plot_histogram(variable=local_primary_variable,
+                                                          comparison_variable=local_comparison_variable,
+                                                          num_bins=local_histogram_bins,
+                                                          x_zoom_min=local_x_zoom_min,
+                                                          x_zoom_max=local_x_zoom_max,
+                                                          base_size=local_base_size) %>%
+                                scale_axes_log10(scale_x=local_scale_x_log_base_10,
+                                                 scale_y=FALSE) %>%
+                                print()
                         }
                     }
 
@@ -682,18 +693,16 @@ shinyServer(function(input, output, session) {
                         log_message_variable('selected_variable_plots_y_zoom_max', local_y_zoom_max)
                         log_message_variable('selected_variable_plots_scale_y_log_base_10', local_scale_y_log_base_10)
 
-                        box_plot <- rt_explore_plot_boxplot(dataset=local_dataset,
-                                                            variable=local_comparison_variable,
-                                                            comparison_variable=local_primary_variable,
-                                                            y_zoom_min=local_y_zoom_min,
-                                                            y_zoom_max=local_y_zoom_max,
-                                                            base_size=local_base_size)
-
-                        box_plot <- scale_axes_log10(plot=box_plot,
-                                                     scale_x=FALSE,
-                                                     scale_y=local_scale_y_log_base_10)
-
-                        print(box_plot)
+                        local_dataset %>%
+                                custom_filter(factor_lump_number=local_filter_factor_lump_number) %>%
+                                rt_explore_plot_boxplot(variable=local_comparison_variable,
+                                                        comparison_variable=local_primary_variable,
+                                                        y_zoom_min=local_y_zoom_min,
+                                                        y_zoom_max=local_y_zoom_max,
+                                                        base_size=local_base_size) %>%
+                                scale_axes_log10(scale_x=FALSE,
+                                                 scale_y=local_scale_y_log_base_10) %>%
+                                print()
 
                     ##########################################################################################
                     # NULL Or Categoric Secondary Variable
@@ -708,15 +717,16 @@ shinyServer(function(input, output, session) {
                         log_message_variable('selected_variable_plots_show_variable_totals', local_show_variable_totals)
                         log_message_variable('selected_variable_plots_show_comparison_totals', local_show_comparison_totals)
 
-                        unique_values_plot <- rt_explore_plot_unique_values(dataset=local_dataset,
-                                                                            variable=local_primary_variable,
-                                                                            comparison_variable=local_comparison_variable,
-                                                                            order_by_count=local_order_by_count,
-                                                                            show_group_totals=local_show_variable_totals,
-                                                                            show_comparison_totals=local_show_comparison_totals,
-                                                                            base_size=local_base_size)
 
-                        print(unique_values_plot)
+                        local_dataset %>%
+                                custom_filter(factor_lump_number=local_filter_factor_lump_number) %>%
+                                rt_explore_plot_unique_values(variable=local_primary_variable,
+                                                              comparison_variable=local_comparison_variable,
+                                                              order_by_count=local_order_by_count,
+                                                              show_group_totals=local_show_variable_totals,
+                                                              show_comparison_totals=local_show_comparison_totals,
+                                                              base_size=local_base_size) %>%
+                                print()
                     }
                 }
             })
