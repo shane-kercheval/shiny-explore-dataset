@@ -2,7 +2,7 @@
 # main dataset
 # initialize with small default dataset or upload from file, by user
 ##########################################################################################################
-reactive_dataset <- function(input, output, session) {
+reactive__dataset <- function(input, output, session) {
     reactive({
 
         req(input$selected_preloaded_dataset)
@@ -78,7 +78,7 @@ reactive_dataset <- function(input, output, session) {
 ##############################################################################################################
 # calculate the numeric summary; it is an expensive operation for large datasets
 ##############################################################################################################
-reactive_numeric_summary <- function(input, output, session, dataset) {
+reactive__numeric_summary <- function(input, output, session, dataset) {
 
     reactive({
 
@@ -95,7 +95,7 @@ reactive_numeric_summary <- function(input, output, session, dataset) {
 ##############################################################################################################
 # calculate the categoric summary; it is an expensive operation for large datasets
 ##############################################################################################################
-reactive_categoric_summary <- function(input, output, session, dataset) {
+reactive__categoric_summary <- function(input, output, session, dataset) {
 
     reactive({
 
@@ -110,7 +110,7 @@ reactive_categoric_summary <- function(input, output, session, dataset) {
 ##########################################################################################################
 # Run Regression when user clicks Run button
 ##########################################################################################################    
-eventReactive_regression_results <- function(input, output, session, dataset) {
+eventReactive__regression_results <- function(input, output, session, dataset) {
 
     eventReactive(input$regression_run_button, {
 
