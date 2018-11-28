@@ -74,10 +74,6 @@ renderUI__variable_plot_point_size_UI <- function(dataset) {
     })
 }
 
-
-
-
-
 ##############################################################################################################
 # Regression Reactive UI
 ##############################################################################################################
@@ -201,12 +197,3 @@ observeEvent__regression_toggle_all_ind_variables <- function(input, dataset, se
         }
     })
 }
-
-
-
-
-
-
-
-
-

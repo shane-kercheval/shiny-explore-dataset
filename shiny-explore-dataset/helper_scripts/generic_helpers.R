@@ -1,4 +1,18 @@
+dataset_or_null <- function(file) {
+    # loads the file if it exists, otherwise returns NULL.
+    
+    withProgress(value=1/2, message='Uploading Data',{
 
+        if(file.exists(file)) {
+
+            return (read.csv(file, header=TRUE))
+
+        } else {
+
+            return (NULL)
+        }
+    })
+}
 
 easy_regression <- function(dataset,
                             dependent_variable,
@@ -15,7 +29,6 @@ easy_regression <- function(dataset,
         interaction_variables_formula <- paste(map_chr(interaction_variables, ~ paste(., collapse =' * ')),
                                                    collapse = ' + ')
     }
-    
 
     if(is.null(independent_variables) || length(independent_variables) == 0) {
 

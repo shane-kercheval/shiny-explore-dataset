@@ -13,12 +13,12 @@ library(lubridate)
 
 source('helper_scripts/definitions.R')
 source('helper_scripts/logging_functions.R')
-source('helper_scripts/ui_helpers.R')
-source('helper_scripts/dynamic_show_hide_controls.R')
 source('helper_scripts/generic_helpers.R')
-source('helper_scripts/reactive_helpers.R')
-source('helper_scripts/renderUI_control_helpers.R')
-source('helper_scripts/render_output_helpers.R')
+source('helper_scripts/plot_helpers.R')
+source('helper_scripts/dynamic_show_hide_controls.R')
+source('helper_scripts/reactive_data_helpers.R')
+source('helper_scripts/reactive_input_helpers.R')
+source('helper_scripts/reactive_output_helpers.R')
 
 
 # Define server logic required to draw a histogram
