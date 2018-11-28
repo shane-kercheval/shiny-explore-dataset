@@ -5,6 +5,11 @@ library(shinyBS)
 
 source('helper_scripts/definitions.R')
 
+##############################################################################################################
+#### naming conventions
+#
+# <section>_<control>
+##############################################################################################################
 shinyUI(fluidPage(theme="custom.css",
 
     useShinyjs(),
@@ -14,7 +19,7 @@ shinyUI(fluidPage(theme="custom.css",
         tabPanel(
             'Load Dataset',
             fluidRow(
-                column(4, selectInput(inputId='selected_preloaded_dataset',
+                column(4, selectInput(inputId='preloaded_dataset',
                                       label='Preloaded Datasets',
                                       choices=c('Diamonds',
                                                 'Credit',
@@ -43,7 +48,7 @@ shinyUI(fluidPage(theme="custom.css",
             'Numeric Summary',
             column(2,
                    class='column-input-control-style',
-                   tags$div(class='input-control-style', uiOutput('selected_numeric_summary_options_UI'))
+                   tags$div(class='input-control-style', uiOutput('numeric_summary_options_UI'))
             ),
             column(10, tags$div(class='results-table', dataTableOutput(outputId='numeric_summary_table')))
         ),
@@ -61,22 +66,22 @@ shinyUI(fluidPage(theme="custom.css",
                 class='column-input-control-style',
                 tags$div(
                     class='input-control-style',
-                    sliderTextInput(inputId='selected_correlation_corr_threshold',
+                    sliderTextInput(inputId='correlation_corr_threshold',
                                     label='Min Correlation Threshold', ## percent increase
                                     choices=seq(0, 1, 0.05),
                                     selected=0,
                                     grid=TRUE),
-                    sliderTextInput(inputId='selected_correlation_p_value_threshold',
+                    sliderTextInput(inputId='correlation_p_value_threshold',
                                     label='Max P-Value Treshold',
                                     choices=seq(0, 1, 0.05),
                                     selected=1,
                                     grid=TRUE),
-                    sliderTextInput(inputId='selected_correlation_base_size',
+                    sliderTextInput(inputId='correlation_base_size',
                                     label='Text Size',
                                     choices=seq(6, 20, 1),
                                     selected=15,
                                     grid=TRUE),
-                    checkboxInput(inputId='selected_correlation_pretty_text',
+                    checkboxInput(inputId='correlation_pretty_text',
                                   label='Pretty Text', value=FALSE, width=NULL)
                     )
             ),
@@ -89,63 +94,52 @@ shinyUI(fluidPage(theme="custom.css",
             column(3,
                 class='column-input-control-style',
 
-                bsCollapse(id='collapse_variable_plot_controls', open='Variables', multiple=TRUE,
+                bsCollapse(id='variable_plots_bscollapse', open='Variables', multiple=TRUE,
                     bsCollapsePanel(
                         'Variables',
-                        uiOutput('selected_variable_plot_variable_UI'),
-                        uiOutput('selected_variable_plot_comparison_UI'),
-                        uiOutput('selected_variable_plot_point_color_UI'),
-                        uiOutput('selected_variable_plot_point_size_UI'),
+                        uiOutput('variable_plots_variable_UI'),
+                        uiOutput('variable_plots_comparison_UI'),
+                        uiOutput('variable_plots_point_color_UI'),
+                        uiOutput('variable_plots_point_size_UI'),
                         style='default'
                     ),
-                    #  bsCollapsePanel(
-                    #     'Filters',
-                    #     # uiOutput('selected_filter_variable1_UI'),
-                    #     # uiOutput('selected_filter_numeric1_UI'),
-                    #     # # date? uiOutput('selected_filter_numeric1_UI'),
-                    #     # uiOutput('selected_filter_categoric1_UI'),
-
-                    #     ######
-
-                    #     style='default'
-                    # ),
                     bsCollapsePanel(
                         'Plot Options',
                         shinyjs::hidden(
-                            selectInput(inputId='selected_variable_plots_numeric_graph_type',
+                            selectInput(inputId='variable_plots_numeric_graph_type',
                                     label='Type',
                                     choices=c('Boxplot', 'Histogram'),
                                     selected='Boxplot')
                         ),
                         shinyjs::hidden(tags$div(id='div_variable_plots_group_barchar_controls',
-                             checkboxInput(inputId='selected_variable_plots_order_by_count',
+                             checkboxInput(inputId='variable_plots_order_by_count',
                                            label='Order By Totals', value=TRUE, width=NULL),
-                             checkboxInput(inputId='selected_variable_plots_show_variable_totals',
+                             checkboxInput(inputId='variable_plots_show_variable_totals',
                                            label='Show Variable Totals', value=TRUE, width=NULL),
-                             checkboxInput(inputId='selected_variable_plots_show_comparison_totals',
+                             checkboxInput(inputId='variable_plots_show_comparison_totals',
                                            label='Show Comparison Totals', value=TRUE, width=NULL)
                         )),
                         shinyjs::hidden(
-                             numericInput(inputId='selected_variable_plots_histogram_bins',
+                             numericInput(inputId='variable_plots_histogram_bins',
                                           label='Number of Bins',
                                           value=30)                 
                         ),
                         shinyjs::hidden(tags$div(id='div_variable_plots_group_scatter_controls',
-                            sliderTextInput(inputId='selected_variable_plots_transparency',
+                            sliderTextInput(inputId='variable_plots_transparency',
                                             label='Transparency',
                                             choices=c(seq(0, 90, 10), 99),
                                             selected=60,
                                             post  = " %",
                                             grid=TRUE),
-                            checkboxInput(inputId='selected_variable_plots_jitter',
+                            checkboxInput(inputId='variable_plots_jitter',
                                           label='Jitter', value=FALSE, width=NULL),
-                            radioButtons(inputId='selected_variable_plots_trend_line',
+                            radioButtons(inputId='variable_plots_trend_line',
                                          label='Trend Line:',
                                          choices=c('None', 'Straight', 'Smooth'),
                                          selected='None',
                                          inline=TRUE,
                                          width=NULL),
-                            radioButtons(inputId='selected_variable_plots_trend_line_se',
+                            radioButtons(inputId='variable_plots_trend_line_se',
                                          label='Trend Confidence Interval:',
                                          choices=c('No', 'Yes'),
                                          selected='Yes',
@@ -153,22 +147,22 @@ shinyUI(fluidPage(theme="custom.css",
                                          width=NULL)
                         )),
                         shinyjs::hidden(tags$div(id='div_variable_plots_group_x_zoom_controls',
-                             checkboxInput(inputId='selected_variable_plots_scale_x_log_base_10',
+                             checkboxInput(inputId='variable_plots_scale_x_log_base_10',
                                            label='Scale X-Axis Log 10', value=FALSE, width=NULL),
-                             numericInput(inputId='selected_variable_plots_x_zoom_min',
+                             numericInput(inputId='variable_plots_x_zoom_min',
                                           label='X-Axis Zoom Min',
                                           value=NULL),
-                             numericInput(inputId='selected_variable_plots_x_zoom_max',
+                             numericInput(inputId='variable_plots_x_zoom_max',
                                           label='X-Axis Zoom Max',
                                           value=NULL)                         
                         )),
                         shinyjs::hidden(tags$div(id='div_variable_plots_group_y_zoom_controls',
-                             checkboxInput(inputId='selected_variable_plots_scale_y_log_base_10',
+                             checkboxInput(inputId='variable_plots_scale_y_log_base_10',
                                            label='Scale Y-Axis Log 10', value=FALSE, width=NULL),
-                             numericInput(inputId='selected_variable_plots_y_zoom_min',
+                             numericInput(inputId='variable_plots_y_zoom_min',
                                           label='Y-Axis Zoom Min',
                                           value=NULL),
-                             numericInput(inputId='selected_variable_plots_y_zoom_max',
+                             numericInput(inputId='variable_plots_y_zoom_max',
                                           label='Y-Axis Zoom Max',
                                           value=NULL)                         
                         )),
@@ -176,18 +170,18 @@ shinyUI(fluidPage(theme="custom.css",
                     ),
                     bsCollapsePanel(
                         'Pretty Options',
-                        sliderTextInput(inputId='selected_variable_plots_base_size',
+                        sliderTextInput(inputId='variable_plots_base_size',
                                         label='Text Size',
                                         choices=seq(6, 20, 1),
                                         selected=15,
                                         grid=TRUE),
-                        checkboxInput(inputId='selected_variable_plots_pretty_text',
+                        checkboxInput(inputId='variable_plots_pretty_text',
                                       label='Pretty Text', value=FALSE, width=NULL),
                         shinyjs::hidden(
-                           checkboxInput(inputId='selected_variable_plots_annotate_points',
+                           checkboxInput(inputId='variable_plots_annotate_points',
                                          label='Annotate Points', value=FALSE, width=NULL)
                         ),
-                        numericInput(inputId='selected_filter_factor_lump_number',
+                        numericInput(inputId='variable_plots_filter_factor_lump_number',
                                      label='Top N Categories',
                                      value=NULL),
                         style='default'
@@ -195,7 +189,7 @@ shinyUI(fluidPage(theme="custom.css",
                 )
             ),
             column(9,
-                plotOutput(outputId='variable_plot')
+                plotOutput(outputId='variable_plots')
             )
         ),
         tabPanel(
@@ -203,19 +197,19 @@ shinyUI(fluidPage(theme="custom.css",
             column(3,
                 class='column-input-control-style',
 
-                bsCollapse(id='collapse_variable_plot_controls', open='Variables', multiple=TRUE,
+                bsCollapse(id='regression_collapse_controls', open='Variables', multiple=TRUE,
                     bsCollapsePanel(
                         'Variables',
-                        uiOutput('regression_selected_dependent_variable_UI'),
-                        uiOutput('regression_selected_independent_variables_UI'),
+                        uiOutput('regression_dependent_variable_UI'),
+                        uiOutput('regression_independent_variables_UI'),
                         actionButton(inputId='regression_toggle_all_ind_variables',
                                      label='Toggle All Variables'),
                         style='default'
                     ),
                     bsCollapsePanel(
                         'Interaction Effects',
-                        uiOutput('regression_selected_interaction_term1_UI'),
-                        uiOutput('regression_selected_interaction_term2_UI'),
+                        uiOutput('regression_interaction_term1_UI'),
+                        uiOutput('regression_interaction_term2_UI'),
                         style='default'
                     )
                 )

@@ -5,39 +5,39 @@
 reactive__dataset <- function(input, output, session) {
     reactive({
 
-        req(input$selected_preloaded_dataset)
+        req(input$preloaded_dataset)
 
         # reactive data
         upload_file_path <- input$uploadFile$datapath
-        local_selected_preloaded_dataset <- input$selected_preloaded_dataset
+        local_preloaded_dataset <- input$preloaded_dataset
 
         log_message_block_start('Loading Dataset')
         log_message_variable('upload_file_path', upload_file_path)
-        log_message_variable('selected_preloaded_dataset', local_selected_preloaded_dataset)
+        log_message_variable('preloaded_dataset', local_preloaded_dataset)
 
         if(is.null(upload_file_path)) {
             
-            if(local_selected_preloaded_dataset == 'Credit') {
+            if(local_preloaded_dataset == 'Credit') {
 
                 dataset_or_null('example_datasets/credit.csv')
 
-            } else if(local_selected_preloaded_dataset == 'Housing') {
+            } else if(local_preloaded_dataset == 'Housing') {
 
                 dataset_or_null('example_datasets/housing.csv')
 
-            } else if(local_selected_preloaded_dataset == 'Insurance') {
+            } else if(local_preloaded_dataset == 'Insurance') {
 
                 dataset_or_null('example_datasets/insurance.csv')
 
-            } else if(local_selected_preloaded_dataset == 'Iris') {
+            } else if(local_preloaded_dataset == 'Iris') {
 
                 return (data.frame(iris))
 
-            } else if(local_selected_preloaded_dataset == 'Diamonds') {
+            } else if(local_preloaded_dataset == 'Diamonds') {
 
                 return (data.frame(diamonds))
 
-            } else if(local_selected_preloaded_dataset == 'Flights') {
+            } else if(local_preloaded_dataset == 'Flights') {
 
                 return (
                     data.frame(nycflights13::flights %>%
@@ -45,7 +45,7 @@ reactive__dataset <- function(input, output, session) {
                         select(-year, -month, -day) %>%
                         select(date, everything())))
 
-            } else if(local_selected_preloaded_dataset == 'Gapminder') {
+            } else if(local_preloaded_dataset == 'Gapminder') {
 
                 return (data.frame(gapminder::gapminder))
 
@@ -113,12 +113,12 @@ eventReactive__regression_results <- function(input, output, session, dataset) {
 
     eventReactive(input$regression_run_button, {
 
-        if(input$regression_selected_dependent_variable == select_variable) {
+        if(input$regression_dependent_variable == select_variable) {
             return (NULL)
         }
 
-        local_interaction_term1 <- input$regression_selected_interaction_term1
-        local_interaction_term2 <- input$regression_selected_interaction_term2
+        local_interaction_term1 <- input$regression_interaction_term1
+        local_interaction_term2 <- input$regression_interaction_term2
 
         withProgress(value=1/2, message='Running Regression',{
 
@@ -133,8 +133,8 @@ eventReactive__regression_results <- function(input, output, session, dataset) {
 
             # updates to reactive variables will not trigger an update here, only regression_run_button
             results <- easy_regression(dataset=dataset(),
-                                       dependent_variable=input$regression_selected_dependent_variable,
-                                       independent_variables=input$regression_selected_independent_variables,
+                                       dependent_variable=input$regression_dependent_variable,
+                                       independent_variables=input$regression_independent_variables,
                                        # list of vectors, each element in the list is a pair of interaction terms
                                        # only supporting two interaction variables at the moment
                                        interaction_variables=interaction_variables)
