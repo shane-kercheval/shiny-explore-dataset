@@ -355,3 +355,143 @@ renderPlot__variable_plot <- function(input, output, session, dataset) {
         session$clientData$output_variable_plot_width * 0.66  # set height to % of width
     })
 }
+
+
+##############################################################################################################
+# Regression
+##############################################################################################################
+renderPrint__regression_summary_output <- function(regression_results) {
+
+    renderPrint({
+
+        req(regression_results())
+
+        summary(regression_results()$results)
+    })
+}
+
+renderText__regression_number_of_rows_missing_removed <- function(regression_results) {
+
+    renderText({
+
+        req(regression_results())
+
+        paste('Number of missing/removed rows from dataset:', length(regression_results()$rows_excluded))
+    })
+}
+
+renderText__regression_formula <- function(regression_results) {
+
+    renderText({
+
+        req(regression_results())
+
+        regression_results()$formula
+    })
+}
+
+renderPrint__regression_summary_vif <- function(regression_results) {
+
+    renderPrint({
+
+        req(regression_results())
+
+        car::vif(regression_results()$results)
+    })
+}
+
+render_diagnostic_plot <- function(regression_results, graph_function, graph_width_function) {
+
+    return (
+        renderPlot({
+
+            req(regression_results())
+
+            withProgress(value=1/2, message='Creating Regression Diagnostic Graph',{
+
+                graph_function()
+            })
+    
+        }, height = graph_width_function)
+    )
+}
+
+render_diagnostic_plot__regression_diagnostic_actual_vs_predicted <- function(input, session, dataset, regression_results) {
+
+    render_diagnostic_plot(
+        regression_results,
+        graph_function=function() {
+            xyplot(dataset()[, isolate({input$regression_selected_dependent_variable})] ~ predict(regression_results()$results),
+                   type=c('p', 'g'),
+                   xlab='Predicted', ylab='Actual')
+        },
+        graph_width_function=function() {0.66 * session$clientData$output_regression_diagnostic_actual_vs_predicted_width}
+    )
+}
+
+render_diagnostic_plot__regression_diagnostic_residuals_vs_fitted <- function(input, session, dataset, regression_results) {
+
+    render_diagnostic_plot(
+        regression_results,
+        graph_function=function() { plot(regression_results()$results, which=1) },
+        graph_width_function=function() {0.66 * session$clientData$output_regression_diagnostic_residuals_vs_fitted_width}
+    )
+}
+
+render_diagnostic_plot__regression_diagnostic_actual_vs_observed <- function(input, session, dataset, regression_results) {
+
+    render_diagnostic_plot(
+        regression_results,
+        graph_function=function() {
+            xyplot(predict(regression_results()$results) ~ 1:nrow(dataset()),
+                   type=c('p', 'g'),
+                   xlab='Observation Number', ylab='Predicted')
+        },
+        graph_width_function=function() {0.66 * session$clientData$output_regression_diagnostic_actual_vs_observed_width}
+    )
+}
+
+render_diagnostic_plot__regression_diagnostic_normal_qq <- function(input, session, dataset, regression_results) {
+
+    render_diagnostic_plot(
+        regression_results,
+        graph_function=function() { plot(regression_results()$results, which=2) },
+        graph_width_function=function() {0.66 * session$clientData$output_regression_diagnostic_normal_qq_width}
+    )
+}
+
+render_diagnostic_plot__regression_diagnostic_scale_location <- function(input, session, dataset, regression_results) {
+
+    render_diagnostic_plot(
+        regression_results,
+        graph_function=function() { plot(regression_results()$results, which=3) },
+        graph_width_function=function() {0.66 * session$clientData$output_regression_diagnostic_scale_location_width}
+    )
+}
+
+render_diagnostic_plot__regression_diagnostic_cooks_distance <- function(input, session, dataset, regression_results) {
+
+    render_diagnostic_plot(
+        regression_results,
+        graph_function=function() { plot(regression_results()$results, which=4) },
+        graph_width_function=function() {0.66 * session$clientData$output_regression_diagnostic_cooks_distance_width}
+    )
+}
+
+render_diagnostic_plot__regression_diagnostic_residuals_vs_leverage <- function(input, session, dataset, regression_results) {
+
+    render_diagnostic_plot(
+        regression_results,
+        graph_function=function() { plot(regression_results()$results, which=5) },
+        graph_width_function=function() {0.66 * session$clientData$output_regression_diagnostic_residuals_vs_leverage_width}
+    )
+}
+
+render_diagnostic_plot__regression_diagnostic_cooks_distance_vs_leverage <- function(input, session, dataset, regression_results) {
+
+    render_diagnostic_plot(
+        regression_results,
+        graph_function=function() { plot(regression_results()$results, which=6) },
+        graph_width_function=function() {0.66 * session$clientData$output_regression_diagnostic_cooks_distance_vs_leverage_width}
+    )
+}
