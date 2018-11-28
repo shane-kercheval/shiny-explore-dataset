@@ -344,12 +344,12 @@ renderPlot__variable_plot <- function(input, output, session, dataset) {
                         return (
                             local_dataset %>%
                                 custom_filter(factor_lump_number=local_variable_plots_filter_factor_lump_number) %>%
-                                rt_explore_plot_unique_values(variable=local_primary_variable,
-                                                              comparison_variable=local_comparison_variable,
-                                                              order_by_count=local_order_by_count,
-                                                              show_group_totals=local_show_variable_totals,
-                                                              show_comparison_totals=local_show_comparison_totals,
-                                                              base_size=local_base_size) %>%
+                                rt_explore_plot_value_totals(variable=local_primary_variable,
+                                                             comparison_variable=local_comparison_variable,
+                                                             order_by_count=local_order_by_count,
+                                                             show_group_totals=local_show_variable_totals,
+                                                             show_comparison_totals=local_show_comparison_totals,
+                                                             base_size=local_base_size) %>%
                                 print()
                         )
                     }
