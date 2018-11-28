@@ -43,13 +43,13 @@ renderUI__variable_plots_comparison_UI <- function(dataset) {
     })
 }
 
-renderUI__variable_plots_sum_by_variable_UI <- function(numeric_summary_data) {
+renderUI__variable_plots_sum_by_variable_UI <- function(dataset) {
 
     renderUI({
 
         selectInput(inputId='variable_plots_sum_by_variable',
                     label = 'Sum By Variable',
-                    choices = c(select_variable_optional, as.character(numeric_summary_data()$feature)),
+                    choices = c(select_variable_optional, colnames(dataset() %>% select_if(is.numeric))),
                     selected = select_variable_optional,
                     multiple = FALSE,
                     selectize = TRUE,

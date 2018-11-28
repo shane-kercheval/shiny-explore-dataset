@@ -99,6 +99,10 @@ shinyUI(fluidPage(theme="custom.css",
                         'Variables',
                         uiOutput('variable_plots_variable_UI'),
                         uiOutput('variable_plots_comparison_UI'),
+                        # NOTE: the variables below can't be hidden initially (but rather are dynamically hidden)
+                        # because the values need to load the first time this tab is clicked
+                        # if not, when they become active (and therefore the values change to the default,
+                        # they will trigger an unncessary plot refresh
                         uiOutput('variable_plots_sum_by_variable_UI'),
                         uiOutput('variable_plots_point_color_UI'),
                         uiOutput('variable_plots_point_size_UI'),

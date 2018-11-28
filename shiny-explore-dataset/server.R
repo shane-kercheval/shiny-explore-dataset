@@ -56,7 +56,7 @@ shinyServer(function(input, output, session) {
     output$variable_plots <- renderPlot__variable_plot(input, output, session, dataset)
     output$variable_plots_variable_UI <- renderUI__variable_plots_variable_UI(dataset)
     output$variable_plots_comparison_UI <- renderUI__variable_plots_comparison_UI(dataset)
-    output$variable_plots_sum_by_variable_UI <- renderUI__variable_plots_sum_by_variable_UI(numeric_summary_data)
+    output$variable_plots_sum_by_variable_UI <- renderUI__variable_plots_sum_by_variable_UI(dataset)
     output$variable_plots_point_color_UI <- renderUI__variable_plots_point_color_UI(dataset)
     output$variable_plots_point_size_UI <- renderUI__variable_plots_point_size_UI(dataset)
     observe__variable_plots__hide_show_uncollapse_on_primary_vars(input, output, session)
