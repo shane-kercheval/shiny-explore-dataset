@@ -11,262 +11,46 @@ library(scales)
 library(lattice)
 library(lubridate)
 
-source('definitions.R')
+source('helper_scripts/definitions.R')
+source('helper_scripts/logging_functions.R')
+source('helper_scripts/ui_helpers.R')
+source('helper_scripts/dynamic_show_hide_controls.R')
+source('helper_scripts/generic_helpers.R')
+source('helper_scripts/reactive_helpers.R')
+source('helper_scripts/renderUI_helpers.R')
+
 
 # Define server logic required to draw a histogram
 shinyServer(function(input, output, session) {
 
     ##########################################################################################################
-    ##########################################################################################################
     # REACTIVE DATASETS
     ##########################################################################################################
-    ##########################################################################################################
 
-    ##########################################################################################################
     # main dataset
-    # initialize with small default dataset or upload from file, by user
-    ##########################################################################################################
-    dataset_or_null <- function(file) {
-        
-        withProgress(value=1/2, message='Uploading Data',{
-
-            if(file.exists(file)) {
-
-                return (read.csv(file, header=TRUE))
-
-            } else {
-
-                return (NULL)
-            }
-        })
-    }
-
-    dataset <- reactive({
-
-        req(input$selected_preloaded_dataset)
-
-        # reactive data
-        upload_file_path <- input$uploadFile$datapath
-        local_selected_preloaded_dataset <- input$selected_preloaded_dataset
-
-        log_message_block_start('Loading Dataset')
-        log_message_variable('upload_file_path', upload_file_path)
-        log_message_variable('selected_preloaded_dataset', local_selected_preloaded_dataset)
-
-        if(is.null(upload_file_path)) {
-            
-            if(local_selected_preloaded_dataset == 'Credit') {
-
-                dataset_or_null('example_datasets/credit.csv')
-
-            } else if(local_selected_preloaded_dataset == 'Housing') {
-
-                dataset_or_null('example_datasets/housing.csv')
-
-            } else if(local_selected_preloaded_dataset == 'Insurance') {
-
-                dataset_or_null('example_datasets/insurance.csv')
-
-            } else if(local_selected_preloaded_dataset == 'Iris') {
-
-                return (data.frame(iris))
-
-            } else if(local_selected_preloaded_dataset == 'Diamonds') {
-
-                return (data.frame(diamonds))
-
-            } else if(local_selected_preloaded_dataset == 'Flights') {
-
-                return (
-                    data.frame(nycflights13::flights %>%
-                        mutate(date = make_date(year, month, day)) %>%
-                        select(-year, -month, -day) %>%
-                        select(date, everything())))
-
-            } else if(local_selected_preloaded_dataset == 'Gapminder') {
-
-                return (data.frame(gapminder::gapminder))
-
-            } else {
-
-                return (NULL)
-            }
-        } else {
-
-            if(str_sub(upload_file_path, -4) == '.csv') {
-                
-                read.csv(upload_file_path, header=TRUE)
-
-            } else if(str_sub(upload_file_path, -4) == '.RDS') {
-            
-                readRDS(file=upload_file_path)
-
-            } else {
-
-                showModal(
-                    modalDialog(title = 'Unknown File Type',
-                                'Only `.csv` and `.RDS` files are supported at this time.'))
-                NULL
-            }
-        }
-    })
-
-    ##########################################################################################################
+    dataset <- reactive_dataset(input, output, session)
     # calculate the numeric summary; it is an expensive operation for large datasets
-    ##########################################################################################################    
-    numeric_summary_data <- reactive({
-
-        # typically I would do the progress in the while rendering the UI, but this is used while updating
-        # the summary options and i'm not sure which will be called first
-        withProgress(value=1/2, message='Calculating Numeric Summary',{
-
-            log_message_block_start('Calculating Numeric Summary')
-            rt_explore_numeric_summary(dataset=dataset())
-        })
-    })
-
-    ##########################################################################################################
+    numeric_summary_data <- reactive_numeric_summary(input, output, session, dataset)
     # calculate the categoric summary; it is an expensive operation for large datasets
-    ##########################################################################################################    
-    categoric_summary_data <- reactive({
-
-        withProgress(value=1/2, message='Calculating Categoric Summary',{
-
-            log_message_block_start('Calculating Categoric Summary')
-            rt_explore_categoric_summary(dataset=dataset())
-        })
-    })
-
-    ##########################################################################################################
+    categoric_summary_data <- reactive_categoric_summary(input, output, session, dataset)
     # Run Regression when user clicks Run button
-    ##########################################################################################################    
-    regression_results <- eventReactive(input$regression_run_button, {
+    regression_results <- eventReactive_regression_results(input, output, session, dataset)
 
-        if(input$regression_selected_dependent_variable == select_variable) {
-            return (NULL)
-        }
-
-        local_interaction_term1 <- input$regression_selected_interaction_term1
-        local_interaction_term2 <- input$regression_selected_interaction_term2
-
-        withProgress(value=1/2, message='Running Regression',{
-
-            interaction_variables <- NULL
-
-            if(!is.null(local_interaction_term1) && local_interaction_term1 != select_variable &&
-               !is.null(local_interaction_term2) && local_interaction_term2 != select_variable) {
-
-                interaction_variables <- list(c(local_interaction_term1,
-                                                local_interaction_term2))
-            }
-
-            # updates to reactive variables will not trigger an update here, only regression_run_button
-            results <- easy_regression(dataset=dataset(),
-                                       dependent_variable=input$regression_selected_dependent_variable,
-                                       independent_variables=input$regression_selected_independent_variables,
-                                       # list of vectors, each element in the list is a pair of interaction terms
-                                       # only supporting two interaction variables at the moment
-                                       interaction_variables=interaction_variables)
-
-            shinyjs::show('regression_formula_header')
-            shinyjs::show('regression_summary_header_UI')
-            shinyjs::show('regression_vif_header')
-            
-            return (results)
-        })
-    })
-
-    ##########################################################################################################
     ##########################################################################################################
     # REACTIVE UI
-    ##########################################################################################################
     ##########################################################################################################
 
     ##########################################################################################################
     # Variable Plot Reactive UI
     ##########################################################################################################
-    output$selected_numeric_summary_options_UI <- renderUI({
+    output$selected_numeric_summary_options_UI <- renderUI_selected_numeric_summary_options_UI(numeric_summary_data)
+    output$selected_variable_plot_variable_UI <- renderUI_selected_variable_plot_variable_UI(dataset)
+    output$selected_variable_plot_comparison_UI <- renderUI_selected_variable_plot_comparison_UI(dataset)
+    output$selected_variable_plot_point_color_UI <- renderUI_selected_variable_plot_point_color_UI(dataset)
+    output$selected_variable_plot_point_size_UI <- renderUI_selected_variable_plot_point_size_UI(dataset)
 
-        # reactive data
-        option_values <- colnames(numeric_summary_data())
-
-        option_values <- option_values[option_values != 'feature']
-        checkboxGroupInput(inputId='selected_numeric_summary_options',
-                           label='Summary Options',
-                           choices=option_values,
-                           selected=c('perc_nulls', 'perc_zeros', 'mean', 'coef_of_var', 'skewness', 'min', 
-                                      'percentile_50', 'max'),
-                           inline=FALSE,
-                           width=NULL)
-    })
-
-    output$selected_variable_plot_variable_UI <- renderUI({
-
-        selectInput(inputId='selected_variable_plot_variable',
-                    label = 'Variable',
-                    choices = c(select_variable, colnames(dataset())),
-                    selected = select_variable,
-                    multiple = FALSE,
-                    selectize = TRUE,
-                    width = 500,
-                    size = NULL)
-    })
-
-    output$selected_variable_plot_comparison_UI <- renderUI({
-
-        selectInput(inputId='selected_variable_plot_comparison',
-                    label = 'Comparison Variable',
-                    choices = c(select_variable_optional, colnames(dataset())),
-                    selected = select_variable_optional,
-                    multiple = FALSE,
-                    selectize = TRUE,
-                    width = 500,
-                    size = NULL)
-    })
-
-    output$selected_variable_plot_point_color_UI <- renderUI({
-
-        selectInput(inputId='selected_variable_plot_point_color',
-                    label = 'Color Variable',
-                    choices = c(select_variable_optional, colnames(dataset())),
-                    selected = select_variable_optional,
-                    multiple = FALSE,
-                    selectize = TRUE,
-                    width = 500,
-                    size = NULL)
-    })
-
-    output$selected_variable_plot_point_size_UI <- renderUI({
-
-        selectInput(inputId='selected_variable_plot_point_size',
-                    label = 'Size Variable',
-                    choices = c(select_variable_optional, colnames(dataset())),
-                    selected = select_variable_optional,
-                    multiple = FALSE,
-                    selectize = TRUE,
-                    width = 500,
-                    size = NULL)
-    })
-
-    observe({
-
-        req(input$selected_variable_plot_variable)
-        req(input$selected_variable_plot_comparison)
-
-        local_primary_variable <- input$selected_variable_plot_variable
-        local_comparison_variable <- input$selected_variable_plot_comparison
-
-        if(local_primary_variable == select_variable || local_comparison_variable == select_variable_optional) {
-
-            shinyjs::hide('selected_variable_plot_point_size_UI')
-            shinyjs::hide('selected_variable_plot_point_color_UI')
-        }
-
-        if(local_primary_variable != select_variable || local_comparison_variable != select_variable_optional) {
-
-            updateCollapse(session, 'collapse_variable_plot_controls', open='Plot Options')
-        }
-    })
+    observe__variable_plot__hide_show_uncollapse_on_primary_vars(input, output, session)
+    
 
 
     ##########################################################################################################
@@ -451,7 +235,6 @@ shinyServer(function(input, output, session) {
         session$clientData$output_correlation_plot_width * 0.66  # set height to % of width
 
     })
-
 
     null_if_select_variable_optional <- function(value) {
 

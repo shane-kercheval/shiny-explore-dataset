@@ -2,7 +2,8 @@ library(shiny)
 library(shinyWidgets)
 library(shinyjs)
 library(shinyBS)
-source('definitions.R')
+
+source('helper_scripts/definitions.R')
 
 shinyUI(fluidPage(theme="custom.css",
 
@@ -15,14 +16,14 @@ shinyUI(fluidPage(theme="custom.css",
             fluidRow(
                 column(4, selectInput(inputId='selected_preloaded_dataset',
                                       label='Preloaded Datasets',
-                                      choices=c('Credit',
+                                      choices=c('Diamonds',
+                                                'Credit',
                                                 'Housing',
                                                 'Insurance',
                                                 'Iris',
-                                                'Diamonds',
                                                 'Flights',
                                                 'Gapminder'),
-                                      selected='Credit')
+                                      selected='Diamonds')
                 ),
                 column(5, fileInput(inputId='uploadFile', 'Upload data (.csv/.RDS)'))
             ),

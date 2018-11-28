@@ -1,0 +1,84 @@
+dplyr_friendly_variable <- function(x) {
+    # if there is a column that is named in the form of "My Column", then aes_string requireds "`My Column`".
+    # Wrapping a variable name such as "`my_column`" still works, so we wrap each variable in a "dplyr
+    # friendly way"
+
+    if (is.null(x)) {
+
+        return (NULL)
+
+    } else {
+
+        return (paste0('`', x, '`'))
+    }
+}
+
+add_trend_line <- function(plot, trend_line_type, confidence_interval=TRUE, color_variable=NULL) {
+    # adds a trend line to a ggplot
+
+    if(trend_line_type == 'None') {
+
+        return (plot)
+
+    } else {
+
+        if(trend_line_type == 'Straight') {
+        
+            return (plot + geom_smooth(method='lm',
+                                       se=confidence_interval,
+                                       mapping=aes_string(color=dplyr_friendly_variable(color_variable))))
+            
+        } else if(trend_line_type == 'Smooth') {
+        
+            return (plot + geom_smooth(method='loess',
+                                       se=confidence_interval,
+                                       mapping=aes_string(color=dplyr_friendly_variable(color_variable))))
+            
+        } else {
+            # this function isn't aware of the value which is an error   
+            stopifnot(FALSE)   
+        }
+    }
+}
+
+prettyfy_plot <- function(plot, dataset, comparison_variable, annotate_points=FALSE) {
+
+    # annotate_points requires a y-axis i.e. comparison_variable
+    if(annotate_points && !is.null(comparison_variable) ) {
+
+        plot <- plot + 
+            geom_text(aes(label=dataset[, comparison_variable]), check_overlap=TRUE, vjust=1, hjust=1)
+    }
+
+    return (plot)
+}
+
+scale_axes_log10 <- function(plot, scale_x, scale_y) {
+    
+    if(scale_x) {
+        
+        plot <- plot + scale_x_log10(labels=comma_format())
+    }
+    if(scale_y) {
+        
+        plot <- plot + scale_y_log10(labels=comma_format())
+    }
+    
+    return (plot)
+}
+
+dataset_or_null <- function(file) {
+    # loads the file if it exists, otherwise returns NULL.
+    
+    withProgress(value=1/2, message='Uploading Data',{
+
+        if(file.exists(file)) {
+
+            return (read.csv(file, header=TRUE))
+
+        } else {
+
+            return (NULL)
+        }
+    })
+}
