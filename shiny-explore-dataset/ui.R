@@ -99,6 +99,7 @@ shinyUI(fluidPage(theme="custom.css",
                         'Variables',
                         uiOutput('variable_plots_variable_UI'),
                         uiOutput('variable_plots_comparison_UI'),
+                        uiOutput('variable_plots_sum_by_variable_UI'),
                         uiOutput('variable_plots_point_color_UI'),
                         uiOutput('variable_plots_point_size_UI'),
                         style='default'

@@ -16,6 +16,7 @@ hide_show_numeric_numeric <- function(session) {
     shinyjs::hide('variable_plots_histogram_bins')
     shinyjs::hide('div_variable_plots_group_barchar_controls')
     shinyjs::hide('variable_plots_numeric_graph_type')
+    shinyjs::hide('variable_plots_sum_by_variable_UI')
 }
 
 hide_show_numeric_categoric <- function(session, showing_boxplot) {
@@ -50,6 +51,7 @@ hide_show_numeric_categoric <- function(session, showing_boxplot) {
     shinyjs::hide('div_variable_plots_group_scatter_controls')
     shinyjs::hide('div_variable_plots_group_barchar_controls')
     shinyjs::hide('variable_plots_annotate_points')
+    shinyjs::hide('variable_plots_sum_by_variable_UI')
 }
 
 hide_show_categoric_numeric <- function(session) {
@@ -72,6 +74,7 @@ hide_show_categoric_numeric <- function(session) {
     shinyjs::hide('div_variable_plots_group_barchar_controls')
     shinyjs::hide('variable_plots_numeric_graph_type')
     shinyjs::hide('variable_plots_annotate_points')
+    shinyjs::hide('variable_plots_sum_by_variable_UI')
 }
 
 hide_show_categoric_categoric <- function(session) {
@@ -79,7 +82,7 @@ hide_show_categoric_categoric <- function(session) {
     log_message('hide_show_categoric_categoric')
     
     # grouped barchart
-
+    shinyjs::show('variable_plots_sum_by_variable_UI') # categoric with categoric (or NULL) can select numeric sum_by_variable
     shinyjs::hide('variable_plots_point_size_UI')
     shinyjs::hide('variable_plots_point_color_UI')
 
@@ -109,6 +112,7 @@ observe__variable_plots__hide_show_uncollapse_on_primary_vars <- function(input,
 
         if(local_primary_variable == select_variable || local_comparison_variable == select_variable_optional) {
 
+            shinyjs::hide('variable_plots_sum_by_variable_UI')
             shinyjs::hide('variable_plots_point_size_UI')
             shinyjs::hide('variable_plots_point_color_UI')
         }

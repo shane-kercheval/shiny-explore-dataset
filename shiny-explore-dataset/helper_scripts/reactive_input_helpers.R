@@ -1,7 +1,6 @@
 renderUI__numeric_summary_options_UI <- function(numeric_summary_data) {
     renderUI({
 
-        # reactive data
         option_values <- colnames(numeric_summary_data())
 
         option_values <- option_values[option_values != 'feature']
@@ -36,6 +35,21 @@ renderUI__variable_plots_comparison_UI <- function(dataset) {
         selectInput(inputId='variable_plots_comparison',
                     label = 'Comparison Variable',
                     choices = c(select_variable_optional, colnames(dataset())),
+                    selected = select_variable_optional,
+                    multiple = FALSE,
+                    selectize = TRUE,
+                    width = 500,
+                    size = NULL)
+    })
+}
+
+renderUI__variable_plots_sum_by_variable_UI <- function(numeric_summary_data) {
+
+    renderUI({
+
+        selectInput(inputId='variable_plots_sum_by_variable',
+                    label = 'Sum By Variable',
+                    choices = c(select_variable_optional, as.character(numeric_summary_data()$feature)),
                     selected = select_variable_optional,
                     multiple = FALSE,
                     selectize = TRUE,

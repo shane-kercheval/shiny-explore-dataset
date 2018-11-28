@@ -103,6 +103,7 @@ renderPlot__variable_plot <- function(input, output, session, dataset) {
         local_dataset <- dataset()
         local_primary_variable <- input$variable_plots_variable
         local_comparison_variable <- input$variable_plots_comparison
+        local_sum_by_variable <- input$variable_plots_sum_by_variable
         local_point_size <- input$variable_plots_point_size
         local_point_color <- input$variable_plots_point_color
 
@@ -138,6 +139,7 @@ renderPlot__variable_plot <- function(input, output, session, dataset) {
                 local_comparison_variable <- null_if_select_variable_optional(local_comparison_variable)
                 # these can actually be NULL (unlike local_comparison_variable which is req)
                 # these can't be req because they aren't even shown initially
+                local_sum_by_variable <- null_if_select_variable_optional(local_sum_by_variable)
                 local_point_size <- null_if_select_variable_optional(local_point_size)
                 local_point_color <- null_if_select_variable_optional(local_point_color)
                 local_comparison_variable <- null_if_select_variable_optional(local_comparison_variable)
@@ -150,6 +152,7 @@ renderPlot__variable_plot <- function(input, output, session, dataset) {
 
                 log_message_variable('primary_variable', local_primary_variable)
                 log_message_variable('comparison_variable', local_comparison_variable)
+                log_message_variable('variable_plots_sum_by_variable', local_sum_by_variable)
                 log_message_variable('variable_plots_point_size', local_point_size)
                 log_message_variable('variable_plots_point_color', local_point_color)
                 log_message_variable('variable_plots_base_size', local_base_size)
@@ -346,6 +349,7 @@ renderPlot__variable_plot <- function(input, output, session, dataset) {
                                 custom_filter(factor_lump_number=local_variable_plots_filter_factor_lump_number) %>%
                                 rt_explore_plot_value_totals(variable=local_primary_variable,
                                                              comparison_variable=local_comparison_variable,
+                                                             sum_by_variable=local_sum_by_variable,
                                                              order_by_count=local_order_by_count,
                                                              show_group_totals=local_show_variable_totals,
                                                              show_comparison_totals=local_show_comparison_totals,
