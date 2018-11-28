@@ -34,7 +34,6 @@ shinyServer(function(input, output, session) {
     ##########################################################################################################
     # numeric summary data
     ##########################################################################################################
-    # calculate the numeric summary; it is an expensive operation for large datasets
     numeric_summary_data <- reactive__numeric_summary(input, output, session, dataset)
     output$numeric_summary_table <- renderDataTable__numeric_summary_table(input, numeric_summary_data)
     output$numeric_summary_options_UI <- renderUI__numeric_summary_options_UI(numeric_summary_data)
@@ -42,7 +41,6 @@ shinyServer(function(input, output, session) {
     ##########################################################################################################
     # categoric summary data
     ##########################################################################################################
-    # calculate the categoric summary; it is an expensive operation for large datasets
     categoric_summary_data <- reactive__categoric_summary(input, output, session, dataset)
     output$categoric_summary_table <- renderDataTable__categoric_summary_table(categoric_summary_data)
     output$categoric_summary_text <- renderPrint__categoric_summary_text(dataset, categoric_summary_data)
@@ -55,9 +53,7 @@ shinyServer(function(input, output, session) {
     ##########################################################################################################
     # RENDER OUTPUT
     ##########################################################################################################
-    # Variable Plot
     output$variable_plots <- renderPlot__variable_plot(input, output, session, dataset)
-    # Reactive UI for Variable Plot Controls
     output$variable_plots_variable_UI <- renderUI__variable_plots_variable_UI(dataset)
     output$variable_plots_comparison_UI <- renderUI__variable_plots_comparison_UI(dataset)
     output$variable_plots_point_color_UI <- renderUI__variable_plots_point_color_UI(dataset)
