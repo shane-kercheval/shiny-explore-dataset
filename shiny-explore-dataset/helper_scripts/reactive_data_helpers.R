@@ -19,15 +19,15 @@ reactive__dataset <- function(input, output, session) {
             
             if(local_preloaded_dataset == 'Credit') {
 
-                dataset_or_null('example_datasets/credit.csv')
+                return (dataset_or_null('example_datasets/credit.csv'))
 
             } else if(local_preloaded_dataset == 'Housing') {
 
-                dataset_or_null('example_datasets/housing.csv')
+                return (dataset_or_null('example_datasets/housing.csv'))
 
             } else if(local_preloaded_dataset == 'Insurance') {
 
-                dataset_or_null('example_datasets/insurance.csv')
+                return (dataset_or_null('example_datasets/insurance.csv'))
 
             } else if(local_preloaded_dataset == 'Iris') {
 
@@ -57,18 +57,18 @@ reactive__dataset <- function(input, output, session) {
 
             if(str_sub(upload_file_path, -4) == '.csv') {
                 
-                read.csv(upload_file_path, header=TRUE)
+                return (read.csv(upload_file_path, header=TRUE))
 
             } else if(str_sub(upload_file_path, -4) == '.RDS') {
             
-                readRDS(file=upload_file_path)
+                return (readRDS(file=upload_file_path))
 
             } else {
 
                 showModal(
                     modalDialog(title = 'Unknown File Type',
                                 'Only `.csv` and `.RDS` files are supported at this time.'))
-                NULL
+                return (NULL)
             }
         }
     })
@@ -86,7 +86,7 @@ reactive__numeric_summary <- function(input, output, session, dataset) {
         withProgress(value=1/2, message='Calculating Numeric Summary',{
 
             log_message_block_start('Calculating Numeric Summary')
-            rt_explore_numeric_summary(dataset=dataset())
+            return (rt_explore_numeric_summary(dataset=dataset()))
         })
     })
 }
@@ -101,7 +101,7 @@ reactive__categoric_summary <- function(input, output, session, dataset) {
         withProgress(value=1/2, message='Calculating Categoric Summary',{
 
             log_message_block_start('Calculating Categoric Summary')
-            rt_explore_categoric_summary(dataset=dataset())
+            return (rt_explore_categoric_summary(dataset=dataset()))
         })
     })
 }
