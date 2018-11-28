@@ -109,6 +109,15 @@ shinyUI(fluidPage(theme="custom.css",
                         style='default'
                     ),
                     bsCollapsePanel(
+                        'Filters',
+                        fluidRow(
+                            column(6, actionButton(inputId='variable_plots_filter_apply', label='Apply Filters')),
+                            column(6, actionButton(inputId='variable_plots_filter_clear', label='Clear Filters'))
+                        ),
+                        tags$br(),
+                        uiOutput('variable_plots_filter_bscollapse_UI')
+                    ),
+                    bsCollapsePanel(
                         'Plot Options',
                         shinyjs::hidden(
                             selectInput(inputId='variable_plots_numeric_graph_type',
