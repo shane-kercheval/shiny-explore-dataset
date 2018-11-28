@@ -14,6 +14,28 @@ dataset_or_null <- function(file) {
     })
 }
 
+null_if_select_variable_optional <- function(value) {
+
+    if(is.null(value) || value == select_variable_optional) {
+
+        value <- NULL
+    }
+
+    return (value)
+}
+
+custom_filter <- function(dataset, factor_lump_number=NULL) {
+
+    if(!is.na(factor_lump_number)) {
+
+        dataset <- dataset %>%
+            mutate_if(is.character, as.factor) %>%
+            mutate_if(is.factor, ~fct_lump(.x, n=factor_lump_number))
+    }
+
+    return (dataset)
+}
+
 easy_regression <- function(dataset,
                             dependent_variable,
                             independent_variables,
@@ -109,25 +131,3 @@ easy_regression <- function(dataset,
 # #interaction_variables <- list(c('housing_median_age', 'total_rooms'), c('total_rooms', 'housing_median_age'))
 # interaction_variables <- list(c('housing_median_age', 'total_rooms'))
 # paste(' ', paste(map_chr(interaction_variables, ~ paste(., collapse =' * ')), collapse = ' + '), '+ ')
-
-null_if_select_variable_optional <- function(value) {
-
-    if(is.null(value) || value == select_variable_optional) {
-
-        value <- NULL
-    }
-
-    return (value)
-}
-
-custom_filter <- function(dataset, factor_lump_number=NULL) {
-
-    if(!is.na(factor_lump_number)) {
-
-        dataset <- dataset %>%
-            mutate_if(is.character, as.factor) %>%
-            mutate_if(is.factor, ~fct_lump(.x, n=factor_lump_number))
-    }
-
-    return (dataset)
-}

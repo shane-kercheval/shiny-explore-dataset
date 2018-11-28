@@ -196,7 +196,6 @@ shinyUI(fluidPage(theme="custom.css",
             'Regression',
             column(3,
                 class='column-input-control-style',
-
                 bsCollapse(id='regression_collapse_controls', open='Variables', multiple=TRUE,
                     bsCollapsePanel(
                         'Variables',

@@ -5,7 +5,7 @@ renderDataTable__dataset_head_table <- function(dataset) {
 
     renderDataTable({
 
-        head(dataset(), 500)
+        return (head(dataset(), 500))
     })
 }
 
@@ -18,6 +18,7 @@ renderDataTable__dataset_types_table <- function(dataset) {
             local_dataset <- dataset()
 
             types <- map_chr(colnames(local_dataset), ~ class(local_dataset[, .])[1])
+
             return (data.frame(variable=colnames(local_dataset), type=types))
         })
     })
@@ -29,7 +30,7 @@ renderDataTable__numeric_summary_table <- function(input, numeric_summary_data) 
 
         local_numeric_summary <- numeric_summary_data()
         local_numeric_options <- input$numeric_summary_options
-        local_numeric_summary[, c('feature', local_numeric_options)]
+        return (local_numeric_summary[, c('feature', local_numeric_options)])
     })
 }
 
@@ -37,8 +38,7 @@ renderDataTable__categoric_summary_table <- function(categoric_summary_data) {
 
     renderDataTable({
         
-        categoric_summary_data()
-
+        return (categoric_summary_data())
     })
 }
 
@@ -47,8 +47,7 @@ renderPrint__categoric_summary_text <- function(dataset, categoric_summary_data)
     renderPrint({
         
         # get R's summary of the categoric data
-        summary(dataset()[, as.character(categoric_summary_data()$feature)])
-
+        return (summary(dataset()[, as.character(categoric_summary_data()$feature)]))
     })
 }
 
@@ -72,16 +71,17 @@ renderPlot__correlation_plot <- function(input, output, session, dataset) {
             log_message_variable('correlation_pretty_text', input$correlation_pretty_text)
 
             # see note about why I use print, in `variable plot` section below.
-            print(rt_explore_plot_correlations(dataset=local_dataset,
-                                               corr_threshold=input$correlation_corr_threshold,
-                                               p_value_threshold=input$correlation_p_value_threshold,
-                                               base_size=input$correlation_base_size,
-                                               type='pearson'))
+            return (
+                print(rt_explore_plot_correlations(dataset=local_dataset,
+                                                   corr_threshold=input$correlation_corr_threshold,
+                                                   p_value_threshold=input$correlation_p_value_threshold,
+                                                   base_size=input$correlation_base_size,
+                                                   type='pearson'))
+            )
         })
     }, height = function() {
 
         session$clientData$output_correlation_plot_width * 0.66  # set height to % of width
-
     })
 }
 
@@ -142,7 +142,8 @@ renderPlot__variable_plot <- function(input, output, session, dataset) {
                 local_point_color <- null_if_select_variable_optional(local_point_color)
                 local_comparison_variable <- null_if_select_variable_optional(local_comparison_variable)
 
-                if(is.na(local_variable_plots_filter_factor_lump_number) || local_variable_plots_filter_factor_lump_number == 0) {
+                if(is.na(local_variable_plots_filter_factor_lump_number) ||
+                        local_variable_plots_filter_factor_lump_number == 0) {
 
                     local_variable_plots_filter_factor_lump_number <- NA
                 }
@@ -185,7 +186,6 @@ renderPlot__variable_plot <- function(input, output, session, dataset) {
                     log_message_generic('column names', paste0(colnames(local_dataset), collapse = '; '))
                 }
 
-
                 ##############################################################################################
                 # Numeric Primary Variable
                 ##############################################################################################
@@ -194,7 +194,8 @@ renderPlot__variable_plot <- function(input, output, session, dataset) {
                     ##########################################################################################
                     # Numeric Secondary Variable
                     ##########################################################################################
-                    if(!is.null(local_comparison_variable) && is.numeric(local_dataset[, local_comparison_variable])) {
+                    if(!is.null(local_comparison_variable) &&
+                            is.numeric(local_dataset[, local_comparison_variable])) {
 
                         hide_show_numeric_numeric(session)
 
@@ -215,29 +216,30 @@ renderPlot__variable_plot <- function(input, output, session, dataset) {
 
                         add_confidence_interval <- !is.null(local_trend_line_se) && local_trend_line_se == 'Yes'
 
-
-                        local_dataset %>% 
-                            custom_filter(factor_lump_number=local_variable_plots_filter_factor_lump_number) %>%
-                            rt_explore_plot_scatter(variable=local_primary_variable,
-                                                    comparison_variable=local_comparison_variable,
-                                                    color_variable=local_point_color,
-                                                    size_variable=local_point_size,
-                                                    # alpha is a measure of opacity which is the opposite of transparency, but transparency is more user-friendly
-                                                    alpha= 1 - local_transparency,
-                                                    jitter=local_jitter,
-                                                    x_zoom_min=local_x_zoom_min,
-                                                    x_zoom_max=local_x_zoom_max,
-                                                    y_zoom_min=local_y_zoom_min,
-                                                    y_zoom_max=local_y_zoom_max,
-                                                    base_size=local_base_size) %>%
-                            scale_axes_log10(scale_x=local_scale_x_log_base_10,
-                                             scale_y=local_scale_y_log_base_10) %>%
-                            add_trend_line(trend_line_type=local_trend_line,
-                                           confidence_interval=add_confidence_interval,
-                                           color_variable=local_point_color) %>% 
-                            prettyfy_plot(comparison_variable=local_comparison_variable,
-                                          annotate_points=local_annotate_points) %>%
-                            print()
+                        return (
+                            local_dataset %>% 
+                                custom_filter(factor_lump_number=local_variable_plots_filter_factor_lump_number) %>%
+                                rt_explore_plot_scatter(variable=local_primary_variable,
+                                                        comparison_variable=local_comparison_variable,
+                                                        color_variable=local_point_color,
+                                                        size_variable=local_point_size,
+                                                        # alpha is a measure of opacity which is the opposite of transparency, but transparency is more user-friendly
+                                                        alpha= 1 - local_transparency,
+                                                        jitter=local_jitter,
+                                                        x_zoom_min=local_x_zoom_min,
+                                                        x_zoom_max=local_x_zoom_max,
+                                                        y_zoom_min=local_y_zoom_min,
+                                                        y_zoom_max=local_y_zoom_max,
+                                                        base_size=local_base_size) %>%
+                                scale_axes_log10(scale_x=local_scale_x_log_base_10,
+                                                 scale_y=local_scale_y_log_base_10) %>%
+                                add_trend_line(trend_line_type=local_trend_line,
+                                               confidence_interval=add_confidence_interval,
+                                               color_variable=local_point_color) %>% 
+                                prettyfy_plot(comparison_variable=local_comparison_variable,
+                                              annotate_points=local_annotate_points) %>%
+                                print()
+                        )
                     ##########################################################################################
                     # NULL Or Categoric Secondary Variable
                     ##########################################################################################
@@ -255,16 +257,18 @@ renderPlot__variable_plot <- function(input, output, session, dataset) {
                             log_message_variable('variable_plots_y_zoom_max', local_y_zoom_max)
                             log_message_variable('variable_plots_scale_y_log_base_10', local_scale_y_log_base_10)
 
-                            local_dataset %>%
-                                custom_filter(factor_lump_number=local_variable_plots_filter_factor_lump_number) %>%
-                                rt_explore_plot_boxplot(variable=local_primary_variable,
-                                                        comparison_variable=local_comparison_variable,
-                                                        y_zoom_min=local_y_zoom_min,
-                                                        y_zoom_max=local_y_zoom_max,
-                                                        base_size=local_base_size) %>%
-                                scale_axes_log10(scale_x=FALSE,
-                                                 scale_y=local_scale_y_log_base_10) %>%
-                            print()
+                            return (
+                                local_dataset %>%
+                                    custom_filter(factor_lump_number=local_variable_plots_filter_factor_lump_number) %>%
+                                    rt_explore_plot_boxplot(variable=local_primary_variable,
+                                                            comparison_variable=local_comparison_variable,
+                                                            y_zoom_min=local_y_zoom_min,
+                                                            y_zoom_max=local_y_zoom_max,
+                                                            base_size=local_base_size) %>%
+                                    scale_axes_log10(scale_x=FALSE,
+                                                     scale_y=local_scale_y_log_base_10) %>%
+                                    print()
+                            )
 
 
                         } else {
@@ -276,18 +280,19 @@ renderPlot__variable_plot <- function(input, output, session, dataset) {
                             log_message_variable('variable_plots_x_zoom_max', local_x_zoom_max)
                             log_message_variable('variable_plots_scale_x_log_base_10', local_scale_x_log_base_10)
                             
-
-                            local_dataset %>%
-                                custom_filter(factor_lump_number=local_variable_plots_filter_factor_lump_number) %>%
-                                rt_explore_plot_histogram(variable=local_primary_variable,
-                                                          comparison_variable=local_comparison_variable,
-                                                          num_bins=local_histogram_bins,
-                                                          x_zoom_min=local_x_zoom_min,
-                                                          x_zoom_max=local_x_zoom_max,
-                                                          base_size=local_base_size) %>%
-                                scale_axes_log10(scale_x=local_scale_x_log_base_10,
-                                                 scale_y=FALSE) %>%
-                                print()
+                            return (
+                                local_dataset %>%
+                                    custom_filter(factor_lump_number=local_variable_plots_filter_factor_lump_number) %>%
+                                    rt_explore_plot_histogram(variable=local_primary_variable,
+                                                              comparison_variable=local_comparison_variable,
+                                                              num_bins=local_histogram_bins,
+                                                              x_zoom_min=local_x_zoom_min,
+                                                              x_zoom_max=local_x_zoom_max,
+                                                              base_size=local_base_size) %>%
+                                    scale_axes_log10(scale_x=local_scale_x_log_base_10,
+                                                     scale_y=FALSE) %>%
+                                    print()
+                            )
                         }
                     }
 
@@ -299,7 +304,8 @@ renderPlot__variable_plot <- function(input, output, session, dataset) {
                     ##########################################################################################
                     # Numeric Secondary Variable
                     ##########################################################################################
-                    if(!is.null(local_comparison_variable) && is.numeric(local_dataset[, local_comparison_variable])) {
+                    if(!is.null(local_comparison_variable) &&
+                            is.numeric(local_dataset[, local_comparison_variable])) {
 
                         hide_show_categoric_numeric(session)
 
@@ -309,7 +315,8 @@ renderPlot__variable_plot <- function(input, output, session, dataset) {
                         log_message_variable('variable_plots_y_zoom_max', local_y_zoom_max)
                         log_message_variable('variable_plots_scale_y_log_base_10', local_scale_y_log_base_10)
 
-                        local_dataset %>%
+                        return (
+                            local_dataset %>%
                                 custom_filter(factor_lump_number=local_variable_plots_filter_factor_lump_number) %>%
                                 rt_explore_plot_boxplot(variable=local_comparison_variable,
                                                         comparison_variable=local_primary_variable,
@@ -319,6 +326,7 @@ renderPlot__variable_plot <- function(input, output, session, dataset) {
                                 scale_axes_log10(scale_x=FALSE,
                                                  scale_y=local_scale_y_log_base_10) %>%
                                 print()
+                        )
 
                     ##########################################################################################
                     # NULL Or Categoric Secondary Variable
@@ -333,8 +341,8 @@ renderPlot__variable_plot <- function(input, output, session, dataset) {
                         log_message_variable('variable_plots_show_variable_totals', local_show_variable_totals)
                         log_message_variable('variable_plots_show_comparison_totals', local_show_comparison_totals)
 
-
-                        local_dataset %>%
+                        return (
+                            local_dataset %>%
                                 custom_filter(factor_lump_number=local_variable_plots_filter_factor_lump_number) %>%
                                 rt_explore_plot_unique_values(variable=local_primary_variable,
                                                               comparison_variable=local_comparison_variable,
@@ -343,12 +351,13 @@ renderPlot__variable_plot <- function(input, output, session, dataset) {
                                                               show_comparison_totals=local_show_comparison_totals,
                                                               base_size=local_base_size) %>%
                                 print()
+                        )
                     }
                 }
             })
         } else {
 
-            NULL
+            return (NULL)
         }
     }, height = function() {
 
@@ -364,7 +373,6 @@ renderPrint__regression_summary_output <- function(regression_results) {
     renderPrint({
 
         req(regression_results())
-
         summary(regression_results()$results)
     })
 }
@@ -374,7 +382,6 @@ renderText__regression_number_of_rows_missing_removed <- function(regression_res
     renderText({
 
         req(regression_results())
-
         paste('Number of missing/removed rows from dataset:', length(regression_results()$rows_excluded))
     })
 }
@@ -384,7 +391,6 @@ renderText__regression_formula <- function(regression_results) {
     renderText({
 
         req(regression_results())
-
         regression_results()$formula
     })
 }
@@ -394,7 +400,6 @@ renderPrint__regression_summary_vif <- function(regression_results) {
     renderPrint({
 
         req(regression_results())
-
         car::vif(regression_results()$results)
     })
 }
@@ -405,7 +410,6 @@ render_diagnostic_plot <- function(regression_results, graph_function, graph_wid
         renderPlot({
 
             req(regression_results())
-
             withProgress(value=1/2, message='Creating Regression Diagnostic Graph',{
 
                 graph_function()
