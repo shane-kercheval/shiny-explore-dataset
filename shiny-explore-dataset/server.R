@@ -61,14 +61,7 @@ shinyServer(function(input, output, session) {
     observeEvent__variable_plots_filter_clear(input, session)
     observeEvent__variable_plots_filter_apply(input, session)
     observe__variable_plots_bscollapse__color(input, session, dataset)
-
-    observeEvent(input$variable_plots_filter_use, {
-        if(input$variable_plots_filter_use) {
-            updateCollapse(session, "variable_plots_bscollapse", style = list('Filters' = 'success'))
-        } else {
-            updateCollapse(session, "variable_plots_bscollapse", style = list('Filters' = 'default'))
-        }
-    })
+    observeEvent__variable_plots_filter_use(input, session)
 
     output$variable_plots <- renderPlot__variable_plot(input, output, session, variable_plots_filtered_dataset)
     output$variable_plots_variable_UI <- renderUI__variable_plots_variable_UI(dataset)
