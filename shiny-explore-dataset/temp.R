@@ -67,3 +67,32 @@ as.Date(dataset$time_hour)
 as_datetime(dataset$time_hour)
 
 summary(dataset)
+
+
+temp <- list()
+temp <- append(temp, 'a')
+temp <- append(temp, 'b')
+
+
+
+
+l = list()
+length(l)=5
+
+names(l) <- c('a', 'b', 'c', 'd', 'e')
+l
+
+l['c'] <- 1
+
+
+l <- list()
+any(map_lgl(l, ~ !is.null(.)))
+
+
+
+
+
+
+
+
+

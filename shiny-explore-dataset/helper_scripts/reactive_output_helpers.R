@@ -92,9 +92,22 @@ renderPlot__correlation_plot <- function(input, output, session, dataset) {
 # shiny app is still working/blocking but no progress is shown. `print` seems to force evaluation while
 # not affecting return of the plot from the function or it being displayed in shiny
 ##############################################################################################################
+
+get_dynamic_filter_selections <- function(input, columns) {
+
+    # get all of the selections from the dynamic filters without triggering refresh for the first time
+    selections_list <- map(columns, ~ isolate(input[[paste0('dynamic_filter_variable_plots_', .)]]))
+    names(selections_list) <- columns
+
+    return (selections_list)
+
+}
+
 renderPlot__variable_plot <- function(input, output, session, dataset) {
 
     renderPlot({
+
+        #req(filter_controls_list())
 
         req(input$variable_plots_variable)
         req(input$variable_plots_comparison)
@@ -133,6 +146,10 @@ renderPlot__variable_plot <- function(input, output, session, dataset) {
             withProgress(value=1/2, message='Plotting Graph',{
 
                 log_message_block_start('Plotting Variable Graph')
+                
+
+
+
     
                 # if there isn't a selection for these variables, then set them to NULL, because they will be
                 # passed to rtools functions (and if they aren't null, rtools expects column names)
