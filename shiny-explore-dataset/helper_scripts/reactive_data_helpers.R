@@ -114,59 +114,73 @@ reactive__variable_plots_filtered_dataset <- function(input, dataset) {
 
     reactive({
 
-        input$variable_plots_filter_apply  # trigger on the apply button
         local_dataset <- dataset()  # clear on new datasets
 
-        column_names <- colnames(local_dataset)
-        num_columns <- length(column_names)
-        withProgress(value=1 / num_columns, message='Applying Filters',{
+        if(!is.null(input$variable_plots_filter_use) && input$variable_plots_filter_use) {
 
-            log_message_block_start('Filtering...')
+            input$variable_plots_filter_apply  # trigger for the "apply" button
+            
 
-            #### APPLY FILTERS
+            column_names <- colnames(local_dataset)
+            num_columns <- length(column_names)
+            withProgress(value=1 / num_columns, message='Applying Filters',{
 
-            # list with selections for each dynamic filter, and list names are the column names
-            dynamic_filter_selections <- get_dynamic_filter_selections(input, column_names)
+                log_message_block_start('Filtering...')
 
-            index = 1
-            for(column_name in column_names) {
+                #### APPLY FILTERS
 
-                incProgress(index / num_columns, detail = column_name)
+                # list with selections for each dynamic filter, and list names are the column names
+                dynamic_filter_selections <- get_dynamic_filter_selections(input, column_names)
+
+                index = 1
+                for(column_name in column_names) {
+
+                    incProgress(index / num_columns, detail = column_name)
 
 
-                filter_selection <- dynamic_filter_selections[[column_name]]
+                    filter_selection <- dynamic_filter_selections[[column_name]]
 
-                log_message_generic(paste('Filtering on', column_name), 
-                                    paste0(filter_selection, collapse = '; '))
-
-                if(!is.null(filter_selection)) {
-                    symbol_column_name <- sym(column_name)
                     
-                    if(is.Date(local_dataset[, column_name]) ||
-                        is.POSIXct(local_dataset[, column_name]) ||
-                        is.POSIXlt(local_dataset[, column_name]) ||
-                        is.numeric(local_dataset[, column_name])) {
-                        #'date'
-                        # for numerics/etc. need to remove NA values and then filter
-                        local_dataset <- local_dataset %>%
-                            filter(!is.na(!!symbol_column_name)) %>%
-                            filter(!!symbol_column_name >= filter_selection[1] & !!symbol_column_name <= filter_selection[2])
-                        
-                    } else if(is.factor(local_dataset[, column_name]) ||
-                                is.character(local_dataset[, column_name])) {
-                        #'factor'
-                        local_dataset <- local_dataset %>%
-                            filter(!!symbol_column_name %in% filter_selection)
-                        
+
+                    if(is.null(filter_selection)) {
+
+                        log_message_generic(column_name, 'skipping...')
+
                     } else {
-                        #class(.)[1]
-                        stopifnot(FALSE)
+
+                        symbol_column_name <- sym(column_name)
+                    
+                        log_message_generic(column_name,
+                                             paste('filtering -', paste0(filter_selection, collapse = '; ')))
+
+                        if(is.Date(local_dataset[, column_name]) ||
+                            is.POSIXct(local_dataset[, column_name]) ||
+                            is.POSIXlt(local_dataset[, column_name]) ||
+                            is.numeric(local_dataset[, column_name])) {
+                            #'date'
+                            # for numerics/etc. need to remove NA values and then filter
+                            local_dataset <- local_dataset %>%
+                                filter(!is.na(!!symbol_column_name)) %>%
+                                filter(!!symbol_column_name >= filter_selection[1] & !!symbol_column_name <= filter_selection[2])
+                            
+                        } else if(is.factor(local_dataset[, column_name]) ||
+                                    is.character(local_dataset[, column_name])) {
+                            #'factor'
+                            local_dataset <- local_dataset %>%
+                                filter(!!symbol_column_name %in% filter_selection)
+                            
+                        } else {
+                            #class(.)[1]
+                            stopifnot(FALSE)
+                        }
                     }
+                    index <- index + 1
                 }
-                index <- index + 1
-            }
-            log_message('Done Filter\n')
-        })
+                log_message('Done Filtering\n')
+            })
+        } else {
+            log_message_block_start('Not Filtering')
+        }
 
         return (local_dataset)
     })
@@ -245,6 +259,7 @@ reactive__filter_controls_list <- function(input, dataset) {
             })
 
         })
+        ui_list
     })
 }
 

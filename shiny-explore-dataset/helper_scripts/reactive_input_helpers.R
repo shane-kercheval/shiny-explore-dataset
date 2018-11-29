@@ -102,7 +102,10 @@ observeEvent__variable_plots_filter_clear <- function(input, session) {
 
     observeEvent(input$variable_plots_filter_clear, ({
 
-        updateCollapse(session, "variable_plots_bscollapse", style = list('Filters' = 'danger'))
+        if(isolate(input$variable_plots_filter_use)) {
+
+            updateCollapse(session, "variable_plots_bscollapse", style = list('Filters' = 'danger'))
+        }
     }))
 }
 
@@ -110,7 +113,10 @@ observeEvent__variable_plots_filter_apply <- function(input, session) {
 
     observeEvent(input$variable_plots_filter_apply, ({
 
-        updateCollapse(session, "variable_plots_bscollapse", style = list('Filters' = 'default'))
+        if(isolate(input$variable_plots_filter_use)) {
+
+            updateCollapse(session, "variable_plots_bscollapse", style = list('Filters' = 'success'))
+        }
     }))
 }
 
@@ -128,11 +134,13 @@ observe__variable_plots_bscollapse__color <- function(input, session, dataset) {
             selections <- append(selections, value)
         }
 
-        # if any of the selections are not null, that means they have been initialized and we can begin to mark as being changed
-        # otherwise, the filter section hasn't even been opened
-        if(any(map_lgl(selections, ~ !is.null(.)))) {
+        if(isolate(input$variable_plots_filter_use)) {
+            # if any of the selections are not null, that means they have been initialized and we can begin to mark as being changed
+            # otherwise, the filter section hasn't even been opened
+            if(any(map_lgl(selections, ~ !is.null(.)))) {
 
-            updateCollapse(session, "variable_plots_bscollapse", style = list('Filters' = 'danger'))
+                updateCollapse(session, "variable_plots_bscollapse", style = list('Filters' = 'danger'))
+            }
         }
     })
 }
