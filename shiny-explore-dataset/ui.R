@@ -110,11 +110,8 @@ shinyUI(fluidPage(theme="custom.css",
                     ),
                     bsCollapsePanel(
                         'Filters',
-                        fluidRow(
-                            column(6, actionButton(inputId='variable_plots_filter_apply', label='Apply Filters')),
-                            column(6, actionButton(inputId='variable_plots_filter_clear', label='Clear Filters'))
-                        ),
-                        tags$br(),
+                        tags$div(style='margin-bottom: 10px;', actionButton(inputId='variable_plots_filter_apply', label='Apply Filters')),
+                        tags$div(style='margin-bottom: 20px;', actionButton(inputId='variable_plots_filter_clear', label='Clear Filters')),
                         uiOutput('variable_plots_filter_bscollapse_UI')
                     ),
                     bsCollapsePanel(

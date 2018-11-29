@@ -54,13 +54,10 @@ shinyServer(function(input, output, session) {
     # Viarable Plot
     ##########################################################################################################
 
-    ##########################################################################################################
     # Viarable Plot - Filters
-    ##########################################################################################################
     filter_controls_list <- reactive__filter_controls_list(input, dataset)
     output$variable_plots_filter_bscollapse_UI <- renderUI__variable_plots_filter_bscollapse_UI(filter_controls_list)
-    # duplicate dataset (which is bad for large datasets) so that the filters don't have to be reapplied every time.
-    variable_plots_filtered_dataset <- reactive__variable_plots_filtered_dataset(input, dataset)
+    variable_plots_filtered_dataset <- reactive__variable_plots_filtered_dataset(input, dataset)  # duplicate dataset (which is bad for large datasets) so that the filters don't have to be reapplied every time.
     observeEvent__variable_plots_filter_clear(input, session)
     observeEvent__variable_plots_filter_apply(input, session)
     observe__variable_plots_bscollapse__color(input, session, dataset)
