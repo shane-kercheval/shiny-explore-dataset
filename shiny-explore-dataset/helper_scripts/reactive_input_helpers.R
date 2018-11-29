@@ -88,6 +88,55 @@ renderUI__variable_plots_point_size_UI <- function(dataset) {
     })
 }
 
+renderUI__variable_plots_filter_bscollapse_UI <- function(filter_controls_list) {
+ 
+    renderUI({
+ 
+        tagList(list=filter_controls_list())
+    })
+}
+
+# Events that control the color of the Filter collapse panel, so that it turns red when the filters haven't
+# been applied (i.e. changes that haven't been applied)
+observeEvent__variable_plots_filter_clear <- function(input, session) {
+
+    observeEvent(input$variable_plots_filter_clear, ({
+
+        updateCollapse(session, "variable_plots_bscollapse", style = list('Filters' = 'danger'))
+    }))
+}
+
+observeEvent__variable_plots_filter_apply <- function(input, session) {
+
+    observeEvent(input$variable_plots_filter_apply, ({
+
+        updateCollapse(session, "variable_plots_bscollapse", style = list('Filters' = 'default'))
+    }))
+}
+
+observe__variable_plots_bscollapse__color <- function(input, session, dataset) {
+
+    observe({
+
+        req(dataset())
+
+        # this is a hack to register all of the dynamic controls to the reactive event listener
+        # also use it to check values (i.e. only update colors if the filters are active i.e. any are not null)
+        selections <- list()
+        for(column_name in colnames(dataset())) {
+            value <- input[[paste0('dynamic_filter_variable_plots_', column_name)]]
+            selections <- append(selections, value)
+        }
+
+        # if any of the selections are not null, that means they have been initialized and we can begin to mark as being changed
+        # otherwise, the filter section hasn't even been opened
+        if(any(map_lgl(selections, ~ !is.null(.)))) {
+
+            updateCollapse(session, "variable_plots_bscollapse", style = list('Filters' = 'danger'))
+        }
+    })
+}
+
 ##############################################################################################################
 # Regression Reactive UI
 ##############################################################################################################

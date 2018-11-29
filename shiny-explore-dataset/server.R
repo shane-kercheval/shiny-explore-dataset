@@ -46,178 +46,24 @@ shinyServer(function(input, output, session) {
     output$categoric_summary_text <- renderPrint__categoric_summary_text(dataset, categoric_summary_data)
 
     ##########################################################################################################
-    # RENDER OUTPUT
+    # Correlation Plot
     ##########################################################################################################
     output$correlation_plot <- renderPlot__correlation_plot(input, output, session, dataset)
 
     ##########################################################################################################
-    # RENDER OUTPUT
+    # Viarable Plot
     ##########################################################################################################
 
-    filter_controls_list <- reactive({
-
-        input$variable_plots_filter_clear
-        req(dataset())
-
-        # local_filter_options_data <- filter_options_data()
-
-        withProgress(value=1/2, message='Generating Filters',{
-            
-            ui_list <- imap(dataset(), ~ {
-
-                #log_message_variable('class', class(.x)[1])
-
-                input_id <- paste0('dynamic_filter_variable_plots_', .y)
-                
-                if(is.Date(.x)) {
-                    #'date'
-                    min_index <- which.min(.x)
-                    max_index <- which.max(.x)
-                    min_value <- .x[min_index]
-                    max_value <- .x[max_index]
-                    
-                    dateRangeInput(inputId=input_id,
-                                   label=.y,
-                                   start=min_value,
-                                   end=max_value)
-                } else if (is.POSIXct(.x) || is.POSIXlt(.x)) {
-                    
-                    # TODO: factor if this works good and is the same as is.Date
-                    
-                    #'POSIX.t'
-                    min_index <- which.min(.x)
-                    max_index <- which.max(.x)
-                    min_value <- .x[min_index]
-                    max_value <- .x[max_index]
-                    
-                    dateRangeInput(inputId=input_id,
-                                   label=.y,
-                                   start=min_value,
-                                   end=max_value)
-                } else if(is.factor(.x)) {
-                    #'factor'
-                    selectInput(inputId=input_id, label=.y, choices=levels(.x), selected = NULL, multiple = TRUE)
-                } else if(is.numeric(.x)) {
-
-                    #'numeric'
-                    min_value <- min(.x, na.rm = TRUE)
-                    max_value <- max(.x, na.rm = TRUE)
-
-                    sliderInput(inputId=input_id, label=.y, min=min_value, max=max_value, value=c(min_value, max_value))
-                } else if(is.character(.x)) {
-                    
-                    values_ordered_by_frequency <- as.character((as.data.frame(table(as.character(.x))) %>%
-                                                                     arrange(desc(Freq)))$Var1)
-
-                    selectInput(inputId=input_id,
-                                label=.y,
-                                choices=values_ordered_by_frequency,
-                                selected = NULL,
-                                multiple = TRUE)
-
-                } else {
-                    #class(.)[1]
-                    stopifnot(FALSE)
-                }
-            })
-
-        })
-    })
-
-    output$variable_plots_filter_bscollapse_UI <- renderUI({
-        tagList(list=filter_controls_list())
-    })
-
-    # duplicate dataset (which i don't like for large datasets) so that that the filters don't have to be reapplied every time.
-    variable_plots_filtered_dataset <- reactive({
-
-        input$variable_plots_filter_apply
-
-
-        local_dataset <- dataset()
-        column_names <- colnames(local_dataset)
-
-        withProgress(value=1/length(column_names), message='Applying Filters',{
-
-            log_message_block_start('Filtering...')
-
-            #### APPLY FILTERS
-
-            # list with selections for each dynamic filter, and list names are the column names
-            dynamic_filter_selections <- get_dynamic_filter_selections(input, column_names)
-
-            index = 1
-            for(column_name in column_names) {
-
-                incProgress(index/length(column_names), detail = column_name)
-
-
-                filter_selection <- dynamic_filter_selections[[column_name]]
-
-                log_message_generic(paste('Filtering on', column_name), 
-                                    paste0(filter_selection, collapse = '; '))
-
-                if(!is.null(filter_selection)) {
-                    symbol_column_name <- sym(column_name)
-                    
-                    if(is.Date(local_dataset[, column_name]) ||
-                        is.POSIXct(local_dataset[, column_name]) ||
-                        is.POSIXlt(local_dataset[, column_name]) ||
-                        is.numeric(local_dataset[, column_name])) {
-                        #'date'
-                        # for numerics/etc. need to remove NA values and then filter
-                        local_dataset <- local_dataset %>%
-                            filter(!is.na(!!symbol_column_name)) %>%
-                            filter(!!symbol_column_name >= filter_selection[1] & !!symbol_column_name <= filter_selection[2])
-                        
-                    } else if(is.factor(local_dataset[, column_name]) ||
-                                is.character(local_dataset[, column_name])) {
-                        #'factor'
-                        local_dataset <- local_dataset %>%
-                            filter(!!symbol_column_name %in% filter_selection)
-                        
-                    } else {
-                        #class(.)[1]
-                        stopifnot(FALSE)
-                    }
-                }
-                index <- index + 1
-            }
-            log_message('Done Filter\n')
-        })
-
-        return (local_dataset)
-    })
-
-
-    observeEvent(input$variable_plots_filter_clear, ({
-        updateCollapse(session, "variable_plots_bscollapse", style = list('Filters' = 'danger'))
-    }))
-
-    observeEvent(input$variable_plots_filter_apply, ({
-        updateCollapse(session, "variable_plots_bscollapse", style = list('Filters' = 'default'))
-    }))
-
-    observe(({
-
-        req(dataset())
-        req(filter_controls_list())
-
-        # this is a hack to register all of the dynamic controls to the reactive event listener
-        # also use it to check values (i.e. only update colors if the filters are active i.e. any are not null)
-        selections <- list()
-        for(column_name in colnames(dataset())) {
-            value <- input[[paste0('dynamic_filter_variable_plots_', column_name)]]
-            selections <- append(selections, value)
-        }
-
-        # if any of the selections are not null, that means they have been initialized and we can begin to mark as being changed
-        # otherwise, the filter section hasn't even been opened
-        if(any(map_lgl(selections, ~ !is.null(.)))) {
-
-            updateCollapse(session, "variable_plots_bscollapse", style = list('Filters' = 'danger'))
-        }
-    }))
+    ##########################################################################################################
+    # Viarable Plot - Filters
+    ##########################################################################################################
+    filter_controls_list <- reactive__filter_controls_list(input, dataset)
+    output$variable_plots_filter_bscollapse_UI <- renderUI__variable_plots_filter_bscollapse_UI(filter_controls_list)
+    # duplicate dataset (which is bad for large datasets) so that the filters don't have to be reapplied every time.
+    variable_plots_filtered_dataset <- reactive__variable_plots_filtered_dataset(input, dataset)
+    observeEvent__variable_plots_filter_clear(input, session)
+    observeEvent__variable_plots_filter_apply(input, session)
+    observe__variable_plots_bscollapse__color(input, session, dataset)
 
     output$variable_plots <- renderPlot__variable_plot(input, output, session, variable_plots_filtered_dataset)
     output$variable_plots_variable_UI <- renderUI__variable_plots_variable_UI(dataset)
@@ -226,8 +72,6 @@ shinyServer(function(input, output, session) {
     output$variable_plots_point_color_UI <- renderUI__variable_plots_point_color_UI(dataset)
     output$variable_plots_point_size_UI <- renderUI__variable_plots_point_size_UI(dataset)
     observe__variable_plots__hide_show_uncollapse_on_primary_vars(input, output, session)
-
-    
 
     ##########################################################################################################
     # Regression Output
