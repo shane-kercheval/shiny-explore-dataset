@@ -5,11 +5,6 @@ library(shinyBS)
 
 source('helper_scripts/definitions.R')
 
-##############################################################################################################
-#### naming conventions
-#
-# <section>_<control>
-##############################################################################################################
 shinyUI(fluidPage(theme="custom.css",
 
     useShinyjs(),
@@ -36,11 +31,11 @@ shinyUI(fluidPage(theme="custom.css",
             tabsetPanel(type='tabs',
                 tabPanel(
                     "First 500 Records of Dataset",
-                    tags$div(class='results-table', dataTableOutput(outputId='dataset_head_table'))
+                    tags$div(class='results-table', dataTableOutput(outputId='source_data__head_table'))
                 ),
                 tabPanel(
                     'Variable Types',
-                    tags$div(class='results-table', dataTableOutput(outputId='dataset_types_table'))
+                    tags$div(class='results-table', dataTableOutput(outputId='source_data__types_table'))
                 )
             )
         ),
@@ -48,16 +43,16 @@ shinyUI(fluidPage(theme="custom.css",
             'Numeric Summary',
             column(2,
                    class='column-input-control-style',
-                   tags$div(class='input-control-style', uiOutput('numeric_summary_options_UI'))
+                   tags$div(class='input-control-style', uiOutput('numeric_summary__options__UI'))
             ),
-            column(10, tags$div(class='results-table', dataTableOutput(outputId='numeric_summary_table')))
+            column(10, tags$div(class='results-table', dataTableOutput(outputId='numeric_summary__table')))
         ),
         tabPanel(
             'Categoric Summary',
-            tags$div(class='results-table', dataTableOutput(outputId='categoric_summary_table')),
+            tags$div(class='results-table', dataTableOutput(outputId='categoric_summary__table')),
             tags$br(),
             h4('Summary of Values'),
-            tags$div(style='width: 800px', verbatimTextOutput(outputId='categoric_summary_text'))
+            tags$div(style='width: 800px', verbatimTextOutput(outputId='categoric_summary__text'))
         ),
         tabPanel(
             'Correlations',

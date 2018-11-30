@@ -51,3 +51,27 @@ devtools::install_github('shane-kercheval/rtools')
 ### Regression
 
 
+
+## Code
+
+### naming scheme for ui.R
+
+### naming scheme for server.R
+
+`<section>__<description>__<type>`
+
+with the exception of session-level reactive datasets and reactive values, which should be:
+
+`<type>__<section>__<description>`
+
+For example:
+
+```r
+reactive__main_data  # main dataset used throughout the application
+reactive__vp__filtered_data  # filtered dataset for vp ("Variable Plots") section
+
+# inputs
+input$vp__variable
+
+# outputs
+```

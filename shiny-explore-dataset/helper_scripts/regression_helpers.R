@@ -1,3 +1,45 @@
+##########################################################################################################
+# Run Regression when user clicks Run button
+##########################################################################################################    
+eventReactive__regression_results <- function(input, output, session, dataset) {
+
+    eventReactive(input$regression_run_button, {
+
+        if(input$regression_dependent_variable == select_variable) {
+            return (NULL)
+        }
+
+        local_interaction_term1 <- input$regression_interaction_term1
+        local_interaction_term2 <- input$regression_interaction_term2
+
+        withProgress(value=1/2, message='Running Regression',{
+
+            interaction_variables <- NULL
+
+            if(!is.null(local_interaction_term1) && local_interaction_term1 != select_variable &&
+               !is.null(local_interaction_term2) && local_interaction_term2 != select_variable) {
+
+                interaction_variables <- list(c(local_interaction_term1,
+                                                local_interaction_term2))
+            }
+
+            # updates to reactive variables will not trigger an update here, only regression_run_button
+            results <- easy_regression(dataset=dataset(),
+                                       dependent_variable=input$regression_dependent_variable,
+                                       independent_variables=input$regression_independent_variables,
+                                       # list of vectors, each element in the list is a pair of interaction terms
+                                       # only supporting two interaction variables at the moment
+                                       interaction_variables=interaction_variables)
+
+            shinyjs::show('regression_formula_header')
+            shinyjs::show('regression_summary_header_UI')
+            shinyjs::show('regression_vif_header')
+            
+            return (results)
+        })
+    })
+}
+
 ##############################################################################################################
 # Regression Reactive UI
 ##############################################################################################################
