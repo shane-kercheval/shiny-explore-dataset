@@ -1,5 +1,5 @@
 ##########################################################################################################
-# main dataset
+# MAIN DATASET
 # initialize with small default dataset or upload from file, by user
 ##########################################################################################################
 reactive__source_data__creator <- function(input) {
@@ -74,6 +74,9 @@ reactive__source_data__creator <- function(input) {
     })
 }
 
+##############################################################################################################
+# OUTPUT
+##############################################################################################################
 renderDataTable__source_data__head <- function(dataset) {
 
     renderDataTable({

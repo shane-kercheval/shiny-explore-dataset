@@ -1,5 +1,5 @@
 ##########################################################################################################
-# Run Regression when user clicks Run button
+# Regression Results - Run Regression when user clicks Run button
 ##########################################################################################################    
 eventReactive__regression__results__creator <- function(input, dataset) {
 
@@ -41,7 +41,7 @@ eventReactive__regression__results__creator <- function(input, dataset) {
 }
 
 ##############################################################################################################
-# Regression Reactive UI
+# INPUT
 ##############################################################################################################
 renderUI__regression__dependent_variable__UI <- function(dataset) {
 
@@ -165,7 +165,7 @@ observeEvent__regression__toggle_all_ind_variables <- function(input, dataset, s
 }
 
 ##############################################################################################################
-# Regression
+# OUTPUT
 ##############################################################################################################
 renderPrint__regression__summary_output <- function(regression__results) {
 

@@ -1,5 +1,5 @@
 ##############################################################################################################
-# calculate the categoric summary; it is an expensive operation for large datasets
+# CATEGORIC SUMMARY - calculate the categoric summary; it is an expensive operation for large datasets
 ##############################################################################################################
 reactive__categoric_summary__creator <- function(dataset) {
 
@@ -13,19 +13,25 @@ reactive__categoric_summary__creator <- function(dataset) {
     })
 }
 
-renderDataTable__categoric_summary__table <- function(categoric_summary) {
-
-    renderDataTable({
-        
-        return (categoric_summary())
-    })
-}
-
+##############################################################################################################
+# INPUT
+##############################################################################################################
 renderPrint__categoric_summary__text <- function(dataset, categoric_summary) {
 
     renderPrint({
         
         # get R's summary of the categoric data
         return (summary(dataset()[, as.character(categoric_summary()$feature)]))
+    })
+}
+
+##############################################################################################################
+# OUTPUT
+##############################################################################################################
+renderDataTable__categoric_summary__table <- function(categoric_summary) {
+
+    renderDataTable({
+        
+        return (categoric_summary())
     })
 }

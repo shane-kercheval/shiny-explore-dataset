@@ -1,5 +1,19 @@
 ##############################################################################################################
-# build the UI controls for the filters
+# FILTERS
+##############################################################################################################
+get_dynamic_filter_selections <- function(input, columns) {
+
+    # get all of the selections from the dynamic filters without triggering refresh for the first time
+    selections_list <- map(columns, ~ isolate(input[[paste0('var_plots__dynamic_filter__', .)]]))
+    names(selections_list) <- columns
+
+    return (selections_list)
+
+}
+
+##############################################################################################################
+# FILTERS - DYNAMIC CONTROL LIST
+# builds controls based on the type of variables in the dataset
 ##############################################################################################################
 reactive__filter_controls_list <- function(input, dataset) {
 
@@ -76,7 +90,74 @@ reactive__filter_controls_list <- function(input, dataset) {
 }
 
 ##############################################################################################################
-# Variable Plot's filtered dataset
+# FILTER BUTTONS
+# Events that control the color of the Filter collapse panel, so that it turns red when the filters haven't
+# been applied (i.e. changes that haven't been applied)
+##############################################################################################################
+observeEvent__var_plots__filter_clear <- function(input, session) {
+
+    observeEvent(input$var_plots__filter_clear, ({
+
+        if(isolate(input$var_plots__filter_use)) {  # only update if we are using the filter
+
+            updateCollapse(session, "var_plots__bscollapse", style = list('Filters' = 'danger'))
+        }
+    }))
+}
+
+observeEvent__var_plots__filter_apply <- function(input, session) {
+
+    observeEvent(input$var_plots__filter_apply, ({
+
+        if(isolate(input$var_plots__filter_use)) {  # only update if we are using the filter
+
+            updateCollapse(session, "var_plots__bscollapse", style = list('Filters' = 'success'))
+        }
+    }))
+}
+
+observeEvent__var_plots__filter_use <- function(input, session) {
+
+    observeEvent(input$var_plots__filter_use, {
+
+        if(input$var_plots__filter_use) {
+
+            updateCollapse(session, "var_plots__bscollapse", style = list('Filters' = 'success'))
+
+        } else {
+
+            updateCollapse(session, "var_plots__bscollapse", style = list('Filters' = 'default'))
+        }
+    })
+}
+
+observe__var_plots__bscollapse__dynamic_inputs <- function(input, session, dataset) {
+
+    observe({
+
+        req(dataset())
+
+        # this is a hack to register all of the dynamic controls to the reactive event listener
+        # also use it to check values (i.e. only update colors if the filters are active i.e. any are not null)
+        selections <- list()
+        for(column_name in colnames(dataset())) {
+            value <- input[[paste0('var_plots__dynamic_filter__', column_name)]]
+            selections <- append(selections, value)
+        }
+
+        # only update if we are using the filter
+        # also, if any of the selections are not null, that means they have been initialized and we can begin
+        # to mark as being changed otherwise, the filter section hasn't even been opened
+        if(isolate(input$var_plots__filter_use) && any(map_lgl(selections, ~ !is.null(.)))) {
+
+            updateCollapse(session, "var_plots__bscollapse", style = list('Filters' = 'danger'))
+        }
+    })
+}
+
+
+##############################################################################################################
+# FILTERED DATASET - Variable Plot's filtered dataset
 # duplicate dataset (which is bad for large datasets) so that the filters don't have to be reapplied every time.
 ##############################################################################################################
 reactive__var_plots__filtered_data__creator <- function(input, dataset) {
@@ -155,192 +236,9 @@ reactive__var_plots__filtered_data__creator <- function(input, dataset) {
     })
 }
 
-renderUI__var_plots__variable__UI <- function(dataset) {
-
-    renderUI({
-        selectInput(inputId='var_plots__variable',
-                    label = 'Variable',
-                    choices = c(select_variable, colnames(dataset())),
-                    selected = select_variable,
-                    multiple = FALSE,
-                    selectize = TRUE,
-                    width = 500,
-                    size = NULL)
-    })
-}
-
-renderUI__var_plots__comparison__UI <- function(dataset) {
-
-    renderUI({
-
-        selectInput(inputId='var_plots__comparison',
-                    label = 'Comparison Variable',
-                    choices = c(select_variable_optional, colnames(dataset())),
-                    selected = select_variable_optional,
-                    multiple = FALSE,
-                    selectize = TRUE,
-                    width = 500,
-                    size = NULL)
-    })
-}
-
-renderUI__var_plots__sum_by_variable__UI <- function(dataset) {
-
-    renderUI({
-
-        selectInput(inputId='var_plots__sum_by_variable',
-                    label = 'Sum By Variable',
-                    choices = c(select_variable_optional, colnames(dataset() %>% select_if(is.numeric))),
-                    selected = select_variable_optional,
-                    multiple = FALSE,
-                    selectize = TRUE,
-                    width = 500,
-                    size = NULL)
-    })
-}
-
-renderUI__var_plots__point_color__UI <- function(dataset) {
-
-    renderUI({
-
-        selectInput(inputId='var_plots__point_color',
-                    label = 'Color Variable',
-                    choices = c(select_variable_optional, colnames(dataset())),
-                    selected = select_variable_optional,
-                    multiple = FALSE,
-                    selectize = TRUE,
-                    width = 500,
-                    size = NULL)
-    })
-}
-
-renderUI__var_plots__point_size__UI <- function(dataset) {
-
-    renderUI({
-
-        selectInput(inputId='var_plots__point_size',
-                    label = 'Size Variable',
-                    choices = c(select_variable_optional, colnames(dataset())),
-                    selected = select_variable_optional,
-                    multiple = FALSE,
-                    selectize = TRUE,
-                    width = 500,
-                    size = NULL)
-    })
-}
-
-renderUI__var_plots__filter_bscollapse__UI <- function(filter_controls_list) {
- 
-    renderUI({
- 
-        tagList(list=filter_controls_list())
-    })
-}
-
-# Events that control the color of the Filter collapse panel, so that it turns red when the filters haven't
-# been applied (i.e. changes that haven't been applied)
-observeEvent__var_plots__filter_clear <- function(input, session) {
-
-    observeEvent(input$var_plots__filter_clear, ({
-
-        if(isolate(input$var_plots__filter_use)) {  # only update if we are using the filter
-
-            updateCollapse(session, "var_plots__bscollapse", style = list('Filters' = 'danger'))
-        }
-    }))
-}
-
-observeEvent__var_plots__filter_apply <- function(input, session) {
-
-    observeEvent(input$var_plots__filter_apply, ({
-
-        if(isolate(input$var_plots__filter_use)) {  # only update if we are using the filter
-
-            updateCollapse(session, "var_plots__bscollapse", style = list('Filters' = 'success'))
-        }
-    }))
-}
-
-observeEvent__var_plots__filter_use <- function(input, session) {
-
-    observeEvent(input$var_plots__filter_use, {
-
-        if(input$var_plots__filter_use) {
-
-            updateCollapse(session, "var_plots__bscollapse", style = list('Filters' = 'success'))
-
-        } else {
-
-            updateCollapse(session, "var_plots__bscollapse", style = list('Filters' = 'default'))
-        }
-    })
-}
-
-observe__var_plots__bscollapse__dynamic_inputs <- function(input, session, dataset) {
-
-    observe({
-
-        req(dataset())
-
-        # this is a hack to register all of the dynamic controls to the reactive event listener
-        # also use it to check values (i.e. only update colors if the filters are active i.e. any are not null)
-        selections <- list()
-        for(column_name in colnames(dataset())) {
-            value <- input[[paste0('var_plots__dynamic_filter__', column_name)]]
-            selections <- append(selections, value)
-        }
-
-        # only update if we are using the filter
-        # also, if any of the selections are not null, that means they have been initialized and we can begin
-        # to mark as being changed otherwise, the filter section hasn't even been opened
-        if(isolate(input$var_plots__filter_use) && any(map_lgl(selections, ~ !is.null(.)))) {
-
-            updateCollapse(session, "var_plots__bscollapse", style = list('Filters' = 'danger'))
-        }
-    })
-}
-
 ##############################################################################################################
-# Variable Plot
-# NOTE: i use `print(xxx_plot)` because ggplot does some sort of lazy evaluation, which means that the 
-# withProgress finishes but the plot is still rendering and if the plot takes a long time to render, the
-# shiny app is still working/blocking but no progress is shown. `print` seems to force evaluation while
-# not affecting return of the plot from the function or it being displayed in shiny
+# CREATE GGPLOT OBJECT
 ##############################################################################################################
-get_dynamic_filter_selections <- function(input, columns) {
-
-    # get all of the selections from the dynamic filters without triggering refresh for the first time
-    selections_list <- map(columns, ~ isolate(input[[paste0('var_plots__dynamic_filter__', .)]]))
-    names(selections_list) <- columns
-
-    return (selections_list)
-
-}
-
-renderPlot__variable_plot <- function(session, ggplot_object, messages) {
-
-    renderPlot({
-        withProgress(value=1/2, message='Plotting Graph',{
-
-           messages$value <- capture_messages_warnings(function() print(ggplot_object()))
-
-           log_message_variable('messages$value', messages$value)
-
-        })
-
-    }, height = function() {
-
-        session$clientData$output_var_plots_width * 0.66  # set height to % of width
-    })
-}
-
-renderPrint__reactiveValues__vp__ggplot_message <- function(message) {
-
-    renderPrint({
-        cat(message$value)
-    })
-}
-
 reactive__var_plots__ggplot__creator <- function(input, session, dataset) {
     reactive({
 
@@ -596,6 +494,94 @@ reactive__var_plots__ggplot__creator <- function(input, session, dataset) {
     })
 }
 
+##############################################################################################################
+# INPUT
+##############################################################################################################
+renderUI__var_plots__variable__UI <- function(dataset) {
+
+    renderUI({
+        selectInput(inputId='var_plots__variable',
+                    label = 'Variable',
+                    choices = c(select_variable, colnames(dataset())),
+                    selected = select_variable,
+                    multiple = FALSE,
+                    selectize = TRUE,
+                    width = 500,
+                    size = NULL)
+    })
+}
+
+renderUI__var_plots__comparison__UI <- function(dataset) {
+
+    renderUI({
+
+        selectInput(inputId='var_plots__comparison',
+                    label = 'Comparison Variable',
+                    choices = c(select_variable_optional, colnames(dataset())),
+                    selected = select_variable_optional,
+                    multiple = FALSE,
+                    selectize = TRUE,
+                    width = 500,
+                    size = NULL)
+    })
+}
+
+renderUI__var_plots__sum_by_variable__UI <- function(dataset) {
+
+    renderUI({
+
+        selectInput(inputId='var_plots__sum_by_variable',
+                    label = 'Sum By Variable',
+                    choices = c(select_variable_optional, colnames(dataset() %>% select_if(is.numeric))),
+                    selected = select_variable_optional,
+                    multiple = FALSE,
+                    selectize = TRUE,
+                    width = 500,
+                    size = NULL)
+    })
+}
+
+renderUI__var_plots__point_color__UI <- function(dataset) {
+
+    renderUI({
+
+        selectInput(inputId='var_plots__point_color',
+                    label = 'Color Variable',
+                    choices = c(select_variable_optional, colnames(dataset())),
+                    selected = select_variable_optional,
+                    multiple = FALSE,
+                    selectize = TRUE,
+                    width = 500,
+                    size = NULL)
+    })
+}
+
+renderUI__var_plots__point_size__UI <- function(dataset) {
+
+    renderUI({
+
+        selectInput(inputId='var_plots__point_size',
+                    label = 'Size Variable',
+                    choices = c(select_variable_optional, colnames(dataset())),
+                    selected = select_variable_optional,
+                    multiple = FALSE,
+                    selectize = TRUE,
+                    width = 500,
+                    size = NULL)
+    })
+}
+
+renderUI__var_plots__filter_bscollapse__UI <- function(filter_controls_list) {
+ 
+    renderUI({
+ 
+        tagList(list=filter_controls_list())
+    })
+}
+
+##############################################################################################################
+# DYNAMICALLY SHOW/HIDE INPUT
+##############################################################################################################
 hide_show_numeric_numeric <- function(session) {
 
     log_message('hide_show_numeric_numeric')
@@ -719,5 +705,33 @@ observe__var_plots__hide_show_uncollapse_on_primary_vars <- function(input, sess
 
             updateCollapse(session, 'var_plots__bscollapse', open='Plot Options')
         }
+    })
+}
+
+##############################################################################################################
+# OUTPUT
+##############################################################################################################
+renderPlot__variable_plot <- function(session, ggplot_object, messages) {
+
+    renderPlot({
+
+        withProgress(value=1/2, message='Plotting Graph',{
+
+           messages$value <- capture_messages_warnings(function() print(ggplot_object()))
+
+           log_message_variable('messages$value', messages$value)
+
+        })
+
+    }, height = function() {
+
+        session$clientData$output_var_plots_width * 0.66  # set height to % of width
+    })
+}
+
+renderPrint__reactiveValues__vp__ggplot_message <- function(message) {
+
+    renderPrint({
+        cat(message$value)
     })
 }

@@ -1,5 +1,5 @@
 ##############################################################################################################
-# calculate the numeric summary; it is an expensive operation for large datasets
+# NUMERIC SUMMARY - calculate the numeric summary; it is an expensive operation for large datasets
 ##############################################################################################################
 reactive__numeric_summary__creator <- function(dataset) {
 
@@ -15,18 +15,9 @@ reactive__numeric_summary__creator <- function(dataset) {
     })
 }
 
-
-renderDataTable__numeric_summary__table <- function(input, numeric_summary) {
-
-    renderDataTable({
-
-        local_summary <- numeric_summary()
-        local_options <- input$numeric_summary__options
-
-        return (local_summary[, c('feature', local_options)])
-    })
-}
-
+##############################################################################################################
+# INPUT
+##############################################################################################################
 renderUI__numeric_summary__options__UI <- function(numeric_summary) {
     renderUI({
 
@@ -40,5 +31,19 @@ renderUI__numeric_summary__options__UI <- function(numeric_summary) {
                                       'percentile_50', 'max'),
                            inline=FALSE,
                            width=NULL)
+    })
+}
+
+##############################################################################################################
+# OUTPUT
+##############################################################################################################
+renderDataTable__numeric_summary__table <- function(input, numeric_summary) {
+
+    renderDataTable({
+
+        local_summary <- numeric_summary()
+        local_options <- input$numeric_summary__options
+
+        return (local_summary[, c('feature', local_options)])
     })
 }
