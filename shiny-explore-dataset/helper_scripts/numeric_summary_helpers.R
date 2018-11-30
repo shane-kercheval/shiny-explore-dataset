@@ -1,7 +1,7 @@
 ##############################################################################################################
 # calculate the numeric summary; it is an expensive operation for large datasets
 ##############################################################################################################
-reactive__numeric_summary_creator <- function(dataset) {
+reactive__numeric_summary__creator <- function(dataset) {
 
     reactive({
 

@@ -1,7 +1,7 @@
 ##############################################################################################################
 # calculate the categoric summary; it is an expensive operation for large datasets
 ##############################################################################################################
-reactive__categoric_summary <- function(dataset) {
+reactive__categoric_summary__creator <- function(dataset) {
 
     reactive({
 

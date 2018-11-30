@@ -92,15 +92,15 @@ shinyUI(fluidPage(theme="custom.css",
                 bsCollapse(id='var_plots__bscollapse', open='Variables', multiple=TRUE,
                     bsCollapsePanel(
                         'Variables',
-                        uiOutput('var_plots__variable_UI'),
-                        uiOutput('var_plots__comparison_UI'),
+                        uiOutput('var_plots__variable__UI'),
+                        uiOutput('var_plots__comparison__UI'),
                         # NOTE: the variables below can't be hidden initially (but rather are dynamically hidden)
                         # because the values need to load the first time this tab is clicked
                         # if not, when they become active (and therefore the values change to the default,
                         # they will trigger an unncessary plot refresh
-                        uiOutput('var_plots__sum_by_variable_UI'),
-                        uiOutput('var_plots__point_color_UI'),
-                        uiOutput('var_plots__point_size_UI'),
+                        uiOutput('var_plots__sum_by_variable__UI'),
+                        uiOutput('var_plots__point_color__UI'),
+                        uiOutput('var_plots__point_size__UI'),
                         style='default'
                     ),
                     bsCollapsePanel(
@@ -115,7 +115,7 @@ shinyUI(fluidPage(theme="custom.css",
                                 tags$div(style='margin-bottom: 20px;', actionButton(inputId='var_plots__filter_clear', label='Clear Filters'))
                             )
                         ),
-                        uiOutput('var_plots__filter_bscollapse_UI')
+                        uiOutput('var_plots__filter_bscollapse__UI')
                     ),
                     bsCollapsePanel(
                         'Plot Options',
@@ -211,19 +211,19 @@ shinyUI(fluidPage(theme="custom.css",
             'Regression',
             column(3,
                 class='column-input-control-style',
-                bsCollapse(id='regression_collapse_controls', open='Variables', multiple=TRUE,
+                bsCollapse(id='regression__collapse_controls', open='Variables', multiple=TRUE,
                     bsCollapsePanel(
                         'Variables',
-                        uiOutput('regression_dependent_variable_UI'),
-                        uiOutput('regression_independent_variables_UI'),
-                        actionButton(inputId='regression_toggle_all_ind_variables',
+                        uiOutput('regression__dependent_variable__UI'),
+                        uiOutput('regression__independent_variables__UI'),
+                        actionButton(inputId='regression__toggle_all_ind_variables',
                                      label='Toggle All Variables'),
                         style='default'
                     ),
                     bsCollapsePanel(
                         'Interaction Effects',
-                        uiOutput('regression_interaction_term1_UI'),
-                        uiOutput('regression_interaction_term2_UI'),
+                        uiOutput('regression__interaction_term1__UI'),
+                        uiOutput('regression__interaction_term2__UI'),
                         style='default'
                     )
                 )
@@ -232,46 +232,46 @@ shinyUI(fluidPage(theme="custom.css",
                 tabsetPanel(type="tabs",
                     tabPanel("Output",
                         tags$br(),
-                        actionButton(inputId='regression_run_button', label='Run Regression'),
+                        actionButton(inputId='regression__run_button', label='Run Regression'),
                         tags$br(),tags$br(),
-                        hidden(tags$h4(id='regression_formula_header', 'Formula')),
-                        verbatimTextOutput(outputId='regression_formula'),
+                        hidden(tags$h4(id='regression__formula_header', 'Formula')),
+                        verbatimTextOutput(outputId='regression__formula'),
                         tags$br(),
-                        hidden(uiOutput('regression_summary_header_UI')),
-                        verbatimTextOutput(outputId='regression_number_of_rows_missing_removed'),
+                        hidden(uiOutput('regression__summary_header__UI')),
+                        verbatimTextOutput(outputId='regression__number_of_rows_missing_removed'),
                         tags$br(),
-                        verbatimTextOutput(outputId='regression_summary_output')
+                        verbatimTextOutput(outputId='regression__summary_output')
                     ),
                     tabPanel("VIFs",
-                        hidden(tags$h4(id='regression_vif_header', 'Variance Inflation Factors')),
-                        verbatimTextOutput(outputId='regression_summary_vif')
+                        hidden(tags$h4(id='regression__vif_header', 'Variance Inflation Factors')),
+                        verbatimTextOutput(outputId='regression__summary_vif')
                     ),
                     tabPanel("Diagnostic Plots",
                         tags$br(),
                         tabsetPanel(type="tabs",
                             tabPanel("Actual vs Predicted",
-                                plotOutput(outputId='regression_diagnostic_actual_vs_predicted')
+                                plotOutput(outputId='regression__diagnostic_actual_vs_predicted')
                             ),
                             tabPanel("Residuals vs Fittted",
-                                plotOutput(outputId='regression_diagnostic_residuals_vs_fitted')
+                                plotOutput(outputId='regression__diagnostic_residuals_vs_fitted')
                             ),
                             tabPanel("Actual vs Observed",
-                                plotOutput(outputId='regression_diagnostic_actual_vs_observed')
+                                plotOutput(outputId='regression__diagnostic_actual_vs_observed')
                             ),
                             tabPanel("Normal Q-Q",
-                                plotOutput(outputId='regression_diagnostic_normal_qq')
+                                plotOutput(outputId='regression__diagnostic_normal_qq')
                             ),
                             tabPanel("Scale-Location",
-                                plotOutput(outputId='regression_diagnostic_scale_location')
+                                plotOutput(outputId='regression__diagnostic_scale_location')
                             ),
                             tabPanel("Cooks Distance",
-                                plotOutput(outputId='regression_diagnostic_cooks_distance')
+                                plotOutput(outputId='regression__diagnostic_cooks_distance')
                             ),
                             tabPanel("Residuals vs. Leverage",
-                                plotOutput(outputId='regression_diagnostic_residuals_vs_leverage')
+                                plotOutput(outputId='regression__diagnostic_residuals_vs_leverage')
                             ),
                             tabPanel("Cooks Distance vs Leverage",
-                                plotOutput(outputId='regression_diagnostic_cooks_distance_vs_leverage')
+                                plotOutput(outputId='regression__diagnostic_cooks_distance_vs_leverage')
                             )
                         )
                     )

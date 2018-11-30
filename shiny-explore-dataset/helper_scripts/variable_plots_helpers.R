@@ -79,7 +79,7 @@ reactive__filter_controls_list <- function(input, dataset) {
 # Variable Plot's filtered dataset
 # duplicate dataset (which is bad for large datasets) so that the filters don't have to be reapplied every time.
 ##############################################################################################################
-reactive__var_plots__filtered_data_creator <- function(input, dataset) {
+reactive__var_plots__filtered_data__creator <- function(input, dataset) {
 
     reactive({
 
@@ -155,7 +155,7 @@ reactive__var_plots__filtered_data_creator <- function(input, dataset) {
     })
 }
 
-renderUI__var_plots__variable_UI <- function(dataset) {
+renderUI__var_plots__variable__UI <- function(dataset) {
 
     renderUI({
         selectInput(inputId='var_plots__variable',
@@ -169,7 +169,7 @@ renderUI__var_plots__variable_UI <- function(dataset) {
     })
 }
 
-renderUI__var_plots__comparison_UI <- function(dataset) {
+renderUI__var_plots__comparison__UI <- function(dataset) {
 
     renderUI({
 
@@ -184,7 +184,7 @@ renderUI__var_plots__comparison_UI <- function(dataset) {
     })
 }
 
-renderUI__var_plots__sum_by_variable_UI <- function(dataset) {
+renderUI__var_plots__sum_by_variable__UI <- function(dataset) {
 
     renderUI({
 
@@ -199,7 +199,7 @@ renderUI__var_plots__sum_by_variable_UI <- function(dataset) {
     })
 }
 
-renderUI__var_plots__point_color_UI <- function(dataset) {
+renderUI__var_plots__point_color__UI <- function(dataset) {
 
     renderUI({
 
@@ -214,7 +214,7 @@ renderUI__var_plots__point_color_UI <- function(dataset) {
     })
 }
 
-renderUI__var_plots__point_size_UI <- function(dataset) {
+renderUI__var_plots__point_size__UI <- function(dataset) {
 
     renderUI({
 
@@ -229,7 +229,7 @@ renderUI__var_plots__point_size_UI <- function(dataset) {
     })
 }
 
-renderUI__var_plots__filter_bscollapse_UI <- function(filter_controls_list) {
+renderUI__var_plots__filter_bscollapse__UI <- function(filter_controls_list) {
  
     renderUI({
  
@@ -341,7 +341,7 @@ renderPrint__reactiveValues__vp__ggplot_message <- function(message) {
     })
 }
 
-reactive__var_plots__ggplot_creator <- function(input, session, dataset) {
+reactive__var_plots__ggplot__creator <- function(input, session, dataset) {
     reactive({
 
         req(input$var_plots__variable)
@@ -602,8 +602,8 @@ hide_show_numeric_numeric <- function(session) {
     
     # scatterplot
 
-    shinyjs::show('var_plots__point_size_UI')
-    shinyjs::show('var_plots__point_color_UI')
+    shinyjs::show('var_plots__point_size__UI')
+    shinyjs::show('var_plots__point_color__UI')
 
     shinyjs::show('div_var_plots__group_scatter_controls')
     shinyjs::show('div_var_plots__group_x_zoom_controls')
@@ -614,7 +614,7 @@ hide_show_numeric_numeric <- function(session) {
     shinyjs::hide('var_plots__histogram_bins')
     shinyjs::hide('div_var_plots__group_barchar_controls')
     shinyjs::hide('var_plots__numeric_graph_type')
-    shinyjs::hide('var_plots__sum_by_variable_UI')
+    shinyjs::hide('var_plots__sum_by_variable__UI')
 }
 
 hide_show_numeric_categoric <- function(session, showing_boxplot) {
@@ -640,8 +640,8 @@ hide_show_numeric_categoric <- function(session, showing_boxplot) {
         updateCheckboxInput(session, 'var_plots__scale_y_log_base_10', value=FALSE)
     }
 
-    shinyjs::hide('var_plots__point_size_UI')
-    shinyjs::hide('var_plots__point_color_UI')
+    shinyjs::hide('var_plots__point_size__UI')
+    shinyjs::hide('var_plots__point_color__UI')
 
     shinyjs::show('var_plots__base_size')
     shinyjs::show('var_plots__numeric_graph_type')
@@ -649,7 +649,7 @@ hide_show_numeric_categoric <- function(session, showing_boxplot) {
     shinyjs::hide('div_var_plots__group_scatter_controls')
     shinyjs::hide('div_var_plots__group_barchar_controls')
     shinyjs::hide('var_plots__annotate_points')
-    shinyjs::hide('var_plots__sum_by_variable_UI')
+    shinyjs::hide('var_plots__sum_by_variable__UI')
 }
 
 hide_show_categoric_numeric <- function(session) {
@@ -657,8 +657,8 @@ hide_show_categoric_numeric <- function(session) {
     log_message('hide_show_categoric_numeric')
     
     # multi-boxplot
-    shinyjs::hide('var_plots__point_size_UI')
-    shinyjs::hide('var_plots__point_color_UI')
+    shinyjs::hide('var_plots__point_size__UI')
+    shinyjs::hide('var_plots__point_color__UI')
 
     shinyjs::show('div_var_plots__group_y_zoom_controls')
     shinyjs::show('var_plots__base_size')
@@ -672,7 +672,7 @@ hide_show_categoric_numeric <- function(session) {
     shinyjs::hide('div_var_plots__group_barchar_controls')
     shinyjs::hide('var_plots__numeric_graph_type')
     shinyjs::hide('var_plots__annotate_points')
-    shinyjs::hide('var_plots__sum_by_variable_UI')
+    shinyjs::hide('var_plots__sum_by_variable__UI')
 }
 
 hide_show_categoric_categoric <- function(session) {
@@ -680,9 +680,9 @@ hide_show_categoric_categoric <- function(session) {
     log_message('hide_show_categoric_categoric')
     
     # grouped barchart
-    shinyjs::show('var_plots__sum_by_variable_UI') # categoric with categoric (or NULL) can select numeric sum_by_variable
-    shinyjs::hide('var_plots__point_size_UI')
-    shinyjs::hide('var_plots__point_color_UI')
+    shinyjs::show('var_plots__sum_by_variable__UI') # categoric with categoric (or NULL) can select numeric sum_by_variable
+    shinyjs::hide('var_plots__point_size__UI')
+    shinyjs::hide('var_plots__point_color__UI')
 
     shinyjs::show('div_var_plots__group_barchar_controls')
     shinyjs::show('var_plots__base_size')
@@ -710,9 +710,9 @@ observe__var_plots__hide_show_uncollapse_on_primary_vars <- function(input, sess
 
         if(local_primary_variable == select_variable || local_comparison_variable == select_variable_optional) {
 
-            shinyjs::hide('var_plots__sum_by_variable_UI')
-            shinyjs::hide('var_plots__point_size_UI')
-            shinyjs::hide('var_plots__point_color_UI')
+            shinyjs::hide('var_plots__sum_by_variable__UI')
+            shinyjs::hide('var_plots__point_size__UI')
+            shinyjs::hide('var_plots__point_color__UI')
         }
 
         if(local_primary_variable != select_variable || local_comparison_variable != select_variable_optional) {
