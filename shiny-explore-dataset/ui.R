@@ -61,27 +61,27 @@ shinyUI(fluidPage(theme="custom.css",
                 class='column-input-control-style',
                 tags$div(
                     class='input-control-style',
-                    sliderTextInput(inputId='correlation_corr_threshold',
+                    sliderTextInput(inputId='correlation__corr_threshold',
                                     label='Min Correlation Threshold', ## percent increase
                                     choices=seq(0, 1, 0.05),
                                     selected=0,
                                     grid=TRUE),
-                    sliderTextInput(inputId='correlation_p_value_threshold',
+                    sliderTextInput(inputId='correlation__p_value_threshold',
                                     label='Max P-Value Treshold',
                                     choices=seq(0, 1, 0.05),
                                     selected=1,
                                     grid=TRUE),
-                    sliderTextInput(inputId='correlation_base_size',
+                    sliderTextInput(inputId='correlation__base_size',
                                     label='Text Size',
                                     choices=seq(6, 20, 1),
                                     selected=15,
                                     grid=TRUE),
-                    checkboxInput(inputId='correlation_pretty_text',
+                    checkboxInput(inputId='correlation__pretty_text',
                                   label='Pretty Text', value=FALSE, width=NULL)
                     )
             ),
             column(10,
-                   plotOutput(outputId='correlation_plot')
+                   plotOutput(outputId='correlation__plot')
             )
         ),
         tabPanel(
@@ -89,94 +89,94 @@ shinyUI(fluidPage(theme="custom.css",
             column(3,
                 class='column-input-control-style',
 
-                bsCollapse(id='variable_plots_bscollapse', open='Variables', multiple=TRUE,
+                bsCollapse(id='var_plots__bscollapse', open='Variables', multiple=TRUE,
                     bsCollapsePanel(
                         'Variables',
-                        uiOutput('variable_plots_variable_UI'),
-                        uiOutput('variable_plots_comparison_UI'),
+                        uiOutput('var_plots__variable_UI'),
+                        uiOutput('var_plots__comparison_UI'),
                         # NOTE: the variables below can't be hidden initially (but rather are dynamically hidden)
                         # because the values need to load the first time this tab is clicked
                         # if not, when they become active (and therefore the values change to the default,
                         # they will trigger an unncessary plot refresh
-                        uiOutput('variable_plots_sum_by_variable_UI'),
-                        uiOutput('variable_plots_point_color_UI'),
-                        uiOutput('variable_plots_point_size_UI'),
+                        uiOutput('var_plots__sum_by_variable_UI'),
+                        uiOutput('var_plots__point_color_UI'),
+                        uiOutput('var_plots__point_size_UI'),
                         style='default'
                     ),
                     bsCollapsePanel(
                         'Filters',
                         fluidRow(
                             column(4,
-                                checkboxInput(inputId='variable_plots_filter_use',
+                                checkboxInput(inputId='var_plots__filter_use',
                                               label='Use Filters', value=FALSE, width=NULL)
                             ),
                             column(8,
-                                tags$div(style='margin-bottom: 10px;', actionButton(inputId='variable_plots_filter_apply', label='Apply Filters')),
-                                tags$div(style='margin-bottom: 20px;', actionButton(inputId='variable_plots_filter_clear', label='Clear Filters'))
+                                tags$div(style='margin-bottom: 10px;', actionButton(inputId='var_plots__filter_apply', label='Apply Filters')),
+                                tags$div(style='margin-bottom: 20px;', actionButton(inputId='var_plots__filter_clear', label='Clear Filters'))
                             )
                         ),
-                        uiOutput('variable_plots_filter_bscollapse_UI')
+                        uiOutput('var_plots__filter_bscollapse_UI')
                     ),
                     bsCollapsePanel(
                         'Plot Options',
                         shinyjs::hidden(
-                            selectInput(inputId='variable_plots_numeric_graph_type',
+                            selectInput(inputId='var_plots__numeric_graph_type',
                                     label='Type',
                                     choices=c('Boxplot', 'Histogram'),
                                     selected='Boxplot')
                         ),
-                        shinyjs::hidden(tags$div(id='div_variable_plots_group_barchar_controls',
-                             checkboxInput(inputId='variable_plots_order_by_count',
+                        shinyjs::hidden(tags$div(id='div_var_plots__group_barchar_controls',
+                             checkboxInput(inputId='var_plots__order_by_count',
                                            label='Order By Totals', value=TRUE, width=NULL),
-                             checkboxInput(inputId='variable_plots_show_variable_totals',
+                             checkboxInput(inputId='var_plots__show_variable_totals',
                                            label='Show Variable Totals', value=TRUE, width=NULL),
-                             checkboxInput(inputId='variable_plots_show_comparison_totals',
+                             checkboxInput(inputId='var_plots__show_comparison_totals',
                                            label='Show Comparison Totals', value=TRUE, width=NULL)
                         )),
                         shinyjs::hidden(
-                             numericInput(inputId='variable_plots_histogram_bins',
+                             numericInput(inputId='var_plots__histogram_bins',
                                           label='Number of Bins',
                                           value=30)                 
                         ),
-                        shinyjs::hidden(tags$div(id='div_variable_plots_group_scatter_controls',
-                            sliderTextInput(inputId='variable_plots_transparency',
+                        shinyjs::hidden(tags$div(id='div_var_plots__group_scatter_controls',
+                            sliderTextInput(inputId='var_plots__transparency',
                                             label='Transparency',
                                             choices=c(seq(0, 90, 10), 99),
                                             selected=60,
                                             post  = " %",
                                             grid=TRUE),
-                            checkboxInput(inputId='variable_plots_jitter',
+                            checkboxInput(inputId='var_plots__jitter',
                                           label='Jitter', value=FALSE, width=NULL),
-                            radioButtons(inputId='variable_plots_trend_line',
+                            radioButtons(inputId='var_plots__trend_line',
                                          label='Trend Line:',
                                          choices=c('None', 'Straight', 'Smooth'),
                                          selected='None',
                                          inline=TRUE,
                                          width=NULL),
-                            radioButtons(inputId='variable_plots_trend_line_se',
+                            radioButtons(inputId='var_plots__trend_line_se',
                                          label='Trend Confidence Interval:',
                                          choices=c('No', 'Yes'),
                                          selected='Yes',
                                          inline=TRUE,
                                          width=NULL)
                         )),
-                        shinyjs::hidden(tags$div(id='div_variable_plots_group_x_zoom_controls',
-                             checkboxInput(inputId='variable_plots_scale_x_log_base_10',
+                        shinyjs::hidden(tags$div(id='div_var_plots__group_x_zoom_controls',
+                             checkboxInput(inputId='var_plots__scale_x_log_base_10',
                                            label='Scale X-Axis Log 10', value=FALSE, width=NULL),
-                             numericInput(inputId='variable_plots_x_zoom_min',
+                             numericInput(inputId='var_plots__x_zoom_min',
                                           label='X-Axis Zoom Min',
                                           value=NULL),
-                             numericInput(inputId='variable_plots_x_zoom_max',
+                             numericInput(inputId='var_plots__x_zoom_max',
                                           label='X-Axis Zoom Max',
                                           value=NULL)                         
                         )),
-                        shinyjs::hidden(tags$div(id='div_variable_plots_group_y_zoom_controls',
-                             checkboxInput(inputId='variable_plots_scale_y_log_base_10',
+                        shinyjs::hidden(tags$div(id='div_var_plots__group_y_zoom_controls',
+                             checkboxInput(inputId='var_plots__scale_y_log_base_10',
                                            label='Scale Y-Axis Log 10', value=FALSE, width=NULL),
-                             numericInput(inputId='variable_plots_y_zoom_min',
+                             numericInput(inputId='var_plots__y_zoom_min',
                                           label='Y-Axis Zoom Min',
                                           value=NULL),
-                             numericInput(inputId='variable_plots_y_zoom_max',
+                             numericInput(inputId='var_plots__y_zoom_max',
                                           label='Y-Axis Zoom Max',
                                           value=NULL)                         
                         )),
@@ -184,18 +184,18 @@ shinyUI(fluidPage(theme="custom.css",
                     ),
                     bsCollapsePanel(
                         'Pretty Options',
-                        sliderTextInput(inputId='variable_plots_base_size',
+                        sliderTextInput(inputId='var_plots__base_size',
                                         label='Text Size',
                                         choices=seq(6, 20, 1),
                                         selected=15,
                                         grid=TRUE),
-                        checkboxInput(inputId='variable_plots_pretty_text',
+                        checkboxInput(inputId='var_plots__pretty_text',
                                       label='Pretty Text', value=FALSE, width=NULL),
                         shinyjs::hidden(
-                           checkboxInput(inputId='variable_plots_annotate_points',
+                           checkboxInput(inputId='var_plots__annotate_points',
                                          label='Annotate Points', value=FALSE, width=NULL)
                         ),
-                        numericInput(inputId='variable_plots_filter_factor_lump_number',
+                        numericInput(inputId='var_plots__filter_factor_lump_number',
                                      label='Top N Categories',
                                      value=NULL),
                         style='default'
@@ -203,8 +203,8 @@ shinyUI(fluidPage(theme="custom.css",
                 )
             ),
             column(9,
-                plotOutput(outputId='variable_plots'),
-                verbatimTextOutput(outputId='variable_plots_ggplot_messages')
+                plotOutput(outputId='var_plots'),
+                verbatimTextOutput(outputId='var_plots__ggplot_messages')
             )
         ),
         tabPanel(

@@ -20,9 +20,10 @@ renderDataTable__numeric_summary__table <- function(input, numeric_summary) {
 
     renderDataTable({
 
-        local_numeric_summary <- numeric_summary()
-        local_numeric_options <- input$numeric_summary_options
-        return (local_numeric_summary[, c('feature', local_numeric_options)])
+        local_summary <- numeric_summary()
+        local_options <- input$numeric_summary__options
+
+        return (local_summary[, c('feature', local_options)])
     })
 }
 
@@ -32,7 +33,7 @@ renderUI__numeric_summary__options__UI <- function(numeric_summary) {
         option_values <- colnames(numeric_summary())
 
         option_values <- option_values[option_values != 'feature']
-        checkboxGroupInput(inputId='numeric_summary_options',
+        checkboxGroupInput(inputId='numeric_summary__options',
                            label='Summary Options',
                            choices=option_values,
                            selected=c('perc_nulls', 'perc_zeros', 'mean', 'coef_of_var', 'skewness', 'min', 

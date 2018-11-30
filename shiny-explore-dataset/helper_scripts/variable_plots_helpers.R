@@ -5,7 +5,7 @@ reactive__filter_controls_list <- function(input, dataset) {
 
     reactive({
 
-        input$variable_plots_filter_clear
+        input$var_plots__filter_clear
         req(dataset())
 
         # local_filter_options_data <- filter_options_data()
@@ -16,7 +16,7 @@ reactive__filter_controls_list <- function(input, dataset) {
 
                 #log_message_variable('class', class(.x)[1])
 
-                input_id <- paste0('dynamic_filter_variable_plots_', .y)
+                input_id <- paste0('var_plots__dynamic_filter__', .y)
                 
                 if(is.Date(.x)) {
                     #'date'
@@ -79,15 +79,15 @@ reactive__filter_controls_list <- function(input, dataset) {
 # Variable Plot's filtered dataset
 # duplicate dataset (which is bad for large datasets) so that the filters don't have to be reapplied every time.
 ##############################################################################################################
-reactive__variable_plots_filtered_dataset <- function(input, dataset) {
+reactive__var_plots__filtered_dataset <- function(input, dataset) {
 
     reactive({
 
         local_dataset <- dataset()  # clear on new datasets
 
-        if(!is.null(input$variable_plots_filter_use) && input$variable_plots_filter_use) {
+        if(!is.null(input$var_plots__filter_use) && input$var_plots__filter_use) {
 
-            input$variable_plots_filter_apply  # trigger for the "apply" button
+            input$var_plots__filter_apply  # trigger for the "apply" button
             
 
             column_names <- colnames(local_dataset)
@@ -155,10 +155,10 @@ reactive__variable_plots_filtered_dataset <- function(input, dataset) {
     })
 }
 
-renderUI__variable_plots_variable_UI <- function(dataset) {
+renderUI__var_plots__variable_UI <- function(dataset) {
 
     renderUI({
-        selectInput(inputId='variable_plots_variable',
+        selectInput(inputId='var_plots__variable',
                     label = 'Variable',
                     choices = c(select_variable, colnames(dataset())),
                     selected = select_variable,
@@ -169,11 +169,11 @@ renderUI__variable_plots_variable_UI <- function(dataset) {
     })
 }
 
-renderUI__variable_plots_comparison_UI <- function(dataset) {
+renderUI__var_plots__comparison_UI <- function(dataset) {
 
     renderUI({
 
-        selectInput(inputId='variable_plots_comparison',
+        selectInput(inputId='var_plots__comparison',
                     label = 'Comparison Variable',
                     choices = c(select_variable_optional, colnames(dataset())),
                     selected = select_variable_optional,
@@ -184,11 +184,11 @@ renderUI__variable_plots_comparison_UI <- function(dataset) {
     })
 }
 
-renderUI__variable_plots_sum_by_variable_UI <- function(dataset) {
+renderUI__var_plots__sum_by_variable_UI <- function(dataset) {
 
     renderUI({
 
-        selectInput(inputId='variable_plots_sum_by_variable',
+        selectInput(inputId='var_plots__sum_by_variable',
                     label = 'Sum By Variable',
                     choices = c(select_variable_optional, colnames(dataset() %>% select_if(is.numeric))),
                     selected = select_variable_optional,
@@ -199,11 +199,11 @@ renderUI__variable_plots_sum_by_variable_UI <- function(dataset) {
     })
 }
 
-renderUI__variable_plots_point_color_UI <- function(dataset) {
+renderUI__var_plots__point_color_UI <- function(dataset) {
 
     renderUI({
 
-        selectInput(inputId='variable_plots_point_color',
+        selectInput(inputId='var_plots__point_color',
                     label = 'Color Variable',
                     choices = c(select_variable_optional, colnames(dataset())),
                     selected = select_variable_optional,
@@ -214,11 +214,11 @@ renderUI__variable_plots_point_color_UI <- function(dataset) {
     })
 }
 
-renderUI__variable_plots_point_size_UI <- function(dataset) {
+renderUI__var_plots__point_size_UI <- function(dataset) {
 
     renderUI({
 
-        selectInput(inputId='variable_plots_point_size',
+        selectInput(inputId='var_plots__point_size',
                     label = 'Size Variable',
                     choices = c(select_variable_optional, colnames(dataset())),
                     selected = select_variable_optional,
@@ -229,7 +229,7 @@ renderUI__variable_plots_point_size_UI <- function(dataset) {
     })
 }
 
-renderUI__variable_plots_filter_bscollapse_UI <- function(filter_controls_list) {
+renderUI__var_plots__filter_bscollapse_UI <- function(filter_controls_list) {
  
     renderUI({
  
@@ -239,44 +239,44 @@ renderUI__variable_plots_filter_bscollapse_UI <- function(filter_controls_list) 
 
 # Events that control the color of the Filter collapse panel, so that it turns red when the filters haven't
 # been applied (i.e. changes that haven't been applied)
-observeEvent__variable_plots_filter_clear <- function(input, session) {
+observeEvent__var_plots__filter_clear <- function(input, session) {
 
-    observeEvent(input$variable_plots_filter_clear, ({
+    observeEvent(input$var_plots__filter_clear, ({
 
-        if(isolate(input$variable_plots_filter_use)) {  # only update if we are using the filter
+        if(isolate(input$var_plots__filter_use)) {  # only update if we are using the filter
 
-            updateCollapse(session, "variable_plots_bscollapse", style = list('Filters' = 'danger'))
+            updateCollapse(session, "var_plots__bscollapse", style = list('Filters' = 'danger'))
         }
     }))
 }
 
-observeEvent__variable_plots_filter_apply <- function(input, session) {
+observeEvent__var_plots__filter_apply <- function(input, session) {
 
-    observeEvent(input$variable_plots_filter_apply, ({
+    observeEvent(input$var_plots__filter_apply, ({
 
-        if(isolate(input$variable_plots_filter_use)) {  # only update if we are using the filter
+        if(isolate(input$var_plots__filter_use)) {  # only update if we are using the filter
 
-            updateCollapse(session, "variable_plots_bscollapse", style = list('Filters' = 'success'))
+            updateCollapse(session, "var_plots__bscollapse", style = list('Filters' = 'success'))
         }
     }))
 }
 
-observeEvent__variable_plots_filter_use <- function(input, session) {
+observeEvent__var_plots__filter_use <- function(input, session) {
 
-    observeEvent(input$variable_plots_filter_use, {
+    observeEvent(input$var_plots__filter_use, {
 
-        if(input$variable_plots_filter_use) {
+        if(input$var_plots__filter_use) {
 
-            updateCollapse(session, "variable_plots_bscollapse", style = list('Filters' = 'success'))
+            updateCollapse(session, "var_plots__bscollapse", style = list('Filters' = 'success'))
 
         } else {
 
-            updateCollapse(session, "variable_plots_bscollapse", style = list('Filters' = 'default'))
+            updateCollapse(session, "var_plots__bscollapse", style = list('Filters' = 'default'))
         }
     })
 }
 
-observe__variable_plots_bscollapse__dynamic_inputs <- function(input, session, dataset) {
+observe__var_plots__bscollapse__dynamic_inputs <- function(input, session, dataset) {
 
     observe({
 
@@ -286,16 +286,16 @@ observe__variable_plots_bscollapse__dynamic_inputs <- function(input, session, d
         # also use it to check values (i.e. only update colors if the filters are active i.e. any are not null)
         selections <- list()
         for(column_name in colnames(dataset())) {
-            value <- input[[paste0('dynamic_filter_variable_plots_', column_name)]]
+            value <- input[[paste0('var_plots__dynamic_filter__', column_name)]]
             selections <- append(selections, value)
         }
 
         # only update if we are using the filter
         # also, if any of the selections are not null, that means they have been initialized and we can begin
         # to mark as being changed otherwise, the filter section hasn't even been opened
-        if(isolate(input$variable_plots_filter_use) && any(map_lgl(selections, ~ !is.null(.)))) {
+        if(isolate(input$var_plots__filter_use) && any(map_lgl(selections, ~ !is.null(.)))) {
 
-            updateCollapse(session, "variable_plots_bscollapse", style = list('Filters' = 'danger'))
+            updateCollapse(session, "var_plots__bscollapse", style = list('Filters' = 'danger'))
         }
     })
 }
@@ -316,19 +316,19 @@ observe__variable_plots_bscollapse__dynamic_inputs <- function(input, session, d
 get_dynamic_filter_selections <- function(input, columns) {
 
     # get all of the selections from the dynamic filters without triggering refresh for the first time
-    selections_list <- map(columns, ~ isolate(input[[paste0('dynamic_filter_variable_plots_', .)]]))
+    selections_list <- map(columns, ~ isolate(input[[paste0('var_plots__dynamic_filter__', .)]]))
     names(selections_list) <- columns
 
     return (selections_list)
 
 }
 
-renderPlot__variable_plot <- function(input, output, session, reactive__variable_plots__ggplot, messages) {
+renderPlot__variable_plot <- function(input, output, session, reactive__var_plots__ggplot, messages) {
 
     renderPlot({
         withProgress(value=1/2, message='Plotting Graph',{
 
-           messages$value <- capture_messages_warnings(function() print(reactive__variable_plots__ggplot()))
+           messages$value <- capture_messages_warnings(function() print(reactive__var_plots__ggplot()))
 
            log_message_variable('messages$value', messages$value)
 
@@ -336,51 +336,51 @@ renderPlot__variable_plot <- function(input, output, session, reactive__variable
 
     }, height = function() {
 
-        session$clientData$output_variable_plots_width * 0.66  # set height to % of width
+        session$clientData$output_var_plots_width * 0.66  # set height to % of width
     })
 }
 
-variable_plots_ggplot_messages__renderPrint <- function(reactive_values) {
+var_plots__ggplot_messages__renderPrint <- function(reactive_values) {
 
     renderPrint({
         cat(reactive_values$value)
     })
 }
 
-reactive__variable_plots__ggplot_creator <- function(input, session, variable_plots_filtered_dataset) {
+reactive__var_plots__ggplot_creator <- function(input, session, var_plots_filtered_dataset) {
     reactive({
 
-        req(input$variable_plots_variable)
-        req(input$variable_plots_comparison)
+        req(input$var_plots__variable)
+        req(input$var_plots__comparison)
 
         # reactive data
-        local_dataset <- variable_plots_filtered_dataset()
-        local_primary_variable <- input$variable_plots_variable
-        local_comparison_variable <- input$variable_plots_comparison
-        local_sum_by_variable <- input$variable_plots_sum_by_variable
-        local_point_size <- input$variable_plots_point_size
-        local_point_color <- input$variable_plots_point_color
+        local_dataset <- var_plots_filtered_dataset()
+        local_primary_variable <- input$var_plots__variable
+        local_comparison_variable <- input$var_plots__comparison
+        local_sum_by_variable <- input$var_plots__sum_by_variable
+        local_point_size <- input$var_plots__point_size
+        local_point_color <- input$var_plots__point_color
 
-        local_transparency <- input$variable_plots_transparency / 100
-        local_annotate_points <- input$variable_plots_annotate_points
-        local_base_size <- input$variable_plots_base_size
-        local_histogram_bins <- input$variable_plots_histogram_bins
-        local_jitter <- input$variable_plots_jitter
-        local_order_by_count <- input$variable_plots_order_by_count
-        local_numeric_graph_type <- input$variable_plots_numeric_graph_type
-        local_pretty_text <- input$variable_plots_pretty_text
-        local_scale_x_log_base_10 <- input$variable_plots_scale_x_log_base_10
-        local_scale_y_log_base_10 <- input$variable_plots_scale_y_log_base_10
-        local_show_variable_totals <- input$variable_plots_show_variable_totals
-        local_show_comparison_totals <- input$variable_plots_show_comparison_totals
-        local_trend_line <- input$variable_plots_trend_line
-        local_trend_line_se <- input$variable_plots_trend_line_se
-        local_x_zoom_min <- input$variable_plots_x_zoom_min
-        local_x_zoom_max <- input$variable_plots_x_zoom_max
-        local_y_zoom_min <- input$variable_plots_y_zoom_min
-        local_y_zoom_max <- input$variable_plots_y_zoom_max
+        local_transparency <- input$var_plots__transparency / 100
+        local_annotate_points <- input$var_plots__annotate_points
+        local_base_size <- input$var_plots__base_size
+        local_histogram_bins <- input$var_plots__histogram_bins
+        local_jitter <- input$var_plots__jitter
+        local_order_by_count <- input$var_plots__order_by_count
+        local_numeric_graph_type <- input$var_plots__numeric_graph_type
+        local_pretty_text <- input$var_plots__pretty_text
+        local_scale_x_log_base_10 <- input$var_plots__scale_x_log_base_10
+        local_scale_y_log_base_10 <- input$var_plots__scale_y_log_base_10
+        local_show_variable_totals <- input$var_plots__show_variable_totals
+        local_show_comparison_totals <- input$var_plots__show_comparison_totals
+        local_trend_line <- input$var_plots__trend_line
+        local_trend_line_se <- input$var_plots__trend_line_se
+        local_x_zoom_min <- input$var_plots__x_zoom_min
+        local_x_zoom_max <- input$var_plots__x_zoom_max
+        local_y_zoom_min <- input$var_plots__y_zoom_min
+        local_y_zoom_max <- input$var_plots__y_zoom_max
 
-        local_variable_plots_filter_factor_lump_number <- input$variable_plots_filter_factor_lump_number
+        local_var_plots__filter_factor_lump_number <- input$var_plots__filter_factor_lump_number
 
         ggplot_object <- NULL
 
@@ -399,21 +399,21 @@ reactive__variable_plots__ggplot_creator <- function(input, session, variable_pl
             local_point_color <- null_if_select_variable_optional(local_point_color)
             local_comparison_variable <- null_if_select_variable_optional(local_comparison_variable)
 
-            if(is.na(local_variable_plots_filter_factor_lump_number) ||
-                    local_variable_plots_filter_factor_lump_number == 0) {
+            if(is.na(local_var_plots__filter_factor_lump_number) ||
+                    local_var_plots__filter_factor_lump_number == 0) {
 
-                local_variable_plots_filter_factor_lump_number <- NA
+                local_var_plots__filter_factor_lump_number <- NA
             }
 
             log_message_variable('primary_variable', local_primary_variable)
             log_message_variable('comparison_variable', local_comparison_variable)
-            log_message_variable('variable_plots_sum_by_variable', local_sum_by_variable)
-            log_message_variable('variable_plots_point_size', local_point_size)
-            log_message_variable('variable_plots_point_color', local_point_color)
-            log_message_variable('variable_plots_base_size', local_base_size)
-            log_message_variable('variable_plots_pretty_text', local_pretty_text)
-            log_message_variable('variable_plots_annotate_points', local_annotate_points)
-            log_message_variable('variable_plots_filter_factor_lump_number', local_variable_plots_filter_factor_lump_number)
+            log_message_variable('var_plots__sum_by_variable', local_sum_by_variable)
+            log_message_variable('var_plots__point_size', local_point_size)
+            log_message_variable('var_plots__point_color', local_point_color)
+            log_message_variable('var_plots__base_size', local_base_size)
+            log_message_variable('var_plots__pretty_text', local_pretty_text)
+            log_message_variable('var_plots__annotate_points', local_annotate_points)
+            log_message_variable('var_plots__filter_factor_lump_number', local_var_plots__filter_factor_lump_number)
             
             if(local_pretty_text) {
                 # if we change to pretty text, it will update the columns and all values to be "pretty",
@@ -439,8 +439,8 @@ reactive__variable_plots__ggplot_creator <- function(input, session, variable_pl
 
                 log_message_variable('updated primary_variable', local_primary_variable)
                 log_message_variable('updated comparison_variable', local_comparison_variable)
-                log_message_variable('updated variable_plots_point_size', local_point_size)
-                log_message_variable('updated variable_plots_point_color', local_point_color)
+                log_message_variable('updated var_plots__point_size', local_point_size)
+                log_message_variable('updated var_plots__point_color', local_point_color)
                 log_message_generic('column names', paste0(colnames(local_dataset), collapse = '; '))
             }
 
@@ -459,23 +459,23 @@ reactive__variable_plots__ggplot_creator <- function(input, session, variable_pl
 
                     log_message('**numeric numeric**')
 
-                    log_message_variable('variable_plots_transparency', local_transparency)
-                    log_message_variable('variable_plots_jitter', local_jitter)
-                    log_message_variable('variable_plots_trend_line', local_trend_line)
-                    log_message_variable('variable_plots_trend_line_se', local_trend_line_se)
+                    log_message_variable('var_plots__transparency', local_transparency)
+                    log_message_variable('var_plots__jitter', local_jitter)
+                    log_message_variable('var_plots__trend_line', local_trend_line)
+                    log_message_variable('var_plots__trend_line_se', local_trend_line_se)
 
-                    log_message_variable('variable_plots_x_zoom_min', local_x_zoom_min)
-                    log_message_variable('variable_plots_x_zoom_max', local_x_zoom_max)
-                    log_message_variable('variable_plots_y_zoom_min', local_y_zoom_min)
-                    log_message_variable('variable_plots_y_zoom_max', local_y_zoom_max)
-                    log_message_variable('variable_plots_annotate_points', local_annotate_points)
-                    log_message_variable('variable_plots_scale_x_log_base_10', local_scale_x_log_base_10)
-                    log_message_variable('variable_plots_scale_y_log_base_10', local_scale_y_log_base_10)
+                    log_message_variable('var_plots__x_zoom_min', local_x_zoom_min)
+                    log_message_variable('var_plots__x_zoom_max', local_x_zoom_max)
+                    log_message_variable('var_plots__y_zoom_min', local_y_zoom_min)
+                    log_message_variable('var_plots__y_zoom_max', local_y_zoom_max)
+                    log_message_variable('var_plots__annotate_points', local_annotate_points)
+                    log_message_variable('var_plots__scale_x_log_base_10', local_scale_x_log_base_10)
+                    log_message_variable('var_plots__scale_y_log_base_10', local_scale_y_log_base_10)
 
                     add_confidence_interval <- !is.null(local_trend_line_se) && local_trend_line_se == 'Yes'
 
                     ggplot_object <- local_dataset %>% 
-                            custom_filter(factor_lump_number=local_variable_plots_filter_factor_lump_number) %>%
+                            custom_filter(factor_lump_number=local_var_plots__filter_factor_lump_number) %>%
                             rt_explore_plot_scatter(variable=local_primary_variable,
                                                     comparison_variable=local_comparison_variable,
                                                     color_variable=local_point_color,
@@ -508,12 +508,12 @@ reactive__variable_plots__ggplot_creator <- function(input, session, variable_pl
 
                         log_message('**numeric null/categoric - boxplot**')
 
-                        log_message_variable('variable_plots_y_zoom_min', local_y_zoom_min)
-                        log_message_variable('variable_plots_y_zoom_max', local_y_zoom_max)
-                        log_message_variable('variable_plots_scale_y_log_base_10', local_scale_y_log_base_10)
+                        log_message_variable('var_plots__y_zoom_min', local_y_zoom_min)
+                        log_message_variable('var_plots__y_zoom_max', local_y_zoom_max)
+                        log_message_variable('var_plots__scale_y_log_base_10', local_scale_y_log_base_10)
 
                         ggplot_object <- local_dataset %>%
-                                custom_filter(factor_lump_number=local_variable_plots_filter_factor_lump_number) %>%
+                                custom_filter(factor_lump_number=local_var_plots__filter_factor_lump_number) %>%
                                 rt_explore_plot_boxplot(variable=local_primary_variable,
                                                         comparison_variable=local_comparison_variable,
                                                         y_zoom_min=local_y_zoom_min,
@@ -526,13 +526,13 @@ reactive__variable_plots__ggplot_creator <- function(input, session, variable_pl
 
                         log_message('**numeric null/categoric - histogram**')
 
-                        log_message_variable('variable_plots_histogram_bins', local_histogram_bins)
-                        log_message_variable('variable_plots_x_zoom_min', local_x_zoom_min)
-                        log_message_variable('variable_plots_x_zoom_max', local_x_zoom_max)
-                        log_message_variable('variable_plots_scale_x_log_base_10', local_scale_x_log_base_10)
+                        log_message_variable('var_plots__histogram_bins', local_histogram_bins)
+                        log_message_variable('var_plots__x_zoom_min', local_x_zoom_min)
+                        log_message_variable('var_plots__x_zoom_max', local_x_zoom_max)
+                        log_message_variable('var_plots__scale_x_log_base_10', local_scale_x_log_base_10)
                         
                         ggplot_object <- local_dataset %>%
-                                custom_filter(factor_lump_number=local_variable_plots_filter_factor_lump_number) %>%
+                                custom_filter(factor_lump_number=local_var_plots__filter_factor_lump_number) %>%
                                 rt_explore_plot_histogram(variable=local_primary_variable,
                                                           comparison_variable=local_comparison_variable,
                                                           num_bins=local_histogram_bins,
@@ -559,12 +559,12 @@ reactive__variable_plots__ggplot_creator <- function(input, session, variable_pl
 
                     log_message('**categoric numeric**')
 
-                    log_message_variable('variable_plots_y_zoom_min', local_y_zoom_min)
-                    log_message_variable('variable_plots_y_zoom_max', local_y_zoom_max)
-                    log_message_variable('variable_plots_scale_y_log_base_10', local_scale_y_log_base_10)
+                    log_message_variable('var_plots__y_zoom_min', local_y_zoom_min)
+                    log_message_variable('var_plots__y_zoom_max', local_y_zoom_max)
+                    log_message_variable('var_plots__scale_y_log_base_10', local_scale_y_log_base_10)
 
                     ggplot_object <- local_dataset %>%
-                            custom_filter(factor_lump_number=local_variable_plots_filter_factor_lump_number) %>%
+                            custom_filter(factor_lump_number=local_var_plots__filter_factor_lump_number) %>%
                             rt_explore_plot_boxplot(variable=local_comparison_variable,
                                                     comparison_variable=local_primary_variable,
                                                     y_zoom_min=local_y_zoom_min,
@@ -581,12 +581,12 @@ reactive__variable_plots__ggplot_creator <- function(input, session, variable_pl
 
                     log_message('**categoric null/categoric**')
 
-                    log_message_variable('variable_plots_order_by_count', local_order_by_count)
-                    log_message_variable('variable_plots_show_variable_totals', local_show_variable_totals)
-                    log_message_variable('variable_plots_show_comparison_totals', local_show_comparison_totals)
+                    log_message_variable('var_plots__order_by_count', local_order_by_count)
+                    log_message_variable('var_plots__show_variable_totals', local_show_variable_totals)
+                    log_message_variable('var_plots__show_comparison_totals', local_show_comparison_totals)
 
                     ggplot_object <- local_dataset %>%
-                            custom_filter(factor_lump_number=local_variable_plots_filter_factor_lump_number) %>%
+                            custom_filter(factor_lump_number=local_var_plots__filter_factor_lump_number) %>%
                             rt_explore_plot_value_totals(variable=local_primary_variable,
                                                          comparison_variable=local_comparison_variable,
                                                          sum_by_variable=local_sum_by_variable,

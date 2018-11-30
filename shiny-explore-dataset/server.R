@@ -54,31 +54,31 @@ shinyServer(function(input, output, session) {
     ##########################################################################################################
     # Correlation Plot
     ##########################################################################################################
-    output$correlation_plot <- renderPlot__correlation_plot(input, output, session, reactive__source_data)
+    output$correlation__plot <- renderPlot__correlation__plot(input, session, reactive__source_data)
 
     ##########################################################################################################
     # Viarable Plot
     ##########################################################################################################
-    reactive__variable_plots__ggplot <- reactive__variable_plots__ggplot_creator(input, session, variable_plots_filtered_dataset)
+    var_plots__filtered_dataset <- reactive__var_plots__filtered_dataset(input, reactive__source_data)  # duplicate reactive__source_data (which is bad for large datasets) so that the filters don't have to be reapplied every time.
+    reactive__var_plots__ggplot <- reactive__var_plots__ggplot_creator(input, session, var_plots__filtered_dataset)
     vp__ggplot_message__reactiveValues <- reactiveValues(value=NULL)
-    output$variable_plots_ggplot_messages <- variable_plots_ggplot_messages__renderPrint(vp__ggplot_message__reactiveValues)
+    output$var_plots__ggplot_messages <- var_plots__ggplot_messages__renderPrint(vp__ggplot_message__reactiveValues)
 
     # Viarable Plot - Filters
     filter_controls_list <- reactive__filter_controls_list(input, reactive__source_data)
-    output$variable_plots_filter_bscollapse_UI <- renderUI__variable_plots_filter_bscollapse_UI(filter_controls_list)
-    variable_plots_filtered_dataset <- reactive__variable_plots_filtered_dataset(input, reactive__source_data)  # duplicate reactive__source_data (which is bad for large datasets) so that the filters don't have to be reapplied every time.
-    observeEvent__variable_plots_filter_clear(input, session)
-    observeEvent__variable_plots_filter_apply(input, session)
-    observe__variable_plots_bscollapse__dynamic_inputs(input, session, reactive__source_data)
-    observeEvent__variable_plots_filter_use(input, session)
+    output$var_plots__filter_bscollapse_UI <- renderUI__var_plots__filter_bscollapse_UI(filter_controls_list)
+    observeEvent__var_plots__filter_clear(input, session)
+    observeEvent__var_plots__filter_apply(input, session)
+    observe__var_plots__bscollapse__dynamic_inputs(input, session, reactive__source_data)
+    observeEvent__var_plots__filter_use(input, session)
 
-    output$variable_plots <- renderPlot__variable_plot(input, output, session, reactive__variable_plots__ggplot, vp__ggplot_message__reactiveValues)
-    output$variable_plots_variable_UI <- renderUI__variable_plots_variable_UI(reactive__source_data)
-    output$variable_plots_comparison_UI <- renderUI__variable_plots_comparison_UI(reactive__source_data)
-    output$variable_plots_sum_by_variable_UI <- renderUI__variable_plots_sum_by_variable_UI(reactive__source_data)
-    output$variable_plots_point_color_UI <- renderUI__variable_plots_point_color_UI(reactive__source_data)
-    output$variable_plots_point_size_UI <- renderUI__variable_plots_point_size_UI(reactive__source_data)
-    observe__variable_plots__hide_show_uncollapse_on_primary_vars(input, output, session)
+    output$var_plots <- renderPlot__variable_plot(input, output, session, reactive__var_plots__ggplot, vp__ggplot_message__reactiveValues)
+    output$var_plots__variable_UI <- renderUI__var_plots__variable_UI(reactive__source_data)
+    output$var_plots__comparison_UI <- renderUI__var_plots__comparison_UI(reactive__source_data)
+    output$var_plots__sum_by_variable_UI <- renderUI__var_plots__sum_by_variable_UI(reactive__source_data)
+    output$var_plots__point_color_UI <- renderUI__var_plots__point_color_UI(reactive__source_data)
+    output$var_plots__point_size_UI <- renderUI__var_plots__point_size_UI(reactive__source_data)
+    observe__var_plots__hide_show_uncollapse_on_primary_vars(input, output, session)
 
 
     ##########################################################################################################
