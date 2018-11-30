@@ -131,3 +131,21 @@ easy_regression <- function(dataset,
 # #interaction_variables <- list(c('housing_median_age', 'total_rooms'), c('total_rooms', 'housing_median_age'))
 # interaction_variables <- list(c('housing_median_age', 'total_rooms'))
 # paste(' ', paste(map_chr(interaction_variables, ~ paste(., collapse =' * ')), collapse = ' + '), '+ ')
+
+
+capture_messages_warnings <- function(func) {
+    
+    messages <- list()
+    withCallingHandlers(
+        warning = function(cnd) {
+            messages <<- append(messages, cnd$message)
+            rlang::cnd_muffle(cnd)
+        },
+        message = function(cnd) {
+            messages <<- append(messages, cnd$message)
+            rlang::cnd_muffle(cnd)
+        },
+        func()
+    )
+    return (paste0(messages, collapse = '\n'))
+}

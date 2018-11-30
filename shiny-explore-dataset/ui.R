@@ -208,7 +208,8 @@ shinyUI(fluidPage(theme="custom.css",
                 )
             ),
             column(9,
-                plotOutput(outputId='variable_plots')
+                tags$div(plotOutput(outputId='variable_plots')),
+                tags$div(verbatimTextOutput(outputId='variable_plots_ggplot_messages'))
             )
         ),
         tabPanel(
