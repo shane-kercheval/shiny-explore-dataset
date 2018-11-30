@@ -15,7 +15,6 @@ source('helper_scripts/definitions.R')
 source('helper_scripts/logging_functions.R')
 source('helper_scripts/generic_helpers.R')
 source('helper_scripts/plot_helpers.R')
-source('helper_scripts/dynamic_show_hide_controls.R')
 source('helper_scripts/dataset_loading_helpers.R')
 source('helper_scripts/numeric_summary_helpers.R')
 source('helper_scripts/categoric_summary_helpers.R')
@@ -59,12 +58,17 @@ shinyServer(function(input, output, session) {
     ##########################################################################################################
     # Viarable Plot
     ##########################################################################################################
-    var_plots__filtered_dataset <- reactive__var_plots__filtered_dataset(input, reactive__source_data)  # duplicate reactive__source_data (which is bad for large datasets) so that the filters don't have to be reapplied every time.
-    reactive__var_plots__ggplot <- reactive__var_plots__ggplot_creator(input, session, var_plots__filtered_dataset)
-    vp__ggplot_message__reactiveValues <- reactiveValues(value=NULL)
-    output$var_plots__ggplot_messages <- var_plots__ggplot_messages__renderPrint(vp__ggplot_message__reactiveValues)
+    # cached dataset after the filters have been applied (which is bad for large datasets :( ) so that the
+    # filters don't have to be reapplied every time; sacrificing memory for speed 
+    reactive__var_plots__filtered_data <- reactive__var_plots__filtered_data_creator(input, reactive__source_data)
+    # creates the ggplot object
+    reactive__var_plots__ggplot <- reactive__var_plots__ggplot_creator(input, session, reactive__var_plots__filtered_data)
+    # stores any messages/warnings that ggplot produces when rendering the plot (outputs below the graph (var_plots__ggplot_messages))
+    reactiveValues__vp__ggplot_message <- reactiveValues(value=NULL)
+    output$var_plots__ggplot_messages <- renderPrint__reactiveValues__vp__ggplot_message(reactiveValues__vp__ggplot_message)
 
-    # Viarable Plot - Filters
+    # Viarable Plot - Filters - this builds up the filters based on the dataset column types and dynamically 
+    # adds the controls to var_plots__filter_bscollapse_UI
     filter_controls_list <- reactive__filter_controls_list(input, reactive__source_data)
     output$var_plots__filter_bscollapse_UI <- renderUI__var_plots__filter_bscollapse_UI(filter_controls_list)
     observeEvent__var_plots__filter_clear(input, session)
@@ -72,14 +76,14 @@ shinyServer(function(input, output, session) {
     observe__var_plots__bscollapse__dynamic_inputs(input, session, reactive__source_data)
     observeEvent__var_plots__filter_use(input, session)
 
-    output$var_plots <- renderPlot__variable_plot(input, output, session, reactive__var_plots__ggplot, vp__ggplot_message__reactiveValues)
+    # main plot
+    output$var_plots <- renderPlot__variable_plot(session, reactive__var_plots__ggplot, reactiveValues__vp__ggplot_message)
     output$var_plots__variable_UI <- renderUI__var_plots__variable_UI(reactive__source_data)
     output$var_plots__comparison_UI <- renderUI__var_plots__comparison_UI(reactive__source_data)
     output$var_plots__sum_by_variable_UI <- renderUI__var_plots__sum_by_variable_UI(reactive__source_data)
     output$var_plots__point_color_UI <- renderUI__var_plots__point_color_UI(reactive__source_data)
     output$var_plots__point_size_UI <- renderUI__var_plots__point_size_UI(reactive__source_data)
-    observe__var_plots__hide_show_uncollapse_on_primary_vars(input, output, session)
-
+    observe__var_plots__hide_show_uncollapse_on_primary_vars(input, session)
 
     ##########################################################################################################
     # Regression Output
