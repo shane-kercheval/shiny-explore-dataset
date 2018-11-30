@@ -34,3 +34,8 @@
     margin-left: 0px;
     padding-left: 0px;
 }
+
+.shiny-plot-output {
+    height: 100% !important;
+    margin-bottom: 10px;
+}
