@@ -1,121 +1,124 @@
-############################################################################################################## 
-# Variable Plot Output
 ##############################################################################################################
-renderDataTable__dataset_head_table <- function(dataset) {
-
-    renderDataTable({
-
-        return (head(dataset(), 500))
-    })
-}
-
-renderDataTable__dataset_types_table <- function(dataset) {
-
-    renderDataTable({
-
-        withProgress(value=1/2, message='Loading Types',{
-
-            local_dataset <- dataset()
-
-            types <- map_chr(colnames(local_dataset), ~ class(local_dataset[, .])[1])
-
-            return (data.frame(variable=colnames(local_dataset), type=types))
-        })
-    })
-}
-
-renderDataTable__numeric_summary_table <- function(input, numeric_summary_data) {
-
-    renderDataTable({
-
-        local_numeric_summary <- numeric_summary_data()
-        local_numeric_options <- input$numeric_summary_options
-        return (local_numeric_summary[, c('feature', local_numeric_options)])
-    })
-}
-
-renderDataTable__categoric_summary_table <- function(categoric_summary_data) {
-
-    renderDataTable({
-        
-        return (categoric_summary_data())
-    })
-}
-
-renderPrint__categoric_summary_text <- function(dataset, categoric_summary_data) {
-
-    renderPrint({
-        
-        # get R's summary of the categoric data
-        return (summary(dataset()[, as.character(categoric_summary_data()$feature)]))
-    })
-}
-
-renderPlot__correlation_plot <- function(input, output, session, dataset) {
-
-    renderPlot({
-
-        withProgress(value=1/2, message='Calculating Correlations', {
-
-            local_dataset <- dataset()
-
-            if(input$correlation_pretty_text) {
-
-                local_dataset <- rt_pretty_dataset(local_dataset)
-            }
-
-            log_message_block_start('Calculating Correlations & Creating Plot')
-            log_message_variable('correlation_corr_threshold', input$correlation_corr_threshold)
-            log_message_variable('correlation_p_value_threshold', input$correlation_p_value_threshold)
-            log_message_variable('correlation_base_size', input$correlation_base_size)
-            log_message_variable('correlation_pretty_text', input$correlation_pretty_text)
-
-            # see note about why I use print, in `variable plot` section below.
-            return (
-                print(rt_explore_plot_correlations(dataset=local_dataset,
-                                                   corr_threshold=input$correlation_corr_threshold,
-                                                   p_value_threshold=input$correlation_p_value_threshold,
-                                                   base_size=input$correlation_base_size,
-                                                   type='pearson'))
-            )
-        })
-    }, height = function() {
-
-        session$clientData$output_correlation_plot_width * 0.66  # set height to % of width
-    })
-}
-
+# Regression Reactive UI
 ##############################################################################################################
-# Variable Plot
-# NOTE: i use `print(xxx_plot)` because ggplot does some sort of lazy evaluation, which means that the 
-# withProgress finishes but the plot is still rendering and if the plot takes a long time to render, the
-# shiny app is still working/blocking but no progress is shown. `print` seems to force evaluation while
-# not affecting return of the plot from the function or it being displayed in shiny
-##############################################################################################################
-get_dynamic_filter_selections <- function(input, columns) {
+renderUI__regression_dependent_variable_UI <- function(dataset) {
 
-    # get all of the selections from the dynamic filters without triggering refresh for the first time
-    selections_list <- map(columns, ~ isolate(input[[paste0('dynamic_filter_variable_plots_', .)]]))
-    names(selections_list) <- columns
+    renderUI({
 
-    return (selections_list)
-
+        selectInput(inputId='regression_dependent_variable',
+                    label='Dependent Variable',
+                    choices=c(select_variable, colnames(dataset())),
+                    selected=select_variable,
+                    multiple=FALSE,
+                    selectize=TRUE,
+                    width=500,
+                    size=NULL)
+    })
 }
 
-renderPlot__variable_plot <- function(input, output, session, reactive__variable_plots__ggplot, messages) {
+renderUI__regression_independent_variables_UI <- function(input, dataset) {
 
-    renderPlot({
-        withProgress(value=1/2, message='Plotting Graph',{
+    renderUI({
 
-           messages$value <- capture_messages_warnings(function() print(reactive__variable_plots__ggplot()))
+        req(input$regression_dependent_variable)
 
-           log_message_variable('messages$value', messages$value)
+        column_names <- colnames(dataset())
+        possible_variables <- column_names[! column_names %in% input$regression_dependent_variable]        
 
-        })
+        checkboxGroupInput(inputId='regression_independent_variables',
+                           label='Independent Variables',
+                           choices=possible_variables,
+                           selected=possible_variables,
+                           inline=FALSE,
+                           width=NULL)
+    })
+}
 
-    }, height = function() {
+renderUI__regression_summary_header_UI <- function(regression_results) {
 
-        session$clientData$output_variable_plots_width * 0.66  # set height to % of width
+    renderUI({
+
+        req(regression_results())
+
+        local_regression_results <- regression_results()
+
+        if(is.null(local_regression_results$reference)) {  # reference is filled for logistic regression
+
+            reference <- ''            
+
+        } else {
+
+            reference <- paste0('(reference: `', local_regression_results$reference, '`)')
+        }
+
+        tags$h4(paste(regression_results()$type, 'Summary', reference))
+    })
+}
+
+renderUI__regression_interaction_term1_UI <- function(input, dataset) {
+
+    renderUI({
+
+        req(input$regression_dependent_variable)
+
+        # cannot select dependent_variable
+        column_names <- colnames(dataset())
+        possible_variables <- column_names[! column_names %in% input$regression_dependent_variable]
+
+        selectInput(inputId='regression_interaction_term1',
+                    label='Interaction Variable 1',
+                    choices=c(select_variable, possible_variables),
+                    selected=select_variable,
+                    multiple=FALSE,
+                    selectize=TRUE,
+                    width=500,
+                    size=NULL)
+    })
+}
+
+renderUI__regression_interaction_term2_UI <- function(input, dataset) {
+
+    renderUI({
+
+        req(input$regression_dependent_variable)
+        req(input$regression_interaction_term1)
+
+        # cannot select dependent_variable or the first term
+        column_names <- colnames(dataset())
+        possible_variables <- column_names[! column_names %in% c(input$regression_dependent_variable,
+                                                                 input$regression_interaction_term1)]
+
+        selectInput(inputId='regression_interaction_term2',
+                    label='Interaction Variable 2',
+                    choices=c(select_variable, possible_variables),
+                    selected=select_variable,
+                    multiple=FALSE,
+                    selectize=TRUE,
+                    width=500,
+                    size=NULL)
+    })
+}
+
+observeEvent__regression_toggle_all_ind_variables <- function(input, dataset, session) {
+
+    observeEvent(input$regression_toggle_all_ind_variables, {
+
+        # if none selected, select all, otherwise (if any selected); unselect all
+        if(length(input$regression_independent_variables) == 0) {
+
+            column_names <- colnames(dataset())
+            possible_variables <- column_names[! column_names %in% input$regression_dependent_variable]
+
+            updateCheckboxGroupInput(session=session,
+                                     inputId='regression_independent_variables',
+                                     selected=possible_variables)
+
+        } else {
+
+            updateCheckboxGroupInput(session=session,
+                                     inputId='regression_independent_variables',
+                                     selected=character(0))
+        }
     })
 }
 

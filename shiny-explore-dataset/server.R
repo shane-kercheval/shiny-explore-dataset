@@ -17,8 +17,12 @@ source('helper_scripts/generic_helpers.R')
 source('helper_scripts/plot_helpers.R')
 source('helper_scripts/dynamic_show_hide_controls.R')
 source('helper_scripts/reactive_data_helpers.R')
-source('helper_scripts/reactive_input_helpers.R')
-source('helper_scripts/reactive_output_helpers.R')
+source('helper_scripts/dataset_loading_helpers.R')
+source('helper_scripts/numeric_summary_helpers.R')
+source('helper_scripts/categoric_summary_helpers.R')
+source('helper_scripts/correlation_helpers.R')
+source('helper_scripts/variable_plots_helpers.R')
+source('helper_scripts/regression_helpers.R')
 
 
 # Define server logic required to draw a histogram
