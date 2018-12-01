@@ -367,26 +367,26 @@ reactive__var_plots__ggplot__creator <- function(input, session, dataset) {
                     add_confidence_interval <- !is.null(local_trend_line_se) && local_trend_line_se == 'Yes'
 
                     ggplot_object <- local_dataset %>% 
-                            custom_filter(factor_lump_number=local_var_plots__filter_factor_lump_number) %>%
-                            rt_explore_plot_scatter(variable=local_primary_variable,
-                                                    comparison_variable=local_comparison_variable,
-                                                    color_variable=local_point_color,
-                                                    size_variable=local_point_size,
-                                                    # alpha is a measure of opacity which is the opposite of transparency, but transparency is more user-friendly
-                                                    alpha= 1 - local_transparency,
-                                                    jitter=local_jitter,
-                                                    x_zoom_min=local_x_zoom_min,
-                                                    x_zoom_max=local_x_zoom_max,
-                                                    y_zoom_min=local_y_zoom_min,
-                                                    y_zoom_max=local_y_zoom_max,
-                                                    base_size=local_base_size) %>%
-                            scale_axes_log10(scale_x=local_scale_x_log_base_10,
-                                             scale_y=local_scale_y_log_base_10) %>%
-                            add_trend_line(trend_line_type=local_trend_line,
-                                           confidence_interval=add_confidence_interval,
-                                           color_variable=local_point_color) %>% 
-                            prettyfy_plot(comparison_variable=local_comparison_variable,
-                                          annotate_points=local_annotate_points)
+                        custom_filter(factor_lump_number=local_var_plots__filter_factor_lump_number) %>%
+                        rt_explore_plot_scatter(variable=local_primary_variable,
+                                                comparison_variable=local_comparison_variable,
+                                                color_variable=local_point_color,
+                                                size_variable=local_point_size,
+                                                # alpha is a measure of opacity which is the opposite of transparency, but transparency is more user-friendly
+                                                alpha= 1 - local_transparency,
+                                                jitter=local_jitter,
+                                                x_zoom_min=local_x_zoom_min,
+                                                x_zoom_max=local_x_zoom_max,
+                                                y_zoom_min=local_y_zoom_min,
+                                                y_zoom_max=local_y_zoom_max,
+                                                base_size=local_base_size) %>%
+                        scale_axes_log10(scale_x=local_scale_x_log_base_10,
+                                         scale_y=local_scale_y_log_base_10) %>%
+                        add_trend_line(trend_line_type=local_trend_line,
+                                       confidence_interval=add_confidence_interval,
+                                       color_variable=local_point_color) %>% 
+                        prettyfy_plot(comparison_variable=local_comparison_variable,
+                                      annotate_points=local_annotate_points)
                 ##########################################################################################
                 # NULL Or Categoric Secondary Variable
                 ##########################################################################################
@@ -405,14 +405,14 @@ reactive__var_plots__ggplot__creator <- function(input, session, dataset) {
                         log_message_variable('var_plots__scale_y_log_base_10', local_scale_y_log_base_10)
 
                         ggplot_object <- local_dataset %>%
-                                custom_filter(factor_lump_number=local_var_plots__filter_factor_lump_number) %>%
-                                rt_explore_plot_boxplot(variable=local_primary_variable,
-                                                        comparison_variable=local_comparison_variable,
-                                                        y_zoom_min=local_y_zoom_min,
-                                                        y_zoom_max=local_y_zoom_max,
-                                                        base_size=local_base_size) %>%
-                                scale_axes_log10(scale_x=FALSE,
-                                                 scale_y=local_scale_y_log_base_10)
+                            custom_filter(factor_lump_number=local_var_plots__filter_factor_lump_number) %>%
+                            rt_explore_plot_boxplot(variable=local_primary_variable,
+                                                    comparison_variable=local_comparison_variable,
+                                                    y_zoom_min=local_y_zoom_min,
+                                                    y_zoom_max=local_y_zoom_max,
+                                                    base_size=local_base_size) %>%
+                            scale_axes_log10(scale_x=FALSE,
+                                             scale_y=local_scale_y_log_base_10)
 
                     } else {
 
@@ -424,15 +424,15 @@ reactive__var_plots__ggplot__creator <- function(input, session, dataset) {
                         log_message_variable('var_plots__scale_x_log_base_10', local_scale_x_log_base_10)
                         
                         ggplot_object <- local_dataset %>%
-                                custom_filter(factor_lump_number=local_var_plots__filter_factor_lump_number) %>%
-                                rt_explore_plot_histogram(variable=local_primary_variable,
-                                                          comparison_variable=local_comparison_variable,
-                                                          num_bins=local_histogram_bins,
-                                                          x_zoom_min=local_x_zoom_min,
-                                                          x_zoom_max=local_x_zoom_max,
-                                                          base_size=local_base_size) %>%
-                                scale_axes_log10(scale_x=local_scale_x_log_base_10,
-                                                 scale_y=FALSE)
+                            custom_filter(factor_lump_number=local_var_plots__filter_factor_lump_number) %>%
+                            rt_explore_plot_histogram(variable=local_primary_variable,
+                                                      comparison_variable=local_comparison_variable,
+                                                      num_bins=local_histogram_bins,
+                                                      x_zoom_min=local_x_zoom_min,
+                                                      x_zoom_max=local_x_zoom_max,
+                                                      base_size=local_base_size) %>%
+                            scale_axes_log10(scale_x=local_scale_x_log_base_10,
+                                             scale_y=FALSE)
                     }
                 }
 
@@ -456,14 +456,14 @@ reactive__var_plots__ggplot__creator <- function(input, session, dataset) {
                     log_message_variable('var_plots__scale_y_log_base_10', local_scale_y_log_base_10)
 
                     ggplot_object <- local_dataset %>%
-                            custom_filter(factor_lump_number=local_var_plots__filter_factor_lump_number) %>%
-                            rt_explore_plot_boxplot(variable=local_comparison_variable,
-                                                    comparison_variable=local_primary_variable,
-                                                    y_zoom_min=local_y_zoom_min,
-                                                    y_zoom_max=local_y_zoom_max,
-                                                    base_size=local_base_size) %>%
-                            scale_axes_log10(scale_x=FALSE,
-                                             scale_y=local_scale_y_log_base_10)
+                        custom_filter(factor_lump_number=local_var_plots__filter_factor_lump_number) %>%
+                        rt_explore_plot_boxplot(variable=local_comparison_variable,
+                                                comparison_variable=local_primary_variable,
+                                                y_zoom_min=local_y_zoom_min,
+                                                y_zoom_max=local_y_zoom_max,
+                                                base_size=local_base_size) %>%
+                        scale_axes_log10(scale_x=FALSE,
+                                         scale_y=local_scale_y_log_base_10)
                 ##########################################################################################
                 # NULL Or Categoric Secondary Variable
                 ##########################################################################################
@@ -478,14 +478,14 @@ reactive__var_plots__ggplot__creator <- function(input, session, dataset) {
                     log_message_variable('var_plots__show_comparison_totals', local_show_comparison_totals)
 
                     ggplot_object <- local_dataset %>%
-                            custom_filter(factor_lump_number=local_var_plots__filter_factor_lump_number) %>%
-                            rt_explore_plot_value_totals(variable=local_primary_variable,
-                                                         comparison_variable=local_comparison_variable,
-                                                         sum_by_variable=local_sum_by_variable,
-                                                         order_by_count=local_order_by_count,
-                                                         show_group_totals=local_show_variable_totals,
-                                                         show_comparison_totals=local_show_comparison_totals,
-                                                         base_size=local_base_size)
+                        custom_filter(factor_lump_number=local_var_plots__filter_factor_lump_number) %>%
+                        rt_explore_plot_value_totals(variable=local_primary_variable,
+                                                     comparison_variable=local_comparison_variable,
+                                                     sum_by_variable=local_sum_by_variable,
+                                                     order_by_count=local_order_by_count,
+                                                     show_group_totals=local_show_variable_totals,
+                                                     show_comparison_totals=local_show_comparison_totals,
+                                                     base_size=local_base_size)
                 }
             }
         }

@@ -74,8 +74,7 @@ shinyServer(function(input, output, session) {
     # Viarable Plot - Filters - this builds up the filters based on the dataset column types and dynamically 
     # adds the controls to var_plots__filter_bscollapse__UI
     filter_controls_list <- reactive__filter_controls_list(input, reactive__source_data)
-    output$var_plots__filter_bscollapse__UI <- 
-        renderUI__var_plots__filter_bscollapse__UI(filter_controls_list)
+    output$var_plots__filter_bscollapse__UI <- renderUI__var_plots__filter_bscollapse__UI(filter_controls_list)
     observeEvent__var_plots__filter_clear(input, session)
     observeEvent__var_plots__filter_apply(input, session)
     observe__var_plots__bscollapse__dynamic_inputs(input, session, reactive__source_data)
