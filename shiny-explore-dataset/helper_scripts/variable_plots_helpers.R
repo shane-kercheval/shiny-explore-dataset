@@ -265,6 +265,7 @@ reactive__var_plots__ggplot__creator <- function(input, session, dataset) {
         local_scale_y_log_base_10 <- input$var_plots__scale_y_log_base_10
         local_show_variable_totals <- input$var_plots__show_variable_totals
         local_show_comparison_totals <- input$var_plots__show_comparison_totals
+        local_stacked_comparison <- input$var_plots__stacked_comparison
         local_trend_line <- input$var_plots__trend_line
         local_trend_line_se <- input$var_plots__trend_line_se
         local_x_zoom_min <- input$var_plots__x_zoom_min
@@ -469,7 +470,8 @@ reactive__var_plots__ggplot__creator <- function(input, session, dataset) {
                 ##########################################################################################
                 } else {
                 
-                    hide_show_categoric_categoric(session)
+                    hide_show_categoric_categoric(session,
+                                                  has_comparison_variable=!is.null(local_comparison_variable))
 
                     log_message('**categoric null/categoric**')
 
@@ -483,8 +485,9 @@ reactive__var_plots__ggplot__creator <- function(input, session, dataset) {
                                                      comparison_variable=local_comparison_variable,
                                                      sum_by_variable=local_sum_by_variable,
                                                      order_by_count=local_order_by_count,
-                                                     show_group_totals=local_show_variable_totals,
+                                                     show_variable_totals=local_show_variable_totals,
                                                      show_comparison_totals=local_show_comparison_totals,
+                                                     stacked_comparison=local_stacked_comparison,
                                                      base_size=local_base_size)
                 }
             }
@@ -599,6 +602,7 @@ hide_show_numeric_numeric <- function(session) {
 
     shinyjs::hide('var_plots__histogram_bins')
     shinyjs::hide('div_var_plots__group_barchar_controls')
+    shinyjs::hide('div_var_plots__multi_barchar_controls')
     shinyjs::hide('var_plots__numeric_graph_type')
     shinyjs::hide('var_plots__sum_by_variable__UI')
 }
@@ -634,6 +638,7 @@ hide_show_numeric_categoric <- function(session, showing_boxplot) {
 
     shinyjs::hide('div_var_plots__group_scatter_controls')
     shinyjs::hide('div_var_plots__group_barchar_controls')
+    shinyjs::hide('div_var_plots__multi_barchar_controls')
     shinyjs::hide('var_plots__annotate_points')
     shinyjs::hide('var_plots__sum_by_variable__UI')
 }
@@ -656,12 +661,13 @@ hide_show_categoric_numeric <- function(session) {
     shinyjs::hide('div_var_plots__group_scatter_controls')
     shinyjs::hide('var_plots__histogram_bins')
     shinyjs::hide('div_var_plots__group_barchar_controls')
+    shinyjs::hide('div_var_plots__multi_barchar_controls')
     shinyjs::hide('var_plots__numeric_graph_type')
     shinyjs::hide('var_plots__annotate_points')
     shinyjs::hide('var_plots__sum_by_variable__UI')
 }
 
-hide_show_categoric_categoric <- function(session) {
+hide_show_categoric_categoric <- function(session, has_comparison_variable) {
 
     log_message('hide_show_categoric_categoric')
     
@@ -671,6 +677,15 @@ hide_show_categoric_categoric <- function(session) {
     shinyjs::hide('var_plots__point_color__UI')
 
     shinyjs::show('div_var_plots__group_barchar_controls')
+    if(has_comparison_variable) {
+
+        shinyjs::show('div_var_plots__multi_barchar_controls')
+
+    } else {
+
+        shinyjs::hide('div_var_plots__multi_barchar_controls')
+    }
+
     shinyjs::show('var_plots__base_size')
 
     shinyjs::hide('div_var_plots__group_x_zoom_controls')

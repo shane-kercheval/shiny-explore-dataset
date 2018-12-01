@@ -126,12 +126,16 @@ shinyUI(fluidPage(theme="custom.css",
                                     selected='Boxplot')
                         ),
                         shinyjs::hidden(tags$div(id='div_var_plots__group_barchar_controls',
-                             checkboxInput(inputId='var_plots__order_by_count',
-                                           label='Order By Totals', value=TRUE, width=NULL),
-                             checkboxInput(inputId='var_plots__show_variable_totals',
-                                           label='Show Variable Totals', value=TRUE, width=NULL),
-                             checkboxInput(inputId='var_plots__show_comparison_totals',
-                                           label='Show Comparison Totals', value=TRUE, width=NULL)
+                            checkboxInput(inputId='var_plots__order_by_count',
+                                          label='Order By Totals', value=TRUE, width=NULL),
+                            checkboxInput(inputId='var_plots__show_variable_totals',
+                                          label='Show Variable Totals', value=TRUE, width=NULL),
+                            checkboxInput(inputId='var_plots__show_comparison_totals',
+                                          label='Show Comparison Totals', value=TRUE, width=NULL)
+                        )),
+                        shinyjs::hidden(tags$div(id='div_var_plots__multi_barchar_controls',
+                            checkboxInput(inputId='var_plots__stacked_comparison',
+                                          label='Stack Comparison Variable', value=TRUE, width=NULL)
                         )),
                         shinyjs::hidden(
                              numericInput(inputId='var_plots__histogram_bins',
