@@ -81,8 +81,39 @@ reactive__source_data__creator <- function(input, custom_triggers) {
                     local_add_date_column %in% colnames(loaded_dataset)) {
 
                 log_message('Adding date fields...')
-                loaded_dataset <- cbind(loaded_dataset,
-                                        rt_get_date_fields(date_vector = loaded_dataset[, local_add_date_column]))
+
+                if(is.numeric(loaded_dataset[, local_add_date_column])) {
+
+                    log_message('Adding date fields...numeric')
+                    is_invalid <- TRUE
+
+                } else {
+
+                    is_invalid <- tryCatch({
+
+                        log_message('Adding date fields...tryCatch()')
+                        (all(is.na(lubridate::as_date(loaded_dataset[, local_add_date_column]))))
+
+                    }, error = function(error_condition) {
+
+                        log_message(paste('Adding date fields...ERROR CONVERTING', local_add_date_column, 'TO DATE'))                    
+                        TRUE
+                    })
+                }
+
+                log_message_variable('Adding date fields...is_invalid', is_invalid)
+
+                if(is_invalid) {
+
+                    showModal(
+                        modalDialog(title = 'Cannot Convert to Date',
+                                    paste0('Cannot convert `', local_add_date_column, '` to a date.')))
+                    
+                } else {
+
+                    loaded_dataset <- cbind(loaded_dataset,
+                                    rt_get_date_fields(date_vector = loaded_dataset[, local_add_date_column]))
+                }
             }
         })
 
