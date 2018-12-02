@@ -291,8 +291,7 @@ reactive__var_plots__ggplot__creator <- function(input, session, dataset) {
 
         ggplot_object <- NULL
 
-        if(local_primary_variable != select_variable) {
-
+        if(local_primary_variable != select_variable && local_primary_variable %in% colnames(local_dataset)) {
 
             log_message_block_start('Creating ggplot object')
             
