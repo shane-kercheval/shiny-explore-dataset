@@ -29,12 +29,27 @@ shinyServer(function(input, output, session) {
     ##########################################################################################################
     # LOAD DATA
     ##########################################################################################################
+    custom_triggers <- reactiveValues(reload_source_data=0)
     # loads dataset depending on drop down or upload
-    reactive__source_data <- reactive__source_data__creator(input)
+    reactive__source_data <- reactive__source_data__creator(input, custom_triggers)
     # shows the first 500 rows of the data
     output$source_data__head_table <- renderDataTable__source_data__head(reactive__source_data)
     # shows the types of the data's variables/columns
     output$source_data__types_table <- renderDataTable__source_data__types(reactive__source_data)
+    output$source_data__add_date_fields__UI <- renderUI__source_data__add_date_fields__UI(reactive__source_data)
+
+    observeEvent(input$source_data__add_date_fields, {
+        # this should trigger a reload of the dataset (perhaps not the best approach, but TBD on alternatives)
+        # however, it shouldn't trigger a reload if it is set back to the default select_variable_optional
+        # which will trigger false positive loadings
+        if(!is.null(reactive__source_data()) &&
+                !is.null(input$source_data__add_date_fields) &&
+                input$source_data__add_date_fields != select_variable_optional &&
+                input$source_data__add_date_fields %in% colnames(reactive__source_data())) {
+
+            custom_triggers$reload_source_data <- runif(1, 1, 1000000)
+        }
+    })
 
     ##########################################################################################################
     # numeric summary data

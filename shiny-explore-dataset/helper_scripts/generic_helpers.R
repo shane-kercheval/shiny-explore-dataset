@@ -1,17 +1,14 @@
 dataset_or_null <- function(file) {
-    # loads the file if it exists, otherwise returns NULL.
-    
-    withProgress(value=1/2, message='Uploading Data',{
+    # loads the file if it exists, otherwise returns NULL.    
 
-        if(file.exists(file)) {
+    if(file.exists(file)) {
 
-            return (read.csv(file, header=TRUE))
+        return (read.csv(file, header=TRUE))
 
-        } else {
+    } else {
 
-            return (NULL)
-        }
-    })
+        return (NULL)
+    }
 }
 
 null_if_select_variable_optional <- function(value) {

@@ -13,9 +13,12 @@ shinyUI(fluidPage(theme="custom.css",
     navlistPanel(
         tabPanel(
             'Load Dataset',
-            fluidRow(
-                column(4, selectInput(inputId='preloaded_dataset',
-                                      label='Preloaded Datasets',
+            tabsetPanel(type='tabs',
+                tabPanel(
+                    'Preloaded Dataset',
+                    tags$br(),
+                    selectInput(inputId='preloaded_dataset',
+                                      label='Choose a Dataset:',
                                       choices=c('Diamonds',
                                                 'Credit',
                                                 'Housing',
@@ -25,8 +28,16 @@ shinyUI(fluidPage(theme="custom.css",
                                                 'Gapminder'),
                                       selected='Diamonds')
                 ),
-                column(5, fileInput(inputId='uploadFile', 'Upload data (.csv/.RDS)'))
+                tabPanel(
+                    'Load .csv/.RDS',
+                    tags$br(),
+                    fileInput(inputId='uploadFile', 'Choose a File:')
+                )
             ),
+            tags$br(),
+            tags$br(),
+            uiOutput('source_data__add_date_fields__UI'),
+            tags$br(),
             tags$br(),
             tabsetPanel(type='tabs',
                 tabPanel(
