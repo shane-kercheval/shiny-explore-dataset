@@ -78,6 +78,14 @@ reactive__filter_controls_list <- function(input, dataset) {
                                 selected = NULL,
                                 multiple = TRUE)
 
+                } else if(is.logical(.x)) {
+
+                    selectInput(inputId=input_id,
+                                label=.y,
+                                choices=c(TRUE, FALSE),
+                                selected = NULL,
+                                multiple = TRUE)
+
                 } else {
                     #class(.)[1]
                     stopifnot(FALSE)
@@ -218,7 +226,13 @@ reactive__var_plots__filtered_data__creator <- function(input, dataset) {
                             #'factor'
                             local_dataset <- local_dataset %>%
                                 filter(!!symbol_column_name %in% filter_selection)
-                            
+                        
+                        } else if(is.logical(local_dataset[, column_name])) {
+
+                            #'logical'
+                            local_dataset <- local_dataset %>%
+                                filter(!!symbol_column_name %in% filter_selection)
+
                         } else {
                             #class(.)[1]
                             stopifnot(FALSE)
