@@ -60,4 +60,3 @@ devtools::install_github('shane-kercheval/rtools')
 ### Regression
 
 ![loading](./docs/regression.png)
-
