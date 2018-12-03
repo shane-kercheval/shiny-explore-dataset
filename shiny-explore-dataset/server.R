@@ -102,7 +102,7 @@ shinyServer(function(input, output, session) {
     output$var_plots__comparison__UI <- renderUI__var_plots__comparison__UI(input, reactive__source_data)
     output$var_plots__date_aggregation__UI <- renderUI__var_plots__date_aggregation__UI(reactive__source_data)
     output$var_plots__sum_by_variable__UI <- renderUI__var_plots__sum_by_variable__UI(reactive__source_data)
-    output$var_plots__point_color__UI <- renderUI__var_plots__point_color__UI(reactive__source_data)
+    output$var_plots__color_variable__UI <- renderUI__var_plots__color_variable__UI(input, reactive__source_data)
     output$var_plots__point_size__UI <- renderUI__var_plots__point_size__UI(reactive__source_data)
     observe__var_plots__hide_show_uncollapse_on_primary_vars(input, session)
 

@@ -250,7 +250,7 @@ reactive__var_plots__ggplot__creator <- function(input, session, dataset) {
         local_date_aggregation <- input$var_plots__date_aggregation
         local_sum_by_variable <- input$var_plots__sum_by_variable
         local_point_size <- input$var_plots__point_size
-        local_point_color <- input$var_plots__point_color
+        local_color_variable <- input$var_plots__color_variable
 
         local_transparency <- input$var_plots__transparency / 100
         local_annotate_points <- input$var_plots__annotate_points
@@ -287,7 +287,7 @@ reactive__var_plots__ggplot__creator <- function(input, session, dataset) {
             # these can't be req because they aren't even shown initially
             local_sum_by_variable <- null_if_select_variable_optional(local_sum_by_variable)
             local_point_size <- null_if_select_variable_optional(local_point_size)
-            local_point_color <- null_if_select_variable_optional(local_point_color)
+            local_color_variable <- null_if_select_variable_optional(local_color_variable)
             local_comparison_variable <- null_if_select_variable_optional(local_comparison_variable)
 
             if(is.na(local_var_plots__filter_factor_lump_number) ||
@@ -300,7 +300,7 @@ reactive__var_plots__ggplot__creator <- function(input, session, dataset) {
             log_message_variable('comparison_variable', local_comparison_variable)
             log_message_variable('var_plots__sum_by_variable', local_sum_by_variable)
             log_message_variable('var_plots__point_size', local_point_size)
-            log_message_variable('var_plots__point_color', local_point_color)
+            log_message_variable('var_plots__color_variable', local_color_variable)
             log_message_variable('var_plots__base_size', local_base_size)
             log_message_variable('var_plots__pretty_text', local_pretty_text)
             log_message_variable('var_plots__annotate_points', local_annotate_points)
@@ -323,21 +323,21 @@ reactive__var_plots__ggplot__creator <- function(input, session, dataset) {
 
                     local_point_size <- rt_pretty_text(local_point_size)
                 }
-                if(!is.null(local_point_color)) {
+                if(!is.null(local_color_variable)) {
 
-                    local_point_color <- rt_pretty_text(local_point_color)
+                    local_color_variable <- rt_pretty_text(local_color_variable)
                 }
 
                 log_message_variable('updated primary_variable', local_primary_variable)
                 log_message_variable('updated comparison_variable', local_comparison_variable)
                 log_message_variable('updated var_plots__point_size', local_point_size)
-                log_message_variable('updated var_plots__point_color', local_point_color)
+                log_message_variable('updated var_plots__color_variable', local_color_variable)
                 log_message_generic('column names', paste0(colnames(local_dataset), collapse = '; '))
             }
 
             if(is_date_type(local_dataset[, local_primary_variable])) {
 
-                hide_show_date(session)
+                hide_show_date(session, has_comparison_variable=!is.null(local_comparison_variable))
 
                 log_message_variable('var_plots__date_aggregation', local_date_aggregation)
 
@@ -367,11 +367,13 @@ reactive__var_plots__ggplot__creator <- function(input, session, dataset) {
                     }
                 }
 
+                add_confidence_interval <- !is.null(local_trend_line_se) && local_trend_line_se == 'Yes'
+
                 ggplot_object <- local_dataset %>% rt_explore_plot_time_series(variable=local_primary_variable,
                                             comparison_variable=local_comparison_variable,
                                             comparison_function=comparison_function,
                                             comparison_function_name=comparison_function_name,
-                                            color_variable=local_point_color,
+                                            color_variable=local_color_variable,
                                             y_zoom_min=local_y_zoom_min,
                                             y_zoom_max=local_y_zoom_max,
                                             base_size=local_base_size) %>%
@@ -379,7 +381,7 @@ reactive__var_plots__ggplot__creator <- function(input, session, dataset) {
                                          scale_y=local_scale_y_log_base_10) %>%
                         add_trend_line(trend_line_type=local_trend_line,
                                        confidence_interval=add_confidence_interval,
-                                       color_variable=local_point_color) %>% 
+                                       color_variable=local_color_variable) %>% 
                         prettyfy_plot(comparison_variable=local_comparison_variable,
                                       annotate_points=local_annotate_points)
 
@@ -418,7 +420,7 @@ reactive__var_plots__ggplot__creator <- function(input, session, dataset) {
                         custom_filter(factor_lump_number=local_var_plots__filter_factor_lump_number) %>%
                         rt_explore_plot_scatter(variable=local_primary_variable,
                                                 comparison_variable=local_comparison_variable,
-                                                color_variable=local_point_color,
+                                                color_variable=local_color_variable,
                                                 size_variable=local_point_size,
                                                 # alpha is a measure of opacity which is the opposite of transparency, but transparency is more user-friendly
                                                 alpha= 1 - local_transparency,
@@ -432,7 +434,7 @@ reactive__var_plots__ggplot__creator <- function(input, session, dataset) {
                                          scale_y=local_scale_y_log_base_10) %>%
                         add_trend_line(trend_line_type=local_trend_line,
                                        confidence_interval=add_confidence_interval,
-                                       color_variable=local_point_color) %>% 
+                                       color_variable=local_color_variable) %>% 
                         prettyfy_plot(comparison_variable=local_comparison_variable,
                                       annotate_points=local_annotate_points)
                 ##########################################################################################
@@ -565,6 +567,8 @@ renderUI__var_plots__comparison__UI <- function(input, dataset) {
 
     renderUI({
 
+        # if we have a date type as the primary variable, the comparison should only be numeric
+
         req(input$var_plots__variable)
 
         local_dataset <- dataset()
@@ -626,13 +630,34 @@ renderUI__var_plots__sum_by_variable__UI <- function(dataset) {
     })
 }
 
-renderUI__var_plots__point_color__UI <- function(dataset) {
+renderUI__var_plots__color_variable__UI <- function(input, dataset) {
 
     renderUI({
+        # if we have a date type as the primary variable, color should only be non-numeric
 
-        selectInput(inputId='var_plots__point_color',
+        req(input$var_plots__variable)
+
+        local_dataset <- dataset()
+        local_primary_variable <- input$var_plots__variable
+
+        dataset_columns <- colnames(local_dataset)
+
+        variable_options <- NULL
+        # only show numeric variables for dates
+        if(local_primary_variable != select_variable &&
+                local_primary_variable %in% dataset_columns &&  # in case datasets change
+                is_date_type(local_dataset[, local_primary_variable])) {
+
+            variable_options <- colnames(local_dataset %>% select_if(purrr::negate(is.numeric)))
+
+        } else {
+
+            variable_options <- dataset_columns
+        }
+
+        selectInput(inputId='var_plots__color_variable',
                     label = 'Color Variable',
-                    choices = c(select_variable_optional, colnames(dataset())),
+                    choices = c(select_variable_optional, variable_options),
                     selected = select_variable_optional,
                     multiple = FALSE,
                     selectize = TRUE,
@@ -667,17 +692,26 @@ renderUI__var_plots__filter_bscollapse__UI <- function(filter_controls_list) {
 ##############################################################################################################
 # DYNAMICALLY SHOW/HIDE INPUT
 ##############################################################################################################
-hide_show_date <- function(session) {
+hide_show_date <- function(session, has_comparison_variable) {
 
     log_message('hide_show_date')
     
-    shinyjs::show('var_plots__date_aggregation__UI')
     shinyjs::show('div_var_plots__group_y_zoom_controls')
     shinyjs::show('var_plots__base_size')
     shinyjs::show('var_plots__annotate_points')
+    shinyjs::show('var_plots__color_variable__UI')
+    shinyjs::show('div_var_plots__group_trend_controls')
+
+    if(has_comparison_variable) {
+
+        shinyjs::show('var_plots__date_aggregation__UI')
+
+    } else {
+
+        shinyjs::hide('var_plots__date_aggregation__UI')
+    }
 
     shinyjs::hide('var_plots__point_size__UI')
-    shinyjs::hide('var_plots__point_color__UI')
     shinyjs::hide('div_var_plots__group_scatter_controls')
     shinyjs::hide('div_var_plots__group_x_zoom_controls')
     shinyjs::hide('var_plots__histogram_bins')
@@ -697,9 +731,10 @@ hide_show_numeric_numeric <- function(session) {
 
     shinyjs::hide('var_plots__date_aggregation__UI')
     shinyjs::show('var_plots__point_size__UI')
-    shinyjs::show('var_plots__point_color__UI')
+    shinyjs::show('var_plots__color_variable__UI')
 
     shinyjs::show('div_var_plots__group_scatter_controls')
+    shinyjs::show('div_var_plots__group_trend_controls')
     shinyjs::show('div_var_plots__group_x_zoom_controls')
     shinyjs::show('div_var_plots__group_y_zoom_controls')
     shinyjs::show('var_plots__base_size')
@@ -710,6 +745,7 @@ hide_show_numeric_numeric <- function(session) {
     shinyjs::hide('div_var_plots__multi_barchar_controls')
     shinyjs::hide('var_plots__numeric_graph_type')
     shinyjs::hide('var_plots__sum_by_variable__UI')
+
 }
 
 hide_show_numeric_categoric <- function(session, showing_boxplot) {
@@ -737,12 +773,13 @@ hide_show_numeric_categoric <- function(session, showing_boxplot) {
 
     shinyjs::hide('var_plots__date_aggregation__UI')
     shinyjs::hide('var_plots__point_size__UI')
-    shinyjs::hide('var_plots__point_color__UI')
+    shinyjs::hide('var_plots__color_variable__UI')
 
     shinyjs::show('var_plots__base_size')
     shinyjs::show('var_plots__numeric_graph_type')
 
     shinyjs::hide('div_var_plots__group_scatter_controls')
+    shinyjs::hide('div_var_plots__group_trend_controls')
     shinyjs::hide('div_var_plots__group_barchar_controls')
     shinyjs::hide('div_var_plots__multi_barchar_controls')
     shinyjs::hide('var_plots__annotate_points')
@@ -755,7 +792,7 @@ hide_show_categoric_numeric <- function(session) {
     
     # multi-boxplot
     shinyjs::hide('var_plots__point_size__UI')
-    shinyjs::hide('var_plots__point_color__UI')
+    shinyjs::hide('var_plots__color_variable__UI')
 
     shinyjs::show('div_var_plots__group_y_zoom_controls')
     shinyjs::show('var_plots__base_size')
@@ -766,6 +803,7 @@ hide_show_categoric_numeric <- function(session) {
 
     shinyjs::hide('var_plots__date_aggregation__UI')
     shinyjs::hide('div_var_plots__group_scatter_controls')
+    shinyjs::hide('div_var_plots__group_trend_controls')
     shinyjs::hide('var_plots__histogram_bins')
     shinyjs::hide('div_var_plots__group_barchar_controls')
     shinyjs::hide('div_var_plots__multi_barchar_controls')
@@ -781,7 +819,7 @@ hide_show_categoric_categoric <- function(session, has_comparison_variable) {
     # grouped barchart
     shinyjs::show('var_plots__sum_by_variable__UI') # categoric with categoric (or NULL) can select numeric sum_by_variable
     shinyjs::hide('var_plots__point_size__UI')
-    shinyjs::hide('var_plots__point_color__UI')
+    shinyjs::hide('var_plots__color_variable__UI')
 
     shinyjs::show('div_var_plots__group_barchar_controls')
     if(has_comparison_variable) {
@@ -803,6 +841,7 @@ hide_show_categoric_categoric <- function(session, has_comparison_variable) {
     updateCheckboxInput(session, 'var_plots__scale_y_log_base_10', value=FALSE)
 
     shinyjs::hide('div_var_plots__group_scatter_controls')
+    shinyjs::hide('div_var_plots__group_trend_controls')
     shinyjs::hide('var_plots__histogram_bins')
     shinyjs::hide('var_plots__numeric_graph_type')
     shinyjs::hide('var_plots__annotate_points')
@@ -822,7 +861,7 @@ observe__var_plots__hide_show_uncollapse_on_primary_vars <- function(input, sess
             shinyjs::hide('var_plots__date_aggregation__UI')
             shinyjs::hide('var_plots__sum_by_variable__UI')
             shinyjs::hide('var_plots__point_size__UI')
-            shinyjs::hide('var_plots__point_color__UI')
+            shinyjs::hide('var_plots__color_variable__UI')
         }
 
         if(local_primary_variable != select_variable || local_comparison_variable != select_variable_optional) {
