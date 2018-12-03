@@ -29,50 +29,35 @@ devtools::install_github('shane-kercheval/rtools')
 
 ### Loading datasets
 
+![loading](./docs/loading_dataset.png)
+
 - Loads either preloaded datasets, or either a .csv or .RDS
     - The downside of loading a CSV is that the app won't be able to use ordered factors, or anything that isn't automatically detected by `read.csv()`.
 - `Add Date Fields based on Date Variable` adds various date fields to the dataset (e.g. year/month/week/day/is_weekend/etc.)
 
 ### Numeric Summary
 
-
+![loading](./docs/numeric_summary.png)
 
 ### Categoric Summary
 
-
+![loading](./docs/categoric_summary.png)
 
 ### Correlations
 
-
+![loading](./docs/correlations.png)
 
 ### Variable Plots
 
+![loading](./docs/variable_plots.png)
 
+- Filtering Notes
+    - when the filter is enabled, the header will turn green
+    - when the filter is enabled and changes have been made but not applied, the header will turn red
+    - sliders for filtering numeric data are inclusive 
+- WARNING: enabling the filters removes all of the NA/missing values from each of the numberic variables even if the sliders are still set to the min/max values. Additionally, filtering numeric data removes the data from the dataset before it is graphed, changing the underlying distribution (unlike the x/y zoom min/max controls).
 
 ### Regression
 
+![loading](./docs/regression.png)
 
-
-## Code
-
-### naming scheme for ui.R
-
-### naming scheme for server.R
-
-`<section>__<description>__<type>`
-
-with the exception of session-level reactive datasets and reactive values, which should be:
-
-`<type>__<section>__<description>`
-
-For example:
-
-```r
-reactive__main_data  # main dataset used throughout the application
-reactive__vp__filtered_data  # filtered dataset for vp ("Variable Plots") section
-
-# inputs
-input$vp__variable
-
-# outputs
-```
