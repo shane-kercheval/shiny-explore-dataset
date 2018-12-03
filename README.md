@@ -29,8 +29,9 @@ devtools::install_github('shane-kercheval/rtools')
 
 ### Loading datasets
 
-
-- The downside of loading a CSV is that the app won't be able to use ordered factors, or anything that isn't automatically detected by `read.csv()`.
+- Loads either preloaded datasets, or either a .csv or .RDS
+    - The downside of loading a CSV is that the app won't be able to use ordered factors, or anything that isn't automatically detected by `read.csv()`.
+- `Add Date Fields based on Date Variable` adds various date fields to the dataset (e.g. year/month/week/day/is_weekend/etc.)
 
 ### Numeric Summary
 
