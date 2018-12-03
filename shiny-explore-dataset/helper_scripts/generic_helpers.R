@@ -11,6 +11,10 @@ dataset_or_null <- function(file) {
     }
 }
 
+is_date_type <- function(x) {
+    return (is.Date(x) || is.POSIXct(x) || is.POSIXlt(x))
+}
+
 null_if_select_variable_optional <- function(value) {
 
     if(is.null(value) || value == select_variable_optional) {

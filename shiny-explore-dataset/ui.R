@@ -109,6 +109,7 @@ shinyUI(fluidPage(theme="custom.css",
                         # because the values need to load the first time this tab is clicked
                         # if not, when they become active (and therefore the values change to the default,
                         # they will trigger an unncessary plot refresh
+                        uiOutput('var_plots__date_aggregation__UI'),
                         uiOutput('var_plots__sum_by_variable__UI'),
                         uiOutput('var_plots__point_color__UI'),
                         uiOutput('var_plots__point_size__UI'),

@@ -6,6 +6,7 @@ eventReactive__regression__results__creator <- function(input, dataset) {
     eventReactive(input$regression__run_button, {
 
         if(input$regression__dependent_variable == select_variable) {
+
             return (NULL)
         }
 

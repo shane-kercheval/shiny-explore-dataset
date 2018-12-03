@@ -32,7 +32,7 @@ reactive__filter_controls_list <- function(input, dataset) {
 
                 input_id <- paste0('var_plots__dynamic_filter__', .y)
                 
-                if(is.Date(.x)) {
+                if(is_date_type(.x)) {
                     #'date'
                     min_index <- which.min(.x)
                     max_index <- which.max(.x)
@@ -43,20 +43,7 @@ reactive__filter_controls_list <- function(input, dataset) {
                                    label=.y,
                                    start=min_value,
                                    end=max_value)
-                } else if (is.POSIXct(.x) || is.POSIXlt(.x)) {
-                    
-                    # TODO: factor if this works good and is the same as is.Date
-                    
-                    #'POSIX.t'
-                    min_index <- which.min(.x)
-                    max_index <- which.max(.x)
-                    min_value <- .x[min_index]
-                    max_value <- .x[max_index]
-                    
-                    dateRangeInput(inputId=input_id,
-                                   label=.y,
-                                   start=min_value,
-                                   end=max_value)
+
                 } else if(is.factor(.x)) {
                     #'factor'
                     selectInput(inputId=input_id, label=.y, choices=levels(.x), selected = NULL, multiple = TRUE)
@@ -163,7 +150,6 @@ observe__var_plots__bscollapse__dynamic_inputs <- function(input, session, datas
     })
 }
 
-
 ##############################################################################################################
 # FILTERED DATASET - Variable Plot's filtered dataset
 # duplicate dataset (which is bad for large datasets) so that the filters don't have to be reapplied every time.
@@ -211,10 +197,8 @@ reactive__var_plots__filtered_data__creator <- function(input, dataset) {
                         log_message_generic(column_name,
                                              paste('filtering -', paste0(filter_selection, collapse = '; ')))
 
-                        if(is.Date(local_dataset[, column_name]) ||
-                            is.POSIXct(local_dataset[, column_name]) ||
-                            is.POSIXlt(local_dataset[, column_name]) ||
-                            is.numeric(local_dataset[, column_name])) {
+                        if(is_date_type(local_dataset[, column_name]) ||
+                                is.numeric(local_dataset[, column_name])) {
                             #'date'
                             # for numerics/etc. need to remove NA values and then filter
                             local_dataset <- local_dataset %>%
@@ -263,6 +247,7 @@ reactive__var_plots__ggplot__creator <- function(input, session, dataset) {
         local_dataset <- dataset()
         local_primary_variable <- input$var_plots__variable
         local_comparison_variable <- input$var_plots__comparison
+        local_date_aggregation <- input$var_plots__date_aggregation
         local_sum_by_variable <- input$var_plots__sum_by_variable
         local_point_size <- input$var_plots__point_size
         local_point_color <- input$var_plots__point_color
@@ -350,10 +335,59 @@ reactive__var_plots__ggplot__creator <- function(input, session, dataset) {
                 log_message_generic('column names', paste0(colnames(local_dataset), collapse = '; '))
             }
 
+            if(is_date_type(local_dataset[, local_primary_variable])) {
+
+                hide_show_date(session)
+
+                log_message_variable('var_plots__date_aggregation', local_date_aggregation)
+
+
+                comparison_function <- NULL
+                comparison_function_name <- NULL
+                if(!is.null(local_comparison_variable)) {
+
+                    comparison_function_name <- local_date_aggregation
+
+                    if(local_date_aggregation == 'Mean') {
+
+                        comparison_function <- function(x) { return (mean(x, na.rm=TRUE)) }
+
+                    } else if (local_date_aggregation == 'Median') {
+
+                        comparison_function <- function(x) { return (median(x, na.rm=TRUE)) }
+
+                    } else if (local_date_aggregation == 'Sum') {
+
+                        comparison_function_name = 'Sum of'
+                        comparison_function <- function(x) { return (sum(x, na.rm=TRUE)) }
+
+                    } else {
+
+                        stopifnot(FALSE)
+                    }
+                }
+
+                ggplot_object <- local_dataset %>% rt_explore_plot_time_series(variable=local_primary_variable,
+                                            comparison_variable=local_comparison_variable,
+                                            comparison_function=comparison_function,
+                                            comparison_function_name=comparison_function_name,
+                                            color_variable=local_point_color,
+                                            y_zoom_min=local_y_zoom_min,
+                                            y_zoom_max=local_y_zoom_max,
+                                            base_size=local_base_size) %>%
+                        scale_axes_log10(scale_x=FALSE,
+                                         scale_y=local_scale_y_log_base_10) %>%
+                        add_trend_line(trend_line_type=local_trend_line,
+                                       confidence_interval=add_confidence_interval,
+                                       color_variable=local_point_color) %>% 
+                        prettyfy_plot(comparison_variable=local_comparison_variable,
+                                      annotate_points=local_annotate_points)
+
+
             ##############################################################################################
             # Numeric Primary Variable
             ##############################################################################################
-            if(is.numeric(local_dataset[, local_primary_variable])) {
+            } else if(is.numeric(local_dataset[, local_primary_variable])) {
 
                 ##########################################################################################
                 # Numeric Secondary Variable
@@ -527,14 +561,49 @@ renderUI__var_plots__variable__UI <- function(dataset) {
     })
 }
 
-renderUI__var_plots__comparison__UI <- function(dataset) {
+renderUI__var_plots__comparison__UI <- function(input, dataset) {
 
     renderUI({
 
+        req(input$var_plots__variable)
+
+        local_dataset <- dataset()
+        local_primary_variable <- input$var_plots__variable
+
+        dataset_columns <- colnames(local_dataset)
+
+        variable_options <- NULL
+        # only show numeric variables for dates
+        if(local_primary_variable != select_variable &&
+                local_primary_variable %in% dataset_columns &&  # in case datasets change
+                is_date_type(local_dataset[, local_primary_variable])) {
+
+            variable_options <- colnames(local_dataset %>% select_if(is.numeric))
+
+        } else {
+
+            variable_options <- dataset_columns
+        }
+
         selectInput(inputId='var_plots__comparison',
                     label = 'Comparison Variable',
-                    choices = c(select_variable_optional, colnames(dataset())),
+                    choices = c(select_variable_optional, variable_options),
                     selected = select_variable_optional,
+                    multiple = FALSE,
+                    selectize = TRUE,
+                    width = 500,
+                    size = NULL)
+    })
+}
+
+renderUI__var_plots__date_aggregation__UI <- function(dataset) {
+
+    renderUI({
+
+        selectInput(inputId='var_plots__date_aggregation',
+                    label = 'Aggregation',
+                    choices = c('Mean', 'Median', 'Sum'),
+                    selected = 'Mean',
                     multiple = FALSE,
                     selectize = TRUE,
                     width = 500,
@@ -598,12 +667,35 @@ renderUI__var_plots__filter_bscollapse__UI <- function(filter_controls_list) {
 ##############################################################################################################
 # DYNAMICALLY SHOW/HIDE INPUT
 ##############################################################################################################
+hide_show_date <- function(session) {
+
+    log_message('hide_show_date')
+    
+    shinyjs::show('var_plots__date_aggregation__UI')
+    shinyjs::show('div_var_plots__group_y_zoom_controls')
+    shinyjs::show('var_plots__base_size')
+    shinyjs::show('var_plots__annotate_points')
+
+    shinyjs::hide('var_plots__point_size__UI')
+    shinyjs::hide('var_plots__point_color__UI')
+    shinyjs::hide('div_var_plots__group_scatter_controls')
+    shinyjs::hide('div_var_plots__group_x_zoom_controls')
+    shinyjs::hide('var_plots__histogram_bins')
+    shinyjs::hide('div_var_plots__group_barchar_controls')
+    shinyjs::hide('div_var_plots__multi_barchar_controls')
+    shinyjs::hide('var_plots__numeric_graph_type')
+    shinyjs::hide('var_plots__sum_by_variable__UI')
+
+
+}
+
 hide_show_numeric_numeric <- function(session) {
 
     log_message('hide_show_numeric_numeric')
     
     # scatterplot
 
+    shinyjs::hide('var_plots__date_aggregation__UI')
     shinyjs::show('var_plots__point_size__UI')
     shinyjs::show('var_plots__point_color__UI')
 
@@ -643,6 +735,7 @@ hide_show_numeric_categoric <- function(session, showing_boxplot) {
         updateCheckboxInput(session, 'var_plots__scale_y_log_base_10', value=FALSE)
     }
 
+    shinyjs::hide('var_plots__date_aggregation__UI')
     shinyjs::hide('var_plots__point_size__UI')
     shinyjs::hide('var_plots__point_color__UI')
 
@@ -671,6 +764,7 @@ hide_show_categoric_numeric <- function(session) {
     # if we are hiding the x-controls, uncheck the scale_x_log10 option so it isn't carried over
     updateCheckboxInput(session, 'var_plots__scale_x_log_base_10', value=FALSE)
 
+    shinyjs::hide('var_plots__date_aggregation__UI')
     shinyjs::hide('div_var_plots__group_scatter_controls')
     shinyjs::hide('var_plots__histogram_bins')
     shinyjs::hide('div_var_plots__group_barchar_controls')
@@ -701,6 +795,7 @@ hide_show_categoric_categoric <- function(session, has_comparison_variable) {
 
     shinyjs::show('var_plots__base_size')
 
+    shinyjs::hide('var_plots__date_aggregation__UI')
     shinyjs::hide('div_var_plots__group_x_zoom_controls')
     shinyjs::hide('div_var_plots__group_y_zoom_controls')
     # if we are hiding the x/y-controls, uncheck the scale_x/y_log10 option so it isn't carried over
@@ -724,6 +819,7 @@ observe__var_plots__hide_show_uncollapse_on_primary_vars <- function(input, sess
 
         if(local_primary_variable == select_variable || local_comparison_variable == select_variable_optional) {
 
+            shinyjs::hide('var_plots__date_aggregation__UI')
             shinyjs::hide('var_plots__sum_by_variable__UI')
             shinyjs::hide('var_plots__point_size__UI')
             shinyjs::hide('var_plots__point_color__UI')
@@ -746,7 +842,6 @@ renderPlot__variable_plot <- function(session, ggplot_object, messages) {
         withProgress(value=1/2, message='Plotting Graph',{
 
            messages$value <- capture_messages_warnings(function() print(ggplot_object()))
-
            log_message_variable('messages$value', messages$value)
 
         })
