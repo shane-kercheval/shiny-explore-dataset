@@ -79,7 +79,8 @@ shinyServer(function(input, output, session) {
     reactive__var_plots__filtered_data <- reactive__var_plots__filtered_data__creator(input,
                                                                                       reactive__source_data)
     # creates the ggplot object
-    reactive__var_plots__ggplot <- reactive__var_plots__ggplot__creator(input, session,
+    reactive__var_plots__ggplot <- reactive__var_plots__ggplot__creator(input,
+                                                                        session,
                                                                         reactive__var_plots__filtered_data)
     # stores any messages/warnings that ggplot produces when rendering the plot (outputs below the graph
     #(var_plots__ggplot_messages))
@@ -96,7 +97,8 @@ shinyServer(function(input, output, session) {
     observeEvent__var_plots__filter_use(input, session)
 
     # main plot
-    output$var_plots <- renderPlot__variable_plot(session, reactive__var_plots__ggplot,
+    output$var_plots <- renderPlot__variable_plot(session,
+                                                  reactive__var_plots__ggplot,
                                                   reactiveValues__vp__ggplot_message)
     output$var_plots__variable__UI <- renderUI__var_plots__variable__UI(reactive__source_data)
     output$var_plots__comparison__UI <- renderUI__var_plots__comparison__UI(input, reactive__source_data)

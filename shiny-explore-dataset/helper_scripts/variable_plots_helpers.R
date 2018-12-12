@@ -382,7 +382,8 @@ reactive__var_plots__ggplot__creator <- function(input, session, dataset) {
                         add_trend_line(trend_line_type=local_trend_line,
                                        confidence_interval=add_confidence_interval,
                                        color_variable=local_color_variable) %>% 
-                        prettyfy_plot(comparison_variable=local_comparison_variable,
+                        prettyfy_plot(dataset=local_dataset,
+                                      comparison_variable=local_comparison_variable,
                                       annotate_points=local_annotate_points)
 
 
@@ -435,7 +436,8 @@ reactive__var_plots__ggplot__creator <- function(input, session, dataset) {
                         add_trend_line(trend_line_type=local_trend_line,
                                        confidence_interval=add_confidence_interval,
                                        color_variable=local_color_variable) %>% 
-                        prettyfy_plot(comparison_variable=local_comparison_variable,
+                        prettyfy_plot(dataset=local_dataset,
+                                      comparison_variable=local_comparison_variable,
                                       annotate_points=local_annotate_points)
                 ##########################################################################################
                 # NULL Or Categoric Secondary Variable
