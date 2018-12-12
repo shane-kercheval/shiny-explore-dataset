@@ -381,12 +381,13 @@ reactive__var_plots__ggplot__creator <- function(input, session, dataset) {
                                          scale_y=local_scale_y_log_base_10) %>%
                         add_trend_line(trend_line_type=local_trend_line,
                                        confidence_interval=add_confidence_interval,
-                                       color_variable=local_color_variable) %>% 
-                        prettyfy_plot(dataset=local_dataset,
-                                      comparison_variable=local_comparison_variable,
-                                      annotate_points=local_annotate_points)
+                                       color_variable=local_color_variable)
 
+                if(local_annotate_points && !is.null(local_comparison_variable)) {
 
+                    ggplot_object <- prettyfy_plot(plot=ggplot_object,
+                        annotations=pretyfy_annotations((local_dataset %>% arrange(!!sym(local_primary_variable)))[, local_comparison_variable]))
+                }
             ##############################################################################################
             # Numeric Primary Variable
             ##############################################################################################
@@ -435,10 +436,14 @@ reactive__var_plots__ggplot__creator <- function(input, session, dataset) {
                                          scale_y=local_scale_y_log_base_10) %>%
                         add_trend_line(trend_line_type=local_trend_line,
                                        confidence_interval=add_confidence_interval,
-                                       color_variable=local_color_variable) %>% 
-                        prettyfy_plot(dataset=local_dataset,
-                                      comparison_variable=local_comparison_variable,
-                                      annotate_points=local_annotate_points)
+                                       color_variable=local_color_variable)
+
+                    if(local_annotate_points && !is.null(local_comparison_variable)) {
+
+                        ggplot_object <- prettyfy_plot(plot=ggplot_object,
+                                                       annotations=pretyfy_annotations(local_dataset[, local_comparison_variable]))
+                    }
+
                 ##########################################################################################
                 # NULL Or Categoric Secondary Variable
                 ##########################################################################################

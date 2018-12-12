@@ -41,13 +41,31 @@ add_trend_line <- function(plot, trend_line_type, confidence_interval=TRUE, colo
     }
 }
 
-prettyfy_plot <- function(plot, dataset, comparison_variable, annotate_points=FALSE) {
+pretyfy_annotations <- function(annotations) {
+    stopifnot(is.numeric(annotations))
 
-    # annotate_points requires a y-axis i.e. comparison_variable
-    if(annotate_points && !is.null(comparison_variable) ) {
+    if(any(annotations > 1000000)) {
+
+        annotations <- paste0(round(annotations / 1000000, 2), 'M')
+
+    } else if (any(annotations > 10000)) {
+
+        annotations <- paste0(round(annotations / 1000, 1), 'K')
+
+    } else if (any(annotations > 1000)) {
+
+        annotations <- paste0(round(annotations / 1000, 2), 'K')
+    }
+
+    return (annotations)
+}
+
+prettyfy_plot <- function(plot, annotations=NULL) {
+
+    if(!is.null(annotations) ) {
 
         plot <- plot + 
-            geom_text(aes(label=dataset[, comparison_variable]), check_overlap=TRUE, vjust=1, hjust=1)
+            geom_text(aes(label=annotations), check_overlap=TRUE, vjust=1, hjust=1)
     }
 
     return (plot)
