@@ -22,6 +22,8 @@ source('helper_scripts/correlation_helpers.R')
 source('helper_scripts/variable_plots_helpers.R')
 source('helper_scripts/regression_helpers.R')
 
+options(shiny.maxRequestSize=30*1024^2)  # increase upload limit to 30MB
+
 
 # Define server logic required to draw a histogram
 shinyServer(function(input, output, session) {
