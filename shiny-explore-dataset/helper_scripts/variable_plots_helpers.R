@@ -4,7 +4,7 @@
 get_dynamic_filter_selections <- function(input, columns) {
 
     # get all of the selections from the dynamic filters without triggering refresh for the first time
-    selections_list <- map(columns, ~ isolate(input[[paste0('var_plots__dynamic_filter__', .)]]))
+    selections_list <- purrr::map(columns, ~ isolate(input[[paste0('var_plots__dynamic_filter__', .)]]))
     names(selections_list) <- columns
 
     return (selections_list)
@@ -45,26 +45,30 @@ reactive__filter_controls_list <- function(input, dataset) {
                                    end=max_value)
 
                 } else if(is.factor(.x)) {
-                    #'factor'
-                    selectInput(inputId=input_id, label=.y, choices=levels(.x), selected = NULL, multiple = TRUE)
+
+                    if(length(levels(.x)) <= 1000) {
+
+                        selectInput(inputId=input_id, label=.y, choices=levels(.x), selected = NULL, multiple = TRUE)
+                    }
                 } else if(is.numeric(.x)) {
 
-                    #'numeric'
                     min_value <- min(.x, na.rm = TRUE)
                     max_value <- max(.x, na.rm = TRUE)
 
                     sliderInput(inputId=input_id, label=.y, min=min_value, max=max_value, value=c(min_value, max_value))
                 } else if(is.character(.x)) {
                     
-                    values_ordered_by_frequency <- as.character((as.data.frame(table(as.character(.x))) %>%
-                                                                     arrange(desc(Freq)))$Var1)
+                    if(length(unique(.x)) <= 1000) {
 
-                    selectInput(inputId=input_id,
-                                label=.y,
-                                choices=values_ordered_by_frequency,
-                                selected = NULL,
-                                multiple = TRUE)
+                        values_ordered_by_frequency <- as.character((as.data.frame(table(as.character(.x))) %>%
+                                                                         arrange(desc(Freq)))$Var1)
 
+                        selectInput(inputId=input_id,
+                                    label=.y,
+                                    choices=values_ordered_by_frequency,
+                                    selected = NULL,
+                                    multiple = TRUE)
+                    }
                 } else if(is.logical(.x)) {
 
                     selectInput(inputId=input_id,
@@ -437,6 +441,12 @@ reactive__var_plots__ggplot__creator <- function(input, session, dataset) {
                     log_message_variable('var_plots__scale_x_log_base_10', local_scale_x_log_base_10)
                     log_message_variable('var_plots__scale_y_log_base_10', local_scale_y_log_base_10)
 
+                    local_map_format <- input$var_plots__map_format
+                    local_map_borders_style <- input$var_plots___map_borders_style
+
+                    log_message_variable('var_plots__map_format', local_map_format)
+                    log_message_variable('var_plots___map_borders_style', local_map_borders_style)
+
                     add_confidence_interval <- !is.null(local_trend_line_se) && local_trend_line_se == 'Yes'
 
                     ggplot_object <- local_dataset %>% 
@@ -463,6 +473,16 @@ reactive__var_plots__ggplot__creator <- function(input, session, dataset) {
 
                         ggplot_object <- prettyfy_plot(plot=ggplot_object,
                                                        annotations=pretyfy_annotations(local_dataset[, local_comparison_variable]))
+                    }
+
+                    if(local_map_format) {
+
+                        ggplot_object <- ggplot_object + coord_map()
+
+                        if(!is_null_or_empty_string(local_map_borders_style)) {
+
+                            ggplot_object <- ggplot_object + borders(local_map_borders_style)
+                        }
                     }
 
                 ##########################################################################################
@@ -747,8 +767,9 @@ hide_show_date <- function(session, has_comparison_variable) {
     shinyjs::hide('div_var_plots__multi_barchar_controls')
     shinyjs::hide('var_plots__numeric_graph_type')
     shinyjs::hide('var_plots__sum_by_variable__UI')
-
-
+    updateCollapse(session, 'var_plots__bscollapse', close="Map Options")
+    shinyjs::hide('var_plots__map_format')
+    shinyjs::hide('var_plots___map_borders_style')
 }
 
 hide_show_numeric_numeric <- function(session) {
@@ -760,6 +781,10 @@ hide_show_numeric_numeric <- function(session) {
     shinyjs::hide('var_plots__date_aggregation__UI')
     shinyjs::show('var_plots__point_size__UI')
     shinyjs::show('var_plots__color_variable__UI')
+
+    shinyjs::show('var_plots__map_format')
+    shinyjs::show('var_plots___map_borders_style')
+    updateCollapse(session, 'var_plots__bscollapse', open="Map Options")
 
     shinyjs::show('div_var_plots__group_scatter_controls')
     shinyjs::show('div_var_plots__group_trend_controls')
@@ -812,6 +837,10 @@ hide_show_numeric_categoric <- function(session, showing_boxplot) {
     shinyjs::hide('div_var_plots__multi_barchar_controls')
     shinyjs::hide('var_plots__annotate_points')
     shinyjs::hide('var_plots__sum_by_variable__UI')
+    updateCollapse(session, 'var_plots__bscollapse', close="Map Options")
+    shinyjs::hide('var_plots__map_format')
+    shinyjs::hide('var_plots___map_borders_style')
+
 }
 
 hide_show_categoric_numeric <- function(session) {
@@ -838,6 +867,10 @@ hide_show_categoric_numeric <- function(session) {
     shinyjs::hide('var_plots__numeric_graph_type')
     shinyjs::hide('var_plots__annotate_points')
     shinyjs::hide('var_plots__sum_by_variable__UI')
+    updateCollapse(session, 'var_plots__bscollapse', close="Map Options")
+    shinyjs::hide('var_plots__map_format')
+    shinyjs::hide('var_plots___map_borders_style')
+
 }
 
 hide_show_categoric_categoric <- function(session, has_comparison_variable) {
@@ -873,6 +906,10 @@ hide_show_categoric_categoric <- function(session, has_comparison_variable) {
     shinyjs::hide('var_plots__histogram_bins')
     shinyjs::hide('var_plots__numeric_graph_type')
     shinyjs::hide('var_plots__annotate_points')
+    updateCollapse(session, 'var_plots__bscollapse', close="Map Options")
+    shinyjs::hide('var_plots__map_format')
+    shinyjs::hide('var_plots___map_borders_style')
+
 }
 
 observe__var_plots__hide_show_uncollapse_on_primary_vars <- function(input, session) {

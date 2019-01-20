@@ -25,6 +25,11 @@ null_if_select_variable_optional <- function(value) {
     return (value)
 }
 
+is_null_or_empty_string <- function(value) {
+
+    return(is.null(value) || value == "")
+}
+
 custom_filter <- function(dataset, factor_lump_number=NULL) {
 
     if(!is.na(factor_lump_number)) {

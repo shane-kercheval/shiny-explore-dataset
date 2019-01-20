@@ -40,7 +40,93 @@ c("00:00", "24:00") %in% hours_minutes
 ```
 
 
+```{r}
+dataset <- read_csv('https://raw.githubusercontent.com/rfordatascience/tidytuesday/master/data/2018/2018-11-06/us_wind.csv')
 
+
+dataset %>%
+    ggplot(aes(x=xlong, y=ylat)) + 
+    geom_point() +
+    coord_map() +
+    borders("state")
+
+var_plots__transparency: `0.6`
+var_plots__jitter: `FALSE`
+var_plots__trend_line: `None`
+var_plots__trend_line_se: `Yes`
+var_plots__x_zoom_min: `NA`
+var_plots__x_zoom_max: `NA`
+var_plots__y_zoom_min: `NA`
+var_plots__y_zoom_max: `NA`
+var_plots__annotate_points: `FALSE`
+var_plots__scale_x_log_base_10: `FALSE`
+var_plots__scale_y_log_base_10: `FALSE`
+var_plots__map_format: `TRUE`
+
+
+scale_axes_log10 <- function(plot, scale_x, scale_y) {
+    
+    if(scale_x) {
+        
+        plot <- plot + scale_x_log10(labels=comma_format())
+    }
+    if(scale_y) {
+        
+        plot <- plot + scale_y_log10(labels=comma_format())
+    }
+    
+    return (plot)
+}
+
+add_trend_line <- function(plot, trend_line_type, confidence_interval=TRUE, color_variable=NULL) {
+    # adds a trend line to a ggplot
+
+    if(trend_line_type == 'None') {
+
+        return (plot)
+
+    } else {
+
+        if(trend_line_type == 'Straight') {
+        
+            return (plot + geom_smooth(method='lm',
+                                       se=confidence_interval,
+                                       mapping=aes_string(color=dplyr_friendly_variable(color_variable))))
+            
+        } else if(trend_line_type == 'Smooth') {
+        
+            return (plot + geom_smooth(method='loess',
+                                       se=confidence_interval,
+                                       mapping=aes_string(color=dplyr_friendly_variable(color_variable))))
+            
+        } else {
+            # this function isn't aware of the value which is an error   
+            stopifnot(FALSE)   
+        }
+    }
+}
+ggplot_object <- dataset %>%
+rt_explore_plot_scatter(variable='xlong',  
+                        comparison_variable='ylat',
+                        color_variable=NULL,
+                        size_variable=NULL,
+                        # alpha is a measure of opacity which is the opposite of transparency, but transparency is more user-friendly
+                        alpha= 1 - 0.6,
+                        jitter=FALSE,
+                        x_zoom_min=NA,
+                        x_zoom_max=NA,
+                        y_zoom_min=NA,
+                        y_zoom_max=NA,
+                        base_size=15) %>%
+    scale_axes_log10(scale_x=FALSE, scale_y=FALSE) %>%
+    add_trend_line(trend_line_type="None",
+                   confidence_interval=FALSE,
+                   color_variable=NULL)
+
+ggplot_object <- ggplot_object + borders("world")
+ggplot_object <- ggplot_object + coord_map()
+ggplot_object
+```
 
 
 

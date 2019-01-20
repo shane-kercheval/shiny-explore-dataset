@@ -224,6 +224,17 @@ shinyUI(fluidPage(theme="custom.css",
                                      label='Top N Categories',
                                      value=NULL),
                         style='default'
+                    ),
+                    bsCollapsePanel(
+                        'Map Options',
+                        shinyjs::hidden(
+                            checkboxInput(inputId='var_plots__map_format',
+                                          label='Format as Map', value=FALSE, width=NULL),
+                            textInput(inputId='var_plots___map_borders_style', label="Borders Style", value = NULL)
+                        ),
+                        bsTooltip(id='var_plots___map_borders_style',
+                                  title="Possible values include `world`, `usa`, `state`, `county`, and more; see docs https://ggplot2.tidyverse.org/reference/borders.html",
+                                  placement='bottom', trigger='hover')
                     )
                 )
             ),
