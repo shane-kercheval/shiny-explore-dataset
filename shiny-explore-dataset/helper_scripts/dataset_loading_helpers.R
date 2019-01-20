@@ -9,21 +9,28 @@ reactive__source_data__creator <- function(input, custom_triggers) {
 
             req(input$preloaded_dataset)
 
+            input$load_data__url_csv_button  # reload data if this button is pressed
             custom_triggers$reload_source_data  # update based on changes to this reactiveValue
 
             # reactive data
             upload_file_path <- input$uploadFile$datapath
             local_preloaded_dataset <- input$preloaded_dataset
             local_add_date_column <- isolate(input$source_data__add_date_fields)
+            local_csv_url <- isolate(input$load_data__url_csv)
 
             log_message_block_start('Loading Dataset')
             log_message_variable('input$uploadFile$datapath', upload_file_path)
+            log_message_variable('input$load_data__url_csv', local_csv_url)
             log_message_variable('input$preloaded_dataset', local_preloaded_dataset)
             log_message_variable('input$source_data__add_date_fields', local_add_date_column)
 
             loaded_dataset <- NULL
 
-            if(is.null(upload_file_path)) {
+            if(!is.null(local_csv_url) && local_csv_url != "") {
+
+                loaded_dataset <- read_csv(local_csv_url)
+
+            } else if(is.null(upload_file_path)) {
                 
                 if(local_preloaded_dataset == 'Credit') {
 

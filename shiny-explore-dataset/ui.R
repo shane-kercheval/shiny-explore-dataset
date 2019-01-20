@@ -33,6 +33,12 @@ shinyUI(fluidPage(theme="custom.css",
                     'Load .csv/.RDS',
                     tags$br(),
                     fileInput(inputId='uploadFile', 'Choose a File:')
+                ),
+                tabPanel(
+                    'Load .csv from URL',
+                    tags$br(),
+                    textInput(inputId='load_data__url_csv', label="URL", value = NULL, width = 600),
+                    actionButton(inputId='load_data__url_csv_button', label='Load Data')
                 )
             ),
             tags$br(),
