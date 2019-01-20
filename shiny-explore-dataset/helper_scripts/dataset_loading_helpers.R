@@ -28,7 +28,7 @@ reactive__source_data__creator <- function(input, custom_triggers) {
 
             if(!is.null(local_csv_url) && local_csv_url != "") {
 
-                loaded_dataset <- read_csv(local_csv_url)
+                loaded_dataset <- as.data.frame(read_csv(local_csv_url)) %>% mutate_if(is.character, factor)
 
             } else if(is.null(upload_file_path)) {
                 

@@ -73,6 +73,20 @@ reactive__filter_controls_list <- function(input, dataset) {
                                 selected = NULL,
                                 multiple = TRUE)
 
+                } else if("hms" %in% class(.x)) {
+
+                    # create slider options (hours in 15 min intervals, 24:00 means <= 23:59:59)
+                    hours <- str_pad(seq(0, 23), 2, side='left', pad=0)
+                    minutes <- str_pad(seq(0, 45, 15), 2, side='left', pad=0)
+                    hours_minutes <- sort(apply(expand.grid(hours, minutes), 1, paste, collapse=":"))
+                    hours_minutes <- c(hours_minutes, "24:00")
+
+                    sliderTextInput(inputId=input_id,
+                                    label=.y,
+                                    choices=hours_minutes,
+                                    selected=c("00:00", "24:00"),
+                                    grid=FALSE)
+
                 } else {
                     #class(.)[1]
                     stopifnot(FALSE)
@@ -216,6 +230,13 @@ reactive__var_plots__filtered_data__creator <- function(input, dataset) {
                             #'logical'
                             local_dataset <- local_dataset %>%
                                 filter(!!symbol_column_name %in% filter_selection)
+
+                        } else if("hms" %in% class(local_dataset[, column_name])) {
+
+                            # hours minutes seconds
+                            local_dataset <- local_dataset %>%
+                                filter(!is.na(!!symbol_column_name)) %>%
+                                filter(!!symbol_column_name >= hm(filter_selection[1]) & !!symbol_column_name <= hm(filter_selection[2]))
 
                         } else {
                             #class(.)[1]
