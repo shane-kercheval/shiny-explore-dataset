@@ -127,7 +127,10 @@ shinyUI(fluidPage(theme="custom.css",
                         fluidRow(
                             column(4,
                                 checkboxInput(inputId='var_plots__filter_use',
-                                              label='Use Filters', value=FALSE, width=NULL)
+                                              label='Use Filters', value=FALSE, width=NULL),
+                                bsTooltip(id='var_plots__filter_use',
+                                  title="Warning! Data that has NA/missing values for numeric variables will be removed.",
+                                  placement='bottom', trigger='hover')
                             ),
                             column(8,
                                 tags$div(style='margin-bottom: 10px;', actionButton(inputId='var_plots__filter_apply', label='Apply Filters')),
@@ -135,6 +138,7 @@ shinyUI(fluidPage(theme="custom.css",
                             )
                         ),
                         uiOutput('var_plots__filter_bscollapse__UI')
+ 
                     ),
                     bsCollapsePanel(
                         'Plot Options',
@@ -230,11 +234,16 @@ shinyUI(fluidPage(theme="custom.css",
                         shinyjs::hidden(
                             checkboxInput(inputId='var_plots__map_format',
                                           label='Format as Map', value=FALSE, width=NULL),
-                            textInput(inputId='var_plots___map_borders_style', label="Borders Style", value = NULL)
+                            textInput(inputId='var_plots___map_borders_database', label="Borders Database", value = NULL),
+                            textInput(inputId='var_plots___map_borders_regions', label="Regions", value = NULL)
                         ),
-                        bsTooltip(id='var_plots___map_borders_style',
+                        bsTooltip(id='var_plots___map_borders_database',
                                   title="Possible values include `world`, `usa`, `state`, `county`, and more; see docs https://ggplot2.tidyverse.org/reference/borders.html",
+                                  placement='bottom', trigger='hover'),
+                        bsTooltip(id='var_plots___map_borders_regions',
+                                  title="e.g. `WA`, or `WA, OR, CA`",
                                   placement='bottom', trigger='hover')
+
                     )
                 )
             ),

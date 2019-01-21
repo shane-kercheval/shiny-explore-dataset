@@ -442,10 +442,12 @@ reactive__var_plots__ggplot__creator <- function(input, session, dataset) {
                     log_message_variable('var_plots__scale_y_log_base_10', local_scale_y_log_base_10)
 
                     local_map_format <- input$var_plots__map_format
-                    local_map_borders_style <- input$var_plots___map_borders_style
+                    local_map_borders_database <- input$var_plots___map_borders_database
+                    local_map_borders_regions <- input$var_plots___map_borders_regions
 
                     log_message_variable('var_plots__map_format', local_map_format)
-                    log_message_variable('var_plots___map_borders_style', local_map_borders_style)
+                    log_message_variable('var_plots___map_borders_database', local_map_borders_database)
+                    log_message_variable('var_plots___map_borders_regions', local_map_borders_regions)
 
                     add_confidence_interval <- !is.null(local_trend_line_se) && local_trend_line_se == 'Yes'
 
@@ -479,9 +481,15 @@ reactive__var_plots__ggplot__creator <- function(input, session, dataset) {
 
                         ggplot_object <- ggplot_object + coord_map()
 
-                        if(!is_null_or_empty_string(local_map_borders_style)) {
+                        if(!is_null_or_empty_string(local_map_borders_database)) {
 
-                            ggplot_object <- ggplot_object + borders(local_map_borders_style)
+                            regions <- str_split(local_map_borders_regions, pattern = ', ', simplify = TRUE)
+                            regions <- as.character(regions)
+
+
+                            ggplot_object <- ggplot_object +
+                                borders(database=local_map_borders_database,
+                                        regions=regions)
                         }
                     }
 
@@ -769,7 +777,8 @@ hide_show_date <- function(session, has_comparison_variable) {
     shinyjs::hide('var_plots__sum_by_variable__UI')
     updateCollapse(session, 'var_plots__bscollapse', close="Map Options")
     shinyjs::hide('var_plots__map_format')
-    shinyjs::hide('var_plots___map_borders_style')
+    shinyjs::hide('var_plots___map_borders_database')
+    shinyjs::hide('var_plots___map_borders_regions')
 }
 
 hide_show_numeric_numeric <- function(session) {
@@ -783,7 +792,8 @@ hide_show_numeric_numeric <- function(session) {
     shinyjs::show('var_plots__color_variable__UI')
 
     shinyjs::show('var_plots__map_format')
-    shinyjs::show('var_plots___map_borders_style')
+    shinyjs::show('var_plots___map_borders_database')
+    shinyjs::show('var_plots___map_borders_regions')
     updateCollapse(session, 'var_plots__bscollapse', open="Map Options")
 
     shinyjs::show('div_var_plots__group_scatter_controls')
@@ -839,7 +849,8 @@ hide_show_numeric_categoric <- function(session, showing_boxplot) {
     shinyjs::hide('var_plots__sum_by_variable__UI')
     updateCollapse(session, 'var_plots__bscollapse', close="Map Options")
     shinyjs::hide('var_plots__map_format')
-    shinyjs::hide('var_plots___map_borders_style')
+    shinyjs::hide('var_plots___map_borders_database')
+    shinyjs::hide('var_plots___map_borders_regions')
 
 }
 
@@ -869,7 +880,8 @@ hide_show_categoric_numeric <- function(session) {
     shinyjs::hide('var_plots__sum_by_variable__UI')
     updateCollapse(session, 'var_plots__bscollapse', close="Map Options")
     shinyjs::hide('var_plots__map_format')
-    shinyjs::hide('var_plots___map_borders_style')
+    shinyjs::hide('var_plots___map_borders_database')
+    shinyjs::hide('var_plots___map_borders_regions')
 
 }
 
@@ -908,7 +920,8 @@ hide_show_categoric_categoric <- function(session, has_comparison_variable) {
     shinyjs::hide('var_plots__annotate_points')
     updateCollapse(session, 'var_plots__bscollapse', close="Map Options")
     shinyjs::hide('var_plots__map_format')
-    shinyjs::hide('var_plots___map_borders_style')
+    shinyjs::hide('var_plots___map_borders_database')
+    shinyjs::hide('var_plots___map_borders_regions')
 
 }
 
