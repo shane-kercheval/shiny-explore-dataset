@@ -36,7 +36,7 @@ shinyServer(function(input, output, session) {
     ##########################################################################################################
     custom_triggers <- reactiveValues(reload_source_data=0)
     # loads dataset depending on drop down or upload
-    reactive__source_data <- reactive__source_data__creator(input, custom_triggers)
+    reactive__source_data <- reactive__source_data__creator(session, input, custom_triggers)
     # shows the first 500 rows of the data
     output$source_data__head_table <- renderDataTable__source_data__head(reactive__source_data)
     # shows the types of the data's variables/columns

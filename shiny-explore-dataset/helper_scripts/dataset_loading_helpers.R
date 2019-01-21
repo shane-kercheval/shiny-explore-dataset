@@ -2,7 +2,7 @@
 # MAIN DATASET
 # initialize with small default dataset or upload from file, by user
 ##########################################################################################################
-reactive__source_data__creator <- function(input, custom_triggers) {
+reactive__source_data__creator <- function(session, input, custom_triggers) {
     reactive({
 
         withProgress(value=1/2, message='Loading Data',{
@@ -123,6 +123,8 @@ reactive__source_data__creator <- function(input, custom_triggers) {
                 }
             }
         })
+
+        updateTextInput(session, inputId='load_data__url_csv', value = '')
 
         return (loaded_dataset)
     })
