@@ -13,6 +13,7 @@ library(scales)
 library(lattice)
 library(lubridate)
 library(maps)
+library(mapproj)
 
 source('helper_scripts/definitions.R')
 source('helper_scripts/logging_functions.R')
