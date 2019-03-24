@@ -226,7 +226,7 @@ shinyUI(fluidPage(theme="custom.css",
                         ),
                         numericInput(inputId='var_plots__filter_factor_lump_number',
                                      label='Top N Categories',
-                                     value=NULL),
+                                     value=10),
                         style='default'
                     ),
                     bsCollapsePanel(

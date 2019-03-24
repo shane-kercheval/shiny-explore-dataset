@@ -267,6 +267,7 @@ reactive__var_plots__ggplot__creator <- function(input, session, dataset) {
 
         req(input$var_plots__variable)
         req(input$var_plots__comparison)
+        req(input$var_plots__filter_factor_lump_number)
 
         # reactive data
         local_dataset <- dataset()
