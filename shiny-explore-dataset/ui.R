@@ -120,6 +120,8 @@ shinyUI(fluidPage(theme="custom.css",
                         uiOutput('var_plots__sum_by_variable__UI'),
                         uiOutput('var_plots__color_variable__UI'),
                         uiOutput('var_plots__point_size__UI'),
+                        textInput('var_plots__multi_value_delimiter',
+                                  label="Multi-Value Delimiter"),
                         style='default'
                     ),
                     bsCollapsePanel(

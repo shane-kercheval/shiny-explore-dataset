@@ -291,6 +291,7 @@ reactive__var_plots__ggplot__creator <- function(input, session, dataset) {
         local_show_variable_totals <- input$var_plots__show_variable_totals
         local_show_comparison_totals <- input$var_plots__show_comparison_totals
         local_stacked_comparison <- input$var_plots__stacked_comparison
+        local_multi_value_delimiter <- input$var_plots__multi_value_delimiter
         local_trend_line <- input$var_plots__trend_line
         local_trend_line_se <- input$var_plots__trend_line_se
         local_x_zoom_min <- input$var_plots__x_zoom_min
@@ -575,8 +576,14 @@ reactive__var_plots__ggplot__creator <- function(input, session, dataset) {
                 # NULL Or Categoric Secondary Variable
                 ##########################################################################################
                 } else {
-                
+                    
+                    if(local_multi_value_delimiter == '' || !is.null(local_comparison_variable)) {
+
+                        local_multi_value_delimiter <- NULL
+                    }
+
                     hide_show_categoric_categoric(session,
+                                                  input,
                                                   has_comparison_variable=!is.null(local_comparison_variable))
 
                     log_message('**categoric null/categoric**')
@@ -584,6 +591,7 @@ reactive__var_plots__ggplot__creator <- function(input, session, dataset) {
                     log_message_variable('var_plots__order_by_count', local_order_by_count)
                     log_message_variable('var_plots__show_variable_totals', local_show_variable_totals)
                     log_message_variable('var_plots__show_comparison_totals', local_show_comparison_totals)
+                    log_message_variable('var_plots__multi_value_delimiter', local_multi_value_delimiter)
 
                     ggplot_object <- local_dataset %>%
                         custom_filter(factor_lump_number=local_var_plots__filter_factor_lump_number) %>%
@@ -594,6 +602,7 @@ reactive__var_plots__ggplot__creator <- function(input, session, dataset) {
                                                      show_variable_totals=local_show_variable_totals,
                                                      show_comparison_totals=local_show_comparison_totals,
                                                      stacked_comparison=local_stacked_comparison,
+                                                     multi_value_delimiter=local_multi_value_delimiter,
                                                      base_size=local_base_size)
                 }
             }
@@ -776,6 +785,7 @@ hide_show_date <- function(session, has_comparison_variable) {
     shinyjs::hide('div_var_plots__multi_barchar_controls')
     shinyjs::hide('var_plots__numeric_graph_type')
     shinyjs::hide('var_plots__sum_by_variable__UI')
+    shinyjs::hide('var_plots__multi_value_delimiter')
     updateCollapse(session, 'var_plots__bscollapse', close="Map Options")
     shinyjs::hide('var_plots__map_format')
     shinyjs::hide('var_plots___map_borders_database')
@@ -809,6 +819,7 @@ hide_show_numeric_numeric <- function(session) {
     shinyjs::hide('div_var_plots__multi_barchar_controls')
     shinyjs::hide('var_plots__numeric_graph_type')
     shinyjs::hide('var_plots__sum_by_variable__UI')
+    shinyjs::hide('var_plots__multi_value_delimiter')
 
 }
 
@@ -848,6 +859,7 @@ hide_show_numeric_categoric <- function(session, showing_boxplot) {
     shinyjs::hide('div_var_plots__multi_barchar_controls')
     shinyjs::hide('var_plots__annotate_points')
     shinyjs::hide('var_plots__sum_by_variable__UI')
+    shinyjs::hide('var_plots__multi_value_delimiter')
     updateCollapse(session, 'var_plots__bscollapse', close="Map Options")
     shinyjs::hide('var_plots__map_format')
     shinyjs::hide('var_plots___map_borders_database')
@@ -879,6 +891,7 @@ hide_show_categoric_numeric <- function(session) {
     shinyjs::hide('var_plots__numeric_graph_type')
     shinyjs::hide('var_plots__annotate_points')
     shinyjs::hide('var_plots__sum_by_variable__UI')
+    shinyjs::hide('var_plots__multi_value_delimiter')
     updateCollapse(session, 'var_plots__bscollapse', close="Map Options")
     shinyjs::hide('var_plots__map_format')
     shinyjs::hide('var_plots___map_borders_database')
@@ -886,12 +899,22 @@ hide_show_categoric_numeric <- function(session) {
 
 }
 
-hide_show_categoric_categoric <- function(session, has_comparison_variable) {
+hide_show_categoric_categoric <- function(session, input, has_comparison_variable) {
 
     log_message('hide_show_categoric_categoric')
     
     # grouped barchart
     shinyjs::show('var_plots__sum_by_variable__UI') # categoric with categoric (or NULL) can select numeric sum_by_variable
+
+    if(is.null(input$var_plots__comparison) || input$var_plots__comparison == select_variable_optional) {
+
+        shinyjs::show('var_plots__multi_value_delimiter')
+
+    } else {
+
+        shinyjs::hide('var_plots__multi_value_delimiter')
+    }
+
     shinyjs::hide('var_plots__point_size__UI')
     shinyjs::hide('var_plots__color_variable__UI')
 
@@ -939,6 +962,7 @@ observe__var_plots__hide_show_uncollapse_on_primary_vars <- function(input, sess
 
             shinyjs::hide('var_plots__date_aggregation__UI')
             shinyjs::hide('var_plots__sum_by_variable__UI')
+            shinyjs::hide('var_plots__multi_value_delimiter')
             shinyjs::hide('var_plots__point_size__UI')
             shinyjs::hide('var_plots__color_variable__UI')
         }
