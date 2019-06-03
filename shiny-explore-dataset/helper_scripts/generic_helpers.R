@@ -30,7 +30,19 @@ is_null_or_empty_string <- function(value) {
     return(is.null(value) || value == "")
 }
 
-custom_filter <- function(dataset, factor_lump_number=NULL) {
+default_if_null_or_empty_string <- function(value, string_values_as_null=NULL, default=NULL) {
+
+    if(is_null_or_empty_string(value) || value %in% string_values_as_null) {
+
+        return (default)
+
+    } else {
+
+        return (value)
+    }
+}
+
+custom_mutate <- function(dataset, factor_lump_number=NULL) {
 
     if(!is.na(factor_lump_number)) {
 

@@ -5,6 +5,13 @@ library(shinyBS)
 
 source('helper_scripts/definitions.R')
 
+date_part_vector <- c('None', 'day', 'week', 'month', 'quarter', 'year')
+names(date_part_vector) <- c('None', 'Day', 'Week', 'Month', 'Quarter', 'Year')
+
+date_break_format_vector <- c('Auto', '%Y-%m-%d', '%Y-%W', '%Y-%m', '%Y')
+names(date_break_format_vector) <- c('Auto', 'Day', 'Week', 'Month', 'Year')
+
+
 shinyUI(fluidPage(theme="custom.css",
 
     useShinyjs(),
@@ -121,7 +128,7 @@ shinyUI(fluidPage(theme="custom.css",
                         uiOutput('var_plots__color_variable__UI'),
                         uiOutput('var_plots__point_size__UI'),
                         textInput('var_plots__multi_value_delimiter',
-                                  label="Multi-Value Delimiter"),
+                                  label="Multi-Value Delimiter"),                        
                         style='default'
                     ),
                     bsCollapsePanel(
@@ -191,6 +198,18 @@ shinyUI(fluidPage(theme="custom.css",
                                          inline=TRUE,
                                          width=NULL)
                         )),
+                        shinyjs::hidden(tags$div(id='div_var_plots__group_time_series_controls',
+                            # time series variables
+                            selectInput(inputId='var_plots__ts_date_floor',
+                                          label='Date Aggregation:',
+                                          choices=date_part_vector,
+                                          selected=names(date_part_vector)[1]),
+                            selectInput(inputId='var_plots__ts_date_break_format',
+                                          label='Date Format:',
+                                          choices=date_break_format_vector,
+                                          selected=names(date_break_format_vector)[1]),
+                            textInput(inputId='var_plots__ts_breaks_width', label="Date Breaks", value = NULL)
+                        )),
                         shinyjs::hidden(tags$div(id='div_var_plots__group_x_zoom_controls',
                              checkboxInput(inputId='var_plots__scale_x_log_base_10',
                                            label='Scale X-Axis Log 10', value=FALSE, width=NULL),
@@ -223,8 +242,12 @@ shinyUI(fluidPage(theme="custom.css",
                         checkboxInput(inputId='var_plots__pretty_text',
                                       label='Pretty Text', value=FALSE, width=NULL),
                         shinyjs::hidden(
+                           checkboxInput(inputId='var_plots__ts_show_points',
+                                         label='Show Points', value=TRUE, width=NULL)
+                        ),
+                        shinyjs::hidden(
                            checkboxInput(inputId='var_plots__annotate_points',
-                                         label='Annotate Points', value=FALSE, width=NULL)
+                                         label='Show Values', value=FALSE, width=NULL)
                         ),
                         numericInput(inputId='var_plots__filter_factor_lump_number',
                                      label='Top N Categories',
