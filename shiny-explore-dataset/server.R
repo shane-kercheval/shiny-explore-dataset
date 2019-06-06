@@ -108,7 +108,6 @@ shinyServer(function(input, output, session) {
                                                   reactiveValues__vp__ggplot_message)
     output$var_plots__variable__UI <- renderUI__var_plots__variable__UI(reactive__source_data)
     output$var_plots__comparison__UI <- renderUI__var_plots__comparison__UI(input, reactive__source_data)
-    output$var_plots__date_aggregation__UI <- renderUI__var_plots__date_aggregation__UI(reactive__source_data)
     output$var_plots__sum_by_variable__UI <- renderUI__var_plots__sum_by_variable__UI(reactive__source_data)
     output$var_plots__color_variable__UI <- renderUI__var_plots__color_variable__UI(input, reactive__source_data)
     output$var_plots__point_size__UI <- renderUI__var_plots__point_size__UI(reactive__source_data)

@@ -278,6 +278,10 @@ reactive__var_plots__ggplot__creator <- function(input, session, dataset) {
         local_sum_by_variable <- input$var_plots__sum_by_variable
         local_point_size <- input$var_plots__point_size
         local_color_variable <- input$var_plots__color_variable
+        local_numeric_numeric_group_variable <- input$var_plots__numeric_numeric_group_variable
+        local_numeric_numeric_aggregation_function <- input$var_plots__numeric_numeric_aggregation_function
+        local_numeric_numeric_aggregation_count_minimum <- input$var_plots__numeric_numeric_aggregation_count_minimum
+        local_numeric_numeric_show_resampled_confidence_interval <- input$var_plots__numeric_numeric_show_resampled_confidence_interval
 
         local_transparency <- input$var_plots__transparency / 100
         local_annotate_points <- input$var_plots__annotate_points
@@ -301,7 +305,7 @@ reactive__var_plots__ggplot__creator <- function(input, session, dataset) {
         local_y_zoom_max <- input$var_plots__y_zoom_max
 
         # for time series plot
-        local_ts_show_points <- default_if_null_or_empty_string(input$var_plots__ts_show_points, default=FALSE)
+        local_show_points <- default_if_null_or_empty_string(input$var_plots__show_points, default=FALSE)
         local_ts_date_floor <- default_if_null_or_empty_string(input$var_plots__ts_date_floor, string_values_as_null='None')
         local_ts_date_break_format <- default_if_null_or_empty_string(input$var_plots__ts_date_break_format, string_values_as_null='Auto')
         local_ts_date_breaks_width <- default_if_null_or_empty_string(input$var_plots__ts_breaks_width)
@@ -375,7 +379,7 @@ reactive__var_plots__ggplot__creator <- function(input, session, dataset) {
 
                 log_message_variable('var_plots__date_aggregation', local_date_aggregation)
 
-                log_message_variable('var_plots__ts_show_points', local_ts_show_points)
+                log_message_variable('var_plots__show_points', local_show_points)
                 log_message_variable('var_plots__ts_date_floor', local_ts_date_floor)
                 log_message_variable('var_plots__ts_date_break_format', local_ts_date_break_format)
                 log_message_variable('var_plots__ts_breaks_width', local_ts_date_breaks_width)
@@ -389,6 +393,10 @@ reactive__var_plots__ggplot__creator <- function(input, session, dataset) {
                     if(local_date_aggregation == 'Mean') {
 
                         comparison_function <- function(x) { return (mean(x, na.rm=TRUE)) }
+
+                    } else if (local_date_aggregation == 'Geometric Mean') {
+
+                        comparison_function <- rt_geometric_mean
 
                     } else if (local_date_aggregation == 'Median') {
 
@@ -416,7 +424,7 @@ reactive__var_plots__ggplot__creator <- function(input, session, dataset) {
                                                 color_variable=local_color_variable,
                                                 y_zoom_min=local_y_zoom_min,
                                                 y_zoom_max=local_y_zoom_max,
-                                                show_points=local_ts_show_points,
+                                                show_points=local_show_points,
                                                 show_labels=local_annotate_points,
                                                 date_floor=local_ts_date_floor,
                                                 date_break_format=local_ts_date_break_format,
@@ -444,7 +452,9 @@ reactive__var_plots__ggplot__creator <- function(input, session, dataset) {
                 if(!is.null(local_comparison_variable) &&
                         is.numeric(local_dataset[, local_comparison_variable])) {
 
-                    hide_show_numeric_numeric(session)
+                    hide_show_numeric_numeric(session, 
+                        local_numeric_numeric_group_variable,
+                        local_numeric_numeric_aggregation_function == "Boxplot")
 
                     log_message('**numeric numeric**')
 
@@ -458,6 +468,7 @@ reactive__var_plots__ggplot__creator <- function(input, session, dataset) {
                     log_message_variable('var_plots__y_zoom_min', local_y_zoom_min)
                     log_message_variable('var_plots__y_zoom_max', local_y_zoom_max)
                     log_message_variable('var_plots__annotate_points', local_annotate_points)
+                    log_message_variable('var_plots__show_points', local_show_points)
                     log_message_variable('var_plots__scale_x_log_base_10', local_scale_x_log_base_10)
                     log_message_variable('var_plots__scale_y_log_base_10', local_scale_y_log_base_10)
 
@@ -466,50 +477,110 @@ reactive__var_plots__ggplot__creator <- function(input, session, dataset) {
                     local_map_borders_regions <- input$var_plots___map_borders_regions
 
                     log_message_variable('var_plots__map_format', local_map_format)
-                    log_message_variable('var_plots___map_borders_database', local_map_borders_database)
-                    log_message_variable('var_plots___map_borders_regions', local_map_borders_regions)
+                    log_message_variable('var_plots__map_borders_database', local_map_borders_database)
+                    log_message_variable('var_plots__map_borders_regions', local_map_borders_regions)
 
-                    add_confidence_interval <- !is.null(local_trend_line_se) && local_trend_line_se == 'Yes'
-
-                    ggplot_object <- local_dataset %>% 
-                        custom_mutate(factor_lump_number=local_var_plots__filter_factor_lump_number) %>%
-                        rt_explore_plot_scatter(variable=local_primary_variable,
-                                                comparison_variable=local_comparison_variable,
-                                                color_variable=local_color_variable,
-                                                size_variable=local_point_size,
-                                                # alpha is a measure of opacity which is the opposite of transparency, but transparency is more user-friendly
-                                                alpha= 1 - local_transparency,
-                                                jitter=local_jitter,
-                                                x_zoom_min=local_x_zoom_min,
-                                                x_zoom_max=local_x_zoom_max,
-                                                y_zoom_min=local_y_zoom_min,
-                                                y_zoom_max=local_y_zoom_max,
-                                                base_size=local_base_size) %>%
-                        scale_axes_log10(scale_x=local_scale_x_log_base_10,
-                                         scale_y=local_scale_y_log_base_10) %>%
-                        add_trend_line(trend_line_type=local_trend_line,
-                                       confidence_interval=add_confidence_interval,
-                                       color_variable=local_color_variable)
-
-                    if(local_annotate_points && !is.null(local_comparison_variable)) {
-
-                        ggplot_object <- prettyfy_plot(plot=ggplot_object,
-                                                       annotations=pretyfy_annotations(local_dataset[, local_comparison_variable]))
-                    }
-
-                    if(local_map_format) {
-
-                        ggplot_object <- ggplot_object + coord_map()
-
-                        if(!is_null_or_empty_string(local_map_borders_database)) {
-
-                            regions <- str_split(local_map_borders_regions, pattern = ', ', simplify = TRUE)
-                            regions <- as.character(regions)
+                    log_message_variable('var_plots__numeric_numeric_group_variable', local_numeric_numeric_group_variable)
+                    log_message_variable('var_plots__numeric_numeric_aggregation_function', local_numeric_numeric_aggregation_function)
+                    log_message_variable('var_plots__numeric_numeric_aggregation_count_minimum', local_numeric_numeric_aggregation_count_minimum)
+                    log_message_variable('var_plots__numeric_numeric_show_resampled_confidence_interval', local_numeric_numeric_show_resampled_confidence_interval)
 
 
-                            ggplot_object <- ggplot_object +
-                                borders(database=local_map_borders_database,
-                                        regions=regions)
+                    if(local_numeric_numeric_group_variable) {
+
+
+                        aggregation_function <- NULL
+                        aggregation_function_name <- NULL
+                        if(local_numeric_numeric_aggregation_function != 'Boxplot') {
+
+                            aggregation_function_name <- local_numeric_numeric_aggregation_function
+
+                            if(local_numeric_numeric_aggregation_function == 'Mean') {
+
+                                aggregation_function <- function(x) { return (mean(x, na.rm=TRUE)) }
+
+                            } else if (local_numeric_numeric_aggregation_function == 'Geometric Mean') {
+
+                                aggregation_function <- rt_geometric_mean
+
+                            } else if (local_numeric_numeric_aggregation_function == 'Median') {
+
+                                aggregation_function <- function(x) { return (median(x, na.rm=TRUE)) }
+
+                            } else if (local_numeric_numeric_aggregation_function == 'Sum') {
+
+                                aggregation_function_name = 'Sum of'
+                                aggregation_function <- function(x) { return (sum(x, na.rm=TRUE)) }
+
+                            } else {
+
+                                stopifnot(FALSE)
+                            }
+                        }
+
+                        ggplot_object <- local_dataset %>% 
+                            custom_mutate(factor_lump_number=local_var_plots__filter_factor_lump_number) %>%
+                            rt_explore_plot_aggregate_2_numerics(variable=local_primary_variable,
+                                                                 comparison_variable=local_comparison_variable,
+                                                                 aggregation_function=aggregation_function,
+                                                                 aggregation_function_name=aggregation_function_name,
+                                                                 aggregation_count_minimum=local_numeric_numeric_aggregation_count_minimum,
+                                                                 show_resampled_confidence_interval=local_numeric_numeric_show_resampled_confidence_interval,
+                                                                 show_points=local_show_points,
+                                                                 show_labels=local_annotate_points,
+                                                                 x_zoom_min=local_x_zoom_min,
+                                                                 x_zoom_max=local_x_zoom_max,
+                                                                 y_zoom_min=local_y_zoom_min,
+                                                                 y_zoom_max=local_y_zoom_max,
+                                                                 base_size=local_base_size) %>%
+                            scale_axes_log10(scale_x=local_scale_x_log_base_10,
+                                             scale_y=local_scale_y_log_base_10)
+
+
+                    } else {
+
+                        add_confidence_interval <- !is.null(local_trend_line_se) && local_trend_line_se == 'Yes'
+
+                        ggplot_object <- local_dataset %>% 
+                            custom_mutate(factor_lump_number=local_var_plots__filter_factor_lump_number) %>%
+                            rt_explore_plot_scatter(variable=local_primary_variable,
+                                                    comparison_variable=local_comparison_variable,
+                                                    color_variable=local_color_variable,
+                                                    size_variable=local_point_size,
+                                                    # alpha is a measure of opacity which is the opposite of transparency, but transparency is more user-friendly
+                                                    alpha= 1 - local_transparency,
+                                                    jitter=local_jitter,
+                                                    x_zoom_min=local_x_zoom_min,
+                                                    x_zoom_max=local_x_zoom_max,
+                                                    y_zoom_min=local_y_zoom_min,
+                                                    y_zoom_max=local_y_zoom_max,
+                                                    base_size=local_base_size) %>%
+                            scale_axes_log10(scale_x=local_scale_x_log_base_10,
+                                             scale_y=local_scale_y_log_base_10) %>%
+                            add_trend_line(trend_line_type=local_trend_line,
+                                           confidence_interval=add_confidence_interval,
+                                           color_variable=local_color_variable)
+
+                        if(local_annotate_points && !is.null(local_comparison_variable)) {
+
+                            ggplot_object <- prettyfy_plot(plot=ggplot_object,
+                                                           annotations=pretyfy_annotations(local_dataset[, local_comparison_variable]))
+                        }
+
+                        if(local_map_format) {
+
+                            ggplot_object <- ggplot_object + coord_map()
+
+                            if(!is_null_or_empty_string(local_map_borders_database)) {
+
+                                regions <- str_split(local_map_borders_regions, pattern = ', ', simplify = TRUE)
+                                regions <- as.character(regions)
+
+
+                                ggplot_object <- ggplot_object +
+                                    borders(database=local_map_borders_database,
+                                            regions=regions)
+                            }
                         }
                     }
 
@@ -686,21 +757,6 @@ renderUI__var_plots__comparison__UI <- function(input, dataset) {
     })
 }
 
-renderUI__var_plots__date_aggregation__UI <- function(dataset) {
-
-    renderUI({
-
-        selectInput(inputId='var_plots__date_aggregation',
-                    label = 'Aggregation',
-                    choices = c('Mean', 'Median', 'Sum'),
-                    selected = 'Mean',
-                    multiple = FALSE,
-                    selectize = TRUE,
-                    width = 500,
-                    size = NULL)
-    })
-}
-
 renderUI__var_plots__sum_by_variable__UI <- function(dataset) {
 
     renderUI({
@@ -785,21 +841,25 @@ hide_show_date <- function(session, has_comparison_variable) {
     shinyjs::show('div_var_plots__group_y_zoom_controls')
     shinyjs::show('var_plots__base_size')
     shinyjs::show('var_plots__annotate_points')
-    shinyjs::show('var_plots__ts_show_points')
+    shinyjs::show('var_plots__show_points')
     shinyjs::show('var_plots__color_variable__UI')
     shinyjs::show('div_var_plots__group_trend_controls')
     shinyjs::show('div_var_plots__group_time_series_controls')
 
     if(has_comparison_variable) {
 
-        shinyjs::show('var_plots__date_aggregation__UI')
+        shinyjs::show('var_plots__date_aggregation')
 
     } else {
 
-        shinyjs::hide('var_plots__date_aggregation__UI')
+        shinyjs::hide('var_plots__date_aggregation')
     }
 
     shinyjs::hide('var_plots__point_size__UI')
+    shinyjs::hide('var_plots__numeric_numeric_group_variable')
+    shinyjs::hide('var_plots__numeric_numeric_aggregation_function')
+    shinyjs::hide('var_plots__numeric_numeric_aggregation_count_minimum')
+    shinyjs::hide('var_plots__numeric_numeric_show_resampled_confidence_interval')
     shinyjs::hide('div_var_plots__group_scatter_controls')
     shinyjs::hide('div_var_plots__group_x_zoom_controls')
     shinyjs::hide('var_plots__histogram_bins')
@@ -814,29 +874,68 @@ hide_show_date <- function(session, has_comparison_variable) {
     shinyjs::hide('var_plots___map_borders_regions')
 }
 
-hide_show_numeric_numeric <- function(session) {
+hide_show_numeric_numeric <- function(session, is_grouping_main_variable, grouping_is_boxplot) {
 
     log_message('hide_show_numeric_numeric')
     
-    # scatterplot
+    # scatterplot; or if grouping the main variable, then boxplot or custom aggregation_function
 
-    shinyjs::hide('var_plots__date_aggregation__UI')
-    shinyjs::show('var_plots__point_size__UI')
-    shinyjs::show('var_plots__color_variable__UI')
+    shinyjs::hide('var_plots__date_aggregation')
+    shinyjs::show('var_plots__numeric_numeric_group_variable')
 
-    shinyjs::show('var_plots__map_format')
-    shinyjs::show('var_plots___map_borders_database')
-    shinyjs::show('var_plots___map_borders_regions')
-    updateCollapse(session, 'var_plots__bscollapse', open="Map Options")
+    if(is_grouping_main_variable) {
 
-    shinyjs::show('div_var_plots__group_scatter_controls')
-    shinyjs::show('div_var_plots__group_trend_controls')
+        shinyjs::show('var_plots__numeric_numeric_aggregation_function')
+        shinyjs::show('var_plots__numeric_numeric_aggregation_count_minimum')
+
+        if(grouping_is_boxplot) {
+            
+            shinyjs::hide('var_plots__show_points')
+            shinyjs::hide('var_plots__annotate_points')
+            shinyjs::hide('var_plots__numeric_numeric_show_resampled_confidence_interval')
+
+        } else {
+
+            shinyjs::show('var_plots__show_points')
+            shinyjs::show('var_plots__annotate_points')
+            shinyjs::show('var_plots__numeric_numeric_show_resampled_confidence_interval')
+        }
+    
+        shinyjs::hide('var_plots__point_size__UI')
+        shinyjs::hide('var_plots__color_variable__UI')
+
+        shinyjs::hide('var_plots__map_format')
+        shinyjs::hide('var_plots___map_borders_database')
+        shinyjs::hide('var_plots___map_borders_regions')
+        updateCollapse(session, 'var_plots__bscollapse', close="Map Options")
+
+        shinyjs::hide('div_var_plots__group_scatter_controls')
+        shinyjs::hide('div_var_plots__group_trend_controls')
+        
+
+    } else {
+
+        shinyjs::hide('var_plots__numeric_numeric_aggregation_function')
+        shinyjs::hide('var_plots__numeric_numeric_aggregation_count_minimum')
+
+        shinyjs::show('var_plots__point_size__UI')
+        shinyjs::show('var_plots__color_variable__UI')
+
+        shinyjs::show('var_plots__map_format')
+        shinyjs::show('var_plots___map_borders_database')
+        shinyjs::show('var_plots___map_borders_regions')
+        updateCollapse(session, 'var_plots__bscollapse', open="Map Options")
+
+        shinyjs::show('div_var_plots__group_scatter_controls')
+        shinyjs::show('div_var_plots__group_trend_controls')
+        shinyjs::show('var_plots__annotate_points')
+        shinyjs::hide('var_plots__show_points')
+    }
+
     shinyjs::show('div_var_plots__group_x_zoom_controls')
     shinyjs::show('div_var_plots__group_y_zoom_controls')
     shinyjs::show('var_plots__base_size')
-    shinyjs::show('var_plots__annotate_points')
-    shinyjs::hide('var_plots__ts_show_points')
-
+    
     shinyjs::hide('div_var_plots__group_time_series_controls')
     shinyjs::hide('var_plots__histogram_bins')
     shinyjs::hide('div_var_plots__group_barchar_controls')
@@ -844,6 +943,7 @@ hide_show_numeric_numeric <- function(session) {
     shinyjs::hide('var_plots__numeric_graph_type')
     shinyjs::hide('var_plots__sum_by_variable__UI')
     shinyjs::hide('var_plots__multi_value_delimiter')
+    #shinyjs::hide('var_plots__filter_factor_lump_number')
 
 }
 
@@ -870,8 +970,12 @@ hide_show_numeric_categoric <- function(session, showing_boxplot) {
         updateCheckboxInput(session, 'var_plots__scale_y_log_base_10', value=FALSE)
     }
 
-    shinyjs::hide('var_plots__date_aggregation__UI')
+    shinyjs::hide('var_plots__date_aggregation')
     shinyjs::hide('var_plots__point_size__UI')
+    shinyjs::hide('var_plots__numeric_numeric_group_variable')
+    shinyjs::hide('var_plots__numeric_numeric_aggregation_function')
+    shinyjs::hide('var_plots__numeric_numeric_aggregation_count_minimum')
+    shinyjs::hide('var_plots__numeric_numeric_show_resampled_confidence_interval')
     shinyjs::hide('var_plots__color_variable__UI')
 
     shinyjs::show('var_plots__base_size')
@@ -883,7 +987,7 @@ hide_show_numeric_categoric <- function(session, showing_boxplot) {
     shinyjs::hide('div_var_plots__group_barchar_controls')
     shinyjs::hide('div_var_plots__multi_barchar_controls')
     shinyjs::hide('var_plots__annotate_points')
-    shinyjs::hide('var_plots__ts_show_points')
+    shinyjs::hide('var_plots__show_points')
     shinyjs::hide('var_plots__sum_by_variable__UI')
     shinyjs::hide('var_plots__multi_value_delimiter')
     updateCollapse(session, 'var_plots__bscollapse', close="Map Options")
@@ -899,6 +1003,10 @@ hide_show_categoric_numeric <- function(session) {
     
     # multi-boxplot
     shinyjs::hide('var_plots__point_size__UI')
+    shinyjs::hide('var_plots__numeric_numeric_group_variable')
+    shinyjs::hide('var_plots__numeric_numeric_aggregation_function')
+    shinyjs::hide('var_plots__numeric_numeric_aggregation_count_minimum')
+    shinyjs::hide('var_plots__numeric_numeric_show_resampled_confidence_interval')
     shinyjs::hide('var_plots__color_variable__UI')
 
     shinyjs::show('div_var_plots__group_y_zoom_controls')
@@ -908,7 +1016,7 @@ hide_show_categoric_numeric <- function(session) {
     # if we are hiding the x-controls, uncheck the scale_x_log10 option so it isn't carried over
     updateCheckboxInput(session, 'var_plots__scale_x_log_base_10', value=FALSE)
 
-    shinyjs::hide('var_plots__date_aggregation__UI')
+    shinyjs::hide('var_plots__date_aggregation')
     shinyjs::hide('div_var_plots__group_scatter_controls')
     shinyjs::hide('div_var_plots__group_trend_controls')
     shinyjs::hide('div_var_plots__group_time_series_controls')
@@ -917,7 +1025,7 @@ hide_show_categoric_numeric <- function(session) {
     shinyjs::hide('div_var_plots__multi_barchar_controls')
     shinyjs::hide('var_plots__numeric_graph_type')
     shinyjs::hide('var_plots__annotate_points')
-    shinyjs::hide('var_plots__ts_show_points')
+    shinyjs::hide('var_plots__show_points')
     shinyjs::hide('var_plots__sum_by_variable__UI')
     shinyjs::hide('var_plots__multi_value_delimiter')
     updateCollapse(session, 'var_plots__bscollapse', close="Map Options")
@@ -944,6 +1052,10 @@ hide_show_categoric_categoric <- function(session, input, has_comparison_variabl
     }
 
     shinyjs::hide('var_plots__point_size__UI')
+    shinyjs::hide('var_plots__numeric_numeric_group_variable')
+    shinyjs::hide('var_plots__numeric_numeric_aggregation_function')
+    shinyjs::hide('var_plots__numeric_numeric_aggregation_count_minimum')
+    shinyjs::hide('var_plots__numeric_numeric_show_resampled_confidence_interval')
     shinyjs::hide('var_plots__color_variable__UI')
 
     shinyjs::show('div_var_plots__group_barchar_controls')
@@ -958,7 +1070,7 @@ hide_show_categoric_categoric <- function(session, input, has_comparison_variabl
 
     shinyjs::show('var_plots__base_size')
 
-    shinyjs::hide('var_plots__date_aggregation__UI')
+    shinyjs::hide('var_plots__date_aggregation')
     shinyjs::hide('div_var_plots__group_x_zoom_controls')
     shinyjs::hide('div_var_plots__group_y_zoom_controls')
     # if we are hiding the x/y-controls, uncheck the scale_x/y_log10 option so it isn't carried over
@@ -971,7 +1083,7 @@ hide_show_categoric_categoric <- function(session, input, has_comparison_variabl
     shinyjs::hide('var_plots__histogram_bins')
     shinyjs::hide('var_plots__numeric_graph_type')
     shinyjs::hide('var_plots__annotate_points')
-    shinyjs::hide('var_plots__ts_show_points')
+    shinyjs::hide('var_plots__show_points')
     updateCollapse(session, 'var_plots__bscollapse', close="Map Options")
     shinyjs::hide('var_plots__map_format')
     shinyjs::hide('var_plots___map_borders_database')
@@ -990,10 +1102,14 @@ observe__var_plots__hide_show_uncollapse_on_primary_vars <- function(input, sess
 
         if(local_primary_variable == select_variable || local_comparison_variable == select_variable_optional) {
 
-            shinyjs::hide('var_plots__date_aggregation__UI')
+            shinyjs::hide('var_plots__date_aggregation')
             shinyjs::hide('var_plots__sum_by_variable__UI')
             shinyjs::hide('var_plots__multi_value_delimiter')
             shinyjs::hide('var_plots__point_size__UI')
+            shinyjs::hide('var_plots__numeric_numeric_group_variable')
+            shinyjs::hide('var_plots__numeric_numeric_aggregation_function')
+            shinyjs::hide('var_plots__numeric_numeric_aggregation_count_minimum')
+            shinyjs::hide('var_plots__numeric_numeric_show_resampled_confidence_interval')
             shinyjs::hide('var_plots__color_variable__UI')
         }
 

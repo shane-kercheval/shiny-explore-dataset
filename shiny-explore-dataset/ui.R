@@ -118,17 +118,36 @@ shinyUI(fluidPage(theme="custom.css",
                     bsCollapsePanel(
                         'Variables',
                         uiOutput('var_plots__variable__UI'),
+                        shinyjs::hidden(
+                            checkboxInput(inputId='var_plots__numeric_numeric_group_variable',
+                                          label='Group Variable', value=FALSE, width=NULL),
+                            selectInput(inputId='var_plots__numeric_numeric_aggregation_function',
+                                    label = 'Aggregation',
+                                    choices = c('Boxplot', 'Mean', 'Geometric Mean', 'Median', 'Sum'),
+                                    selected = 'Boxplot',
+                                    multiple = FALSE,
+                                    selectize = TRUE,
+                                    width = 500,
+                                    size = NULL)
+                        ),
                         uiOutput('var_plots__comparison__UI'),
                         # NOTE: the variables below can't be hidden initially (but rather are dynamically hidden)
                         # because the values need to load the first time this tab is clicked
                         # if not, when they become active (and therefore the values change to the default,
                         # they will trigger an unncessary plot refresh
-                        uiOutput('var_plots__date_aggregation__UI'),
+                        selectInput(inputId='var_plots__date_aggregation',
+                                    label = 'Aggregation',
+                                    choices = c('Mean', 'Geometric Mean', 'Median', 'Sum'),
+                                    selected = 'Mean',
+                                    multiple = FALSE,
+                                    selectize = TRUE,
+                                    width = 500,
+                                    size = NULL),
                         uiOutput('var_plots__sum_by_variable__UI'),
                         uiOutput('var_plots__color_variable__UI'),
                         uiOutput('var_plots__point_size__UI'),
                         textInput('var_plots__multi_value_delimiter',
-                                  label="Multi-Value Delimiter"),                        
+                                  label="Multi-Value Delimiter"),
                         style='default'
                     ),
                     bsCollapsePanel(
@@ -184,6 +203,15 @@ shinyUI(fluidPage(theme="custom.css",
                             checkboxInput(inputId='var_plots__jitter',
                                           label='Jitter', value=FALSE, width=NULL)
                         )),
+                        shinyjs::hidden(
+                            numericInput(inputId='var_plots__numeric_numeric_aggregation_count_minimum',
+                                          label='Minimum number of samples in group:',
+                                          value=30)
+                        ),
+                        shinyjs::hidden(
+                            checkboxInput(inputId='var_plots__numeric_numeric_show_resampled_confidence_interval',
+                                          label='Show Confidence Interval (Resampling):', value=FALSE, width=NULL)
+                        ),
                         shinyjs::hidden(tags$div(id='div_var_plots__group_trend_controls',
                             radioButtons(inputId='var_plots__trend_line',
                                          label='Trend Line:',
@@ -242,7 +270,7 @@ shinyUI(fluidPage(theme="custom.css",
                         checkboxInput(inputId='var_plots__pretty_text',
                                       label='Pretty Text', value=FALSE, width=NULL),
                         shinyjs::hidden(
-                           checkboxInput(inputId='var_plots__ts_show_points',
+                           checkboxInput(inputId='var_plots__show_points',
                                          label='Show Points', value=TRUE, width=NULL)
                         ),
                         shinyjs::hidden(
