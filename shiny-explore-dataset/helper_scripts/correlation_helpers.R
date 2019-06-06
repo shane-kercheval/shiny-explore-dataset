@@ -15,6 +15,7 @@ renderPlot__correlation__plot <- function(input, session, dataset) {
             }
 
             log_message_block_start('Calculating Correlations & Creating Plot')
+            log_message_variable('correlation__max_missing_column_perc', input$correlation__max_missing_column_perc)
             log_message_variable('correlation__corr_threshold', input$correlation__corr_threshold)
             log_message_variable('correlation__p_value_threshold', input$correlation__p_value_threshold)
             log_message_variable('correlation__base_size', input$correlation__base_size)
@@ -23,6 +24,7 @@ renderPlot__correlation__plot <- function(input, session, dataset) {
             # see note about why I use print, in `variable plot` section below.
             return (
                 print(rt_explore_plot_correlations(dataset=local_dataset,
+                                                   max_missing_column_perc=input$correlation__max_missing_column_perc,
                                                    corr_threshold=input$correlation__corr_threshold,
                                                    p_value_threshold=input$correlation__p_value_threshold,
                                                    base_size=input$correlation__base_size,

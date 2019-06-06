@@ -86,6 +86,11 @@ shinyUI(fluidPage(theme="custom.css",
                 class='column-input-control-style',
                 tags$div(
                     class='input-control-style',
+                    sliderTextInput(inputId='correlation__max_missing_column_perc',
+                                    label='Max Perc of Missing Data', ## percent increase
+                                    choices=seq(0, 1, 0.05),
+                                    selected=0.05,
+                                    grid=TRUE),
                     sliderTextInput(inputId='correlation__corr_threshold',
                                     label='Min Correlation Threshold', ## percent increase
                                     choices=seq(0, 1, 0.05),
