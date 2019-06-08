@@ -307,6 +307,7 @@ shinyUI(fluidPage(theme="custom.css",
             ),
             column(9,
                 plotOutput(outputId='var_plots'),
+                verbatimTextOutput(outputId='var_plots__filtering_messages'),
                 verbatimTextOutput(outputId='var_plots__ggplot_messages')
             )
         ),

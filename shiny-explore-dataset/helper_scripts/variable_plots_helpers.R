@@ -1,9 +1,9 @@
 ##############################################################################################################
 # FILTERS
 ##############################################################################################################
-get_dynamic_filter_selections <- function(input, columns) {
+get_dynamic_filter_values <- function(input, columns) {
 
-    # get all of the selections from the dynamic filters without triggering refresh for the first time
+    # get all of the filter values from the dynamic filters without triggering refresh for the first time
     selections_list <- purrr::map(columns, ~ isolate(input[[paste0('var_plots__dynamic_filter__', .)]]))
     names(selections_list) <- columns
 
@@ -170,8 +170,8 @@ observeEvent__var_plots__show_hide_dynamic_filters <- function(input, session, d
 
         unselected <- dataset_columns[!dataset_columns %in% filter_controls_selections]
 
-        log_message_variable("Selected Filter Variables", paste(filter_controls_selections, collapse=";"))
-        log_message_variable("Unselected Filter Variables", paste(unselected, collapse=";"))
+        log_message_variable("Selected Filter Variables", paste(filter_controls_selections, collapse="; "))
+        log_message_variable("Unselected Filter Variables", paste(unselected, collapse="; "))
 
         for(variable in filter_controls_selections) {
 
@@ -215,7 +215,7 @@ observe__var_plots__bscollapse__dynamic_inputs <- function(input, session, datas
 # FILTERED DATASET - Variable Plot's filtered dataset
 # duplicate dataset (which is bad for large datasets) so that the filters don't have to be reapplied every time.
 ##############################################################################################################
-reactive__var_plots__filtered_data__creator <- function(input, dataset) {
+reactive__var_plots__filtered_data__creator <- function(input, dataset, reactive_filter_message_list) {
 
     reactive({
 
@@ -238,70 +238,23 @@ reactive__var_plots__filtered_data__creator <- function(input, dataset) {
                 log_message_block_start('Filtering...')
 
                 #### APPLY FILTERS
+                # list with selections for each dynamic filter, and list names are the column names; includes
+                # filter values for ALL controls, whether hidden or shown, so need to subset by the filters
+                # that are actually selected
+                all_filter_values <- get_dynamic_filter_values(input, column_names)
+                filter_results <- filter_data(dataset=local_dataset,
+                                              filter_list=all_filter_values[filter_controls_selections],
+                                              callback=NULL)
+                local_dataset <- filter_results[[1]]
 
-                # list with selections for each dynamic filter, and list names are the column names
-                dynamic_filter_selections <- get_dynamic_filter_selections(input, column_names)
-
-                index = 1
-                for(column_name in column_names) {
-
-                    incProgress(index / num_columns, detail = column_name)
-
-                    # only filter column if the column is selected
-                    if(column_name %in% filter_controls_selections) {
-
-                        filter_selection <- dynamic_filter_selections[[column_name]]
-
-                        if(is.null(filter_selection)) {
-
-                            log_message_generic(column_name, 'skipping...')
-
-                        } else {
-
-                            symbol_column_name <- sym(column_name)
-                        
-                            log_message_generic(column_name,
-                                                 paste('filtering -', paste0(filter_selection, collapse = '; ')))
-
-                            if(is_date_type(local_dataset[, column_name]) ||
-                                    is.numeric(local_dataset[, column_name])) {
-                                #'date'
-                                # for numerics/etc. need to remove NA values and then filter
-                                local_dataset <- local_dataset %>%
-                                    filter(!is.na(!!symbol_column_name)) %>%
-                                    filter(!!symbol_column_name >= filter_selection[1] & !!symbol_column_name <= filter_selection[2])
-                                
-                            } else if(is.factor(local_dataset[, column_name]) ||
-                                        is.character(local_dataset[, column_name])) {
-                                #'factor'
-                                local_dataset <- local_dataset %>%
-                                    filter(!!symbol_column_name %in% filter_selection)
-                            
-                            } else if(is.logical(local_dataset[, column_name])) {
-
-                                #'logical'
-                                local_dataset <- local_dataset %>%
-                                    filter(!!symbol_column_name %in% filter_selection)
-
-                            } else if("hms" %in% class(local_dataset[, column_name])) {
-
-                                # hours minutes seconds
-                                local_dataset <- local_dataset %>%
-                                    filter(!is.na(!!symbol_column_name)) %>%
-                                    filter(!!symbol_column_name >= hm(filter_selection[1]) & !!symbol_column_name <= hm(filter_selection[2]))
-
-                            } else {
-                                #class(.)[1]
-                                stopifnot(FALSE)
-                            }
-                        }
-                    }
-                    index <- index + 1
-                }
-                log_message('Done Filtering\n')
+                log_message(format_filtering_message(filter_results[[2]]))
+                reactive_filter_message_list$value <- filter_results[[2]]
+                
+                #incProgress(index / num_columns, detail = column_name)
             })
         } else {
             log_message_block_start('Not Filtering')
+            reactive_filter_message_list$value <- NULL
         }
 
         return (local_dataset)
@@ -876,10 +829,15 @@ renderUI__var_plots__filter_controls_selections__UI <- function(input, dataset) 
     renderUI({
 
         input$var_plots__filter_clear
+        choices <- list(
+            "All Variables" = c("All Variables"),
+            "Individual Variables" = colnames(dataset())
+        )
 
         selectInput(inputId='var_plots__filter_controls_selections',
                     label = 'Filters',
-                    choices = c('All Variables', colnames(dataset())),
+                    choices = choices,
+                    #choices = c('All Variables', colnames(dataset())),
                     selected = NULL,
                     multiple = TRUE,
                     selectize = TRUE,
@@ -1228,4 +1186,26 @@ renderPrint__reactiveValues__vp__ggplot_message <- function(message) {
     renderPrint({
         cat(message$value)
     })
+}
+
+#' @param reactive_filter_message_list is a reactive object, whos' `value` is list object that contains a
+#' string value for each variable being filtered
+renderPrint__reactiveValues__vp_filtering_message <- function(reactive_filter_message_list) {
+
+    renderPrint({
+        cat(format_filtering_message(reactive_filter_message_list$value))
+    })
+}
+
+#' @param filter_message_list list object that contains a string value for each variable being filtered
+format_filtering_message <- function(filter_message_list) {
+
+    message <- NULL
+    
+    if(!is.null(filter_message_list) && length(filter_message_list) != 0) {
+
+        message <- paste0("Filtering Variables:\n\n", paste0(filter_message_list, collapse="\n"))
+    }
+
+    return (message)
 }

@@ -1,3 +1,5 @@
+library(lubridate)
+
 dataset_or_null <- function(file) {
     # loads the file if it exists, otherwise returns NULL.    
 
@@ -116,41 +118,6 @@ easy_regression <- function(dataset,
     )
 }
 
-# dataset <- read.csv("example_datasets/housing.csv", header=TRUE)
-# dependent_variable <- 'median_house_value'
-# independent_variables <- c('longitude', 'latitude', 'housing_median_age', 'total_rooms', 'total_bedrooms', 'population', 'households', 'median_income', 'ocean_proximity')
-
-# dataset <- read.csv("example_datasets/credit.csv", header=TRUE)
-# dependent_variable <- 'default'
-# independent_variables <- colnames(dataset)[1:16]
-# 
-# results <- easy_regression(dataset, dependent_variable, independent_variables)
-# summary(results$results)
-# names(results$results)
-# plot(results$results, which=c(1, 2, 3, 4, 5, 6))
-# plot(results$results, which=c(1, 2, 3, 4))
-
-# library(lattice)
-# xyplot(dataset[, dependent_variable] ~ predict(results$results),
-#        type=c('p', 'g'),
-#        xlab='Predicted', ylab='Actual')
-# 
-# 
-# library(lattice)
-# xyplot(predict(results$results) ~ 1:nrow(dataset),
-#        type=c('p', 'g'),
-#        xlab='Observation Number', ylab='Predicted')
-# 
-# predict(results$results, type='response')
-# contrasts(dataset[, dependent_variable])
-# coefficients(results$results)
-# summary(lm(median_house_value ~ housing_median_age * total_rooms + housing_median_age + total_rooms, data=dataset))
-# # 
-# #interaction_variables <- list(c('housing_median_age', 'total_rooms'), c('total_rooms', 'housing_median_age'))
-# interaction_variables <- list(c('housing_median_age', 'total_rooms'))
-# paste(' ', paste(map_chr(interaction_variables, ~ paste(., collapse =' * ')), collapse = ' + '), '+ ')
-
-
 capture_messages_warnings <- function(func) {
     
     messages <- list()
@@ -166,4 +133,124 @@ capture_messages_warnings <- function(func) {
         func()
     )
     return (paste0(messages, collapse = '\n'))
+}
+
+#' filters the dataset based on a list of filters
+#' 
+#' @param filter_list a named list with names as columns and values as filter values e.g.
+#' 
+#'         ```
+#'         $carat
+#'         [1] 0.20 5.01
+#'         $cut
+#'         [1] "Good"
+#'         $color
+#'         NULL
+#'         ```
+#'      `filter_list` should only contain the variables that the user is filtering on
+#' @param callback a callback function that get's executed at the beginning of each loop for e.g. providing a
+#'      way to `incProgress`
+#'      Has the params `(index, num_columns, column_name)`
+#' @return a list
+#'      index 1: filtered dataset
+#'      index 2: string containing information about what was filtered
+filter_data <- function(dataset, filter_list, callback=NULL) {
+
+    end_message <- function(message, num_is_na, num_removing) {
+        if(num_is_na > 0) {
+        
+            message <- paste0(message, "; Removing ", num_is_na, " missing values", ")")
+        } else {
+            message <- paste0(message, ")")
+        }
+    }
+
+    filter_messages <- list()
+    columns <- names(filter_list)
+    index <- 1
+    for(column_name in columns) {
+        # column_name <- columns[2]
+        message <- NULL
+        filter_values <- filter_list[[column_name]]
+        
+        if(!is.null(callback)) {
+
+            callback(index, num_columns, column_name)
+        }
+
+        if(is.null(filter_values)) {
+
+            message <- paste0(column_name, ": Not Filtering")
+
+        } else {
+
+            symbol_column_name <- sym(column_name)
+        
+            if(is_date_type(dataset[, column_name]) ||
+                    is.numeric(dataset[, column_name])) {
+                #'date'
+                # for numerics/etc. need to remove NA values and then filter
+                num_is_na <- sum(is.na(dataset[, column_name]))
+                num_removing <- sum(!is.na(dataset[, column_name]) & 
+                                    (dataset[, column_name] < filter_values[1] | dataset[, column_name] > filter_values[2]))
+
+                message <- paste0(column_name, ": ", filter_values[1], " <= x <= ", filter_values[2], " (Removing ", num_removing, " values") %>%
+                    end_message(num_is_na, num_removing)
+
+                dataset <- dataset %>%
+                    filter(!is.na(!!symbol_column_name)) %>%
+                    filter(!!symbol_column_name >= filter_values[1] & !!symbol_column_name <= filter_values[2])
+                
+            } else if(is.factor(dataset[, column_name]) ||
+                        is.character(dataset[, column_name])) {
+                
+                num_is_na <- sum(is.na(dataset[, column_name]))
+                num_removing <- sum(!is.na(dataset[, column_name]) & 
+                                    !dataset[, column_name] %in% filter_values)
+
+                message <- paste0(column_name, ": ", paste0(filter_values, collapse=", "), " (Removing ", num_removing, " values") %>%
+                    end_message(num_is_na, num_removing)
+
+                #'factor'
+                dataset <- dataset %>%
+                    filter(!!symbol_column_name %in% filter_values)
+            
+            } else if(is.logical(dataset[, column_name])) {
+
+                num_is_na <- sum(is.na(dataset[, column_name]))
+                num_removing <- sum(!is.na(dataset[, column_name]) & 
+                                    !dataset[, column_name] %in% filter_values)
+
+                message <- paste0(column_name, ": ", paste0(filter_values, collapse=", "), " (Removing ", num_removing, " values") %>%
+                    end_message(num_is_na, num_removing)
+
+                #'logical'
+                dataset <- dataset %>%
+                    filter(!!symbol_column_name %in% filter_values)
+
+            } else if("hms" %in% class(dataset[, column_name])) {
+
+                num_is_na <- sum(is.na(dataset[, column_name]))
+                num_removing <- sum(!is.na(dataset[, column_name]) & 
+                                    (dataset[, column_name] < hm(filter_values[1]) | dataset[, column_name] > hm(filter_values[2])))
+
+                message <- paste0(column_name, ": ", filter_values[1], " <= x <= ", filter_values[2], " (Removing ", num_removing, " values") %>%
+                    end_message(num_is_na, num_removing)
+
+                # hours minutes seconds
+                dataset <- dataset %>%
+                    filter(!is.na(!!symbol_column_name)) %>%
+                    filter(!!symbol_column_name >= hm(filter_values[1]) & !!symbol_column_name <= hm(filter_values[2]))
+
+            } else {
+                #class(.)[1]
+                stopifnot(FALSE)
+            }
+        }
+ 
+        filter_messages <- append(filter_messages, message)
+        index <- index + 1
+    }
+
+    return (list(dataset, filter_messages))
 }
