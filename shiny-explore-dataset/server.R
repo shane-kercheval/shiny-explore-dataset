@@ -93,10 +93,15 @@ shinyServer(function(input, output, session) {
     reactiveValues__vp__ggplot_message <- reactiveValues(value=NULL)
     output$var_plots__ggplot_messages <- renderPrint__reactiveValues__vp__ggplot_message(reactiveValues__vp__ggplot_message)
 
-    # Viarable Plot - Filters - this builds up the filters based on the dataset column types and dynamically 
-    # adds the controls to var_plots__filter_bscollapse__UI
-    filter_controls_list <- reactive__filter_controls_list(input, reactive__source_data)
-    output$var_plots__filter_bscollapse__UI <- renderUI__var_plots__filter_bscollapse__UI(filter_controls_list)
+    # this builds up the filters based on the dataset column types and dynamically adds the controls to var_plots__filter_bscollapse__UI
+    reactive__filter_controls_list <- reactive__filter_controls_list__creator(input, reactive__source_data)
+    # area in Filters area where all of the filters are stored and then shown/hidden based on selections
+    output$var_plots__filter_bscollapse__UI <- renderUI__var_plots__filter_bscollapse__UI(input, reactive__source_data, reactive__filter_controls_list)
+    # where the user selects the variables they want to filter
+    output$var_plots__filter_controls_selections__UI <- renderUI__var_plots__filter_controls_selections__UI(input, reactive__source_data)
+    # contains the logic to show/hide filters based on selections
+    observeEvent__var_plots__show_hide_dynamic_filters(input, session, reactive__source_data)
+
     observeEvent__var_plots__filter_clear(input, session)
     observeEvent__var_plots__filter_apply(input, session)
     observe__var_plots__bscollapse__dynamic_inputs(input, session, reactive__source_data)

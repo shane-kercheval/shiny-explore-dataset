@@ -170,8 +170,8 @@ shinyUI(fluidPage(theme="custom.css",
                                 tags$div(style='margin-bottom: 20px;', actionButton(inputId='var_plots__filter_clear', label='Clear Filters'))
                             )
                         ),
+                        uiOutput('var_plots__filter_controls_selections__UI'),
                         uiOutput('var_plots__filter_bscollapse__UI')
- 
                     ),
                     bsCollapsePanel(
                         'Plot Options',

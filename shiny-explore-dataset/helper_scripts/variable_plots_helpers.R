@@ -15,13 +15,12 @@ get_dynamic_filter_selections <- function(input, columns) {
 # FILTERS - DYNAMIC CONTROL LIST
 # builds controls based on the type of variables in the dataset
 ##############################################################################################################
-reactive__filter_controls_list <- function(input, dataset) {
+reactive__filter_controls_list__creator <- function(input, dataset) {
 
     reactive({
 
-        input$var_plots__filter_clear
         req(dataset())
-
+        input$var_plots__filter_clear
         # local_filter_options_data <- filter_options_data()
 
         withProgress(value=1/2, message='Generating Filters',{
@@ -31,7 +30,7 @@ reactive__filter_controls_list <- function(input, dataset) {
                 #log_message_variable('class', class(.x)[1])
 
                 input_id <- paste0('var_plots__dynamic_filter__', .y)
-                
+                filter_object <- NULL
                 if(is_date_type(.x)) {
                     #'date'
                     min_index <- which.min(.x)
@@ -39,23 +38,23 @@ reactive__filter_controls_list <- function(input, dataset) {
                     min_value <- .x[min_index]
                     max_value <- .x[max_index]
                     
-                    dateRangeInput(inputId=input_id,
-                                   label=.y,
-                                   start=min_value,
-                                   end=max_value)
+                    filter_object <- dateRangeInput(inputId=input_id,
+                                                    label=.y,
+                                                    start=min_value,
+                                                    end=max_value)
 
                 } else if(is.factor(.x)) {
 
                     if(length(levels(.x)) <= 1000) {
 
-                        selectInput(inputId=input_id, label=.y, choices=levels(.x), selected = NULL, multiple = TRUE)
+                        filter_object <- selectInput(inputId=input_id, label=.y, choices=levels(.x), selected = NULL, multiple = TRUE)
                     }
                 } else if(is.numeric(.x)) {
 
                     min_value <- min(.x, na.rm = TRUE)
                     max_value <- max(.x, na.rm = TRUE)
 
-                    sliderInput(inputId=input_id, label=.y, min=min_value, max=max_value, value=c(min_value, max_value))
+                    filter_object <- sliderInput(inputId=input_id, label=.y, min=min_value, max=max_value, value=c(min_value, max_value))
                 } else if(is.character(.x)) {
                     
                     if(length(unique(.x)) <= 1000) {
@@ -63,7 +62,7 @@ reactive__filter_controls_list <- function(input, dataset) {
                         values_ordered_by_frequency <- as.character((as.data.frame(table(as.character(.x))) %>%
                                                                          arrange(desc(Freq)))$Var1)
 
-                        selectInput(inputId=input_id,
+                        filter_object <- selectInput(inputId=input_id,
                                     label=.y,
                                     choices=values_ordered_by_frequency,
                                     selected = NULL,
@@ -71,7 +70,7 @@ reactive__filter_controls_list <- function(input, dataset) {
                     }
                 } else if(is.logical(.x)) {
 
-                    selectInput(inputId=input_id,
+                    filter_object <- selectInput(inputId=input_id,
                                 label=.y,
                                 choices=c(TRUE, FALSE),
                                 selected = NULL,
@@ -85,7 +84,7 @@ reactive__filter_controls_list <- function(input, dataset) {
                     hours_minutes <- sort(apply(expand.grid(hours, minutes), 1, paste, collapse=":"))
                     hours_minutes <- c(hours_minutes, "24:00")
 
-                    sliderTextInput(inputId=input_id,
+                    filter_object <- sliderTextInput(inputId=input_id,
                                     label=.y,
                                     choices=hours_minutes,
                                     selected=c("00:00", "24:00"),
@@ -95,8 +94,14 @@ reactive__filter_controls_list <- function(input, dataset) {
                     #class(.)[1]
                     stopifnot(FALSE)
                 }
-            })
 
+                if(!is.null(filter_object)) {
+
+                    filter_object <- shinyjs::hidden(filter_object)
+                }
+
+                return (filter_object)
+            })
         })
         ui_list
     })
@@ -144,6 +149,44 @@ observeEvent__var_plots__filter_use <- function(input, session) {
     })
 }
 
+#' The filter objects (e.g. sliderInput, selectInput, etc.) are created based on the dataset column types;
+#' all of these objects are added to the `var_plots__filter_bscollapse__UI`. 
+#' When someone selects the variables to filter, all of the filter objects are shown/hidden according.
+#' This observeEvent does the hiding/showing 
+observeEvent__var_plots__show_hide_dynamic_filters <- function(input, session, dataset) {
+
+    observeEvent(input$var_plots__filter_controls_selections, {
+        
+        if(input$var_plots__filter_use) {
+
+            updateCollapse(session, "var_plots__bscollapse", style = list('Filters' = 'danger'))
+        }
+
+        dataset_columns <- colnames(dataset())
+        filter_controls_selections <- input$var_plots__filter_controls_selections
+        if('All Variables' %in% filter_controls_selections) {
+            filter_controls_selections <- dataset_columns
+        }
+
+        unselected <- dataset_columns[!dataset_columns %in% filter_controls_selections]
+
+        log_message_variable("Selected Filter Variables", paste(filter_controls_selections, collapse=";"))
+        log_message_variable("Unselected Filter Variables", paste(unselected, collapse=";"))
+
+        for(variable in filter_controls_selections) {
+
+            shinyjs::show(paste0('var_plots__dynamic_filter__', variable))
+        }
+
+        for(variable in unselected) {
+
+            shinyjs::hide(paste0('var_plots__dynamic_filter__', variable))
+        }
+    
+    }, ignoreNULL = FALSE)  # ignoreNULL so that the observeEvent is triggered when the user removes all
+                            # of the selections from the `var_plots__filter_controls_selections` inputSelect
+}
+
 observe__var_plots__bscollapse__dynamic_inputs <- function(input, session, dataset) {
 
     observe({
@@ -178,10 +221,15 @@ reactive__var_plots__filtered_data__creator <- function(input, dataset) {
 
         local_dataset <- dataset()  # clear on new datasets
 
+        # these are the columns we want to filter on; if the column is not in the selection, don't filter
+        filter_controls_selections <- isolate(input$var_plots__filter_controls_selections)
+        if('All Variables' %in% filter_controls_selections) {
+            filter_controls_selections <- colnames(dataset())
+        }
+
         if(!is.null(input$var_plots__filter_use) && input$var_plots__filter_use) {
 
             input$var_plots__filter_apply  # trigger for the "apply" button
-            
 
             column_names <- colnames(local_dataset)
             num_columns <- length(column_names)
@@ -199,52 +247,53 @@ reactive__var_plots__filtered_data__creator <- function(input, dataset) {
 
                     incProgress(index / num_columns, detail = column_name)
 
+                    # only filter column if the column is selected
+                    if(column_name %in% filter_controls_selections) {
 
-                    filter_selection <- dynamic_filter_selections[[column_name]]
+                        filter_selection <- dynamic_filter_selections[[column_name]]
 
-                    
+                        if(is.null(filter_selection)) {
 
-                    if(is.null(filter_selection)) {
-
-                        log_message_generic(column_name, 'skipping...')
-
-                    } else {
-
-                        symbol_column_name <- sym(column_name)
-                    
-                        log_message_generic(column_name,
-                                             paste('filtering -', paste0(filter_selection, collapse = '; ')))
-
-                        if(is_date_type(local_dataset[, column_name]) ||
-                                is.numeric(local_dataset[, column_name])) {
-                            #'date'
-                            # for numerics/etc. need to remove NA values and then filter
-                            local_dataset <- local_dataset %>%
-                                filter(!is.na(!!symbol_column_name)) %>%
-                                filter(!!symbol_column_name >= filter_selection[1] & !!symbol_column_name <= filter_selection[2])
-                            
-                        } else if(is.factor(local_dataset[, column_name]) ||
-                                    is.character(local_dataset[, column_name])) {
-                            #'factor'
-                            local_dataset <- local_dataset %>%
-                                filter(!!symbol_column_name %in% filter_selection)
-                        
-                        } else if(is.logical(local_dataset[, column_name])) {
-
-                            #'logical'
-                            local_dataset <- local_dataset %>%
-                                filter(!!symbol_column_name %in% filter_selection)
-
-                        } else if("hms" %in% class(local_dataset[, column_name])) {
-
-                            # hours minutes seconds
-                            local_dataset <- local_dataset %>%
-                                filter(!is.na(!!symbol_column_name)) %>%
-                                filter(!!symbol_column_name >= hm(filter_selection[1]) & !!symbol_column_name <= hm(filter_selection[2]))
+                            log_message_generic(column_name, 'skipping...')
 
                         } else {
-                            #class(.)[1]
-                            stopifnot(FALSE)
+
+                            symbol_column_name <- sym(column_name)
+                        
+                            log_message_generic(column_name,
+                                                 paste('filtering -', paste0(filter_selection, collapse = '; ')))
+
+                            if(is_date_type(local_dataset[, column_name]) ||
+                                    is.numeric(local_dataset[, column_name])) {
+                                #'date'
+                                # for numerics/etc. need to remove NA values and then filter
+                                local_dataset <- local_dataset %>%
+                                    filter(!is.na(!!symbol_column_name)) %>%
+                                    filter(!!symbol_column_name >= filter_selection[1] & !!symbol_column_name <= filter_selection[2])
+                                
+                            } else if(is.factor(local_dataset[, column_name]) ||
+                                        is.character(local_dataset[, column_name])) {
+                                #'factor'
+                                local_dataset <- local_dataset %>%
+                                    filter(!!symbol_column_name %in% filter_selection)
+                            
+                            } else if(is.logical(local_dataset[, column_name])) {
+
+                                #'logical'
+                                local_dataset <- local_dataset %>%
+                                    filter(!!symbol_column_name %in% filter_selection)
+
+                            } else if("hms" %in% class(local_dataset[, column_name])) {
+
+                                # hours minutes seconds
+                                local_dataset <- local_dataset %>%
+                                    filter(!is.na(!!symbol_column_name)) %>%
+                                    filter(!!symbol_column_name >= hm(filter_selection[1]) & !!symbol_column_name <= hm(filter_selection[2]))
+
+                            } else {
+                                #class(.)[1]
+                                stopifnot(FALSE)
+                            }
                         }
                     }
                     index <- index + 1
@@ -823,11 +872,45 @@ renderUI__var_plots__point_size__UI <- function(dataset) {
     })
 }
 
-renderUI__var_plots__filter_bscollapse__UI <- function(filter_controls_list) {
+renderUI__var_plots__filter_controls_selections__UI <- function(input, dataset) {
+    renderUI({
+
+        input$var_plots__filter_clear
+
+        selectInput(inputId='var_plots__filter_controls_selections',
+                    label = 'Filters',
+                    choices = c('All Variables', colnames(dataset())),
+                    selected = NULL,
+                    multiple = TRUE,
+                    selectize = TRUE,
+                    width = 500,
+                    size = NULL)
+    })
+}
+
+renderUI__var_plots__filter_bscollapse__UI <- function(input, dataset, filter_controls_list) {
  
     renderUI({
- 
         tagList(list=filter_controls_list())
+
+        # filter_controls_selections <- input$var_plots__filter_controls_selections
+        # if('All Variables' %in% filter_controls_selections) {
+        #     filter_controls_selections <- colnames(dataset())
+        # }
+        # tagList(list=filter_controls_list()[filter_controls_selections])
+        
+        # control_list <- list()
+        # for(selection in filter_controls_selections) {
+        #     if(is.null(isolate(input[[paste0('var_plots__dynamic_filter__', selection)]]))) {
+
+        #         control_list <- append(control_list, filter_controls_list()[selection])
+
+        #     } else {
+
+        #         control_list <- append(control_list, isolate(output[[paste0('var_plots__dynamic_filter__', selection)]]))
+        #     }
+        # }
+        #tagList(list=control_list)
     })
 }
 
