@@ -159,7 +159,7 @@ filter_data <- function(dataset, filter_list, callback=NULL) {
     end_message <- function(message, num_is_na, num_removing) {
         if(num_is_na > 0) {
         
-            message <- paste0(message, "; Removing ", num_is_na, " missing values", ")")
+            message <- paste0(message, "; Removing ", num_is_na, " rows with missing values", ")")
         } else {
             message <- paste0(message, ")")
         }
@@ -194,7 +194,7 @@ filter_data <- function(dataset, filter_list, callback=NULL) {
                 num_removing <- sum(!is.na(dataset[, column_name]) & 
                                     (dataset[, column_name] < filter_values[1] | dataset[, column_name] > filter_values[2]))
 
-                message <- paste0(column_name, ": ", filter_values[1], " <= x <= ", filter_values[2], " (Removing ", num_removing, " values") %>%
+                message <- paste0(column_name, ": ", filter_values[1], " <= x <= ", filter_values[2], " (Removing ", num_removing, " rows") %>%
                     end_message(num_is_na, num_removing)
 
                 dataset <- dataset %>%
@@ -208,7 +208,7 @@ filter_data <- function(dataset, filter_list, callback=NULL) {
                 num_removing <- sum(!is.na(dataset[, column_name]) & 
                                     !dataset[, column_name] %in% filter_values)
 
-                message <- paste0(column_name, ": ", paste0(filter_values, collapse=", "), " (Removing ", num_removing, " values") %>%
+                message <- paste0(column_name, ": ", paste0(filter_values, collapse=", "), " (Removing ", num_removing, " rows") %>%
                     end_message(num_is_na, num_removing)
 
                 #'factor'
@@ -221,7 +221,7 @@ filter_data <- function(dataset, filter_list, callback=NULL) {
                 num_removing <- sum(!is.na(dataset[, column_name]) & 
                                     !dataset[, column_name] %in% filter_values)
 
-                message <- paste0(column_name, ": ", paste0(filter_values, collapse=", "), " (Removing ", num_removing, " values") %>%
+                message <- paste0(column_name, ": ", paste0(filter_values, collapse=", "), " (Removing ", num_removing, " rows") %>%
                     end_message(num_is_na, num_removing)
 
                 #'logical'
@@ -234,7 +234,7 @@ filter_data <- function(dataset, filter_list, callback=NULL) {
                 num_removing <- sum(!is.na(dataset[, column_name]) & 
                                     (dataset[, column_name] < hm(filter_values[1]) | dataset[, column_name] > hm(filter_values[2])))
 
-                message <- paste0(column_name, ": ", filter_values[1], " <= x <= ", filter_values[2], " (Removing ", num_removing, " values") %>%
+                message <- paste0(column_name, ": ", filter_values[1], " <= x <= ", filter_values[2], " (Removing ", num_removing, " rows") %>%
                     end_message(num_is_na, num_removing)
 
                 # hours minutes seconds
