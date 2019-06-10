@@ -1,33 +1,28 @@
 ##############################################################################################################
 # FILTERS
 ##############################################################################################################
+
+#' get all of the filter values from the dynamic filters without triggering refresh for the first time
+#' @param columns the names of the columns/filters of interest
 get_dynamic_filter_values <- function(input, columns) {
 
-    # get all of the filter values from the dynamic filters without triggering refresh for the first time
     selections_list <- purrr::map(columns, ~ isolate(input[[paste0('var_plots__dynamic_filter__', .)]]))
     names(selections_list) <- columns
 
     return (selections_list)
-
 }
 
-##############################################################################################################
-# FILTERS - DYNAMIC CONTROL LIST
-# builds controls based on the type of variables in the dataset
-##############################################################################################################
+#' builds controls based on the type of variables in the dataset
 reactive__filter_controls_list__creator <- function(input, dataset) {
 
     reactive({
 
         req(dataset())
         input$var_plots__filter_clear
-        # local_filter_options_data <- filter_options_data()
 
-        withProgress(value=1/2, message='Generating Filters',{
+        withProgress(value=1/2, message='Generating Filters', {
             
             ui_list <- imap(dataset(), ~ {
-
-                #log_message_variable('class', class(.x)[1])
 
                 input_id <- paste0('var_plots__dynamic_filter__', .y)
                 filter_object <- NULL
@@ -53,8 +48,8 @@ reactive__filter_controls_list__creator <- function(input, dataset) {
 
                     min_value <- min(.x, na.rm = TRUE)
                     max_value <- max(.x, na.rm = TRUE)
-
                     filter_object <- sliderInput(inputId=input_id, label=.y, min=min_value, max=max_value, value=c(min_value, max_value))
+
                 } else if(is.character(.x)) {
                     
                     if(length(unique(.x)) <= 1000) {
@@ -233,7 +228,7 @@ reactive__var_plots__filtered_data__creator <- function(input, dataset, reactive
 
             column_names <- colnames(local_dataset)
             num_columns <- length(column_names)
-            withProgress(value=1 / num_columns, message='Applying Filters',{
+            withProgress(value=1 / 2, message='Applying Filters',{
 
                 log_message_block_start('Filtering...')
 
@@ -244,15 +239,17 @@ reactive__var_plots__filtered_data__creator <- function(input, dataset, reactive
                 all_filter_values <- get_dynamic_filter_values(input, column_names)
                 filter_results <- filter_data(dataset=local_dataset,
                                               filter_list=all_filter_values[filter_controls_selections],
-                                              callback=NULL)
+                                              callback=function(index, num_columns, column_name) {
+                                                 incProgress(index / num_columns,
+                                                             detail = paste("column:", column_name))
+                                              })
                 local_dataset <- filter_results[[1]]
 
                 log_message(format_filtering_message(filter_results[[2]]))
                 reactive_filter_message_list$value <- filter_results[[2]]
-                
-                #incProgress(index / num_columns, detail = column_name)
             })
         } else {
+
             log_message_block_start('Not Filtering')
             reactive_filter_message_list$value <- NULL
         }

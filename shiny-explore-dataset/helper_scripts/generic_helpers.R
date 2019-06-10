@@ -175,7 +175,7 @@ filter_data <- function(dataset, filter_list, callback=NULL) {
         
         if(!is.null(callback)) {
 
-            callback(index, num_columns, column_name)
+            callback(index, length(columns), column_name)
         }
 
         if(is.null(filter_values)) {

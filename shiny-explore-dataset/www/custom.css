@@ -39,3 +39,11 @@
     height: 100% !important;
     margin-bottom: 10px;
 }
+
+.shiny-notification {
+    opacity: 1;
+}
+
+.progress-text .progress-detail {
+    display: block;
+}
