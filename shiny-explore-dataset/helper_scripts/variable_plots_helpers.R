@@ -236,13 +236,15 @@ reactive__var_plots__filtered_data__creator <- function(input, dataset, reactive
                 # list with selections for each dynamic filter, and list names are the column names; includes
                 # filter values for ALL controls, whether hidden or shown, so need to subset by the filters
                 # that are actually selected
+                progress_bar_callback <- function(index, num_columns, column_name) {
+
+                    incProgress(index / num_columns, detail = paste("column:", column_name))
+                }
+
                 all_filter_values <- get_dynamic_filter_values(input, column_names)
                 filter_results <- filter_data(dataset=local_dataset,
                                               filter_list=all_filter_values[filter_controls_selections],
-                                              callback=function(index, num_columns, column_name) {
-                                                 incProgress(index / num_columns,
-                                                             detail = paste("column:", column_name))
-                                              })
+                                              callback=progress_bar_callback)
                 local_dataset <- filter_results[[1]]
 
                 log_message(format_filtering_message(filter_results[[2]]))
