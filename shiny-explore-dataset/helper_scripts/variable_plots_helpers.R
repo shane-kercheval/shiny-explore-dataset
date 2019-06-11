@@ -279,7 +279,7 @@ reactive__var_plots__ggplot__creator <- function(input, session, dataset) {
         local_sum_by_variable <- input$var_plots__sum_by_variable
         local_point_size <- input$var_plots__point_size
         local_color_variable <- input$var_plots__color_variable
-        local_numeric_numeric_group_variable <- input$var_plots__numeric_numeric_group_variable
+        local_numeric_numeric_group_comp_variable <- input$var_plots__numeric_numeric_group_comp_variable
         local_numeric_numeric_aggregation_function <- input$var_plots__numeric_numeric_aggregation_function
         local_numeric_numeric_aggregation_count_minimum <- input$var_plots__numeric_numeric_aggregation_count_minimum
         local_numeric_numeric_show_resampled_confidence_interval <- input$var_plots__numeric_numeric_show_resampled_confidence_interval
@@ -454,7 +454,7 @@ reactive__var_plots__ggplot__creator <- function(input, session, dataset) {
                         is.numeric(local_dataset[, local_comparison_variable])) {
 
                     hide_show_numeric_numeric(session, 
-                        local_numeric_numeric_group_variable,
+                        local_numeric_numeric_group_comp_variable,
                         local_numeric_numeric_aggregation_function == "Boxplot")
 
                     log_message('**numeric numeric**')
@@ -481,13 +481,13 @@ reactive__var_plots__ggplot__creator <- function(input, session, dataset) {
                     log_message_variable('var_plots__map_borders_database', local_map_borders_database)
                     log_message_variable('var_plots__map_borders_regions', local_map_borders_regions)
 
-                    log_message_variable('var_plots__numeric_numeric_group_variable', local_numeric_numeric_group_variable)
+                    log_message_variable('var_plots__numeric_numeric_group_comp_variable', local_numeric_numeric_group_comp_variable)
                     log_message_variable('var_plots__numeric_numeric_aggregation_function', local_numeric_numeric_aggregation_function)
                     log_message_variable('var_plots__numeric_numeric_aggregation_count_minimum', local_numeric_numeric_aggregation_count_minimum)
                     log_message_variable('var_plots__numeric_numeric_show_resampled_confidence_interval', local_numeric_numeric_show_resampled_confidence_interval)
 
 
-                    if(local_numeric_numeric_group_variable) {
+                    if(local_numeric_numeric_group_comp_variable) {
 
 
                         aggregation_function <- NULL
@@ -769,7 +769,8 @@ renderUI__var_plots__sum_by_variable__UI <- function(dataset) {
                     multiple = FALSE,
                     selectize = TRUE,
                     width = 500,
-                    size = NULL)
+                    size = NULL) %>%
+            add_tooltip("Sums the selected variable associated with each instance.")
     })
 }
 
@@ -896,7 +897,7 @@ hide_show_date <- function(session, has_comparison_variable) {
     }
 
     shinyjs::hide('var_plots__point_size__UI')
-    shinyjs::hide('var_plots__numeric_numeric_group_variable')
+    shinyjs::hide('var_plots__numeric_numeric_group_comp_variable')
     shinyjs::hide('var_plots__numeric_numeric_aggregation_function')
     shinyjs::hide('var_plots__numeric_numeric_aggregation_count_minimum')
     shinyjs::hide('var_plots__numeric_numeric_show_resampled_confidence_interval')
@@ -921,7 +922,7 @@ hide_show_numeric_numeric <- function(session, is_grouping_main_variable, groupi
     # scatterplot; or if grouping the main variable, then boxplot or custom aggregation_function
 
     shinyjs::hide('var_plots__date_aggregation')
-    shinyjs::show('var_plots__numeric_numeric_group_variable')
+    shinyjs::show('var_plots__numeric_numeric_group_comp_variable')
 
     if(is_grouping_main_variable) {
 
@@ -1012,7 +1013,7 @@ hide_show_numeric_categoric <- function(session, showing_boxplot) {
 
     shinyjs::hide('var_plots__date_aggregation')
     shinyjs::hide('var_plots__point_size__UI')
-    shinyjs::hide('var_plots__numeric_numeric_group_variable')
+    shinyjs::hide('var_plots__numeric_numeric_group_comp_variable')
     shinyjs::hide('var_plots__numeric_numeric_aggregation_function')
     shinyjs::hide('var_plots__numeric_numeric_aggregation_count_minimum')
     shinyjs::hide('var_plots__numeric_numeric_show_resampled_confidence_interval')
@@ -1043,7 +1044,7 @@ hide_show_categoric_numeric <- function(session) {
     
     # multi-boxplot
     shinyjs::hide('var_plots__point_size__UI')
-    shinyjs::hide('var_plots__numeric_numeric_group_variable')
+    shinyjs::hide('var_plots__numeric_numeric_group_comp_variable')
     shinyjs::hide('var_plots__numeric_numeric_aggregation_function')
     shinyjs::hide('var_plots__numeric_numeric_aggregation_count_minimum')
     shinyjs::hide('var_plots__numeric_numeric_show_resampled_confidence_interval')
@@ -1092,7 +1093,7 @@ hide_show_categoric_categoric <- function(session, input, has_comparison_variabl
     }
 
     shinyjs::hide('var_plots__point_size__UI')
-    shinyjs::hide('var_plots__numeric_numeric_group_variable')
+    shinyjs::hide('var_plots__numeric_numeric_group_comp_variable')
     shinyjs::hide('var_plots__numeric_numeric_aggregation_function')
     shinyjs::hide('var_plots__numeric_numeric_aggregation_count_minimum')
     shinyjs::hide('var_plots__numeric_numeric_show_resampled_confidence_interval')
@@ -1146,7 +1147,7 @@ observe__var_plots__hide_show_uncollapse_on_primary_vars <- function(input, sess
             shinyjs::hide('var_plots__sum_by_variable__UI')
             shinyjs::hide('var_plots__multi_value_delimiter')
             shinyjs::hide('var_plots__point_size__UI')
-            shinyjs::hide('var_plots__numeric_numeric_group_variable')
+            shinyjs::hide('var_plots__numeric_numeric_group_comp_variable')
             shinyjs::hide('var_plots__numeric_numeric_aggregation_function')
             shinyjs::hide('var_plots__numeric_numeric_aggregation_count_minimum')
             shinyjs::hide('var_plots__numeric_numeric_show_resampled_confidence_interval')
