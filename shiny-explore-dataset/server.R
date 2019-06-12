@@ -1,4 +1,4 @@
-#devtools::install_github('shane-kercheval/rtools')
+#devtools::install_github('shane-kercheval/rtools', force=TRUE)
 
 library(shiny)
 library(shinyWidgets)
