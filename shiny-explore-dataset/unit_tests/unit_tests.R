@@ -277,7 +277,6 @@ test_that("filter", {
     expect_true(str_detect(filter_results[[2]][[2]], "Removing 0 rows"))
 })
 
-
 test_that("generic_helpers::filter_data - flights/date", {
     context("generic_helpers::filter_data - flights/date")
     
