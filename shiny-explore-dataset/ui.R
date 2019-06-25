@@ -16,8 +16,7 @@ shinyUI(fluidPage(theme="custom.css",
 
     useShinyjs(),
 
-    titlePanel('Explore Dataset'),
-    navlistPanel(
+    navbarPage(title = 'Explore Dataset',
         tabPanel(
             'Load Dataset',
             tabsetPanel(type='tabs',
@@ -454,7 +453,6 @@ shinyUI(fluidPage(theme="custom.css",
                     )
                 )   
             )
-        ),
-        widths=c(2,10)
+        )
     )
 ))
