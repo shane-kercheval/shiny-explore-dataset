@@ -210,20 +210,21 @@ shinyUI(fluidPage(theme="custom.css",
                                     choices=c('Boxplot', 'Histogram'),
                                     selected='Boxplot')
                         ),
+                        shinyjs::hidden(tags$div(id='div_var_plots__multi_barchar_controls',
+                            uiOutput('var_plots__categoric_view_type__UI')
+                            # checkboxInput(inputId='var_plots__stacked_comparison',
+                            #               label='Stack Comparison Variable', value=TRUE, width=NULL)
+                        )),
                         shinyjs::hidden(tags$div(id='div_var_plots__group_barchar_controls',
                             checkboxInput(inputId='var_plots__order_by_count',
-                                          label='Order By Totals', value=TRUE, width=NULL),
+                                          label='Order By Totals', value=FALSE, width=NULL),
                             bsTooltip(id='div_var_plots__group_barchar_controls',
                                       title="Orders by total number of records. Otherwise, orders by character or factor-level ordering.",
                                       placement='top', trigger='hover'),
                             checkboxInput(inputId='var_plots__show_variable_totals',
-                                          label='Show Variable Totals', value=TRUE, width=NULL),
+                                          label='Show Variable Values', value=TRUE, width=NULL),
                             checkboxInput(inputId='var_plots__show_comparison_totals',
-                                          label='Show Comparison Totals', value=TRUE, width=NULL)
-                        )),
-                        shinyjs::hidden(tags$div(id='div_var_plots__multi_barchar_controls',
-                            checkboxInput(inputId='var_plots__stacked_comparison',
-                                          label='Stack Comparison Variable', value=TRUE, width=NULL)
+                                          label='Show Comparison Values', value=TRUE, width=NULL)
                         )),
                         shinyjs::hidden(
                              numericInput(inputId='var_plots__histogram_bins',

@@ -296,7 +296,7 @@ reactive__var_plots__ggplot__creator <- function(input, session, dataset) {
         local_scale_y_log_base_10 <- input$var_plots__scale_y_log_base_10
         local_show_variable_totals <- input$var_plots__show_variable_totals
         local_show_comparison_totals <- input$var_plots__show_comparison_totals
-        local_stacked_comparison <- input$var_plots__stacked_comparison
+        local_categoric_view_type <- input$var_plots__categoric_view_type
         local_multi_value_delimiter <- input$var_plots__multi_value_delimiter
         local_trend_line <- input$var_plots__trend_line
         local_trend_line_se <- input$var_plots__trend_line_se
@@ -663,7 +663,7 @@ reactive__var_plots__ggplot__creator <- function(input, session, dataset) {
                 # NULL Or Categoric Secondary Variable
                 ##########################################################################################
                 } else {
-                    
+
                     if(local_multi_value_delimiter == '' || !is.null(local_comparison_variable)) {
 
                         local_multi_value_delimiter <- NULL
@@ -673,12 +673,15 @@ reactive__var_plots__ggplot__creator <- function(input, session, dataset) {
                                                   input,
                                                   has_comparison_variable=!is.null(local_comparison_variable))
 
+                    req(input$var_plots__categoric_view_type)
+
                     log_message('**categoric null/categoric**')
 
                     log_message_variable('var_plots__order_by_count', local_order_by_count)
                     log_message_variable('var_plots__show_variable_totals', local_show_variable_totals)
                     log_message_variable('var_plots__show_comparison_totals', local_show_comparison_totals)
                     log_message_variable('var_plots__multi_value_delimiter', local_multi_value_delimiter)
+                    log_message_variable('var_plots__categoric_view_type', local_categoric_view_type)
 
                     ggplot_object <- local_dataset %>% select(c(local_primary_variable, local_comparison_variable, local_sum_by_variable)) %>%
                         custom_mutate(factor_lump_number=local_var_plots__filter_factor_lump_number) %>%
@@ -688,8 +691,9 @@ reactive__var_plots__ggplot__creator <- function(input, session, dataset) {
                                                      order_by_count=local_order_by_count,
                                                      show_variable_totals=local_show_variable_totals,
                                                      show_comparison_totals=local_show_comparison_totals,
-                                                     stacked_comparison=local_stacked_comparison,
+                                                     view_type=local_categoric_view_type,
                                                      multi_value_delimiter=local_multi_value_delimiter,
+                                                     show_dual_axes=FALSE,
                                                      base_size=local_base_size)
                 }
             }
@@ -815,6 +819,59 @@ renderUI__var_plots__size_variable__UI <- function(dataset) {
                     label = 'Size Variable',
                     choices = c(select_variable_optional, colnames(dataset())),
                     selected = select_variable_optional,
+                    multiple = FALSE,
+                    selectize = TRUE,
+                    width = 500,
+                    size = NULL)
+    })
+}
+
+renderUI__var_plots__categoric_view_type__UI <- function(input) {
+
+    renderUI({
+        
+        # used for Categoric Primary and optionally Categoric Secondary variables
+        log_message_block_start("Creating Categoric View Type")
+
+        log_message_variable('input$var_plots__categoric_view_type', input$var_plots__categoric_view_type)
+        log_message_variable('input$var_plots__comparison', input$var_plots__comparison)
+        log_message_variable('input$var_plots__sum_by_variable', input$var_plots__sum_by_variable)
+
+        previous_selection <- input$var_plots__categoric_view_type
+        local_comparison_variable <- null_if_select_variable_optional(input$var_plots__comparison)
+        local_sum_by_variable <- null_if_select_variable_optional(input$var_plots__sum_by_variable)                    
+
+        view_type_options <- NULL
+        if(is.null(local_comparison_variable) && is.null(local_sum_by_variable)) {
+
+            view_type_options <- c("Bar", "Confidence Interval")
+
+        } else if(is.null(local_comparison_variable) && !is.null(local_sum_by_variable)) {
+
+            view_type_options <- c("Bar")
+
+        } else if(!is.null(local_comparison_variable) && is.null(local_sum_by_variable)) {
+
+            view_type_options <- c("Bar", "Confidence Interval", "Facet by Comparison", "Confidence Interval - within Variable", "Stack")
+
+        } else { # both are not null
+            
+            view_type_options <- c("Bar", "Facet by Comparison", "Stack")
+        }
+
+        if(!is.null(previous_selection) && previous_selection %in% view_type_options) {
+            
+            selected_option <- previous_selection
+
+        } else {
+
+            selected_option <- "Bar"
+        }
+
+        selectInput(inputId='var_plots__categoric_view_type',
+                    label = 'View Type',
+                    choices = view_type_options,
+                    selected = selected_option,
                     multiple = FALSE,
                     selectize = TRUE,
                     width = 500,
@@ -1096,16 +1153,8 @@ hide_show_categoric_categoric <- function(session, input, has_comparison_variabl
     shinyjs::hide('var_plots__numeric_numeric_show_resampled_confidence_interval')
     shinyjs::hide('var_plots__color_variable__UI')
 
+    shinyjs::show('div_var_plots__multi_barchar_controls')
     shinyjs::show('div_var_plots__group_barchar_controls')
-    if(has_comparison_variable) {
-
-        shinyjs::show('div_var_plots__multi_barchar_controls')
-
-    } else {
-
-        shinyjs::hide('div_var_plots__multi_barchar_controls')
-    }
-
     shinyjs::show('var_plots__base_size')
 
     shinyjs::hide('var_plots__date_aggregation')

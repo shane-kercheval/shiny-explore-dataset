@@ -120,6 +120,7 @@ shinyServer(function(input, output, session) {
     output$var_plots__sum_by_variable__UI <- renderUI__var_plots__sum_by_variable__UI(reactive__source_data)
     output$var_plots__color_variable__UI <- renderUI__var_plots__color_variable__UI(input, reactive__source_data)
     output$var_plots__size_variable__UI <- renderUI__var_plots__size_variable__UI(reactive__source_data)
+    output$var_plots__categoric_view_type__UI <- renderUI__var_plots__categoric_view_type__UI(input)
     observe__var_plots__hide_show_uncollapse_on_primary_vars(input, session)
 
     ##########################################################################################################
