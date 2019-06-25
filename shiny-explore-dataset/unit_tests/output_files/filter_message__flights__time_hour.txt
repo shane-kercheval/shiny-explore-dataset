@@ -1,0 +1,1 @@
+time_hour: 2013-03-05 <= x <= 2013-11-30 (Removing 83203 rows; Removing 500 rows with missing values)

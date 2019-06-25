@@ -325,24 +325,55 @@ test_that("generic_helpers::filter_data - flights/date", {
     expect_true(str_detect(filter_results[[2]][[1]], paste(as.character(num_na), "rows with missing values")))
     expect_true(str_detect(filter_results[[2]][[1]], paste(as.character(num_filtered_out), "rows")))
     writeLines(paste0(filter_results[[2]], collapse = "\n\n"), "output_files/filter_message__flights__date.txt")
+
+    ##########################################################################################################
+    filter_selections <- c('time_hour')
+    filter_results <- filter_data(dataset=dataset,
+                                  filter_list=global_filter_list[filter_selections],
+                                  callback=NULL)
+    expected_filtered <- dataset %>%
+        mutate(temp_time_hour = floor_date(time_hour, unit='days')) %>%
+        filter(!is.na(temp_time_hour),
+               temp_time_hour >= global_filter_list[[filter_selections]][1],
+               temp_time_hour <= global_filter_list[[filter_selections]][2]) %>%
+        select(-temp_time_hour)
+    # filter seems to remove row_names, but it is kept in the filter_data function
+    rownames(expected_filtered) <- rownames(filter_results[[1]])
+    expect_true(rt_are_dataframes_equal(expected_filtered, filter_results[[1]]))
+    expect_false(any(filter_results[[1]]$time_hour < global_filter_list[[filter_selections]][1]))
+    expect_true(floor_date(max(filter_results[[1]]$time_hour, na.rm = TRUE), unit='days') == global_filter_list[[2]][2])
     
+    num_na <- sum(is.na(dataset$time_hour))
+    time_hour_floor <- floor_date(dataset$time_hour, unit='day')
+    num_filtered_out <- sum(time_hour_floor < global_filter_list[[2]][1] | time_hour_floor > global_filter_list[[2]][2], na.rm = TRUE)
+    expect_equal(length(filter_results[[2]]), length(filter_selections))
+    expect_true(str_detect(filter_results[[2]][[1]], "time_hour:"))
+    expect_true(str_detect(filter_results[[2]][[1]], as.character(global_filter_list[[2]][1])))
+    expect_true(str_detect(filter_results[[2]][[1]], as.character(global_filter_list[[2]][1])))
+    expect_true(str_detect(filter_results[[2]][[1]], paste(as.character(num_na), "rows with missing values")))
+    expect_true(str_detect(filter_results[[2]][[1]], paste(as.character(num_filtered_out), "rows")))
+    writeLines(paste0(filter_results[[2]], collapse = "\n\n"), "output_files/filter_message__flights__time_hour.txt")
     ##########################################################################################################
     filter_selections <- c('date', 'time_hour')
     filter_results <- filter_data(dataset=dataset,
                                   filter_list=global_filter_list[filter_selections],
                                   callback=NULL)
-    expected_filtered <- dataset %>% filter(!is.na(date),
-                                            date >= global_filter_list[[1]][1],
-                                            date <= global_filter_list[[1]][2],
-                                            !is.na(time_hour),
-                                            time_hour >= global_filter_list[[2]][1],
-                                            time_hour <= global_filter_list[[2]][2])
+    
+    expected_filtered <- dataset %>%
+    #    mutate(time_hour = floor_date(time_hour, unit='days')) %>%
+        filter(!is.na(date),
+               date >= global_filter_list[[1]][1],
+               date <= global_filter_list[[1]][2],
+               !is.na(time_hour),
+               time_hour >= global_filter_list[[2]][1]
+               #time_hour <= global_filter_list[[2]][2]  # don't need this since it is already filtered by date
+               )
+    rownames(expected_filtered) <- rownames(filter_results[[1]])
     expect_true(rt_are_dataframes_equal(expected_filtered, filter_results[[1]]))
     expect_false(any(filter_results[[1]]$date < global_filter_list[[1]][1]))
     expect_false(any(filter_results[[1]]$date > global_filter_list[[1]][2]))
     expect_false(any(filter_results[[1]]$time_hour < global_filter_list[[2]][1]))
     expect_false(any(filter_results[[1]]$time_hour > global_filter_list[[2]][2]))
-    #expect_true(any(floor_date(filter_results[[1]]$time_hour, unit = 'days') == global_filter_list[[2]][2]))
 
     num_na <- sum(is.na(dataset$date))
     num_filtered_out <- sum(dataset$date < global_filter_list[[1]][1] | dataset$date > global_filter_list[[1]][2], na.rm = TRUE)
@@ -358,7 +389,8 @@ test_that("generic_helpers::filter_data - flights/date", {
                             date >= global_filter_list[[1]][1],
                             date <= global_filter_list[[1]][2])
     num_na <- sum(is.na(t$time_hour))  # the date filter removed all of the NAs from time_hour
-    num_filtered_out <- sum(t$time_hour < global_filter_list[[2]][1] | t$time_hour > global_filter_list[[2]][2], na.rm = TRUE)
+    time_hour_floor <- floor_date(t$time_hour, unit='day')
+    num_filtered_out <- sum(time_hour_floor < global_filter_list[[2]][1] | time_hour_floor > global_filter_list[[2]][2], na.rm = TRUE)
     expect_equal(length(filter_results[[2]]), length(filter_selections))
     expect_true(str_detect(filter_results[[2]][[2]], "time_hour:"))
     expect_true(str_detect(filter_results[[2]][[2]], as.character(global_filter_list[[2]][1])))
@@ -366,6 +398,7 @@ test_that("generic_helpers::filter_data - flights/date", {
     expect_false(str_detect(filter_results[[2]][[2]], paste(as.character(num_na), "rows with missing values")))
     #expect_true(str_detect(filter_results[[2]][[2]], paste(as.character(num_na), "rows with missing values")))
     expect_true(str_detect(filter_results[[2]][[2]], paste(as.character(num_filtered_out), "rows")))
+
     writeLines(paste0(filter_results[[2]], collapse = "\n\n"), "output_files/filter_message__flights__date__time_hour.txt")
     ##########################################################################################################
     filter_selections <- c('hms', 'date', 'time_hour')
@@ -381,6 +414,7 @@ test_that("generic_helpers::filter_data - flights/date", {
                                             !is.na(time_hour),
                                             time_hour >= global_filter_list[[filter_selections[3]]][1],
                                             time_hour <= global_filter_list[[filter_selections[3]]][2])
+    rownames(expected_filtered) <- rownames(filter_results[[1]])
     expect_true(rt_are_dataframes_equal(expected_filtered, filter_results[[1]]))
     expect_false(any(filter_results[[1]]$hms < hm(global_filter_list[[filter_selections[1]]][1])))
     expect_false(any(filter_results[[1]]$hms > hm(global_filter_list[[filter_selections[1]]][2])))
@@ -420,6 +454,9 @@ test_that("generic_helpers::filter_data - flights/date", {
                             date >= global_filter_list[[filter_selections[2]]][1],
                             date <= global_filter_list[[filter_selections[2]]][2])
     num_na <- sum(is.na(t$time_hour))
+    time_hour_floor <- floor_date(t$time_hour, unit='day')
+    num_filtered_out <- sum(time_hour_floor < global_filter_list[[filter_selections[3]]][1] | time_hour_floor > global_filter_list[[filter_selections[3]]][2], na.rm = TRUE)
+    
     num_filtered_out <- sum(t$time_hour < global_filter_list[[filter_selections[3]]][1] | t$time_hour > global_filter_list[[filter_selections[3]]][2], na.rm = TRUE)
     expect_true(str_detect(filter_results[[2]][[3]], "time_hour:"))
     expect_true(str_detect(filter_results[[2]][[3]], as.character(global_filter_list[[filter_selections[3]]][1])))

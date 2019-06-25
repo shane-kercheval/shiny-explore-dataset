@@ -191,9 +191,26 @@ filter_data <- function(dataset, filter_list, callback=NULL) {
 
             symbol_column_name <- sym(column_name)
         
-            if(is_date_type(dataset[, column_name]) ||
-                    is.numeric(dataset[, column_name])) {
+            if(is_date_type(dataset[, column_name])) {
                 #'date'
+                # for numerics/etc. need to remove NA values and then filter
+                num_is_na <- sum(is.na(dataset[, column_name]))
+
+                # need to convert possible date/times to days so that if someone selects 11/01 as an end-date
+                # then it includes all date/times on 11/01 (even e.g 'XXXX-11-01 23:23:23')
+                day_column <- floor_date(dataset[, column_name], unit='days')
+
+                num_removing <- sum(!is.na(day_column) & # already counting is.na() above
+                                    (day_column < filter_values[1] | day_column > filter_values[2]))
+
+                message <- paste0(column_name, ": ", filter_values[1], " <= x <= ", filter_values[2], " (Removing ", num_removing, " rows") %>%
+                    end_message(num_is_na, num_removing)
+
+                valid_indexes <- which(!is.na(day_column) & day_column >= filter_values[1] & day_column <= filter_values[2])
+                dataset <- dataset[valid_indexes, ]
+                
+            } else if(is.numeric(dataset[, column_name])) {
+
                 # for numerics/etc. need to remove NA values and then filter
                 num_is_na <- sum(is.na(dataset[, column_name]))
                 num_removing <- sum(!is.na(dataset[, column_name]) & 
@@ -205,7 +222,7 @@ filter_data <- function(dataset, filter_list, callback=NULL) {
                 dataset <- dataset %>%
                     filter(!is.na(!!symbol_column_name)) %>%
                     filter(!!symbol_column_name >= filter_values[1] & !!symbol_column_name <= filter_values[2])
-                
+
             } else if(is.factor(dataset[, column_name]) ||
                         is.character(dataset[, column_name])) {
                 
