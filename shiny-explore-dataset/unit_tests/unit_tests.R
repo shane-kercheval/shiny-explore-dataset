@@ -310,6 +310,8 @@ test_that("generic_helpers::filter_data - flights/date", {
     expected_filtered <- dataset %>% filter(!is.na(date),
                                             date >= global_filter_list[[1]][1],
                                             date <= global_filter_list[[1]][2])
+    # filter seems to remove row_names, but it is kept in the filter_data function
+    rownames(expected_filtered) <- rownames(filter_results[[1]])
     expect_true(rt_are_dataframes_equal(expected_filtered, filter_results[[1]]))
     expect_false(any(filter_results[[1]]$date < global_filter_list[[1]][1]))
     expect_false(any(filter_results[[1]]$date > global_filter_list[[1]][2]))
@@ -322,6 +324,7 @@ test_that("generic_helpers::filter_data - flights/date", {
     expect_true(str_detect(filter_results[[2]][[1]], as.character(global_filter_list[[1]][1])))
     expect_true(str_detect(filter_results[[2]][[1]], paste(as.character(num_na), "rows with missing values")))
     expect_true(str_detect(filter_results[[2]][[1]], paste(as.character(num_filtered_out), "rows")))
+    writeLines(paste0(filter_results[[2]], collapse = "\n\n"), "output_files/filter_message__flights__date.txt")
     
     ##########################################################################################################
     filter_selections <- c('date', 'time_hour')
@@ -339,6 +342,7 @@ test_that("generic_helpers::filter_data - flights/date", {
     expect_false(any(filter_results[[1]]$date > global_filter_list[[1]][2]))
     expect_false(any(filter_results[[1]]$time_hour < global_filter_list[[2]][1]))
     expect_false(any(filter_results[[1]]$time_hour > global_filter_list[[2]][2]))
+    #expect_true(any(floor_date(filter_results[[1]]$time_hour, unit = 'days') == global_filter_list[[2]][2]))
 
     num_na <- sum(is.na(dataset$date))
     num_filtered_out <- sum(dataset$date < global_filter_list[[1]][1] | dataset$date > global_filter_list[[1]][2], na.rm = TRUE)
@@ -362,7 +366,7 @@ test_that("generic_helpers::filter_data - flights/date", {
     expect_false(str_detect(filter_results[[2]][[2]], paste(as.character(num_na), "rows with missing values")))
     #expect_true(str_detect(filter_results[[2]][[2]], paste(as.character(num_na), "rows with missing values")))
     expect_true(str_detect(filter_results[[2]][[2]], paste(as.character(num_filtered_out), "rows")))
-
+    writeLines(paste0(filter_results[[2]], collapse = "\n\n"), "output_files/filter_message__flights__date__time_hour.txt")
     ##########################################################################################################
     filter_selections <- c('hms', 'date', 'time_hour')
     filter_results <- filter_data(dataset=dataset,
@@ -423,7 +427,7 @@ test_that("generic_helpers::filter_data - flights/date", {
     expect_false(str_detect(filter_results[[2]][[3]], paste(as.character(num_na), "rows with missing values")))
     #expect_true(str_detect(filter_results[[2]][[3]], paste(as.character(num_na), "rows with missing values")))
     expect_true(str_detect(filter_results[[2]][[3]], paste(as.character(num_filtered_out), "rows")))
-
+    writeLines(paste0(filter_results[[2]], collapse = "\n\n"), "output_files/filter_message__flights__hms__date__time_hour.txt")
     
     ##########################################################################################################
     filter_selections <- c('hms')
@@ -446,6 +450,7 @@ test_that("generic_helpers::filter_data - flights/date", {
     expect_true(str_detect(filter_results[[2]][[1]], as.character(global_filter_list[[filter_selections[1]]][2])))
     expect_true(str_detect(filter_results[[2]][[1]], paste(as.character(num_na), "rows with missing values")))
     expect_true(str_detect(filter_results[[2]][[1]], paste(as.character(num_filtered_out), "rows")))
+    writeLines(paste0(filter_results[[2]], collapse = "\n\n"), "output_files/filter_message__flights__hms.txt")
     ##########################################################################################################
     filter_selections <- c('date', 'hms')
     filter_results <- filter_data(dataset=dataset,
@@ -485,4 +490,5 @@ test_that("generic_helpers::filter_data - flights/date", {
     expect_false(str_detect(filter_results[[2]][[2]], paste(as.character(num_na), "rows with missing values")))
     #expect_true(str_detect(filter_results[[2]][[2]], paste(as.character(num_na), "rows with missing values")))
     expect_true(str_detect(filter_results[[2]][[2]], paste(as.character(num_filtered_out), "rows")))
+    writeLines(paste0(filter_results[[2]], collapse = "\n\n"), "output_files/filter_message__flights__date__hms.txt")
 })

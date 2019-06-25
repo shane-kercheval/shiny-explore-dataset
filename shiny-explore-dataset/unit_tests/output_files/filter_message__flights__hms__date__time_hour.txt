@@ -1,0 +1,5 @@
+hms: 09:01 <= x <= 18:59 (Removing 154192 rows; Removing 500 rows with missing values)
+
+date: 2013-02-05 <= x <= 2013-10-31 (Removing 42607 rows; Removing 404 rows with missing values)
+
+time_hour: 2013-03-05 <= x <= 2013-11-30 (Removing 12578 rows)
