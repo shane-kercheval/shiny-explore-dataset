@@ -106,13 +106,17 @@ observeEvent__var_plots__custom_labels_clear <- function(input, session) {
 
     observeEvent(input$var_plots__custom_labels_clear, ({
 
-        updateTextInput(session, 'var_plots___custom_title', value='')
-        updateTextInput(session, 'var_plots___custom_subtitle', value='')
-        updateTextInput(session, 'var_plots___custom_x_axis_label', value='')
-        updateTextInput(session, 'var_plots___custom_y_axis_label', value='')
-        updateTextInput(session, 'var_plots___custom_caption', value='')
-        updateTextInput(session, 'var_plots___custom_tag', value='')
+        log_message_block_start('Clearing Custom Graph Labels')
 
+        updateTextInput(session, 'var_plots__custom_title', value='')
+        updateTextInput(session, 'var_plots__custom_subtitle', value='')
+        updateTextInput(session, 'var_plots__custom_x_axis_label', value='')
+        updateTextInput(session, 'var_plots__custom_y_axis_label', value='')
+        updateTextInput(session, 'var_plots__custom_caption', value='')
+        updateTextInput(session, 'var_plots__custom_tag', value='')
+
+        # even though I call updateTextInput before click, the values haven't been reset yet
+        # click('var_plots__custom_labels_apply')
     }))
 }
 
@@ -283,6 +287,8 @@ reactive__var_plots__ggplot__creator <- function(input, session, dataset) {
         req(input$var_plots__variable)
         req(input$var_plots__comparison)
         req(input$var_plots__filter_factor_lump_number)
+
+        input$var_plots__custom_labels_apply  # trigger update if applying custom labels
 
         # reactive data
         local_dataset <- dataset()
@@ -712,31 +718,37 @@ reactive__var_plots__ggplot__creator <- function(input, session, dataset) {
                 }
             }
 
-            if(!is_null_or_empty_string(input$var_plots___custom_title)) {
-                ggplot_object <- ggplot_object +
-                    labs(title = input$var_plots___custom_title)
-            }
-            if(!is_null_or_empty_string(input$var_plots___custom_subtitle)) {
-                ggplot_object <- ggplot_object +
-                    labs(subtitle = input$var_plots___custom_subtitle)
-            }
-            if(!is_null_or_empty_string(input$var_plots___custom_x_axis_label)) {
-                ggplot_object <- ggplot_object +
-                    labs(x = input$var_plots___custom_x_axis_label)
-            }
-            if(!is_null_or_empty_string(input$var_plots___custom_y_axis_label)) {
-                ggplot_object <- ggplot_object +
-                    labs(y = input$var_plots___custom_y_axis_label)
-            }
-            if(!is_null_or_empty_string(input$var_plots___custom_caption)) {
-                ggplot_object <- ggplot_object +
-                    labs(caption = input$var_plots___custom_caption)
-            }
-            if(!is_null_or_empty_string(input$var_plots___custom_tag)) {
-                ggplot_object <- ggplot_object +
-                    labs(tag = input$var_plots___custom_tag)
-            }
+            local_var_plots__custom_title <- isolate(input$var_plots__custom_title)
+            local_var_plots__custom_subtitle <- isolate(input$var_plots__custom_subtitle)
+            local_var_plots__custom_x_axis_label <- isolate(input$var_plots__custom_x_axis_label)
+            local_var_plots__custom_y_axis_label <- isolate(input$var_plots__custom_y_axis_label)
+            local_var_plots__custom_caption <- isolate(input$var_plots__custom_caption)
+            local_var_plots__custom_tag <- isolate(input$var_plots__custom_tag)
 
+            if(!is_null_or_empty_string(local_var_plots__custom_title)) {
+                ggplot_object <- ggplot_object +
+                    labs(title = local_var_plots__custom_title)
+            }
+            if(!is_null_or_empty_string(local_var_plots__custom_subtitle)) {
+                ggplot_object <- ggplot_object +
+                    labs(subtitle = local_var_plots__custom_subtitle)
+            }
+            if(!is_null_or_empty_string(local_var_plots__custom_x_axis_label)) {
+                ggplot_object <- ggplot_object +
+                    labs(x = local_var_plots__custom_x_axis_label)
+            }
+            if(!is_null_or_empty_string(local_var_plots__custom_y_axis_label)) {
+                ggplot_object <- ggplot_object +
+                    labs(y = local_var_plots__custom_y_axis_label)
+            }
+            if(!is_null_or_empty_string(local_var_plots__custom_caption)) {
+                ggplot_object <- ggplot_object +
+                    labs(caption = local_var_plots__custom_caption)
+            }
+            if(!is_null_or_empty_string(local_var_plots__custom_tag)) {
+                ggplot_object <- ggplot_object +
+                    labs(tag = local_var_plots__custom_tag)
+            }
         }
 
         return (ggplot_object)
