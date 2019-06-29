@@ -439,10 +439,6 @@ shinyUI(fluidPage(theme="custom.css",
                         tags$br(),
                         verbatimTextOutput(outputId='regression__summary_output')
                     ),
-                    tabPanel("VIFs",
-                        hidden(tags$h4(id='regression__vif_header', 'Variance Inflation Factors')),
-                        verbatimTextOutput(outputId='regression__summary_vif')
-                    ),
                     tabPanel("Diagnostic Plots",
                         tags$br(),
                         tabsetPanel(type="tabs",
@@ -471,6 +467,10 @@ shinyUI(fluidPage(theme="custom.css",
                                 plotOutput(outputId='regression__diagnostic_cooks_distance_vs_leverage')
                             )
                         )
+                    ),
+                    tabPanel("VIFs",
+                        hidden(tags$h4(id='regression__vif_header', 'Variance Inflation Factors')),
+                        verbatimTextOutput(outputId='regression__summary_vif')
                     )
                 )   
             )

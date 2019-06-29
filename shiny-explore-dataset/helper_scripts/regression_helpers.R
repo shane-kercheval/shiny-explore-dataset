@@ -68,12 +68,21 @@ renderUI__regression__independent_variables__UI <- function(input, dataset) {
         column_names <- colnames(dataset())
         possible_variables <- column_names[! column_names %in% input$regression__dependent_variable]        
 
-        checkboxGroupInput(inputId='regression__independent_variables',
-                           label='Independent Variables',
-                           choices=possible_variables,
-                           selected=possible_variables,
-                           inline=FALSE,
-                           width=NULL)
+        selectInput(inputId='regression__independent_variables',
+                    label = 'Independent Variables',
+                    choices = possible_variables,
+                    selected = NULL,
+                    multiple = TRUE,
+                    selectize = TRUE,
+                    width = 500,
+                    size = NULL)
+
+        # checkboxGroupInput(inputId='regression__independent_variables',
+        #                    label='Independent Variables',
+        #                    choices=possible_variables,
+        #                    selected=possible_variables,
+        #                    inline=FALSE,
+        #                    width=NULL)
     })
 }
 
@@ -152,15 +161,15 @@ observeEvent__regression__toggle_all_ind_variables <- function(input, dataset, s
             column_names <- colnames(dataset())
             possible_variables <- column_names[! column_names %in% input$regression__dependent_variable]
 
-            updateCheckboxGroupInput(session=session,
-                                     inputId='regression__independent_variables',
-                                     selected=possible_variables)
+            updateSelectInput(session=session,
+                              inputId='regression__independent_variables',
+                              selected=possible_variables)
 
         } else {
 
-            updateCheckboxGroupInput(session=session,
-                                     inputId='regression__independent_variables',
-                                     selected=character(0))
+            updateSelectInput(session=session,
+                              inputId='regression__independent_variables',
+                              selected=character(0))
         }
     })
 }
