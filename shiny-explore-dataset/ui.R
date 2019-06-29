@@ -64,71 +64,7 @@ shinyUI(fluidPage(theme="custom.css",
             )
         ),
         tabPanel(
-            'Numeric Summary',
-            column(2,
-                   class='column-input-control-style',
-                   tags$div(class='input-control-style', uiOutput('numeric_summary__options__UI'))
-            ),
-            column(10, tags$div(class='results-table', dataTableOutput(outputId='numeric_summary__table')))
-        ),
-        tabPanel(
-            'Categoric Summary',
-            tags$div(class='results-table', dataTableOutput(outputId='categoric_summary__table')),
-            tags$br(),
-            h4('Summary of Values'),
-            tags$div(style='width: 800px', verbatimTextOutput(outputId='categoric_summary__text'))
-        ),
-        tabPanel(
-            'Correlations',
-            column(
-                2,
-                class='column-input-control-style',
-                tags$div(
-                    class='input-control-style',
-                    sliderInput(inputId='correlation__max_missing_column_perc',
-                                label='Max Perc of Missing Data', ## percent increase
-                                min=0,
-                                max=100,
-                                step=5,
-                                value=5,
-                                post="%"),
-                    bsTooltip(id='correlation__max_missing_column_perc',
-                          title="Only includes columns that have less than x% missing data.",
-                          placement='top', trigger='hover'),
-                    sliderTextInput(inputId='correlation__corr_threshold',
-                                    label='Min Correlation Threshold', ## percent increase
-                                    choices=seq(0, 1, 0.05),
-                                    selected=0,
-                                    grid=TRUE),
-                    bsTooltip(id='correlation__corr_threshold',
-                          title="Only show pairs of correlations above the selected threshold.",
-                          placement='top', trigger='hover'),
-                    sliderTextInput(inputId='correlation__p_value_threshold',
-                                    label='Max P-Value Treshold',
-                                    choices=seq(0, 1, 0.05),
-                                    selected=1,
-                                    grid=TRUE),
-                    bsTooltip(id='correlation__p_value_threshold',
-                          title="Only show pairs of correlations that have a p-value below the selected threshold.",
-                          placement='top', trigger='hover'),
-                    sliderTextInput(inputId='correlation__base_size',
-                                    label='Text Size',
-                                    choices=seq(6, 20, 1),
-                                    selected=15,
-                                    grid=TRUE),
-                    checkboxInput(inputId='correlation__pretty_text',
-                                  label='Pretty Text', value=FALSE, width=NULL),
-                    bsTooltip(id='correlation__pretty_text',
-                          title="For instance, changes `column_name` to `Column Name`. WARNING: can be slow for large datasets.",
-                          placement='top', trigger='hover')
-                )
-            ),
-            column(10,
-                   plotOutput(outputId='correlation__plot')
-            )
-        ),
-        tabPanel(
-            'Variable Plots',
+            'Graphs',
             column(3,
                 class='column-input-control-style',
 
@@ -202,7 +138,7 @@ shinyUI(fluidPage(theme="custom.css",
                         uiOutput('var_plots__filter_bscollapse__UI')
                     ),
                     bsCollapsePanel(
-                        'Plot Options',
+                        'Graph Options',
                         shinyjs::hidden(
                             selectInput(inputId='var_plots__numeric_graph_type',
                                     label='Type',
@@ -319,10 +255,38 @@ shinyUI(fluidPage(theme="custom.css",
                                       title='"Zoom" into the graph, using this value as the maximum y-axis coordinate',
                                       placement='top', trigger='hover')
                         )),
+                        sliderInput(inputId='var_plots__filter_factor_lump_number',
+                                label='Top N Categories',
+                                min=1,
+                                max=50,
+                                step=1,
+                                value=10),
+                        bsTooltip(id='var_plots__filter_factor_lump_number',
+                                  title="Only show the top N categories. Groups all other categories into `Other` category.",
+                                  placement='top', trigger='hover'),
                         style='default'
                     ),
                     bsCollapsePanel(
                         'Other Options',
+                        div(style="margin-bottom:10px",
+                            actionButton(inputId='var_plots__custom_labels_clear', label='Clear Labels')),
+                        
+                        textInput(inputId='var_plots___custom_title', label="Title", value = NULL),
+                        textInput(inputId='var_plots___custom_subtitle', label="Subtitle", value = NULL),
+                        textInput(inputId='var_plots___custom_x_axis_label', label="X-Axis Label", value = NULL),
+                        textInput(inputId='var_plots___custom_y_axis_label', label="Y-Axis Label", value = NULL),
+                        textInput(inputId='var_plots___custom_caption', label="Caption", value = NULL),
+                        textInput(inputId='var_plots___custom_tag', label="Tag", value = NULL),
+                        bsTooltip(id='var_plots___custom_title',
+                                  title="Adds or replaces a title to the graph.",
+                                  placement='top', trigger='hover'),
+                        bsTooltip(id='var_plots___custom_caption',
+                                  title="Adds or replaces a caption on the graph (appears on the bottom-right of the graph).",
+                                  placement='top', trigger='hover'),
+                        bsTooltip(id='var_plots___custom_tag',
+                                  title="Adds or replaces a tag on the graph (appears on the top-left of the graph).",
+                                  placement='top', trigger='hover'),
+                        
                         sliderTextInput(inputId='var_plots__base_size',
                                         label='Text Size',
                                         choices=seq(6, 20, 1),
@@ -345,18 +309,6 @@ shinyUI(fluidPage(theme="custom.css",
                            checkboxInput(inputId='var_plots__annotate_points',
                                          label='Show Values', value=FALSE, width=NULL)
                         ),
-                        sliderInput(inputId='var_plots__filter_factor_lump_number',
-                                label='Top N Categories',
-                                min=1,
-                                max=50,
-                                step=1,
-                                value=10),
-                        # numericInput(inputId='var_plots__filter_factor_lump_number',
-                        #              label='Top N Categories',
-                        #              value=10),
-                        bsTooltip(id='var_plots__filter_factor_lump_number',
-                                  title="Only show the top N categories. Groups all other categories into `Other` category.",
-                                  placement='top', trigger='hover'),
                         style='default'
                     ),
                     bsCollapsePanel(
@@ -381,6 +333,70 @@ shinyUI(fluidPage(theme="custom.css",
                 plotOutput(outputId='var_plots'),
                 verbatimTextOutput(outputId='var_plots__filtering_messages'),
                 verbatimTextOutput(outputId='var_plots__ggplot_messages')
+            )
+        ),
+        tabPanel(
+            'Numeric Summary',
+            column(2,
+                   class='column-input-control-style',
+                   tags$div(class='input-control-style', uiOutput('numeric_summary__options__UI'))
+            ),
+            column(10, tags$div(class='results-table', dataTableOutput(outputId='numeric_summary__table')))
+        ),
+        tabPanel(
+            'Categoric Summary',
+            tags$div(class='results-table', dataTableOutput(outputId='categoric_summary__table')),
+            tags$br(),
+            h4('Summary of Values'),
+            tags$div(style='width: 800px', verbatimTextOutput(outputId='categoric_summary__text'))
+        ),
+        tabPanel(
+            'Correlations',
+            column(
+                2,
+                class='column-input-control-style',
+                tags$div(
+                    class='input-control-style',
+                    sliderInput(inputId='correlation__max_missing_column_perc',
+                                label='Max Perc of Missing Data', ## percent increase
+                                min=0,
+                                max=100,
+                                step=5,
+                                value=5,
+                                post="%"),
+                    bsTooltip(id='correlation__max_missing_column_perc',
+                          title="Only includes columns that have less than x% missing data.",
+                          placement='top', trigger='hover'),
+                    sliderTextInput(inputId='correlation__corr_threshold',
+                                    label='Min Correlation Threshold', ## percent increase
+                                    choices=seq(0, 1, 0.05),
+                                    selected=0,
+                                    grid=TRUE),
+                    bsTooltip(id='correlation__corr_threshold',
+                          title="Only show pairs of correlations above the selected threshold.",
+                          placement='top', trigger='hover'),
+                    sliderTextInput(inputId='correlation__p_value_threshold',
+                                    label='Max P-Value Treshold',
+                                    choices=seq(0, 1, 0.05),
+                                    selected=1,
+                                    grid=TRUE),
+                    bsTooltip(id='correlation__p_value_threshold',
+                          title="Only show pairs of correlations that have a p-value below the selected threshold.",
+                          placement='top', trigger='hover'),
+                    sliderTextInput(inputId='correlation__base_size',
+                                    label='Text Size',
+                                    choices=seq(6, 20, 1),
+                                    selected=15,
+                                    grid=TRUE),
+                    checkboxInput(inputId='correlation__pretty_text',
+                                  label='Pretty Text', value=FALSE, width=NULL),
+                    bsTooltip(id='correlation__pretty_text',
+                          title="For instance, changes `column_name` to `Column Name`. WARNING: can be slow for large datasets.",
+                          placement='top', trigger='hover')
+                )
+            ),
+            column(10,
+                   plotOutput(outputId='correlation__plot')
             )
         ),
         tabPanel(

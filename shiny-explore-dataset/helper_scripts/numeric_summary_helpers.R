@@ -27,8 +27,8 @@ renderUI__numeric_summary__options__UI <- function(numeric_summary) {
         checkboxGroupInput(inputId='numeric_summary__options',
                            label='Summary Options',
                            choices=option_values,
-                           selected=c('perc_nulls', 'perc_zeros', 'mean', 'coef_of_var', 'skewness', 'min', 
-                                      'percentile_50', 'max'),
+                           selected=c('nulls', 'perc_nulls', 'perc_zeros', 'mean', 'coef_of_var', 'skewness',
+                                      'min', 'percentile_50', 'max'),
                            inline=FALSE,
                            width=NULL)
     })

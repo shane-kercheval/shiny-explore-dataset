@@ -111,6 +111,8 @@ shinyServer(function(input, output, session) {
     observe__var_plots__bscollapse__dynamic_inputs(input, session, reactive__source_data)
     observeEvent__var_plots__filter_use(input, session)
 
+    observeEvent__var_plots__custom_labels_clear(input, session)
+
     # main plot
     output$var_plots <- renderPlot__variable_plot(session,
                                                   reactive__var_plots__ggplot,

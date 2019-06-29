@@ -102,6 +102,20 @@ reactive__filter_controls_list__creator <- function(input, dataset) {
     })
 }
 
+observeEvent__var_plots__custom_labels_clear <- function(input, session) {
+
+    observeEvent(input$var_plots__custom_labels_clear, ({
+
+        updateTextInput(session, 'var_plots___custom_title', value='')
+        updateTextInput(session, 'var_plots___custom_subtitle', value='')
+        updateTextInput(session, 'var_plots___custom_x_axis_label', value='')
+        updateTextInput(session, 'var_plots___custom_y_axis_label', value='')
+        updateTextInput(session, 'var_plots___custom_caption', value='')
+        updateTextInput(session, 'var_plots___custom_tag', value='')
+
+    }))
+}
+
 ##############################################################################################################
 # FILTER BUTTONS
 # Events that control the color of the Filter collapse panel, so that it turns red when the filters haven't
@@ -697,6 +711,32 @@ reactive__var_plots__ggplot__creator <- function(input, session, dataset) {
                                                      base_size=local_base_size)
                 }
             }
+
+            if(!is_null_or_empty_string(input$var_plots___custom_title)) {
+                ggplot_object <- ggplot_object +
+                    labs(title = input$var_plots___custom_title)
+            }
+            if(!is_null_or_empty_string(input$var_plots___custom_subtitle)) {
+                ggplot_object <- ggplot_object +
+                    labs(subtitle = input$var_plots___custom_subtitle)
+            }
+            if(!is_null_or_empty_string(input$var_plots___custom_x_axis_label)) {
+                ggplot_object <- ggplot_object +
+                    labs(x = input$var_plots___custom_x_axis_label)
+            }
+            if(!is_null_or_empty_string(input$var_plots___custom_y_axis_label)) {
+                ggplot_object <- ggplot_object +
+                    labs(y = input$var_plots___custom_y_axis_label)
+            }
+            if(!is_null_or_empty_string(input$var_plots___custom_caption)) {
+                ggplot_object <- ggplot_object +
+                    labs(caption = input$var_plots___custom_caption)
+            }
+            if(!is_null_or_empty_string(input$var_plots___custom_tag)) {
+                ggplot_object <- ggplot_object +
+                    labs(tag = input$var_plots___custom_tag)
+            }
+
         }
 
         return (ggplot_object)
@@ -1202,7 +1242,7 @@ observe__var_plots__hide_show_uncollapse_on_primary_vars <- function(input, sess
 
         if(local_primary_variable != select_variable || local_comparison_variable != select_variable_optional) {
 
-            updateCollapse(session, 'var_plots__bscollapse', open='Plot Options')
+            updateCollapse(session, 'var_plots__bscollapse', open='Graph Options')
         }
     })
 }
