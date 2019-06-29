@@ -277,6 +277,211 @@ test_that("filter", {
     expect_true(str_detect(filter_results[[2]][[2]], "Removing 0 rows"))
 })
 
+test_that("filter: missing_values_options", {
+    context("generic_helpers::filter_data w/ <Missing Values (NA)>")
+    
+    missing_value_string <- '<Missing Values (NA)>'
+    
+    dataset <- data.frame(diamonds)
+    dataset[1:500, 'carat'] <- NA
+    dataset[501:1000, 'cut'] <- NA
+    dataset[1001:1500, 'color'] <- NA
+    
+    # build filter list
+    # build filter selection list (to mimic shiny and also reuse list)
+    global_filter_list <- list(
+        carat = c(0.5, 2),
+        cut = c(missing_value_string, 'Ideal', 'Premium', 'Good'),
+        color = NULL,
+        price = c(326, 18823)
+    )
+    
+    filter_selections <- c()
+    filter_results <- filter_data(dataset=dataset,
+                                  filter_list=global_filter_list[filter_selections],
+                                  callback=NULL)
+    expect_true(rt_are_dataframes_equal(dataset, filter_results[[1]]))
+    expect_equal(length(filter_results[[2]]), 0)
+    
+    filter_selections <- NULL
+    filter_results <- filter_data(dataset=dataset,
+                                  filter_list=global_filter_list[filter_selections],
+                                  callback=NULL)
+    expect_true(rt_are_dataframes_equal(dataset, filter_results[[1]]))
+    expect_equal(length(filter_results[[2]]), 0)
+    
+    ##########################################################################################################
+    filter_selections <- c('carat')
+    filter_results <- filter_data(dataset=dataset,
+                                  filter_list=global_filter_list[filter_selections],
+                                  callback=NULL)
+    expected_filtered <- dataset %>% filter(!is.na(carat),
+                                            carat >= 0.5,
+                                            carat <= 2)
+    expect_true(rt_are_dataframes_equal(expected_filtered, filter_results[[1]]))
+    expect_false(any(filter_results[[1]]$carat < 0.5))
+    expect_false(any(filter_results[[1]]$carat > 2))
+    
+    num_na <- sum(is.na(dataset$carat))
+    num_filtered_out <- sum(dataset$carat < 0.5 | dataset$carat > 2, na.rm = TRUE)
+    expect_equal(length(filter_results[[2]]), length(filter_selections))
+    expect_true(str_detect(filter_results[[2]][[1]], "carat:"))
+    expect_true(str_detect(filter_results[[2]][[1]], "0.5"))
+    expect_true(str_detect(filter_results[[2]][[1]], "2"))
+    expect_true(str_detect(filter_results[[2]][[1]], paste(as.character(num_na), "rows with missing values")))
+    expect_true(str_detect(filter_results[[2]][[1]], paste(as.character(num_filtered_out), "rows")))
+    
+    ##########################################################################################################
+    filter_selections <- c('cut')
+    filter_results <- filter_data(dataset=dataset,
+                                  filter_list=global_filter_list[filter_selections],
+                                  callback=NULL)
+    
+    categories_kept <- global_filter_list$cut %>% rt_remove_val(missing_value_string)
+    
+    expected_filtered <- dataset %>% filter(is.na(cut) | cut %in% categories_kept)
+    expect_true(rt_are_dataframes_equal(expected_filtered, filter_results[[1]]))
+    expect_equal(sum(is.na(filter_results[[1]]$cut)), 500)
+    
+    unique_cut_values <- unique(filter_results[[1]]$cut)
+    expect_true(any(is.na(unique_cut_values)))
+    expect_true(setequal(unique_cut_values %>% rt_remove_val(NA), categories_kept))
+
+    num_filtered_out <- sum(!is.na(dataset$cut) & !(dataset$cut %in% categories_kept))
+    
+    expect_equal(length(filter_results[[2]]), length(filter_selections))
+    expect_true(str_detect(filter_results[[2]][[1]], "cut:"))
+    expect_true(grepl(paste0(global_filter_list$cut, collapse = ', '), filter_results[[2]][[1]], fixed=TRUE))
+    expect_true(str_detect(filter_results[[2]][[1]], paste(as.character(num_filtered_out), "rows")))
+
+    ##########################################################################################################
+    filter_selections <- c('carat', 'cut')
+    filter_results <- filter_data(dataset=dataset,
+                                  filter_list=global_filter_list[filter_selections],
+                                  callback=NULL)
+    expected_filtered <- dataset %>% filter(!is.na(carat),
+                                            carat >= 0.5,
+                                            carat <= 2,
+                                            is.na(cut) | cut %in% c('Ideal', 'Premium', 'Good'))
+    expect_true(rt_are_dataframes_equal(expected_filtered, filter_results[[1]]))
+    expect_false(any(filter_results[[1]]$carat < 0.5))
+    expect_false(any(filter_results[[1]]$carat > 2))
+    expect_true(all(is.na(filter_results[[1]]$cut) | filter_results[[1]]$cut %in% c('Ideal', 'Premium', 'Good')))
+    expect_equal(length(filter_results[[2]]), length(filter_selections))
+    
+    # caret should have the same checks as above since it is the first filter
+    # more than 19443 values will be removed from other filters, but not from the carat filter directly
+    num_na <- sum(is.na(dataset$carat))
+    num_filtered_out <- sum(dataset$carat < 0.5 | dataset$carat > 2, na.rm = TRUE)
+    expect_true(str_detect(filter_results[[2]][[1]], "carat:"))
+    expect_true(str_detect(filter_results[[2]][[1]], "0.5"))
+    expect_true(str_detect(filter_results[[2]][[1]], "2"))
+    expect_true(str_detect(filter_results[[2]][[1]], paste(as.character(num_na), "rows with missing values")))
+    expect_true(str_detect(filter_results[[2]][[1]], paste(as.character(num_filtered_out), "rows")))
+    
+    # dataset at time of cut being filtered
+    t <- dataset %>% filter(!is.na(carat),
+                            carat >= 0.5,
+                            carat <= 2)
+    
+    categories_kept <- global_filter_list$cut %>% rt_remove_val(missing_value_string)
+    unique_cut_values <- unique(filter_results[[1]]$cut)
+    expect_true(any(is.na(unique_cut_values)))
+    expect_true(setequal(unique_cut_values %>% rt_remove_val(NA), categories_kept))
+    
+    num_filtered_out <- sum(!is.na(t $cut) & !(t $cut %in% categories_kept))
+    expect_equal(length(filter_results[[2]]), length(filter_selections))
+    expect_true(str_detect(filter_results[[2]][[2]], "cut:"))
+    expect_true(grepl(paste0(global_filter_list$cut, collapse = ', '), filter_results[[2]][[2]], fixed=TRUE))
+    expect_true(str_detect(filter_results[[2]][[2]], paste(as.character(num_filtered_out), "rows")))
+    carat_cut_factor_results <- filter_results[[2]][[2]]
+    ##########################################################################################################
+    filter_selections <- c('carat', 'cut')
+    filter_results <- filter_data(dataset=dataset %>% mutate(cut = as.character(cut)),  # change to character
+                                  filter_list=global_filter_list[filter_selections],
+                                  callback=NULL)
+    expected_filtered <- dataset %>% filter(!is.na(carat),
+                                            carat >= 0.5,
+                                            carat <= 2,
+                                            is.na(cut) | cut %in% c('Ideal', 'Premium', 'Good'))
+    expect_true(rt_are_dataframes_equal(expected_filtered, filter_results[[1]]))
+    expect_false(any(filter_results[[1]]$carat < 0.5))
+    expect_false(any(filter_results[[1]]$carat > 2))
+    expect_true(all(is.na(filter_results[[1]]$cut) | filter_results[[1]]$cut %in% c('Ideal', 'Premium', 'Good')))
+    expect_equal(length(filter_results[[2]]), length(filter_selections))
+    
+    # caret should have the same checks as above since it is the first filter
+    # more than 19443 values will be removed from other filters, but not from the carat filter directly
+    num_na <- sum(is.na(dataset$carat))
+    num_filtered_out <- sum(dataset$carat < 0.5 | dataset$carat > 2, na.rm = TRUE)
+    expect_true(str_detect(filter_results[[2]][[1]], "carat:"))
+    expect_true(str_detect(filter_results[[2]][[1]], "0.5"))
+    expect_true(str_detect(filter_results[[2]][[1]], "2"))
+    expect_true(str_detect(filter_results[[2]][[1]], paste(as.character(num_na), "rows with missing values")))
+    expect_true(str_detect(filter_results[[2]][[1]], paste(as.character(num_filtered_out), "rows")))
+    
+    # dataset at time of cut being filtered
+    t <- dataset %>% filter(!is.na(carat),
+                            carat >= 0.5,
+                            carat <= 2)
+    
+    categories_kept <- global_filter_list$cut %>% rt_remove_val(missing_value_string)
+    unique_cut_values <- unique(filter_results[[1]]$cut)
+    expect_true(any(is.na(unique_cut_values)))
+    expect_true(setequal(unique_cut_values %>% rt_remove_val(NA), categories_kept))
+    
+    num_filtered_out <- sum(!is.na(t $cut) & !(t $cut %in% categories_kept))
+    expect_equal(length(filter_results[[2]]), length(filter_selections))
+    expect_true(str_detect(filter_results[[2]][[2]], "cut:"))
+    expect_true(grepl(paste0(global_filter_list$cut, collapse = ', '), filter_results[[2]][[2]], fixed=TRUE))
+    expect_true(str_detect(filter_results[[2]][[2]], paste(as.character(num_filtered_out), "rows")))
+    expect_equal(carat_cut_factor_results, filter_results[[2]][[2]])
+    ##########################################################################################################
+    filter_selections <- c('carat', 'cut', 'color')
+    filter_results <- filter_data(dataset=dataset,
+                                  filter_list=global_filter_list[filter_selections],
+                                  callback=NULL)
+    # same as above since color is NULL and therefore even though there are NULLs we are not filtering tem
+    expected_filtered <- dataset %>% filter(!is.na(carat),
+                                            carat >= 0.5,
+                                            carat <= 2,
+                                            is.na(cut) | cut %in% c('Ideal', 'Premium', 'Good'))
+    expect_true(rt_are_dataframes_equal(expected_filtered, filter_results[[1]]))
+    expect_false(any(filter_results[[1]]$carat < 0.5))
+    expect_false(any(filter_results[[1]]$carat > 2))
+    expect_true(all(is.na(filter_results[[1]]$cut) | filter_results[[1]]$cut %in% c('Ideal', 'Premium', 'Good')))
+    expect_equal(length(filter_results[[2]]), length(filter_selections))
+    
+    # caret should have the same checks as above since it is the first filter
+    # more than 19443 values will be removed from other filters, but not from the carat filter directly
+    num_na <- sum(is.na(dataset$carat))
+    num_filtered_out <- sum(dataset$carat < 0.5 | dataset$carat > 2, na.rm = TRUE)
+    expect_true(str_detect(filter_results[[2]][[1]], "carat:"))
+    expect_true(str_detect(filter_results[[2]][[1]], "0.5"))
+    expect_true(str_detect(filter_results[[2]][[1]], "2"))
+    expect_true(str_detect(filter_results[[2]][[1]], paste(as.character(num_na), "rows with missing values")))
+    expect_true(str_detect(filter_results[[2]][[1]], paste(as.character(num_filtered_out), "rows")))
+    
+    # dataset at time of cut being filtered
+    t <- dataset %>% filter(!is.na(carat),
+                            carat >= 0.5,
+                            carat <= 2)
+    
+    categories_kept <- global_filter_list$cut %>% rt_remove_val(missing_value_string)
+    unique_cut_values <- unique(filter_results[[1]]$cut)
+    expect_true(any(is.na(unique_cut_values)))
+    expect_true(setequal(unique_cut_values %>% rt_remove_val(NA), categories_kept))
+    
+    num_filtered_out <- sum(!is.na(t $cut) & !(t $cut %in% categories_kept))
+    expect_equal(length(filter_results[[2]]), length(filter_selections))
+    expect_true(str_detect(filter_results[[2]][[2]], "cut:"))
+    expect_true(grepl(paste0(global_filter_list$cut, collapse = ', '), filter_results[[2]][[2]], fixed=TRUE))
+    expect_true(str_detect(filter_results[[2]][[2]], paste(as.character(num_filtered_out), "rows")))
+    expect_equal(carat_cut_factor_results, filter_results[[2]][[2]])
+    
+    expect_equal(filter_results[[2]][[3]], "color: Not Filtering")
+})
+
 test_that("generic_helpers::filter_data - flights/date", {
     context("generic_helpers::filter_data - flights/date")
     

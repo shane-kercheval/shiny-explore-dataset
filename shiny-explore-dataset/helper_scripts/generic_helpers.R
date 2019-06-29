@@ -226,17 +226,30 @@ filter_data <- function(dataset, filter_list, callback=NULL) {
             } else if(is.factor(dataset[, column_name]) ||
                         is.character(dataset[, column_name])) {
                 
-                num_is_na <- sum(is.na(dataset[, column_name]))
-                num_removing <- sum(!is.na(dataset[, column_name]) & 
-                                    !dataset[, column_name] %in% filter_values)
+                missing_value_string <- "<Missing Values (NA)>"
+        
+                if(missing_value_string %in% filter_values) {
+                    
+                    num_is_na <- 0
+                    num_removing <- sum(!is.na(dataset[, column_name]) &
+                                            !dataset[, column_name] %in% filter_values)
+                    
+                    dataset <- dataset %>%
+                        filter(is.na(!!symbol_column_name) | !!symbol_column_name %in% filter_values)
 
+                } else {
+                
+                    num_is_na <- sum(is.na(dataset[, column_name]))
+                    num_removing <- sum(!is.na(dataset[, column_name]) &
+                                            !dataset[, column_name] %in% filter_values)
+
+                    dataset <- dataset %>%
+                        filter(!!symbol_column_name %in% filter_values)
+                }
+                
                 message <- paste0(column_name, ": ", paste0(filter_values, collapse=", "), " (Removing ", num_removing, " rows") %>%
                     end_message(num_is_na, num_removing)
-
-                #'factor'
-                dataset <- dataset %>%
-                    filter(!!symbol_column_name %in% filter_values)
-            
+                
             } else if(is.logical(dataset[, column_name])) {
 
                 num_is_na <- sum(is.na(dataset[, column_name]))

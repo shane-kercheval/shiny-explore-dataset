@@ -41,28 +41,47 @@ reactive__filter_controls_list__creator <- function(input, dataset) {
                 } else if(is.factor(.x)) {
 
                     if(length(levels(.x)) <= 1000) {
+                        choices <- levels(.x)
 
-                        filter_object <- selectInput(inputId=input_id, label=.y, choices=levels(.x), selected = NULL, multiple = TRUE)
+                        if(any(is.na(.x))) {
+
+                            choices <- c("<Missing Values (NA)>", choices)
+                        }
+
+                        filter_object <- selectInput(inputId=input_id,
+                                                     label=.y,
+                                                     choices=choices,
+                                                     selected = NULL,
+                                                     multiple = TRUE)
+                    }
+                } else if(is.character(.x)) {
+                    
+                    if(length(unique(.x)) <= 1000) {
+
+                        choices <- as.character((as.data.frame(table(as.character(.x))) %>%
+                                                     arrange(desc(Freq)))$Var1)
+
+                        if(any(is.na(.x))) {
+
+                            choices <- c("<Missing Values (NA)>", choices)
+                        }
+
+                        filter_object <- selectInput(inputId=input_id,
+                                    label=.y,
+                                    choices=choices,
+                                    selected = NULL,
+                                    multiple = TRUE)
                     }
                 } else if(is.numeric(.x)) {
 
                     min_value <- min(.x, na.rm = TRUE)
                     max_value <- max(.x, na.rm = TRUE)
-                    filter_object <- sliderInput(inputId=input_id, label=.y, min=min_value, max=max_value, value=c(min_value, max_value))
+                    filter_object <- sliderInput(inputId=input_id,
+                                                 label=.y,
+                                                 min=min_value,
+                                                 max=max_value,
+                                                 value=c(min_value, max_value))
 
-                } else if(is.character(.x)) {
-                    
-                    if(length(unique(.x)) <= 1000) {
-
-                        values_ordered_by_frequency <- as.character((as.data.frame(table(as.character(.x))) %>%
-                                                                         arrange(desc(Freq)))$Var1)
-
-                        filter_object <- selectInput(inputId=input_id,
-                                    label=.y,
-                                    choices=values_ordered_by_frequency,
-                                    selected = NULL,
-                                    multiple = TRUE)
-                    }
                 } else if(is.logical(.x)) {
 
                     filter_object <- selectInput(inputId=input_id,
