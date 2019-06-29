@@ -370,25 +370,35 @@ reactive__var_plots__ggplot__creator <- function(input, session, dataset) {
                 # but that means we have to take the variables they selected and change them to be
                 # "pretty" as well so subsetting by them finds the correct column
 
-                local_dataset <- rt_pretty_dataset(dataset=local_dataset)
+                local_dataset <- rt_pretty_dataset(dataset=local_dataset %>%
+                                                                select(c(default_if_null_or_empty_string(local_primary_variable),
+                                                                         default_if_null_or_empty_string(local_comparison_variable),
+                                                                         default_if_null_or_empty_string(local_sum_by_variable),
+                                                                         default_if_null_or_empty_string(local_size_variable),
+                                                                         default_if_null_or_empty_string(local_color_variable))))
 
                 # R uses the "`My Variable`" syntax for variables with spaces which dplyr's xxx_() relies on
                 local_primary_variable <- rt_pretty_text(local_primary_variable)
-                if(!is.null(local_comparison_variable)) {
+                if(!is_null_or_empty_string(local_comparison_variable)) {
 
                     local_comparison_variable <- rt_pretty_text(local_comparison_variable)
                 }
-                if(!is.null(local_size_variable)) {
+                if(!is_null_or_empty_string(local_sum_by_variable)) {
+
+                    local_sum_by_variable <- rt_pretty_text(local_sum_by_variable)
+                }
+                if(!is_null_or_empty_string(local_size_variable)) {
 
                     local_size_variable <- rt_pretty_text(local_size_variable)
                 }
-                if(!is.null(local_color_variable)) {
+                if(!is_null_or_empty_string(local_color_variable)) {
 
                     local_color_variable <- rt_pretty_text(local_color_variable)
                 }
 
                 log_message_variable('updated primary_variable', local_primary_variable)
                 log_message_variable('updated comparison_variable', local_comparison_variable)
+                log_message_variable('updated sum_by_variable', local_sum_by_variable)
                 log_message_variable('updated var_plots__size_variable', local_size_variable)
                 log_message_variable('updated var_plots__color_variable', local_color_variable)
                 log_message_generic('column names', paste0(colnames(local_dataset), collapse = '; '))
