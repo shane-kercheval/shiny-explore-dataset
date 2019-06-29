@@ -76,13 +76,6 @@ renderUI__regression__independent_variables__UI <- function(input, dataset) {
                     selectize = TRUE,
                     width = 500,
                     size = NULL)
-
-        # checkboxGroupInput(inputId='regression__independent_variables',
-        #                    label='Independent Variables',
-        #                    choices=possible_variables,
-        #                    selected=possible_variables,
-        #                    inline=FALSE,
-        #                    width=NULL)
     })
 }
 
