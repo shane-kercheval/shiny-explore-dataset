@@ -448,6 +448,10 @@ shinyUI(fluidPage(theme="custom.css",
                             tabPanel("Residuals vs Predicted",
                                 plotOutput(outputId='regression__diagnostic_residuals_vs_fitted')
                             ),
+                            tabPanel("Residuals vs Predictors",
+                                uiOutput('regression__residuals_vs_predictors_var__UI'),
+                                plotOutput(outputId='regression__diagnostic_residuals_vs_predictors')
+                            ),
                             tabPanel("Predicted vs Observed",
                                 plotOutput(outputId='regression__diagnostic_actual_vs_observed')
                             ),

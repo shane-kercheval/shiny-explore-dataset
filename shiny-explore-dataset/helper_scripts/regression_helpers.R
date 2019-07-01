@@ -170,6 +170,24 @@ observeEvent__regression__toggle_all_ind_variables <- function(input, dataset, s
 ##############################################################################################################
 # OUTPUT
 ##############################################################################################################
+renderUI__regression__residuals_vs_predictors_var__UI <- function(input, regression_results) {
+
+    renderUI({
+
+        choices <- rt_regression_get_ind_var_options(regression_results()$model,
+                                                     input$regression__dependent_variable,
+                                                     input$regression__independent_variables)
+        selectInput(inputId='regression__residuals_vs_predictors_var',
+                    label=NULL,
+                    choices=choices,
+                    selected=choices[1],
+                    multiple=FALSE,
+                    selectize=TRUE,
+                    width=500,
+                    size=NULL)
+    })
+}
+
 renderPrint__regression__summary_output <- function(regression__results) {
 
     renderPrint({
@@ -241,6 +259,21 @@ render_diagnostic_plot__residuals_vs_fitted <- function(input, session, dataset,
         regression__results,
         graph_function=function() { rt_regression_plot_residual_vs_predicted(regression__results()$model) },
         graph_width_function=function() {0.66 * session$clientData$output_regression__diagnostic_residuals_vs_fitted_width}
+    )
+}
+
+render_diagnostic_plot__residuals_vs_predictors <- function(input, session, dataset, regression__results) {
+
+    render_diagnostic_plot(
+        regression__results,
+        graph_function=function() {
+
+            req(input$regression__residuals_vs_predictors_var)
+            rt_regression_plot_residual_vs_variable(regression__results()$model,
+                                                    input$regression__residuals_vs_predictors_var,
+                                                    dataset())
+        },
+        graph_width_function=function() {0.66 * session$clientData$output_regression__diagnostic_residuals_vs_predictors_width}
     )
 }
 
