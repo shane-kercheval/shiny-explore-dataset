@@ -25,12 +25,12 @@ eventReactive__regression__results__creator <- function(input, dataset) {
             }
 
             # updates to reactive variables will not trigger an update here, only regression__run_button
-            results <- easy_regression(dataset=dataset(),
-                                       dependent_variable=input$regression__dependent_variable,
-                                       independent_variables=input$regression__independent_variables,
-                                       # list of vectors, each element in the list is a pair of interaction terms
-                                       # only supporting two interaction variables at the moment
-                                       interaction_variables=interaction_variables)
+            results <- rt_regression(dataset=dataset(),
+                                     dependent_variable=input$regression__dependent_variable,
+                                     independent_variables=input$regression__independent_variables,
+                                     # list of vectors, each element in the list is a pair of interaction terms
+                                     # only supporting two interaction variables at the moment
+                                     interaction_variables=interaction_variables)
 
             shinyjs::show('regression__formula_header')
             shinyjs::show('regression__summary_header__UI')
@@ -175,7 +175,7 @@ renderPrint__regression__summary_output <- function(regression__results) {
     renderPrint({
 
         req(regression__results())
-        summary(regression__results()$results)
+        summary(regression__results()$model)
     })
 }
 
@@ -202,7 +202,7 @@ renderPrint__regression__summary_vif <- function(regression__results) {
     renderPrint({
 
         req(regression__results())
-        car::vif(regression__results()$results)
+        car::vif(regression__results()$model)
     })
 }
 
@@ -226,9 +226,10 @@ render_diagnostic_plot__actual_vs_predicted <- function(input, session, dataset,
     render_diagnostic_plot(
         regression__results,
         graph_function=function() {
-            xyplot(dataset()[, isolate({input$regression__dependent_variable})] ~ predict(regression__results()$results),
-                   type=c('p', 'g'),
-                   xlab='Predicted', ylab='Actual')
+            rt_regression_plot_actual_vs_predicted(regression__results()$model)
+            # xyplot(dataset()[, isolate({input$regression__dependent_variable})] ~ predict(regression__results()$model),
+            #        type=c('p', 'g'),
+            #        xlab='Predicted', ylab='Actual')
         },
         graph_width_function=function() {0.66 * session$clientData$output_regression__diagnostic_actual_vs_predicted_width}
     )
@@ -238,7 +239,7 @@ render_diagnostic_plot__residuals_vs_fitted <- function(input, session, dataset,
 
     render_diagnostic_plot(
         regression__results,
-        graph_function=function() { plot(regression__results()$results, which=1) },
+        graph_function=function() { rt_regression_plot_residual_vs_predicted(regression__results()$model) },
         graph_width_function=function() {0.66 * session$clientData$output_regression__diagnostic_residuals_vs_fitted_width}
     )
 }
@@ -248,7 +249,7 @@ render_diagnostic_plot__actual_vs_observed <- function(input, session, dataset, 
     render_diagnostic_plot(
         regression__results,
         graph_function=function() {
-            xyplot(predict(regression__results()$results) ~ 1:nrow(dataset()),
+            xyplot(predict(regression__results()$model) ~ 1:nrow(dataset()),
                    type=c('p', 'g'),
                    xlab='Observation Number', ylab='Predicted')
         },
@@ -260,7 +261,7 @@ render_diagnostic_plot__normal_qq <- function(input, session, dataset, regressio
 
     render_diagnostic_plot(
         regression__results,
-        graph_function=function() { plot(regression__results()$results, which=2) },
+        graph_function=function() { plot(regression__results()$model, which=2) },
         graph_width_function=function() {0.66 * session$clientData$output_regression__diagnostic_normal_qq_width}
     )
 }
@@ -269,7 +270,7 @@ render_diagnostic_plot__scale_location <- function(input, session, dataset, regr
 
     render_diagnostic_plot(
         regression__results,
-        graph_function=function() { plot(regression__results()$results, which=3) },
+        graph_function=function() { plot(regression__results()$model, which=3) },
         graph_width_function=function() {0.66 * session$clientData$output_regression__diagnostic_scale_location_width}
     )
 }
@@ -278,7 +279,7 @@ render_diagnostic_plot__cooks_distance <- function(input, session, dataset, regr
 
     render_diagnostic_plot(
         regression__results,
-        graph_function=function() { plot(regression__results()$results, which=4) },
+        graph_function=function() { plot(regression__results()$model, which=4) },
         graph_width_function=function() {0.66 * session$clientData$output_regression__diagnostic_cooks_distance_width}
     )
 }
@@ -287,7 +288,7 @@ render_diagnostic_plot__residuals_vs_leverage <- function(input, session, datase
 
     render_diagnostic_plot(
         regression__results,
-        graph_function=function() { plot(regression__results()$results, which=5) },
+        graph_function=function() { plot(regression__results()$model, which=5) },
         graph_width_function=function() {0.66 * session$clientData$output_regression__diagnostic_residuals_vs_leverage_width}
     )
 }
@@ -296,7 +297,7 @@ render_diagnostic_plot__cooks_distance_vs_leverage <- function(input, session, d
 
     render_diagnostic_plot(
         regression__results,
-        graph_function=function() { plot(regression__results()$results, which=6) },
+        graph_function=function() { plot(regression__results()$model, which=6) },
         graph_width_function=function() {0.66 * session$clientData$output_regression__diagnostic_cooks_distance_vs_leverage_width}
     )
 }

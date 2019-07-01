@@ -405,7 +405,7 @@ shinyUI(fluidPage(theme="custom.css",
             )
         ),
         tabPanel(
-            'Regression',
+            'Regression (Beta)',
             column(3,
                 class='column-input-control-style',
                 bsCollapse(id='regression__collapse_controls', open='Variables', multiple=TRUE,
@@ -439,16 +439,16 @@ shinyUI(fluidPage(theme="custom.css",
                         tags$br(),
                         verbatimTextOutput(outputId='regression__summary_output')
                     ),
-                    tabPanel("Diagnostic Plots",
+                    tabPanel("Plots",
                         tags$br(),
                         tabsetPanel(type="tabs",
                             tabPanel("Actual vs Predicted",
                                 plotOutput(outputId='regression__diagnostic_actual_vs_predicted')
                             ),
-                            tabPanel("Residuals vs Fittted",
+                            tabPanel("Residuals vs Predicted",
                                 plotOutput(outputId='regression__diagnostic_residuals_vs_fitted')
                             ),
-                            tabPanel("Actual vs Observed",
+                            tabPanel("Predicted vs Observed",
                                 plotOutput(outputId='regression__diagnostic_actual_vs_observed')
                             ),
                             tabPanel("Normal Q-Q",
