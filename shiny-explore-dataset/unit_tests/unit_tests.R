@@ -4,6 +4,8 @@ library(rtools)
 library(hms)
 
 source('../helper_scripts/generic_helpers.R', chdir = TRUE)
+Sys.setenv(TZ='UTC')
+
 #source('unit_test_helper.R', chdir = TRUE)
 
 # to run from command line, use:

@@ -1,3 +1,5 @@
+library(hms)
+
 ##########################################################################################################
 # MAIN DATASET
 # initialize with small default dataset or upload from file, by user
@@ -51,6 +53,7 @@ reactive__source_data__creator <- function(session, input, custom_triggers) {
                 } else if(local_preloaded_dataset == 'Diamonds') {
 
                     loaded_dataset <- data.frame(diamonds)
+                    loaded_dataset[1:500, 'cut'] <- NA
 
                 } else if(local_preloaded_dataset == 'Flights') {
 
@@ -59,6 +62,8 @@ reactive__source_data__creator <- function(session, input, custom_triggers) {
                             mutate(date = make_date(year, month, day)) %>%
                             select(-year, -month, -day) %>%
                             select(date, everything()))
+
+                    loaded_dataset$hms <- as.hms(loaded_dataset$time_hour)
 
                 } else if(local_preloaded_dataset == 'Wine Ratings') {
 
