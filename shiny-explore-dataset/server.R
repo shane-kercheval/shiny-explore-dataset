@@ -46,11 +46,11 @@ shinyServer(function(input, output, session) {
 
     observeEvent(input$source_data__add_date_fields, {
         # this should trigger a reload of the dataset (perhaps not the best approach, but TBD on alternatives)
-        # however, it shouldn't trigger a reload if it is set back to the default select_variable_optional
+        # however, it shouldn't trigger a reload if it is set back to the default global__select_variable_optional
         # which will trigger false positive loadings
         if(!is.null(reactive__source_data()) &&
                 !is.null(input$source_data__add_date_fields) &&
-                input$source_data__add_date_fields != select_variable_optional &&
+                input$source_data__add_date_fields != global__select_variable_optional &&
                 input$source_data__add_date_fields %in% colnames(reactive__source_data())) {
 
             custom_triggers$reload_source_data <- runif(1, 1, 1000000)
@@ -134,7 +134,8 @@ shinyServer(function(input, output, session) {
     outputOptions(output, "var_plots__color_variable__UI", suspendWhenHidden = FALSE)
     outputOptions(output, "var_plots__size_variable__UI", suspendWhenHidden = FALSE)
 
-    observe__var_plots__hide_show_uncollapse_on_primary_vars(input, session)
+    observe__var_plots__hide_show_uncollapse_on_primary_vars(session, input)
+    observeEvent__var_plots__variables_buttons_clear_swap(session, input)
 
     ##########################################################################################################
     # Regression Output

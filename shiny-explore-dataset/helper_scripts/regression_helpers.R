@@ -5,7 +5,7 @@ eventReactive__regression__results__creator <- function(input, dataset) {
 
     eventReactive(input$regression__run_button, {
 
-        if(input$regression__dependent_variable == select_variable) {
+        if(input$regression__dependent_variable == global__select_variable) {
 
             return (NULL)
         }
@@ -17,8 +17,8 @@ eventReactive__regression__results__creator <- function(input, dataset) {
 
             interaction_variables <- NULL
 
-            if(!is.null(local_interaction_term1) && local_interaction_term1 != select_variable &&
-               !is.null(local_interaction_term2) && local_interaction_term2 != select_variable) {
+            if(!is.null(local_interaction_term1) && local_interaction_term1 != global__select_variable &&
+               !is.null(local_interaction_term2) && local_interaction_term2 != global__select_variable) {
 
                 interaction_variables <- list(c(local_interaction_term1,
                                                 local_interaction_term2))
@@ -50,8 +50,8 @@ renderUI__regression__dependent_variable__UI <- function(dataset) {
 
         selectInput(inputId='regression__dependent_variable',
                     label='Dependent Variable',
-                    choices=c(select_variable, colnames(dataset())),
-                    selected=select_variable,
+                    choices=c(global__select_variable, colnames(dataset())),
+                    selected=global__select_variable,
                     multiple=FALSE,
                     selectize=TRUE,
                     width=500,
@@ -112,8 +112,8 @@ renderUI__regression__interaction_term1__UI <- function(input, dataset) {
 
         selectInput(inputId='regression__interaction_term1',
                     label='Interaction Variable 1',
-                    choices=c(select_variable, possible_variables),
-                    selected=select_variable,
+                    choices=c(global__select_variable, possible_variables),
+                    selected=global__select_variable,
                     multiple=FALSE,
                     selectize=TRUE,
                     width=500,
@@ -135,8 +135,8 @@ renderUI__regression__interaction_term2__UI <- function(input, dataset) {
 
         selectInput(inputId='regression__interaction_term2',
                     label='Interaction Variable 2',
-                    choices=c(select_variable, possible_variables),
-                    selected=select_variable,
+                    choices=c(global__select_variable, possible_variables),
+                    selected=global__select_variable,
                     multiple=FALSE,
                     selectize=TRUE,
                     width=500,

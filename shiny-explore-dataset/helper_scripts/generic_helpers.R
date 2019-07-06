@@ -24,7 +24,7 @@ is_date_type <- function(x) {
 
 null_if_select_variable_optional <- function(value) {
 
-    if(is.null(value) || value == select_variable_optional) {
+    if(is.null(value) || value == global__select_variable_optional) {
 
         value <- NULL
     }

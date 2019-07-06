@@ -60,6 +60,16 @@ reactive__source_data__creator <- function(session, input, custom_triggers) {
                             select(-year, -month, -day) %>%
                             select(date, everything()))
 
+                } else if(local_preloaded_dataset == 'Wine Ratings') {
+
+                    # originally from 'https://raw.githubusercontent.com/rfordatascience/tidytuesday/master/data/2019/2019-05-28/winemag-data-130k-v2.csv'
+                    loaded_dataset <- readRDS('example_datasets/wine_ratings.RDS') %>%
+                        as.data.frame() %>%
+                        extract(title, 'year', '([20]\\d\\d\\d)', convert=TRUE, remove=FALSE) %>%
+                        mutate(year = ifelse(year < 1900, NA, year)) %>%
+                        select(-X1) %>%
+                        select(country, province, variety, year, points, price, title, winery, everything())
+
                 } else if(local_preloaded_dataset == 'Gapminder') {
 
                     loaded_dataset <- data.frame(gapminder::gapminder)
@@ -84,7 +94,7 @@ reactive__source_data__creator <- function(session, input, custom_triggers) {
 
             if(!is.null(loaded_dataset) &&
                     !is.null(local_add_date_column) &&
-                    local_add_date_column != select_variable_optional &&
+                    local_add_date_column != global__select_variable_optional &&
                     local_add_date_column %in% colnames(loaded_dataset)) {
 
                 log_message('Adding date fields...')
@@ -138,8 +148,8 @@ renderUI__source_data__add_date_fields__UI <- function(dataset) {
 
         selectInput(inputId='source_data__add_date_fields',
                     label = 'Add Date Fields based on Date Variable',
-                    choices = c(select_variable_optional, colnames(dataset())),
-                    selected = select_variable_optional,
+                    choices = c(global__select_variable_optional, colnames(dataset())),
+                    selected = global__select_variable_optional,
                     multiple = FALSE,
                     selectize = TRUE,
                     width = 500,

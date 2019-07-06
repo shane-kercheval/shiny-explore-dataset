@@ -354,7 +354,7 @@ reactive__var_plots__ggplot__creator <- function(input, session, dataset) {
 
         ggplot_object <- NULL
 
-        if(local_primary_variable != select_variable && local_primary_variable %in% colnames(local_dataset)) {
+        if(local_primary_variable != global__select_variable && local_primary_variable %in% colnames(local_dataset)) {
 
             log_message_block_start('Creating ggplot object')
             
@@ -792,8 +792,8 @@ renderUI__var_plots__variable__UI <- function(dataset) {
     renderUI({
         selectInput(inputId='var_plots__variable',
                     label = 'Variable',
-                    choices = c(select_variable, colnames(dataset())),
-                    selected = select_variable,
+                    choices = c(global__select_variable, colnames(dataset())),
+                    selected = global__select_variable,
                     multiple = FALSE,
                     selectize = TRUE,
                     width = 500,
@@ -809,7 +809,7 @@ renderUI__var_plots__comparison__UI <- function(input, dataset) {
 
         req(input$var_plots__variable)
 
-        selected_variable <- default_if_null_or_empty_string(input$var_plots__comparison, select_variable_optional)
+        selected_variable <- default_if_null_or_empty_string(input$var_plots__comparison, global__select_variable_optional)
 
         local_dataset <- dataset()
         local_primary_variable <- input$var_plots__variable
@@ -818,7 +818,7 @@ renderUI__var_plots__comparison__UI <- function(input, dataset) {
 
         variable_options <- NULL
         # only show numeric variables for dates
-        if(local_primary_variable != select_variable &&
+        if(local_primary_variable != global__select_variable &&
                 local_primary_variable %in% dataset_columns &&  # in case datasets change
                 is_date_type(local_dataset[, local_primary_variable])) {
 
@@ -831,7 +831,7 @@ renderUI__var_plots__comparison__UI <- function(input, dataset) {
 
         selectInput(inputId='var_plots__comparison',
                     label = 'Comparison Variable',
-                    choices = c(select_variable_optional, variable_options),
+                    choices = c(global__select_variable_optional, variable_options),
                     selected = selected_variable,
                     multiple = FALSE,
                     selectize = TRUE,
@@ -846,8 +846,8 @@ renderUI__var_plots__sum_by_variable__UI <- function(dataset) {
 
         selectInput(inputId='var_plots__sum_by_variable',
                     label = 'Sum By Variable',
-                    choices = c(select_variable_optional, colnames(dataset() %>% select_if(is.numeric))),
-                    selected = select_variable_optional,
+                    choices = c(global__select_variable_optional, colnames(dataset() %>% select_if(is.numeric))),
+                    selected = global__select_variable_optional,
                     multiple = FALSE,
                     selectize = TRUE,
                     width = 500,
@@ -870,7 +870,7 @@ renderUI__var_plots__color_variable__UI <- function(input, dataset) {
 
         variable_options <- NULL
         # only show numeric variables for dates
-        if(local_primary_variable != select_variable &&
+        if(local_primary_variable != global__select_variable &&
                 local_primary_variable %in% dataset_columns &&  # in case datasets change
                 is_date_type(local_dataset[, local_primary_variable])) {
 
@@ -883,8 +883,8 @@ renderUI__var_plots__color_variable__UI <- function(input, dataset) {
 
         selectInput(inputId='var_plots__color_variable',
                     label = 'Color Variable',
-                    choices = c(select_variable_optional, variable_options),
-                    selected = select_variable_optional,
+                    choices = c(global__select_variable_optional, variable_options),
+                    selected = global__select_variable_optional,
                     multiple = FALSE,
                     selectize = TRUE,
                     width = 500,
@@ -898,8 +898,8 @@ renderUI__var_plots__size_variable__UI <- function(dataset) {
 
         selectInput(inputId='var_plots__size_variable',
                     label = 'Size Variable',
-                    choices = c(select_variable_optional, colnames(dataset())),
-                    selected = select_variable_optional,
+                    choices = c(global__select_variable_optional, colnames(dataset())),
+                    selected = global__select_variable_optional,
                     multiple = FALSE,
                     selectize = TRUE,
                     width = 500,
@@ -1004,6 +1004,52 @@ renderUI__var_plots__filter_bscollapse__UI <- function(input, dataset, filter_co
         #     }
         # }
         #tagList(list=control_list)
+    })
+}
+
+clear_variables <- function(session, input, swap_primary_and_comparison=FALSE) {
+
+    if(swap_primary_and_comparison) {
+
+        current_variable_selected <- input$var_plots__variable
+        current_comparison_selected <- input$var_plots__comparison
+
+        updateSelectInput(session, 'var_plots__variable', selected=current_comparison_selected)
+        updateSelectInput(session, 'var_plots__comparison', selected=current_variable_selected)
+
+    } else {
+
+        updateSelectInput(session, 'var_plots__variable', selected=global__select_variable)
+        updateSelectInput(session, 'var_plots__comparison', selected=global__select_variable_optional)
+    }
+
+    updateSelectInput(session, 'var_plots__sum_by_variable', selected=global__select_variable_optional)
+    updateSelectInput(session, 'var_plots__color_variable', selected=global__select_variable_optional)
+    updateSelectInput(session, 'var_plots__size_variable', selected=global__select_variable_optional)
+
+    updateCheckboxInput(session, 'var_plots__numeric_numeric_group_comp_variable', value=FALSE)
+    updateSelectInput(session,
+                      'var_plots__numeric_numeric_aggregation_function',
+                      selected=global__num_num_aggregation_function_default)
+    updateSelectInput(session,
+                      'var_plots__date_aggregation',
+                      selected=global__var_plots__date_aggregation_default)
+    updateTextInput(session, 'var_plots__multi_value_delimiter', value="")
+
+}
+
+observeEvent__var_plots__variables_buttons_clear_swap <- function(session, input) {
+
+    observeEvent(input$var_plots__variables_buttons_clear, {
+
+        clear_variables(session, input, swap_primary_and_comparison=FALSE)
+
+    })
+
+    observeEvent(input$var_plots__variables_buttons_swap, {
+
+        clear_variables(session, input, swap_primary_and_comparison=TRUE)
+
     })
 }
 
@@ -1218,7 +1264,7 @@ hide_show_categoric_categoric <- function(session, input, has_comparison_variabl
     # grouped barchart
     shinyjs::show('var_plots__sum_by_variable__UI') # categoric with categoric (or NULL) can select numeric sum_by_variable
 
-    if(is.null(input$var_plots__comparison) || input$var_plots__comparison == select_variable_optional) {
+    if(is.null(input$var_plots__comparison) || input$var_plots__comparison == global__select_variable_optional) {
 
         shinyjs::show('var_plots__multi_value_delimiter')
 
@@ -1259,7 +1305,7 @@ hide_show_categoric_categoric <- function(session, input, has_comparison_variabl
 
 }
 
-observe__var_plots__hide_show_uncollapse_on_primary_vars <- function(input, session) {
+observe__var_plots__hide_show_uncollapse_on_primary_vars <- function(session, input) {
     observe({
 
         req(input$var_plots__variable)
@@ -1268,7 +1314,7 @@ observe__var_plots__hide_show_uncollapse_on_primary_vars <- function(input, sess
         local_primary_variable <- input$var_plots__variable
         local_comparison_variable <- input$var_plots__comparison
 
-        if(local_primary_variable == select_variable || local_comparison_variable == select_variable_optional) {
+        if(local_primary_variable == global__select_variable || local_comparison_variable == global__select_variable_optional) {
 
             shinyjs::hide('var_plots__date_aggregation')
             shinyjs::hide('var_plots__sum_by_variable__UI')
@@ -1281,7 +1327,7 @@ observe__var_plots__hide_show_uncollapse_on_primary_vars <- function(input, sess
             shinyjs::hide('var_plots__color_variable__UI')
         }
 
-        if(local_primary_variable != select_variable || local_comparison_variable != select_variable_optional) {
+        if(local_primary_variable != global__select_variable || local_comparison_variable != global__select_variable_optional) {
 
             updateCollapse(session, 'var_plots__bscollapse', open='Graph Options')
         }
