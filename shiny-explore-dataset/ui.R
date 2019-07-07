@@ -259,37 +259,55 @@ shinyUI(fluidPage(theme="custom.css",
                             bsTooltip(id='var_plots__scale_x_log_base_10',
                                       title="Adds a Log transformation to the values associated with the x-axis.",
                                       placement='top', trigger='hover'),
-                            numericInput(inputId='var_plots__x_zoom_min',
-                                         label='X-Axis Min',
-                                         value=NULL),
+                            div(style="display:inline-block",     
+                            
+                                numericInput(inputId='var_plots__x_zoom_min',
+                                             label='X-Axis Min',
+                                             value=NULL,
+                                             width=100)
+                            ),
+                            div(style="display:inline-block; margin-left: 10px",     
+                            
+                                numericInput(inputId='var_plots__x_zoom_max',
+                                             label='X-Axis Max',
+                                             value=NULL,
+                                             width=100)
+                            ),
                             bsTooltip(id='var_plots__x_zoom_min',
                                       title='"Zoom" into the graph, using this value as the minimum x-axis coordinate',
                                       placement='top', trigger='hover'),
-                            numericInput(inputId='var_plots__x_zoom_max',
-                                         label='X-Axis Max',
-                                         value=NULL),
                             bsTooltip(id='var_plots__x_zoom_max',
                                       title='"Zoom" into the graph, using this value as the maximum x-axis coordinate',
                                       placement='top', trigger='hover')
                         )),
                         shinyjs::hidden(tags$div(id='div_var_plots__group_y_zoom_controls',
+
                             checkboxInput(inputId='var_plots__scale_y_log_base_10',
                                           label='Scale Y-Axis Log 10', value=FALSE, width=NULL),
                             bsTooltip(id='var_plots__scale_y_log_base_10',
                                       title="Adds a Log transformation to the values associated with the y-axis.",
                                       placement='top', trigger='hover'),
-                            numericInput(inputId='var_plots__y_zoom_min',
-                                         label='Y-Axis Min',
-                                         value=NULL),
+                            
+                            div(style="display:inline-block",     
+                            
+                                numericInput(inputId='var_plots__y_zoom_min',
+                                             label='Y-Axis Min',
+                                             value=NULL,
+                                             width=100)
+                            ),
+                            div(style="display:inline-block; margin-left: 10px",     
+                            
+                                numericInput(inputId='var_plots__y_zoom_max',
+                                             label='Y-Axis Max',
+                                             value=NULL,
+                                             width=100)
+                            ),
                             bsTooltip(id='var_plots__y_zoom_min',
                                       title='"Zoom" into the graph, using this value as the minimum y-axis coordinate',
-                                      placement='top', trigger='hover'),
-                            numericInput(inputId='var_plots__y_zoom_max',
-                                         label='Y-Axis Max',
-                                         value=NULL),
+                                      placement='bottom', trigger='hover'),
                             bsTooltip(id='var_plots__y_zoom_max',
                                       title='"Zoom" into the graph, using this value as the maximum y-axis coordinate',
-                                      placement='top', trigger='hover')
+                                      placement='bottom', trigger='hover') 
                         )),
                         style='default'
                     ),
