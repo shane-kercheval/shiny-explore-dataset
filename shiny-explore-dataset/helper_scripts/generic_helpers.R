@@ -49,13 +49,26 @@ default_if_null_or_empty_string <- function(value, string_values_as_null=NULL, d
     }
 }
 
-custom_mutate <- function(dataset, factor_lump_number=NULL) {
+mutate_factor_lump <- function(dataset, factor_lump_number=NULL, ignore_columns=NULL) {
 
-    if(!is.na(factor_lump_number)) {
+    if(!is.null(factor_lump_number) && !is.na(factor_lump_number)) {
 
-        dataset <- dataset %>%
+        column_names <- colnames(dataset)
+
+        if(!is.null(ignore_columns)) {
+
+            temp <- dataset %>% select(ignore_columns)
+        }
+
+        dataset <- dataset %>% select(rt_remove_val(column_names, ignore_columns)) %>%
             mutate_if(is.character, as.factor) %>%
             mutate_if(is.factor, ~fct_lump(.x, n=factor_lump_number))
+
+        if(!is.null(ignore_columns)) {
+
+            dataset <- cbind(dataset, temp)
+            dataset <- dataset %>% select(column_names)
+        }
     }
 
     return (dataset)

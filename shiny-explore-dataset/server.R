@@ -122,6 +122,7 @@ shinyServer(function(input, output, session) {
     output$var_plots__sum_by_variable__UI <- renderUI__var_plots__sum_by_variable__UI(reactive__source_data)
     output$var_plots__color_variable__UI <- renderUI__var_plots__color_variable__UI(input, reactive__source_data)
     output$var_plots__size_variable__UI <- renderUI__var_plots__size_variable__UI(reactive__source_data)
+    output$var_plots__label_variables__UI <- renderUI__var_plots__label_variables__UI(reactive__source_data)
     output$var_plots__categoric_view_type__UI <- renderUI__var_plots__categoric_view_type__UI(input)
 
     # the `outputOptions` options code below makes it so that these variables/selectInput update even if they
@@ -133,6 +134,7 @@ shinyServer(function(input, output, session) {
     outputOptions(output, "var_plots__sum_by_variable__UI", suspendWhenHidden = FALSE)
     outputOptions(output, "var_plots__color_variable__UI", suspendWhenHidden = FALSE)
     outputOptions(output, "var_plots__size_variable__UI", suspendWhenHidden = FALSE)
+    outputOptions(output, "var_plots__label_variables__UI", suspendWhenHidden = FALSE)
 
     observe__var_plots__hide_show_uncollapse_on_primary_vars(session, input)
     observeEvent__var_plots__variables_buttons_clear_swap(session, input)

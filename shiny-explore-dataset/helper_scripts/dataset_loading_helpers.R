@@ -71,9 +71,10 @@ reactive__source_data__creator <- function(session, input, custom_triggers) {
                     loaded_dataset <- readRDS('example_datasets/wine_ratings.RDS') %>%
                         as.data.frame() %>%
                         extract(title, 'year', '([20]\\d\\d\\d)', convert=TRUE, remove=FALSE) %>%
-                        mutate(year = ifelse(year < 1900, NA, year)) %>%
+                        mutate(year = ifelse(year < 1900, NA, year),
+                               points_per_price = points / price) %>%
                         select(-X1) %>%
-                        select(country, province, variety, year, points, price, title, winery, everything())
+                        select(country, province, variety, year, points, price, points_per_price, title, winery, everything())
 
                 } else if(local_preloaded_dataset == 'Gapminder') {
 

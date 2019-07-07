@@ -317,6 +317,7 @@ reactive__var_plots__ggplot__creator <- function(input, session, dataset) {
 
         local_sum_by_variable <- input$var_plots__sum_by_variable
         local_size_variable <- input$var_plots__size_variable
+        local_label_variables <- input$var_plots__label_variables
         local_color_variable <- input$var_plots__color_variable
         local_numeric_numeric_group_comp_variable <- input$var_plots__numeric_numeric_group_comp_variable
         local_numeric_numeric_aggregation_function <- input$var_plots__numeric_numeric_aggregation_function
@@ -365,6 +366,7 @@ reactive__var_plots__ggplot__creator <- function(input, session, dataset) {
             # these can't be req because they aren't even shown initially
             local_sum_by_variable <- null_if_select_variable_optional(local_sum_by_variable)
             local_size_variable <- null_if_select_variable_optional(local_size_variable)
+            local_label_variables <- null_if_select_variable_optional(local_label_variables)
             local_color_variable <- null_if_select_variable_optional(local_color_variable)
             local_comparison_variable <- null_if_select_variable_optional(local_comparison_variable)
 
@@ -378,6 +380,7 @@ reactive__var_plots__ggplot__creator <- function(input, session, dataset) {
             log_message_variable('comparison_variable', local_comparison_variable)
             log_message_variable('var_plots__sum_by_variable', local_sum_by_variable)
             log_message_variable('var_plots__size_variable', local_size_variable)
+            log_message_variable('var_plots__label_variables', paste0(local_label_variables, collapse=', '))
             log_message_variable('var_plots__color_variable', local_color_variable)
             log_message_variable('var_plots__base_size', local_base_size)
             log_message_variable('var_plots__pretty_text', local_pretty_text)
@@ -410,6 +413,10 @@ reactive__var_plots__ggplot__creator <- function(input, session, dataset) {
 
                     local_size_variable <- rt_pretty_text(local_size_variable)
                 }
+                # if(!is_null_or_empty_string(local_size_variable)) {
+
+                #     local_label_variables <- rt_pretty_text(local_label_variables)
+                # }
                 if(!is_null_or_empty_string(local_color_variable)) {
 
                     local_color_variable <- rt_pretty_text(local_color_variable)
@@ -419,6 +426,7 @@ reactive__var_plots__ggplot__creator <- function(input, session, dataset) {
                 log_message_variable('updated comparison_variable', local_comparison_variable)
                 log_message_variable('updated sum_by_variable', local_sum_by_variable)
                 log_message_variable('updated var_plots__size_variable', local_size_variable)
+                # log_message_variable('updated var_plots__label_variables', local_label_variables)
                 log_message_variable('updated var_plots__color_variable', local_color_variable)
                 log_message_generic('column names', paste0(colnames(local_dataset), collapse = '; '))
             }
@@ -465,7 +473,7 @@ reactive__var_plots__ggplot__creator <- function(input, session, dataset) {
 
                 add_confidence_interval <- !is.null(local_trend_line_se) && local_trend_line_se == 'Yes'
                 ggplot_object <- local_dataset %>% select(local_primary_variable, local_comparison_variable, local_color_variable) %>%
-                    custom_mutate(factor_lump_number=local_var_plots__filter_factor_lump_number) %>%
+                    mutate_factor_lump(factor_lump_number=local_var_plots__filter_factor_lump_number) %>%
                     rt_explore_plot_time_series(variable=local_primary_variable,
                                                 comparison_variable=local_comparison_variable,
                                                 comparison_function=comparison_function,
@@ -568,7 +576,7 @@ reactive__var_plots__ggplot__creator <- function(input, session, dataset) {
                         }
 
                         ggplot_object <- local_dataset %>%#  select(local_primary_variable, local_comparison_variable) %>%
-                            #custom_mutate(factor_lump_number=local_var_plots__filter_factor_lump_number) %>%
+                            #mutate_factor_lump(factor_lump_number=local_var_plots__filter_factor_lump_number) %>%
                             rt_explore_plot_aggregate_2_numerics(variable=local_primary_variable,
                                                                  comparison_variable=local_comparison_variable,
                                                                  aggregation_function=aggregation_function,
@@ -588,12 +596,18 @@ reactive__var_plots__ggplot__creator <- function(input, session, dataset) {
 
                         add_confidence_interval <- !is.null(local_trend_line_se) && local_trend_line_se == 'Yes'
 
-                        ggplot_object <- local_dataset %>% select(local_primary_variable, local_comparison_variable, local_color_variable, local_size_variable) %>%
-                            custom_mutate(factor_lump_number=local_var_plots__filter_factor_lump_number) %>%
+                        ggplot_object <- local_dataset %>% select(local_primary_variable,
+                                                                  local_comparison_variable,
+                                                                  local_color_variable,
+                                                                  local_size_variable,
+                                                                  local_label_variables) %>%
+                            mutate_factor_lump(factor_lump_number=local_var_plots__filter_factor_lump_number,
+                                               ignore_columns=local_label_variables) %>%
                             rt_explore_plot_scatter(variable=local_primary_variable,
                                                     comparison_variable=local_comparison_variable,
                                                     color_variable=local_color_variable,
                                                     size_variable=local_size_variable,
+                                                    label_variables=local_label_variables,
                                                     # alpha is a measure of opacity which is the opposite of transparency, but transparency is more user-friendly
                                                     alpha= 1 - local_transparency,
                                                     jitter=local_jitter,
@@ -649,7 +663,7 @@ reactive__var_plots__ggplot__creator <- function(input, session, dataset) {
                         log_message_variable('var_plots__scale_y_log_base_10', local_scale_y_log_base_10)
 
                         ggplot_object <- local_dataset %>% select(local_primary_variable, local_comparison_variable) %>%
-                            custom_mutate(factor_lump_number=local_var_plots__filter_factor_lump_number) %>%
+                            mutate_factor_lump(factor_lump_number=local_var_plots__filter_factor_lump_number) %>%
                             rt_explore_plot_boxplot(variable=local_primary_variable,
                                                     comparison_variable=local_comparison_variable,
                                                     y_zoom_min=local_y_zoom_min,
@@ -668,7 +682,7 @@ reactive__var_plots__ggplot__creator <- function(input, session, dataset) {
                         log_message_variable('var_plots__scale_x_log_base_10', local_scale_x_log_base_10)
                         
                         ggplot_object <- local_dataset %>% select(local_primary_variable, local_comparison_variable) %>%
-                            custom_mutate(factor_lump_number=local_var_plots__filter_factor_lump_number) %>%
+                            mutate_factor_lump(factor_lump_number=local_var_plots__filter_factor_lump_number) %>%
                             rt_explore_plot_histogram(variable=local_primary_variable,
                                                       comparison_variable=local_comparison_variable,
                                                       num_bins=local_histogram_bins,
@@ -700,7 +714,7 @@ reactive__var_plots__ggplot__creator <- function(input, session, dataset) {
                     log_message_variable('var_plots__scale_y_log_base_10', local_scale_y_log_base_10)
 
                     ggplot_object <- local_dataset %>% select(local_primary_variable, local_comparison_variable) %>%
-                        custom_mutate(factor_lump_number=local_var_plots__filter_factor_lump_number) %>%
+                        mutate_factor_lump(factor_lump_number=local_var_plots__filter_factor_lump_number) %>%
                         rt_explore_plot_boxplot(variable=local_comparison_variable,
                                                 comparison_variable=local_primary_variable,
                                                 y_zoom_min=local_y_zoom_min,
@@ -733,7 +747,7 @@ reactive__var_plots__ggplot__creator <- function(input, session, dataset) {
                     log_message_variable('var_plots__categoric_view_type', local_categoric_view_type)
 
                     ggplot_object <- local_dataset %>% select(c(local_primary_variable, local_comparison_variable, local_sum_by_variable)) %>%
-                        custom_mutate(factor_lump_number=local_var_plots__filter_factor_lump_number) %>%
+                        mutate_factor_lump(factor_lump_number=local_var_plots__filter_factor_lump_number) %>%
                         rt_explore_plot_value_totals(variable=local_primary_variable,
                                                      comparison_variable=local_comparison_variable,
                                                      sum_by_variable=local_sum_by_variable,
@@ -907,6 +921,21 @@ renderUI__var_plots__size_variable__UI <- function(dataset) {
     })
 }
 
+renderUI__var_plots__label_variables__UI <- function(dataset) {
+
+    renderUI({
+
+        selectInput(inputId='var_plots__label_variables',
+                    label = 'Label Variables',
+                    choices = colnames(dataset()),
+                    selected = NULL,
+                    multiple = TRUE,
+                    selectize = TRUE,
+                    width = 500,
+                    size = NULL)
+    })
+}
+
 renderUI__var_plots__categoric_view_type__UI <- function(input) {
 
     renderUI({
@@ -1026,6 +1055,7 @@ clear_variables <- function(session, input, swap_primary_and_comparison=FALSE) {
     updateSelectInput(session, 'var_plots__sum_by_variable', selected=global__select_variable_optional)
     updateSelectInput(session, 'var_plots__color_variable', selected=global__select_variable_optional)
     updateSelectInput(session, 'var_plots__size_variable', selected=global__select_variable_optional)
+    updateSelectInput(session, 'var_plots__label_variables', selected=global__select_variable_optional)
 
     updateCheckboxInput(session, 'var_plots__numeric_numeric_group_comp_variable', value=FALSE)
     updateSelectInput(session,
@@ -1078,6 +1108,7 @@ hide_show_date <- function(session, has_comparison_variable) {
     }
 
     shinyjs::hide('var_plots__size_variable__UI')
+    shinyjs::hide('var_plots__label_variables__UI')
     shinyjs::hide('var_plots__numeric_numeric_group_comp_variable')
     shinyjs::hide('var_plots__numeric_numeric_aggregation_function')
     shinyjs::hide('var_plots__numeric_numeric_aggregation_count_minimum')
@@ -1124,6 +1155,7 @@ hide_show_numeric_numeric <- function(session, is_grouping_main_variable, groupi
         }
     
         shinyjs::hide('var_plots__size_variable__UI')
+        shinyjs::hide('var_plots__label_variables__UI')
         shinyjs::hide('var_plots__color_variable__UI')
 
         shinyjs::hide('var_plots__map_format')
@@ -1141,6 +1173,7 @@ hide_show_numeric_numeric <- function(session, is_grouping_main_variable, groupi
         shinyjs::hide('var_plots__numeric_numeric_aggregation_count_minimum')
 
         shinyjs::show('var_plots__size_variable__UI')
+        shinyjs::show('var_plots__label_variables__UI')
         shinyjs::show('var_plots__color_variable__UI')
 
         shinyjs::show('var_plots__map_format')
@@ -1194,6 +1227,7 @@ hide_show_numeric_categoric <- function(session, showing_boxplot) {
 
     shinyjs::hide('var_plots__date_aggregation')
     shinyjs::hide('var_plots__size_variable__UI')
+    shinyjs::hide('var_plots__label_variables__UI')
     shinyjs::hide('var_plots__numeric_numeric_group_comp_variable')
     shinyjs::hide('var_plots__numeric_numeric_aggregation_function')
     shinyjs::hide('var_plots__numeric_numeric_aggregation_count_minimum')
@@ -1225,6 +1259,7 @@ hide_show_categoric_numeric <- function(session) {
     
     # multi-boxplot
     shinyjs::hide('var_plots__size_variable__UI')
+    shinyjs::hide('var_plots__label_variables__UI')
     shinyjs::hide('var_plots__numeric_numeric_group_comp_variable')
     shinyjs::hide('var_plots__numeric_numeric_aggregation_function')
     shinyjs::hide('var_plots__numeric_numeric_aggregation_count_minimum')
@@ -1274,6 +1309,7 @@ hide_show_categoric_categoric <- function(session, input, has_comparison_variabl
     }
 
     shinyjs::hide('var_plots__size_variable__UI')
+    shinyjs::hide('var_plots__label_variables__UI')
     shinyjs::hide('var_plots__numeric_numeric_group_comp_variable')
     shinyjs::hide('var_plots__numeric_numeric_aggregation_function')
     shinyjs::hide('var_plots__numeric_numeric_aggregation_count_minimum')
@@ -1320,6 +1356,7 @@ observe__var_plots__hide_show_uncollapse_on_primary_vars <- function(session, in
             shinyjs::hide('var_plots__sum_by_variable__UI')
             shinyjs::hide('var_plots__multi_value_delimiter')
             shinyjs::hide('var_plots__size_variable__UI')
+            shinyjs::hide('var_plots__label_variables__UI')
             shinyjs::hide('var_plots__numeric_numeric_group_comp_variable')
             shinyjs::hide('var_plots__numeric_numeric_aggregation_function')
             shinyjs::hide('var_plots__numeric_numeric_aggregation_count_minimum')

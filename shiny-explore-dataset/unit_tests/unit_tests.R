@@ -736,3 +736,139 @@ test_that("generic_helpers::filter_data - flights/date", {
     expect_true(str_detect(filter_results[[2]][[2]], paste(as.character(num_filtered_out), "rows")))
     writeLines(paste0(filter_results[[2]], collapse = "\n\n"), "output_files/filter_message__flights__date__hms.txt")
 })
+
+test_that("generic_helpers::mutate_factor_lump", {
+    
+    dataset <- dataset_or_null('../example_datasets/credit.csv') %>%
+        mutate(checking_balance = as.character(checking_balance),
+               employment_duration = as.character(employment_duration))
+    
+    actual_types <- map_chr(colnames(dataset), ~ class(dataset[, .])[1])
+    expect_identical(actual_types, c('character', 'integer', 'factor', 'factor', 'integer', 'factor', 'character',
+                                     'integer', 'integer', 'integer', 'factor', 'factor', 'integer', 'factor',
+                                     'integer', 'factor', 'factor'))
+    
+    expected_types <- replace(actual_types, actual_types == 'character', 'factor')
+    
+    # factor_lump_number NULL
+    lumped_dataset <- dataset %>% mutate_factor_lump(factor_lump_number = NULL)
+    expect_true(rt_are_dataframes_equal(lumped_dataset, dataset))
+    
+    lumped_dataset <- dataset %>% mutate_factor_lump(factor_lump_number = NA)
+    expect_true(rt_are_dataframes_equal(lumped_dataset, dataset))
+    
+    # characters & factors
+    lumped_dataset <- dataset %>% mutate_factor_lump(factor_lump_number = 1)
+    expect_identical(colnames(dataset), colnames(lumped_dataset))
+    found_types <- map_chr(colnames(lumped_dataset), ~ class(lumped_dataset[, .])[1])
+    expect_identical(expected_types, found_types)
+    expect_true(rt_are_dataframes_equal(lumped_dataset %>% select_if(is.numeric),
+                                        dataset %>% select_if(is.numeric)))
+    all_factors <- colnames(lumped_dataset)[found_types == 'factor']
+    # all factors should have 2 levels, the top level and "Other"
+    expect_true(all(map_lgl(all_factors, ~ length(levels(lumped_dataset[, .])) == 2)))
+    # it looks like if there are 2 factors, rather than keeping changing 1 to Other (and still
+    # having 2 factors) it keeps the original factor
+    original_number_of_levels <- map_int(all_factors, ~ length(unique(dataset[, .])))
+    found_other_level_if_expected <- map2_lgl(all_factors, original_number_of_levels, ~ {
+        # if there are more than 2 levels (even though the factor_lump number is 1), we expect Other to be
+        # a level
+        if(.y > 2) {
+            return ("Other" %in% levels(lumped_dataset[, .]))
+        } else {
+            return (!"Other" %in% levels(lumped_dataset[, .]))
+        }
+    })
+    expect_true(all(found_other_level_if_expected))
+
+    # ignore_columns
+    all_categoric <- colnames(dataset)[expected_types == 'factor']
+    lumped_dataset <- dataset %>% mutate_factor_lump(factor_lump_number = 1, ignore_columns = all_categoric)
+    expect_identical(colnames(dataset), colnames(lumped_dataset))
+    expect_true(rt_are_dataframes_equal(lumped_dataset, dataset))
+    
+    # subset
+    ignore_columns <- c("checking_balance", "credit_history")
+    lumped_dataset <- dataset %>% mutate_factor_lump(factor_lump_number = 1,
+                                                     ignore_columns = ignore_columns)
+    expect_identical(colnames(dataset), colnames(lumped_dataset))
+    new_expected_types <- expected_types
+    new_expected_types[1] <- 'character' # we are ignoring this column, and the other column is already a factor
+    found_types <- map_chr(colnames(lumped_dataset), ~ class(lumped_dataset[, .])[1])
+    expect_identical(new_expected_types, found_types)
+    
+    expect_identical(lumped_dataset$checking_balance, dataset$checking_balance)
+    expect_identical(lumped_dataset$credit_history, dataset$credit_history)
+    
+    expect_true(rt_are_dataframes_equal(lumped_dataset %>% select_if(is.numeric),
+                                        dataset %>% select_if(is.numeric)))
+    
+    all_factors <- colnames(lumped_dataset)[found_types == 'factor']
+    all_factors <- all_factors %>% rt_remove_val(ignore_columns)
+    # all factors should have 2 levels, the top level and "Other"
+    expect_true(all(map_lgl(all_factors, ~ length(levels(lumped_dataset[, .])) == 2)))
+    # it looks like if there are 2 factors, rather than keeping changing 1 to Other (and still
+    # having 2 factors) it keeps the original factor
+    original_number_of_levels <- map_int(all_factors, ~ length(unique(dataset[, .])))
+    found_other_level_if_expected <- map2_lgl(all_factors, original_number_of_levels, ~ {
+        # if there are more than 2 levels (even though the factor_lump number is 1), we expect Other to be
+        # a level
+        if(.y > 2) {
+            return ("Other" %in% levels(lumped_dataset[, .]))
+        } else {
+            return (!"Other" %in% levels(lumped_dataset[, .]))
+        }
+    })
+    expect_true(all(found_other_level_if_expected))
+})
+
+test_that("generic_helpers::mutate_factor_lump::single_character", {
+    
+    dataset <- dataset_or_null('../example_datasets/credit.csv') %>%
+        select(checking_balance) %>%
+        mutate(checking_balance = as.character(checking_balance))
+    
+    # factor_lump_number NULL
+    lumped_dataset <- dataset %>% mutate_factor_lump(factor_lump_number = NULL)
+    expect_true(rt_are_dataframes_equal(lumped_dataset, dataset))
+    
+    lumped_dataset <- dataset %>% mutate_factor_lump(factor_lump_number = NA)
+    expect_true(rt_are_dataframes_equal(lumped_dataset, dataset))
+    
+    # characters & factors
+    lumped_dataset <- dataset %>% mutate_factor_lump(factor_lump_number = 1)
+    expect_true(rt_are_dataframes_equal(lumped_dataset,
+                                        dataset %>%
+                                            mutate(checking_balance = fct_lump(checking_balance, n=1))))
+})
+
+test_that("generic_helpers::mutate_factor_lump::all_numeric", {
+    
+    dataset <- dataset_or_null('../example_datasets/credit.csv') %>%
+        select(months_loan_duration)
+        
+    # factor_lump_number NULL
+    lumped_dataset <- dataset %>% mutate_factor_lump(factor_lump_number = NULL)
+    expect_true(rt_are_dataframes_equal(lumped_dataset, dataset))
+    
+    lumped_dataset <- dataset %>% mutate_factor_lump(factor_lump_number = NA)
+    expect_true(rt_are_dataframes_equal(lumped_dataset, dataset))
+    
+    # characters & factors
+    lumped_dataset <- dataset %>% mutate_factor_lump(factor_lump_number = 1)
+    expect_true(rt_are_dataframes_equal(lumped_dataset, dataset))
+    
+    dataset <- dataset_or_null('../example_datasets/credit.csv') %>%
+        select(months_loan_duration, amount)
+    
+    # factor_lump_number NULL
+    lumped_dataset <- dataset %>% mutate_factor_lump(factor_lump_number = NULL)
+    expect_true(rt_are_dataframes_equal(lumped_dataset, dataset))
+    
+    lumped_dataset <- dataset %>% mutate_factor_lump(factor_lump_number = NA)
+    expect_true(rt_are_dataframes_equal(lumped_dataset, dataset))
+    
+    # characters & factors
+    lumped_dataset <- dataset %>% mutate_factor_lump(factor_lump_number = 1)
+    expect_true(rt_are_dataframes_equal(lumped_dataset, dataset))
+})
