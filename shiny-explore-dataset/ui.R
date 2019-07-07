@@ -5,13 +5,6 @@ library(shinyBS)
 
 source('helper_scripts/definitions.R')
 
-date_part_vector <- c('None', 'day', 'week', 'month', 'quarter', 'year')
-names(date_part_vector) <- c('None', 'Day', 'Week', 'Month', 'Quarter', 'Year')
-
-date_break_format_vector <- c('Auto', '%Y-%m-%d', '%Y-%W', '%Y-%m', '%Y')
-names(date_break_format_vector) <- c('Auto', 'Day', 'Week', 'Month', 'Year')
-
-
 shinyUI(fluidPage(theme="custom.css",
 
     useShinyjs(),
@@ -96,10 +89,10 @@ shinyUI(fluidPage(theme="custom.css",
                         # because the values need to load the first time this tab is clicked
                         # if not, when they become active (and therefore the values change to the default,
                         # they will trigger an unncessary plot refresh
-                        selectInput(inputId='var_plots__date_aggregation',
+                        selectInput(inputId='var_plots__numeric_aggregation',
                                     label = 'Aggregation',
                                     choices = c('Mean', 'Geometric Mean', 'Median', 'Sum'),
-                                    selected = global__var_plots__date_aggregation_default,
+                                    selected = global__var_plots__numeric_aggregation_default,
                                     multiple = FALSE,
                                     selectize = TRUE,
                                     width = 500,
@@ -107,13 +100,12 @@ shinyUI(fluidPage(theme="custom.css",
                         uiOutput('var_plots__sum_by_variable__UI'),
                         uiOutput('var_plots__color_variable__UI'),
                         uiOutput('var_plots__size_variable__UI'),
-                        uiOutput('var_plots__label_variables__UI'),
                         textInput('var_plots__multi_value_delimiter',
                                   width=200,
                                   label="Multi-Value Delimiter"),
                         bsTooltip(id='var_plots__multi_value_delimiter',
                                   title="For variables that have multi-value instances seperated by a delimiter (e.g. value_x;value_y), this feature seperates the multi-value instance into multiple instances and counts them individually.",
-                                  placement='bottom', trigger='hover'),
+                                  placement='top', trigger='hover'),
                         fluidRow(
                             div(style="display:inline-block; float:left; margin-bottom:0px; margin-top:10px; margin-left: 15px",
                                 actionButton(inputId='var_plots__variables_buttons_clear', label='Clear')),
@@ -154,17 +146,63 @@ shinyUI(fluidPage(theme="custom.css",
                     ),
                     bsCollapsePanel(
                         'Graph Options',
+                        fluidRow(
+                            div(style="display:inline-block; float:left; margin-bottom:20px; margin-left: 15px",
+                                actionButton(inputId='var_plots__graph_options_apply', label='Apply Options')),
+                            div(style="display:inline-block; float:left; margin-bottom:20px; margin-left: 10px",
+                                actionButton(inputId='var_plots__graph_options_clear', label='Clear'))
+                        ),
                         shinyjs::hidden(
                             selectInput(inputId='var_plots__numeric_graph_type',
                                     label='Type',
                                     choices=c('Boxplot', 'Histogram'),
                                     selected='Boxplot')
                         ),
+                        shinyjs::hidden(
+                             numericInput(inputId='var_plots__histogram_bins',
+                                          label='Number of Bins',
+                                          value=30)                 
+                        ),
                         shinyjs::hidden(tags$div(id='div_var_plots__multi_barchar_controls',
                             uiOutput('var_plots__categoric_view_type__UI')
                             # checkboxInput(inputId='var_plots__stacked_comparison',
                             #               label='Stack Comparison Variable', value=TRUE, width=NULL)
                         )),
+                        shinyjs::hidden(
+                            sliderTextInput(inputId='var_plots__filter_factor_lump_number',
+                                        label="Top N Categories",
+                                        choices=as.character(c("Off", seq(1, 10), seq(15, 50, 5))),
+                                        selected="10",
+                                        grid=TRUE)
+                        ),
+                        bsTooltip(id='var_plots__filter_factor_lump_number',
+                                  title="Only show the top N categories. Groups all other categories into `Other` category.",
+                                  placement='top', trigger='hover'),
+                        uiOutput('var_plots__label_variables__UI'),
+                        shinyjs::hidden(
+                            numericInput(inputId='var_plots__numeric_numeric_aggregation_count_minimum',
+                                          label='Minimum number of samples in group:',
+                                          value=30),
+                            bsTooltip(id='var_plots__numeric_numeric_aggregation_count_minimum',
+                                    title="The minimum number of samples/instances required in order to include the group in the graph.",
+                                    placement='top', trigger='hover')
+                        ),
+                        shinyjs::hidden(
+                           checkboxInput(inputId='var_plots__annotate_points',
+                                         label='Show Values', value=FALSE, width=NULL)
+                        ),
+                        shinyjs::hidden(
+                            checkboxInput(inputId='var_plots__show_points',
+                                          label='Show Points', value=TRUE, width=NULL),
+                            bsTooltip(id='var_plots__show_points',
+                                  title="Show the value associated with each point.",
+                                  placement='top', trigger='hover')
+                        
+                        ),
+                        shinyjs::hidden(
+                            checkboxInput(inputId='var_plots__numeric_numeric_show_resampled_confidence_interval',
+                                          label='Show Confidence Interval (Resampling):', value=FALSE, width=NULL)
+                        ),
                         shinyjs::hidden(tags$div(id='div_var_plots__group_barchar_controls',
                             checkboxInput(inputId='var_plots__order_by_count',
                                           label='Order By Totals', value=FALSE, width=NULL),
@@ -176,11 +214,6 @@ shinyUI(fluidPage(theme="custom.css",
                             checkboxInput(inputId='var_plots__show_comparison_totals',
                                           label='Show Comparison Values', value=TRUE, width=NULL)
                         )),
-                        shinyjs::hidden(
-                             numericInput(inputId='var_plots__histogram_bins',
-                                          label='Number of Bins',
-                                          value=30)                 
-                        ),
                         shinyjs::hidden(tags$div(id='div_var_plots__group_scatter_controls',
                             sliderTextInput(inputId='var_plots__transparency',
                                             label='Transparency',
@@ -194,18 +227,6 @@ shinyUI(fluidPage(theme="custom.css",
                                     title="Adds a small amount of random variation to the location of each point, and is a useful way of handling overplotting caused by discreteness in datasets.",
                                     placement='top', trigger='hover')
                         )),
-                        shinyjs::hidden(
-                            numericInput(inputId='var_plots__numeric_numeric_aggregation_count_minimum',
-                                          label='Minimum number of samples in group:',
-                                          value=30),
-                            bsTooltip(id='var_plots__numeric_numeric_aggregation_count_minimum',
-                                    title="The minimum number of samples/instances required in order to include the group in the graph.",
-                                    placement='top', trigger='hover')
-                        ),
-                        shinyjs::hidden(
-                            checkboxInput(inputId='var_plots__numeric_numeric_show_resampled_confidence_interval',
-                                          label='Show Confidence Interval (Resampling):', value=FALSE, width=NULL)
-                        ),
                         shinyjs::hidden(tags$div(id='div_var_plots__group_trend_controls',
                             radioButtons(inputId='var_plots__trend_line',
                                          label='Trend Line:',
@@ -224,12 +245,12 @@ shinyUI(fluidPage(theme="custom.css",
                             # time series variables
                             selectInput(inputId='var_plots__ts_date_floor',
                                           label='Date Aggregation:',
-                                          choices=date_part_vector,
-                                          selected=names(date_part_vector)[1]),
+                                          choices=global__date_part_vector,
+                                          selected=names(global__date_part_vector)[1]),
                             selectInput(inputId='var_plots__ts_date_break_format',
                                           label='Date Format:',
-                                          choices=date_break_format_vector,
-                                          selected=names(date_break_format_vector)[1]),
+                                          choices=global__date_break_format_vector,
+                                          selected=names(global__date_break_format_vector)[1]),
                             textInput(inputId='var_plots__ts_breaks_width', label="Date Breaks", value = NULL)
                         )),
                         shinyjs::hidden(tags$div(id='div_var_plots__group_x_zoom_controls',
@@ -239,13 +260,13 @@ shinyUI(fluidPage(theme="custom.css",
                                       title="Adds a Log transformation to the values associated with the x-axis.",
                                       placement='top', trigger='hover'),
                             numericInput(inputId='var_plots__x_zoom_min',
-                                         label='X-Axis Zoom Min',
+                                         label='X-Axis Min',
                                          value=NULL),
                             bsTooltip(id='var_plots__x_zoom_min',
                                       title='"Zoom" into the graph, using this value as the minimum x-axis coordinate',
                                       placement='top', trigger='hover'),
                             numericInput(inputId='var_plots__x_zoom_max',
-                                         label='X-Axis Zoom Max',
+                                         label='X-Axis Max',
                                          value=NULL),
                             bsTooltip(id='var_plots__x_zoom_max',
                                       title='"Zoom" into the graph, using this value as the maximum x-axis coordinate',
@@ -258,36 +279,27 @@ shinyUI(fluidPage(theme="custom.css",
                                       title="Adds a Log transformation to the values associated with the y-axis.",
                                       placement='top', trigger='hover'),
                             numericInput(inputId='var_plots__y_zoom_min',
-                                         label='Y-Axis Zoom Min',
+                                         label='Y-Axis Min',
                                          value=NULL),
                             bsTooltip(id='var_plots__y_zoom_min',
                                       title='"Zoom" into the graph, using this value as the minimum y-axis coordinate',
                                       placement='top', trigger='hover'),
                             numericInput(inputId='var_plots__y_zoom_max',
-                                         label='Y-Axis Zoom Max',
+                                         label='Y-Axis Max',
                                          value=NULL),
                             bsTooltip(id='var_plots__y_zoom_max',
                                       title='"Zoom" into the graph, using this value as the maximum y-axis coordinate',
                                       placement='top', trigger='hover')
                         )),
-                        sliderInput(inputId='var_plots__filter_factor_lump_number',
-                                label='Top N Categories',
-                                min=1,
-                                max=50,
-                                step=1,
-                                value=10),
-                        bsTooltip(id='var_plots__filter_factor_lump_number',
-                                  title="Only show the top N categories. Groups all other categories into `Other` category.",
-                                  placement='top', trigger='hover'),
                         style='default'
                     ),
                     bsCollapsePanel(
                         'Other Options',
                         
                         fluidRow(
-                            div(style="display:inline-block; float:left; margin-bottom:10px; margin-left: 15px",
+                            div(style="display:inline-block; float:left; margin-bottom:20px; margin-left: 15px",
                                 actionButton(inputId='var_plots__custom_labels_apply', label='Apply Labels')),
-                            div(style="display:inline-block; float:left; margin-bottom:10px; margin-left: 10px",
+                            div(style="display:inline-block; float:left; margin-bottom:20px; margin-left: 10px",
                                 actionButton(inputId='var_plots__custom_labels_clear', label='Clear'))
                         ),
                         
@@ -317,18 +329,6 @@ shinyUI(fluidPage(theme="custom.css",
                         bsTooltip(id='var_plots__pretty_text',
                                   title="For instance, changes `column_name` to `Column Name`. WARNING: can be slow for large datasets.",
                                   placement='top', trigger='hover'),
-                        shinyjs::hidden(
-                            checkboxInput(inputId='var_plots__show_points',
-                                          label='Show Points', value=TRUE, width=NULL),
-                            bsTooltip(id='var_plots__show_points',
-                                  title="Show the value associated with each point.",
-                                  placement='top', trigger='hover')
-                        
-                        ),
-                        shinyjs::hidden(
-                           checkboxInput(inputId='var_plots__annotate_points',
-                                         label='Show Values', value=FALSE, width=NULL)
-                        ),
                         style='default'
                     ),
                     bsCollapsePanel(

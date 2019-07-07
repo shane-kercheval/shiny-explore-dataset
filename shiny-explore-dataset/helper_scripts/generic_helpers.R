@@ -49,6 +49,10 @@ default_if_null_or_empty_string <- function(value, string_values_as_null=NULL, d
     }
 }
 
+is_categoric <- function(x) {
+    return (is.character(x) || is.factor(x))
+}
+
 mutate_factor_lump <- function(dataset, factor_lump_number=NULL, ignore_columns=NULL) {
 
     if(!is.null(factor_lump_number) && !is.na(factor_lump_number)) {
