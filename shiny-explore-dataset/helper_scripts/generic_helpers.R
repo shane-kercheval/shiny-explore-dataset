@@ -22,6 +22,10 @@ is_date_type <- function(x) {
     return (is.Date(x) || is.POSIXct(x) || is.POSIXlt(x))
 }
 
+is_categoric <- function(x) {
+    return (is.character(x) || is.factor(x))
+}
+
 null_if_select_variable_optional <- function(value) {
 
     if(is.null(value) || value == global__select_variable_optional) {
@@ -47,10 +51,6 @@ default_if_null_or_empty_string <- function(value, string_values_as_null=NULL, d
 
         return (value)
     }
-}
-
-is_categoric <- function(x) {
-    return (is.character(x) || is.factor(x))
 }
 
 mutate_factor_lump <- function(dataset, factor_lump_number=NULL, ignore_columns=NULL) {

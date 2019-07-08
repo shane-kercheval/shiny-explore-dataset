@@ -36,7 +36,8 @@ reactive__filter_controls_list__creator <- function(input, dataset) {
                     filter_object <- dateRangeInput(inputId=input_id,
                                                     label=.y,
                                                     start=min_value,
-                                                    end=max_value)
+                                                    end=max_value,
+                                                    width='100%')
 
                 } else if(is.factor(.x)) {
 
@@ -52,7 +53,8 @@ reactive__filter_controls_list__creator <- function(input, dataset) {
                                                      label=.y,
                                                      choices=choices,
                                                      selected = NULL,
-                                                     multiple = TRUE)
+                                                     multiple = TRUE,
+                                                     width='100%')
                     }
                 } else if(is.character(.x)) {
                     
@@ -67,10 +69,11 @@ reactive__filter_controls_list__creator <- function(input, dataset) {
                         }
 
                         filter_object <- selectInput(inputId=input_id,
-                                    label=.y,
-                                    choices=choices,
-                                    selected = NULL,
-                                    multiple = TRUE)
+                                                     label=.y,
+                                                     choices=choices,
+                                                     selected = NULL,
+                                                     multiple = TRUE,
+                                                     width='100%')
                     }
                 } else if(is.numeric(.x)) {
 
@@ -80,7 +83,8 @@ reactive__filter_controls_list__creator <- function(input, dataset) {
                                                  label=.y,
                                                  min=min_value,
                                                  max=max_value,
-                                                 value=c(min_value, max_value))
+                                                 value=c(min_value, max_value),
+                                                 width='100%')
 
                 } else if(is.logical(.x)) {
 
@@ -88,7 +92,8 @@ reactive__filter_controls_list__creator <- function(input, dataset) {
                                 label=.y,
                                 choices=c(TRUE, FALSE),
                                 selected = NULL,
-                                multiple = TRUE)
+                                multiple = TRUE,
+                                width='100%')
 
                 } else if("hms" %in% class(.x)) {
 
@@ -99,10 +104,11 @@ reactive__filter_controls_list__creator <- function(input, dataset) {
                     hours_minutes <- c(hours_minutes, "24:00")
 
                     filter_object <- sliderTextInput(inputId=input_id,
-                                    label=.y,
-                                    choices=hours_minutes,
-                                    selected=c("00:00", "24:00"),
-                                    grid=FALSE)
+                                                     label=.y,
+                                                     choices=hours_minutes,
+                                                     selected=c("00:00", "24:00"),
+                                                     grid=FALSE,
+                                                     width='100%')
 
                 } else {
                     #class(.)[1]
@@ -725,10 +731,14 @@ reactive__var_plots__ggplot__creator <- function(input, session, dataset) {
                         log_message_variable('var_plots__y_zoom_max', local_y_zoom_max)
                         log_message_variable('var_plots__scale_y_log_base_10', local_scale_y_log_base_10)
 
-                        ggplot_object <- local_dataset %>% select(local_primary_variable, local_comparison_variable) %>%
+                        ggplot_object <- local_dataset %>%
+                            select(local_primary_variable,
+                                   local_comparison_variable,
+                                   local_color_variable) %>%
                             mutate_factor_lump(factor_lump_number=local_var_plots__filter_factor_lump_number) %>%
                             rt_explore_plot_boxplot(variable=local_primary_variable,
                                                     comparison_variable=local_comparison_variable,
+                                                    color_variable=local_color_variable,
                                                     y_zoom_min=local_y_zoom_min,
                                                     y_zoom_max=local_y_zoom_max,
                                                     base_size=local_base_size) %>%
@@ -776,10 +786,14 @@ reactive__var_plots__ggplot__creator <- function(input, session, dataset) {
                     log_message_variable('var_plots__y_zoom_max', local_y_zoom_max)
                     log_message_variable('var_plots__scale_y_log_base_10', local_scale_y_log_base_10)
 
-                    ggplot_object <- local_dataset %>% select(local_primary_variable, local_comparison_variable) %>%
+                    ggplot_object <- local_dataset %>%
+                        select(local_primary_variable,
+                               local_comparison_variable,
+                               local_color_variable) %>%
                         mutate_factor_lump(factor_lump_number=local_var_plots__filter_factor_lump_number) %>%
                         rt_explore_plot_boxplot(variable=local_comparison_variable,
                                                 comparison_variable=local_primary_variable,
+                                                color_variable=local_color_variable,
                                                 y_zoom_min=local_y_zoom_min,
                                                 y_zoom_max=local_y_zoom_max,
                                                 base_size=local_base_size) %>%
@@ -871,7 +885,7 @@ renderUI__var_plots__variable__UI <- function(dataset) {
                     selected = global__select_variable,
                     multiple = FALSE,
                     selectize = TRUE,
-                    width = 500,
+                    width='100%',
                     size = NULL)
     })
 }
@@ -910,7 +924,7 @@ renderUI__var_plots__comparison__UI <- function(input, dataset) {
                     selected = selected_variable,
                     multiple = FALSE,
                     selectize = TRUE,
-                    width = 500,
+                    width='100%',
                     size = NULL)
     })
 }
@@ -925,7 +939,7 @@ renderUI__var_plots__sum_by_variable__UI <- function(dataset) {
                     selected = global__select_variable_optional,
                     multiple = FALSE,
                     selectize = TRUE,
-                    width = 500,
+                    width='100%',
                     size = NULL) %>%
             add_tooltip("Sums the selected variable associated with each instance.")
     })
@@ -939,20 +953,36 @@ renderUI__var_plots__color_variable__UI <- function(input, dataset) {
         req(input$var_plots__variable)
 
         local_dataset <- dataset()
+        
         local_primary_variable <- input$var_plots__variable
+        local_comparison_variable <- null_if_select_variable_optional(input$var_plots__comparison)
 
         dataset_columns <- colnames(local_dataset)
 
         variable_options <- NULL
-        # only show numeric variables for dates
+        # only show categoric variables for dates
         if(local_primary_variable != global__select_variable &&
                 local_primary_variable %in% dataset_columns &&  # in case datasets change
                 is_date_type(local_dataset[, local_primary_variable])) {
 
+           log_message_block_start('Creating Color Variable - Dates') 
+
+            variable_options <- colnames(local_dataset %>% select_if(purrr::negate(is.numeric)))
+
+        } else if(!is.null(local_primary_variable) &&
+                  !is.null(local_comparison_variable) &&
+                  local_primary_variable != global__select_variable &&
+                  local_primary_variable %in% dataset_columns &&  # in case datasets change
+                  xor(is.numeric(local_dataset[, local_primary_variable]),
+                      is.numeric(local_dataset[, local_comparison_variable]))) {
+            # if we have one numeric and one categoric variable (regardless which is which)
+            # then we are displaying a boxplot and we only want to display categoric variables
+            log_message_block_start('Creating Color Variable - XOR numeric/categoric')
             variable_options <- colnames(local_dataset %>% select_if(purrr::negate(is.numeric)))
 
         } else {
 
+            log_message_block_start('Creating Color Variable - other')
             variable_options <- dataset_columns
         }
 
@@ -962,7 +992,7 @@ renderUI__var_plots__color_variable__UI <- function(input, dataset) {
                     selected = global__select_variable_optional,
                     multiple = FALSE,
                     selectize = TRUE,
-                    width = 500,
+                    width='100%',
                     size = NULL)
     })
 }
@@ -977,7 +1007,7 @@ renderUI__var_plots__size_variable__UI <- function(dataset) {
                     selected = global__select_variable_optional,
                     multiple = FALSE,
                     selectize = TRUE,
-                    width = 500,
+                    width='100%',
                     size = NULL)
     })
 }
@@ -992,7 +1022,7 @@ renderUI__var_plots__label_variables__UI <- function(dataset) {
                     selected = NULL,
                     multiple = TRUE,
                     selectize = TRUE,
-                    width = 500,
+                    width='100%',
                     size = NULL)
     })
 }
@@ -1045,7 +1075,7 @@ renderUI__var_plots__categoric_view_type__UI <- function(input) {
                     selected = selected_option,
                     multiple = FALSE,
                     selectize = TRUE,
-                    width = 500,
+                    width='100%',
                     size = NULL)
     })
 }
@@ -1066,7 +1096,7 @@ renderUI__var_plots__filter_controls_selections__UI <- function(input, dataset) 
                     selected = NULL,
                     multiple = TRUE,
                     selectize = TRUE,
-                    width = 500,
+                    width='100%',
                     size = NULL)
     })
 }
@@ -1117,8 +1147,10 @@ clear_variables <- function(session, input, swap_primary_and_comparison=FALSE) {
     updateSelectInput(session, 'var_plots__color_variable', selected=global__select_variable_optional)
     updateSelectInput(session, 'var_plots__size_variable', selected=global__select_variable_optional)
 
-    updateSliderTextInput(session, 'var_plots__filter_factor_lump_number', choices=as.character(c("Off", seq(1, 10), seq(15, 50, 5))),
-                                        selected="10")
+    updateSliderTextInput(session,
+                          'var_plots__filter_factor_lump_number',
+                          choices=as.character(c("Off", seq(1, 10), seq(15, 50, 5))),
+                          selected="10")
 
     updateCheckboxInput(session, 'var_plots__numeric_numeric_group_comp_variable', value=FALSE)
     updateSelectInput(session,
@@ -1275,6 +1307,7 @@ hide_show_numeric_categoric <- function(session, showing_boxplot) {
         shinyjs::hide('var_plots__histogram_bins')
         shinyjs::show('div_var_plots__group_y_zoom_controls')
         shinyjs::hide('div_var_plots__group_x_zoom_controls')
+        shinyjs::show('var_plots__color_variable__UI')
         # if we are hiding the x-controls, uncheck the scale_x_log10 option so it isn't carried over
         updateCheckboxInput(session, 'var_plots__scale_x_log_base_10', value=FALSE)
     
@@ -1295,7 +1328,6 @@ hide_show_numeric_categoric <- function(session, showing_boxplot) {
     shinyjs::hide('var_plots__numeric_numeric_aggregation_function')
     shinyjs::hide('var_plots__numeric_numeric_aggregation_count_minimum')
     shinyjs::hide('var_plots__numeric_numeric_show_resampled_confidence_interval')
-    shinyjs::hide('var_plots__color_variable__UI')
 
     shinyjs::show('var_plots__base_size')
     shinyjs::show('var_plots__numeric_graph_type')
@@ -1327,7 +1359,7 @@ hide_show_categoric_numeric <- function(session) {
     shinyjs::hide('var_plots__numeric_numeric_aggregation_function')
     shinyjs::hide('var_plots__numeric_numeric_aggregation_count_minimum')
     shinyjs::hide('var_plots__numeric_numeric_show_resampled_confidence_interval')
-    shinyjs::hide('var_plots__color_variable__UI')
+    shinyjs::show('var_plots__color_variable__UI')
 
     shinyjs::show('div_var_plots__group_y_zoom_controls')
     shinyjs::show('var_plots__base_size')
