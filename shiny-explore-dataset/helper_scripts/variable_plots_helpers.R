@@ -145,12 +145,26 @@ observeEvent__var_plots__custom_labels_clear <- function(input, session) {
     }))
 }
 
+observeEvent__var_plots__graph_options_apply <- function(input, session) {
+
+    observeEvent(input$var_plots__graph_options_apply, {
+
+            updateCollapse(session, "var_plots__bscollapse", style = list("Graph Options" = "default"))
+    })
+}
+
 observeEvent__var_plots__graph_options_clear <- function(input, session) {
 
-    observeEvent(input$var_plots__graph_options_clear, ({
+    observeEvent(input$var_plots__graph_options_clear, {
 
-        log_message_block_start('Clearing Custom Graph Options')
+        log_message_block_start("Graph Options Dirty (Cleared Controls)")
 
+        updateCollapse(session, "var_plots__bscollapse", style = list("Graph Options" = "danger"))
+
+        updateSliderTextInput(session,
+                          'var_plots__filter_factor_lump_number',
+                          choices=as.character(c("Off", seq(1, 10), seq(15, 50, 5))),
+                          selected="10")
         updateSelectInput(session, 'var_plots__label_variables', selected=character(0))
         updateCheckboxInput(session, 'var_plots__annotate_points', value=FALSE)
         updateCheckboxInput(session, 'var_plots__show_points', value=FALSE)
@@ -175,8 +189,65 @@ observeEvent__var_plots__graph_options_clear <- function(input, session) {
         updateCheckboxInput(session, 'var_plots__scale_y_log_base_10', value=FALSE)
         updateNumericInput(session, 'var_plots__y_zoom_min', value=integer(0))
         updateNumericInput(session, 'var_plots__y_zoom_max', value=integer(0))
+    })
+}
 
-    }))
+hide_graph_options <- function(input) {
+
+    shinyjs::hide('var_plots__filter_factor_lump_number')
+    shinyjs::hide('var_plots__label_variables__UI')
+    shinyjs::hide('var_plots__annotate_points')
+    shinyjs::hide('var_plots__show_points')
+    shinyjs::hide('var_plots__numeric_graph_type')
+    shinyjs::hide('var_plots__categoric_view_type')
+    shinyjs::hide('div_var_plots__group_barchar_controls')
+    shinyjs::hide('var_plots__histogram_bins')
+    shinyjs::hide('div_var_plots__group_scatter_controls')
+    shinyjs::hide('var_plots__numeric_numeric_aggregation_count_minimum')
+    shinyjs::hide('var_plots__numeric_numeric_show_resampled_confidence_interval')
+    shinyjs::hide('div_var_plots__group_trend_controls')
+    shinyjs::hide('div_var_plots__group_time_series_controls')
+    shinyjs::hide('div_var_plots__group_x_zoom_controls')
+    shinyjs::hide('div_var_plots__group_y_zoom_controls')
+}
+
+observeEvent__var_plots__graph_options__any_used <- function(input, session) {
+
+    observeEvent(c(# any of these will trigger the graph options color change
+                   input$var_plots__filter_factor_lump_number,
+                   input$var_plots__label_variables,
+                   input$var_plots__annotate_points,
+                   input$var_plots__show_points,
+                   input$var_plots__numeric_graph_type,
+                   input$var_plots__categoric_view_type,
+                   input$var_plots__order_by_count,
+                   input$var_plots__show_variable_totals,
+                   input$var_plots__show_comparison_totals,
+                   input$var_plots__histogram_bins,
+                   input$var_plots__transparency,
+                   input$var_plots__jitter,
+                   input$var_plots__numeric_numeric_aggregation_count_minimum,
+                   input$var_plots__numeric_numeric_show_resampled_confidence_interval,
+                   input$var_plots__trend_line,
+                   input$var_plots__trend_line_se,
+                   input$var_plots__ts_date_floor,
+                   input$var_plots__ts_date_break_format,
+                   input$var_plots__ts_breaks_width,
+                   input$var_plots__scale_x_log_base_10,
+                   input$var_plots__x_zoom_min,
+                   input$var_plots__x_zoom_max,
+                   input$var_plots__scale_y_log_base_10,
+                   input$var_plots__y_zoom_min,
+                   input$var_plots__y_zoom_max
+        ), {
+
+        if(isolate(input$var_plots__variable) != global__select_variable) {
+
+            log_message_block_start('Graph Options Dirty (Control Used)')
+            updateCollapse(session, "var_plots__bscollapse", style = list("Graph Options" = "danger"))
+        }
+
+    }, ignoreNULL = TRUE, ignoreInit = TRUE)
 }
 
 ##############################################################################################################
@@ -360,6 +431,7 @@ hide_show_top_n_categories <- function(dataset, variable, comparison_variable, s
         return (TRUE)
     }
 }
+
 ##############################################################################################################
 # CREATE GGPLOT OBJECT
 ##############################################################################################################
@@ -721,7 +793,9 @@ reactive__var_plots__ggplot__creator <- function(input, session, dataset) {
 
                     show_boxplot <- local_numeric_graph_type == 'Boxplot'
 
-                    hide_show_numeric_categoric(session=session, showing_boxplot=show_boxplot)
+                    hide_show_numeric_categoric(session=session,
+                                                showing_boxplot=show_boxplot,
+                                                has_comparison_variable=!is.null(local_comparison_variable))
 
                     if(show_boxplot) {
 
@@ -867,6 +941,10 @@ reactive__var_plots__ggplot__creator <- function(input, session, dataset) {
                 ggplot_object <- ggplot_object +
                     labs(tag = local_var_plots__custom_tag)
             }
+
+        } else {
+
+            hide_graph_options(input)
         }
 
         return (ggplot_object)
@@ -1027,9 +1105,11 @@ renderUI__var_plots__label_variables__UI <- function(dataset) {
     })
 }
 
-renderUI__var_plots__categoric_view_type__UI <- function(input) {
+observeEvent__var_plots__categoric_view_type <- function(input, session) {
 
-    renderUI({
+    observeEvent(c(input$var_plots__categoric_view_type,
+                   input$var_plots__comparison,
+                   input$var_plots__sum_by_variable), {
         
         # used for Categoric Primary and optionally Categoric Secondary variables
         log_message_block_start("Creating Categoric View Type")
@@ -1069,14 +1149,10 @@ renderUI__var_plots__categoric_view_type__UI <- function(input) {
             selected_option <- "Bar"
         }
 
-        selectInput(inputId='var_plots__categoric_view_type',
-                    label = 'View Type',
-                    choices = view_type_options,
-                    selected = selected_option,
-                    multiple = FALSE,
-                    selectize = TRUE,
-                    width='100%',
-                    size = NULL)
+        updateSelectInput(session,
+                          'var_plots__categoric_view_type',
+                          choices = view_type_options,
+                          selected = selected_option)
     })
 }
 
@@ -1147,11 +1223,6 @@ clear_variables <- function(session, input, swap_primary_and_comparison=FALSE) {
     updateSelectInput(session, 'var_plots__color_variable', selected=global__select_variable_optional)
     updateSelectInput(session, 'var_plots__size_variable', selected=global__select_variable_optional)
 
-    updateSliderTextInput(session,
-                          'var_plots__filter_factor_lump_number',
-                          choices=as.character(c("Off", seq(1, 10), seq(15, 50, 5))),
-                          selected="10")
-
     updateCheckboxInput(session, 'var_plots__numeric_numeric_group_comp_variable', value=FALSE)
     updateSelectInput(session,
                       'var_plots__numeric_numeric_aggregation_function',
@@ -1212,7 +1283,7 @@ hide_show_date <- function(session, has_comparison_variable) {
     shinyjs::hide('div_var_plots__group_x_zoom_controls')
     shinyjs::hide('var_plots__histogram_bins')
     shinyjs::hide('div_var_plots__group_barchar_controls')
-    shinyjs::hide('div_var_plots__multi_barchar_controls')
+    shinyjs::hide('var_plots__categoric_view_type')
     shinyjs::hide('var_plots__numeric_graph_type')
     shinyjs::hide('var_plots__sum_by_variable__UI')
     shinyjs::hide('var_plots__multi_value_delimiter')
@@ -1222,7 +1293,10 @@ hide_show_date <- function(session, has_comparison_variable) {
     shinyjs::hide('var_plots___map_borders_regions')
 }
 
-hide_show_numeric_numeric <- function(session, is_grouping_main_variable, grouping_is_boxplot) {
+hide_show_numeric_numeric <- function(session,
+                                      is_grouping_main_variable,
+                                      grouping_is_boxplot,
+                                      has_comparison_variable) {
 
     log_message('hide_show_numeric_numeric')
     
@@ -1260,18 +1334,17 @@ hide_show_numeric_numeric <- function(session, is_grouping_main_variable, groupi
 
         shinyjs::hide('div_var_plots__group_scatter_controls')
         shinyjs::hide('div_var_plots__group_trend_controls')
-        
 
     } else {
 
         shinyjs::hide('var_plots__numeric_numeric_aggregation_function')
         shinyjs::hide('var_plots__numeric_numeric_aggregation_count_minimum')
+        shinyjs::hide('var_plots__numeric_numeric_show_resampled_confidence_interval')
 
         shinyjs::show('var_plots__size_variable__UI')
         shinyjs::show('var_plots__label_variables__UI')
         shinyjs::hide('var_plots__annotate_points')
         shinyjs::show('var_plots__color_variable__UI')
-
         shinyjs::show('var_plots__map_format')
         shinyjs::show('var_plots___map_borders_database')
         shinyjs::show('var_plots___map_borders_regions')
@@ -1289,15 +1362,14 @@ hide_show_numeric_numeric <- function(session, is_grouping_main_variable, groupi
     shinyjs::hide('div_var_plots__group_time_series_controls')
     shinyjs::hide('var_plots__histogram_bins')
     shinyjs::hide('div_var_plots__group_barchar_controls')
-    shinyjs::hide('div_var_plots__multi_barchar_controls')
+    shinyjs::hide('var_plots__categoric_view_type')
     shinyjs::hide('var_plots__numeric_graph_type')
     shinyjs::hide('var_plots__sum_by_variable__UI')
     shinyjs::hide('var_plots__multi_value_delimiter')
     #shinyjs::hide('var_plots__filter_factor_lump_number')
-
 }
 
-hide_show_numeric_categoric <- function(session, showing_boxplot) {
+hide_show_numeric_categoric <- function(session, showing_boxplot, has_comparison_variable) {
     
     log_message('hide_show_numeric_categoric')
     
@@ -1307,7 +1379,15 @@ hide_show_numeric_categoric <- function(session, showing_boxplot) {
         shinyjs::hide('var_plots__histogram_bins')
         shinyjs::show('div_var_plots__group_y_zoom_controls')
         shinyjs::hide('div_var_plots__group_x_zoom_controls')
-        shinyjs::show('var_plots__color_variable__UI')
+        if(has_comparison_variable) {
+
+            shinyjs::show('var_plots__color_variable__UI')
+
+        } else {
+
+            shinyjs::hide('var_plots__color_variable__UI')
+        }
+
         # if we are hiding the x-controls, uncheck the scale_x_log10 option so it isn't carried over
         updateCheckboxInput(session, 'var_plots__scale_x_log_base_10', value=FALSE)
     
@@ -1317,6 +1397,7 @@ hide_show_numeric_categoric <- function(session, showing_boxplot) {
         shinyjs::show('var_plots__histogram_bins')
         shinyjs::hide('div_var_plots__group_y_zoom_controls')
         shinyjs::show('div_var_plots__group_x_zoom_controls')
+        shinyjs::hide('var_plots__color_variable__UI')
         # if we are hiding the y-controls, uncheck the scale_y_log10 option so it isn't carried over
         updateCheckboxInput(session, 'var_plots__scale_y_log_base_10', value=FALSE)
     }
@@ -1336,7 +1417,7 @@ hide_show_numeric_categoric <- function(session, showing_boxplot) {
     shinyjs::hide('div_var_plots__group_trend_controls')
     shinyjs::hide('div_var_plots__group_time_series_controls')
     shinyjs::hide('div_var_plots__group_barchar_controls')
-    shinyjs::hide('div_var_plots__multi_barchar_controls')
+    shinyjs::hide('var_plots__categoric_view_type')
     shinyjs::hide('var_plots__annotate_points')
     shinyjs::hide('var_plots__show_points')
     shinyjs::hide('var_plots__sum_by_variable__UI')
@@ -1374,7 +1455,7 @@ hide_show_categoric_numeric <- function(session) {
     shinyjs::hide('div_var_plots__group_time_series_controls')
     shinyjs::hide('var_plots__histogram_bins')
     shinyjs::hide('div_var_plots__group_barchar_controls')
-    shinyjs::hide('div_var_plots__multi_barchar_controls')
+    shinyjs::hide('var_plots__categoric_view_type')
     shinyjs::hide('var_plots__numeric_graph_type')
     shinyjs::hide('var_plots__annotate_points')
     shinyjs::hide('var_plots__show_points')
@@ -1411,7 +1492,7 @@ hide_show_categoric_categoric <- function(session, input, has_comparison_variabl
     shinyjs::hide('var_plots__numeric_numeric_show_resampled_confidence_interval')
     shinyjs::hide('var_plots__color_variable__UI')
 
-    shinyjs::show('div_var_plots__multi_barchar_controls')
+    shinyjs::show('var_plots__categoric_view_type')
     shinyjs::show('div_var_plots__group_barchar_controls')
     shinyjs::show('var_plots__base_size')
 
@@ -1451,7 +1532,6 @@ observe__var_plots__hide_show_uncollapse_on_primary_vars <- function(session, in
             shinyjs::hide('var_plots__sum_by_variable__UI')
             shinyjs::hide('var_plots__multi_value_delimiter')
             shinyjs::hide('var_plots__size_variable__UI')
-            shinyjs::hide('var_plots__label_variables__UI')
             shinyjs::hide('var_plots__numeric_numeric_group_comp_variable')
             shinyjs::hide('var_plots__numeric_numeric_aggregation_function')
             shinyjs::hide('var_plots__numeric_numeric_aggregation_count_minimum')

@@ -113,6 +113,8 @@ shinyServer(function(input, output, session) {
 
     observeEvent__var_plots__custom_labels_clear(input, session)
     observeEvent__var_plots__graph_options_clear(input, session)
+    observeEvent__var_plots__graph_options_apply(input, session)
+    observeEvent__var_plots__graph_options__any_used(input, session)
 
     # main plot
     output$var_plots <- renderPlot__variable_plot(session,
@@ -124,7 +126,7 @@ shinyServer(function(input, output, session) {
     output$var_plots__color_variable__UI <- renderUI__var_plots__color_variable__UI(input, reactive__source_data)
     output$var_plots__size_variable__UI <- renderUI__var_plots__size_variable__UI(reactive__source_data)
     output$var_plots__label_variables__UI <- renderUI__var_plots__label_variables__UI(reactive__source_data)
-    output$var_plots__categoric_view_type__UI <- renderUI__var_plots__categoric_view_type__UI(input)
+    observeEvent__var_plots__categoric_view_type(input, session)
 
     # the `outputOptions` options code below makes it so that these variables/selectInput update even if they
     # are hidden; why? e.g. if using the "Pretty Text" option, these variables are accessed whether hidden
