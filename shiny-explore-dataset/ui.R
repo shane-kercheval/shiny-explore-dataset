@@ -309,7 +309,6 @@ shinyUI(fluidPage(theme="custom.css",
                             div(style="display:inline-block; float:left; margin-bottom:20px; margin-left: 10px",
                                 actionButton(inputId='var_plots__custom_labels_clear', label='Clear'))
                         ),
-                        
                         textInput(inputId='var_plots__custom_title', label="Title", width='100%', value=NULL),
                         textInput(inputId='var_plots__custom_subtitle', label="Subtitle", width='100%', value=NULL),
                         textInput(inputId='var_plots__custom_x_axis_label', label="X-Axis Label", width='100%', value=NULL),

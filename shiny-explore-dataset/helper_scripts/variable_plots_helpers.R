@@ -127,11 +127,22 @@ reactive__filter_controls_list__creator <- function(input, dataset) {
     })
 }
 
+observeEvent__var_plots__custom_labels_apply <- function(input, session) {
+
+    observeEvent(input$var_plots__custom_labels_apply, ({
+
+        log_message_block_start('Applying Custom Graph Labels')
+        updateCollapse(session, "var_plots__bscollapse", style = list("Other Options" = "default"))
+    }))
+}
+
 observeEvent__var_plots__custom_labels_clear <- function(input, session) {
 
     observeEvent(input$var_plots__custom_labels_clear, ({
 
         log_message_block_start('Clearing Custom Graph Labels')
+
+        updateCollapse(session, "var_plots__bscollapse", style = list("Other Options" = "danger"))
 
         updateTextInput(session, 'var_plots__custom_title', value='')
         updateTextInput(session, 'var_plots__custom_subtitle', value='')
@@ -139,6 +150,8 @@ observeEvent__var_plots__custom_labels_clear <- function(input, session) {
         updateTextInput(session, 'var_plots__custom_y_axis_label', value='')
         updateTextInput(session, 'var_plots__custom_caption', value='')
         updateTextInput(session, 'var_plots__custom_tag', value='')
+        updateCheckboxInput(session, 'var_plots__pretty_text', value=FALSE)
+        updateSliderTextInput(session, 'var_plots__base_size', selected=15)
 
         # even though I call updateTextInput before click, the values haven't been reset yet
         # click('var_plots__custom_labels_apply')
@@ -245,6 +258,28 @@ observeEvent__var_plots__graph_options__any_used <- function(input, session) {
 
             log_message_block_start('Graph Options Dirty (Control Used)')
             updateCollapse(session, "var_plots__bscollapse", style = list("Graph Options" = "danger"))
+        }
+
+    }, ignoreNULL = TRUE, ignoreInit = TRUE)
+}
+
+observeEvent__var_plots__other_options__any_used <- function(input, session) {
+
+    observeEvent(c(# any of these will trigger the graph options color change
+                   input$var_plots__custom_title,
+                   input$var_plots__custom_subtitle,
+                   input$var_plots__custom_x_axis_label,
+                   input$var_plots__custom_y_axis_label,
+                   input$var_plots__custom_caption,
+                   input$var_plots__custom_tag,
+                   input$var_plots__base_size,
+                   input$var_plots__pretty_text
+        ), {
+
+        if(isolate(input$var_plots__variable) != global__select_variable) {
+
+            log_message_block_start('Other Options Dirty (Control Used)')
+            updateCollapse(session, "var_plots__bscollapse", style = list("Other Options" = "danger"))
         }
 
     }, ignoreNULL = TRUE, ignoreInit = TRUE)

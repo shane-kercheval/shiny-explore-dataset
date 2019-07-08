@@ -115,6 +115,8 @@ shinyServer(function(input, output, session) {
     observeEvent__var_plots__graph_options_clear(input, session)
     observeEvent__var_plots__graph_options_apply(input, session)
     observeEvent__var_plots__graph_options__any_used(input, session)
+    observeEvent__var_plots__custom_labels_apply(input, session)
+    observeEvent__var_plots__other_options__any_used(input, session)
 
     # main plot
     output$var_plots <- renderPlot__variable_plot(session,
