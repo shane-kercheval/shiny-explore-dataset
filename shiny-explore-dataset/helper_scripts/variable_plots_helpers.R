@@ -183,7 +183,7 @@ observeEvent__var_plots__graph_options_clear <- function(input, session) {
         updateCheckboxInput(session, 'var_plots__show_points', value=FALSE)
         updateSelectInput(session, 'var_plots__numeric_graph_type', selected="Boxplot")
         updateSelectInput(session, 'var_plots__categoric_view_type', selected="Bar")
-        updateCheckboxInput(session, 'var_plots__order_by_count', value=FALSE)
+        updateSelectInput(session, 'var_plots__order_by_variable', selected="Default")
         updateCheckboxInput(session, 'var_plots__show_variable_totals', value=TRUE)
         updateCheckboxInput(session, 'var_plots__show_comparison_totals', value=TRUE)
         updateNumericInput(session, 'var_plots__histogram_bins', value=30)
@@ -214,6 +214,7 @@ hide_graph_options <- function(input) {
     shinyjs::hide('var_plots__numeric_graph_type')
     shinyjs::hide('var_plots__categoric_view_type')
     shinyjs::hide('div_var_plots__group_barchar_controls')
+    shinyjs::hide('var_plots__order_by_variable')
     shinyjs::hide('var_plots__histogram_bins')
     shinyjs::hide('div_var_plots__group_scatter_controls')
     shinyjs::hide('var_plots__numeric_numeric_aggregation_count_minimum')
@@ -233,7 +234,7 @@ observeEvent__var_plots__graph_options__any_used <- function(input, session) {
                    input$var_plots__show_points,
                    input$var_plots__numeric_graph_type,
                    input$var_plots__categoric_view_type,
-                   input$var_plots__order_by_count,
+                   input$var_plots__order_by_variable,
                    input$var_plots__show_variable_totals,
                    input$var_plots__show_comparison_totals,
                    input$var_plots__histogram_bins,
@@ -511,7 +512,7 @@ reactive__var_plots__ggplot__creator <- function(input, session, dataset) {
         local_base_size <- isolate(input$var_plots__base_size)
         local_histogram_bins <- isolate(input$var_plots__histogram_bins)
         local_jitter <- isolate(input$var_plots__jitter)
-        local_order_by_count <- isolate(input$var_plots__order_by_count)
+        local_order_by_variable <- isolate(input$var_plots__order_by_variable)
         local_numeric_graph_type <- isolate(input$var_plots__numeric_graph_type)
         local_pretty_text <- isolate(input$var_plots__pretty_text)
         local_scale_x_log_base_10 <- isolate(input$var_plots__scale_x_log_base_10)
@@ -648,7 +649,8 @@ reactive__var_plots__ggplot__creator <- function(input, session, dataset) {
                 }
 
                 add_confidence_interval <- !is.null(local_trend_line_se) && local_trend_line_se == 'Yes'
-                ggplot_object <- local_dataset %>% select(local_primary_variable, local_comparison_variable, local_color_variable) %>%
+                ggplot_object <- local_dataset %>%
+                    select(local_primary_variable, local_comparison_variable, local_color_variable) %>%
                     mutate_factor_lump(factor_lump_number=local_var_plots__filter_factor_lump_number) %>%
                     rt_explore_plot_time_series(variable=local_primary_variable,
                                                 comparison_variable=local_comparison_variable,
@@ -841,6 +843,7 @@ reactive__var_plots__ggplot__creator <- function(input, session, dataset) {
                         log_message_variable('var_plots__scale_y_log_base_10', local_scale_y_log_base_10)
 
                         ggplot_object <- local_dataset %>%
+                            mutate_factor_reorder(local_order_by_variable, local_comparison_variable) %>%
                             select(local_primary_variable,
                                    local_comparison_variable,
                                    local_color_variable) %>%
@@ -896,6 +899,7 @@ reactive__var_plots__ggplot__creator <- function(input, session, dataset) {
                     log_message_variable('var_plots__scale_y_log_base_10', local_scale_y_log_base_10)
 
                     ggplot_object <- local_dataset %>%
+                        mutate_factor_reorder(local_order_by_variable, local_primary_variable) %>%
                         select(local_primary_variable,
                                local_comparison_variable,
                                local_color_variable) %>%
@@ -924,18 +928,20 @@ reactive__var_plots__ggplot__creator <- function(input, session, dataset) {
 
                     log_message('**categoric null/categoric**')
 
-                    log_message_variable('var_plots__order_by_count', local_order_by_count)
+                    log_message_variable('var_plots__order_by_variable', local_order_by_variable)
                     log_message_variable('var_plots__show_variable_totals', local_show_variable_totals)
                     log_message_variable('var_plots__show_comparison_totals', local_show_comparison_totals)
                     log_message_variable('var_plots__multi_value_delimiter', local_multi_value_delimiter)
                     log_message_variable('var_plots__categoric_view_type', local_categoric_view_type)
 
-                    ggplot_object <- local_dataset %>% select(c(local_primary_variable, local_comparison_variable, local_sum_by_variable)) %>%
+                    ggplot_object <- local_dataset %>%
+                        mutate_factor_reorder(local_order_by_variable, local_primary_variable) %>%
+                        select(c(local_primary_variable, local_comparison_variable, local_sum_by_variable)) %>%
                         mutate_factor_lump(factor_lump_number=local_var_plots__filter_factor_lump_number) %>%
                         rt_explore_plot_value_totals(variable=local_primary_variable,
                                                      comparison_variable=local_comparison_variable,
                                                      sum_by_variable=local_sum_by_variable,
-                                                     order_by_count=local_order_by_count,
+                                                     order_by_count=local_order_by_variable == "Frequency",
                                                      show_variable_totals=local_show_variable_totals,
                                                      show_comparison_totals=local_show_comparison_totals,
                                                      view_type=local_categoric_view_type,
@@ -1140,6 +1146,21 @@ renderUI__var_plots__label_variables__UI <- function(dataset) {
     })
 }
 
+renderUI__var_plots__order_by_variable__UI <- function(dataset) {
+
+    renderUI({
+
+        selectInput(inputId='var_plots__order_by_variable',
+                    label = 'Order By',
+                    choices = c("Default", "Frequency", colnames(dataset() %>% select_if(is.numeric))),
+                    selected = "Default",
+                    multiple = FALSE,
+                    selectize = TRUE,
+                    width='100%') %>%
+            add_tooltip("If a numeric variable is selected, the categories are ordered by the categories\\' median value of the variable.")
+    })
+}
+
 observeEvent__var_plots__categoric_view_type <- function(input, session) {
 
     observeEvent(c(input$var_plots__categoric_view_type,
@@ -1318,6 +1339,7 @@ hide_show_date <- function(session, has_comparison_variable) {
     shinyjs::hide('div_var_plots__group_x_zoom_controls')
     shinyjs::hide('var_plots__histogram_bins')
     shinyjs::hide('div_var_plots__group_barchar_controls')
+    shinyjs::hide('var_plots__order_by_variable')
     shinyjs::hide('var_plots__categoric_view_type')
     shinyjs::hide('var_plots__numeric_graph_type')
     shinyjs::hide('var_plots__sum_by_variable__UI')
@@ -1397,6 +1419,7 @@ hide_show_numeric_numeric <- function(session,
     shinyjs::hide('div_var_plots__group_time_series_controls')
     shinyjs::hide('var_plots__histogram_bins')
     shinyjs::hide('div_var_plots__group_barchar_controls')
+    shinyjs::hide('var_plots__order_by_variable')
     shinyjs::hide('var_plots__categoric_view_type')
     shinyjs::hide('var_plots__numeric_graph_type')
     shinyjs::hide('var_plots__sum_by_variable__UI')
@@ -1417,10 +1440,12 @@ hide_show_numeric_categoric <- function(session, showing_boxplot, has_comparison
         if(has_comparison_variable) {
 
             shinyjs::show('var_plots__color_variable__UI')
+            shinyjs::show('var_plots__order_by_variable')
 
         } else {
 
             shinyjs::hide('var_plots__color_variable__UI')
+            shinyjs::hide('var_plots__order_by_variable')
         }
 
         # if we are hiding the x-controls, uncheck the scale_x_log10 option so it isn't carried over
@@ -1490,6 +1515,7 @@ hide_show_categoric_numeric <- function(session) {
     shinyjs::hide('div_var_plots__group_time_series_controls')
     shinyjs::hide('var_plots__histogram_bins')
     shinyjs::hide('div_var_plots__group_barchar_controls')
+    shinyjs::show('var_plots__order_by_variable')
     shinyjs::hide('var_plots__categoric_view_type')
     shinyjs::hide('var_plots__numeric_graph_type')
     shinyjs::hide('var_plots__annotate_points')
@@ -1529,6 +1555,7 @@ hide_show_categoric_categoric <- function(session, input, has_comparison_variabl
 
     shinyjs::show('var_plots__categoric_view_type')
     shinyjs::show('div_var_plots__group_barchar_controls')
+    shinyjs::show('var_plots__order_by_variable')
     shinyjs::show('var_plots__base_size')
 
     shinyjs::hide('var_plots__numeric_aggregation')

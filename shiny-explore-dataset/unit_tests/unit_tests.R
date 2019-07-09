@@ -872,3 +872,40 @@ test_that("generic_helpers::mutate_factor_lump::all_numeric", {
     lumped_dataset <- dataset %>% mutate_factor_lump(factor_lump_number = 1)
     expect_true(rt_are_dataframes_equal(lumped_dataset, dataset))
 })
+
+test_that("generic_helpers::mutate_factor_reorder", {
+
+    diamonds_order_by_freq <- diamonds %>% count(cut, sort=TRUE)
+    diamonds_order_by_median <- diamonds %>%
+        group_by(cut) %>%
+        summarise(n=n(),
+                  median_carat=median(carat)) %>%
+        arrange(desc(median_carat))
+    
+    # DEFAULT
+    mutated <- diamonds %>% mutate_factor_reorder('Default', 'cut')
+    expect_identical(levels(mutated$cut), levels(diamonds$cut))
+    
+    # FREQ
+    # CHAR
+    mutated <- diamonds %>% 
+        mutate(cut = as.character(cut)) %>%
+        mutate_factor_reorder('Frequency', 'cut')
+    expect_identical(levels(mutated$cut), as.character(diamonds_order_by_freq$cut))
+    
+    # FACTOR
+    mutated <- diamonds %>% mutate_factor_reorder('Frequency', 'cut')
+    expect_identical(levels(mutated$cut), as.character(diamonds_order_by_freq$cut))
+    
+    # MEDIAN
+    # CHAR
+    mutated <- diamonds %>% 
+        mutate(cut = as.character(cut)) %>%
+        mutate_factor_reorder('carat', 'cut')
+    expect_identical(levels(mutated$cut), as.character(diamonds_order_by_median$cut))
+    
+    # FACTOR
+    mutated <- diamonds %>% 
+        mutate_factor_reorder('carat', 'cut')
+    expect_identical(levels(mutated$cut), as.character(diamonds_order_by_median$cut))
+})

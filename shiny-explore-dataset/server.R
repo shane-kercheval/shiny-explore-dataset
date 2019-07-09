@@ -128,7 +128,9 @@ shinyServer(function(input, output, session) {
     output$var_plots__color_variable__UI <- renderUI__var_plots__color_variable__UI(input, reactive__source_data)
     output$var_plots__size_variable__UI <- renderUI__var_plots__size_variable__UI(reactive__source_data)
     output$var_plots__label_variables__UI <- renderUI__var_plots__label_variables__UI(reactive__source_data)
+    output$var_plots__order_by_variable__UI <- renderUI__var_plots__order_by_variable__UI(reactive__source_data)
     observeEvent__var_plots__categoric_view_type(input, session)
+
 
     # the `outputOptions` options code below makes it so that these variables/selectInput update even if they
     # are hidden; why? e.g. if using the "Pretty Text" option, these variables are accessed whether hidden
@@ -140,6 +142,7 @@ shinyServer(function(input, output, session) {
     outputOptions(output, "var_plots__color_variable__UI", suspendWhenHidden = FALSE)
     outputOptions(output, "var_plots__size_variable__UI", suspendWhenHidden = FALSE)
     outputOptions(output, "var_plots__label_variables__UI", suspendWhenHidden = FALSE)
+    outputOptions(output, "var_plots__order_by_variable__UI", suspendWhenHidden = FALSE)
 
     observe__var_plots__hide_show_uncollapse_on_primary_vars(session, input)
     observeEvent__var_plots__variables_buttons_clear_swap(session, input)

@@ -78,6 +78,37 @@ mutate_factor_lump <- function(dataset, factor_lump_number=NULL, ignore_columns=
     return (dataset)
 }
 
+#' mutates a categoricvariable in order (factor) to order it (and display) it on a graph in that particular order
+#' @param dataset the dataset
+#' @param variable_to_order_by: "Default", "Frequency", or the name of the variable
+#' @param variable_to_order: the variable to mutate the factor order
+mutate_factor_reorder <- function(dataset, variable_to_order_by, variable_to_order) {
+
+    if (variable_to_order_by == "Frequency") {
+
+        dataset[, variable_to_order] <- fct_infreq(dataset[[variable_to_order]], ordered = TRUE)
+    
+    } else if (variable_to_order_by != "Default") {
+
+        rt_stopif(is.null(variable_to_order_by))
+        
+        symbol_variable_to_order <- sym(variable_to_order)
+        symbol_variable_to_order_by <- sym(variable_to_order_by)
+        new_levels <- dataset %>%
+            group_by(!!symbol_variable_to_order) %>%
+            summarise(n = n(), median_v = median(!!symbol_variable_to_order_by)) %>%
+            arrange(desc(median_v), desc(n)) %>%
+            rt_get_vector(variable_to_order) %>%
+            as.character()
+
+        dataset[, variable_to_order] <- factor(dataset[[variable_to_order]],
+                                               levels = new_levels,
+                                               ordered = TRUE)
+    }
+
+    return (dataset)
+}
+
 capture_messages_warnings <- function(func) {
     
     messages <- list()
