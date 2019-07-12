@@ -152,6 +152,8 @@ observeEvent__var_plots__custom_labels_clear <- function(input, session) {
         updateTextInput(session, 'var_plots__custom_tag', value='')
         updateCheckboxInput(session, 'var_plots__pretty_text', value=FALSE)
         updateSliderTextInput(session, 'var_plots__base_size', selected=15)
+        updateTextAreaInput(session, 'var_plots__vertical_annotations', value="")
+        updateTextAreaInput(session, 'var_plots__horizontal_annotations', value="")
 
         # even though I call updateTextInput before click, the values haven't been reset yet
         # click('var_plots__custom_labels_apply')
@@ -274,6 +276,8 @@ observeEvent__var_plots__other_options__any_used <- function(input, session) {
                    input$var_plots__custom_caption,
                    input$var_plots__custom_tag,
                    input$var_plots__base_size,
+                   input$var_plots__vertical_annotations,
+                   input$var_plots__horizontal_annotations,
                    input$var_plots__pretty_text
         ), {
 
@@ -507,6 +511,17 @@ reactive__var_plots__ggplot__creator <- function(input, session, dataset) {
         local_numeric_numeric_aggregation_count_minimum <- isolate(input$var_plots__numeric_numeric_aggregation_count_minimum)
         local_numeric_numeric_show_resampled_confidence_interval <- isolate(input$var_plots__numeric_numeric_show_resampled_confidence_interval)
 
+        local_vertical_annotations <- isolate(input$var_plots__vertical_annotations)
+        vertical_annotations <- str_split(local_vertical_annotations, "\n")[[1]]
+        vertical_annotations <- purrr::map(vertical_annotations, ~ str_split(., ';')[[1]])
+        log_message_variable('var_plots__vertical_annotations', paste0(vertical_annotations, collapse="..."))
+
+        local_horizontal_annotations <- isolate(input$var_plots__horizontal_annotations)
+        horizontal_annotations <- str_split(local_horizontal_annotations, "\n")[[1]]
+        horizontal_annotations <- purrr::map(horizontal_annotations, ~ str_split(., ';')[[1]])
+        log_message_variable('var_plots__horizontal_annotations', paste0(horizontal_annotations, collapse="..."))
+
+
         local_transparency <- isolate(input$var_plots__transparency) / 100
         local_annotate_points <- isolate(input$var_plots__annotate_points)
         local_base_size <- isolate(input$var_plots__base_size)
@@ -671,6 +686,41 @@ reactive__var_plots__ggplot__creator <- function(input, session, dataset) {
                                    confidence_interval=add_confidence_interval,
                                    color_variable=local_color_variable)
 
+                if(!is.null(vertical_annotations) && vertical_annotations != "" && length(vertical_annotations) > 0) {
+
+                    for(annotation in vertical_annotations) {
+
+                        ggplot_object <- ggplot_object +
+                             geom_vline(xintercept = ymd(annotation[1]), color='red') +
+                             geom_text(x=ymd(annotation[1]),
+                                       y=0,
+                                       label=annotation[2],
+                                       color="red",
+                                       angle=90,
+                                       #text=element_text(size=3),
+                                       hjust=0,
+                                       vjust=-0.5)
+  
+                    }
+                }
+
+                if(!is.null(horizontal_annotations) && horizontal_annotations != "" && length(horizontal_annotations) > 0) {
+
+                    for(annotation in horizontal_annotations) {
+
+                        y_value <- as.numeric(annotation[1])
+                        ggplot_object <- ggplot_object +
+                             geom_hline(yintercept = y_value, color='red') +
+                             geom_text(y=y_value,
+                                       x=0,
+                                       label=annotation[2],
+                                       color="red",
+                                       hjust=-0.2,
+                                       vjust=-0.5)
+  
+                    }
+                }
+
                 # if(local_annotate_points && !is.null(local_comparison_variable)) {
 
                 #     ggplot_object <- prettyfy_plot(plot=ggplot_object,
@@ -823,6 +873,42 @@ reactive__var_plots__ggplot__creator <- function(input, session, dataset) {
                         }
                     }
 
+                    if(!is.null(vertical_annotations) && vertical_annotations != "" && length(vertical_annotations) > 0) {
+
+                        for(annotation in vertical_annotations) {
+
+                            x_value <- as.numeric(annotation[1])
+                            ggplot_object <- ggplot_object +
+                                 geom_vline(xintercept = x_value, color='red') +
+                                 geom_text(x=x_value,
+                                           y=0,
+                                           label=annotation[2],
+                                           color="red",
+                                           angle=90,
+                                           #text=element_text(size=3),
+                                           hjust=0,
+                                           vjust=-0.5)
+      
+                        }
+                    }
+
+                    if(!is.null(horizontal_annotations) && horizontal_annotations != "" && length(horizontal_annotations) > 0) {
+
+                        for(annotation in horizontal_annotations) {
+
+                            y_value <- as.numeric(annotation[1])
+                            ggplot_object <- ggplot_object +
+                                 geom_hline(yintercept = y_value, color='red') +
+                                 geom_text(y=y_value,
+                                           x=0,
+                                           label=annotation[2],
+                                           color="red",
+                                           hjust=-0.2,
+                                           vjust=-0.5)
+      
+                        }
+                    }
+
                 ##########################################################################################
                 # NULL Or Categoric Secondary Variable
                 ##########################################################################################
@@ -857,6 +943,22 @@ reactive__var_plots__ggplot__creator <- function(input, session, dataset) {
                             scale_axes_log10(scale_x=FALSE,
                                              scale_y=local_scale_y_log_base_10)
 
+                        if(!is.null(horizontal_annotations) && horizontal_annotations != "" && length(horizontal_annotations) > 0) {
+
+                            for(annotation in horizontal_annotations) {
+
+                                y_value <- as.numeric(annotation[1])
+                                ggplot_object <- ggplot_object +
+                                     geom_hline(yintercept = y_value, color='red') +
+                                     geom_text(y=y_value,
+                                               x=0,
+                                               label=annotation[2],
+                                               color="red",
+                                               hjust=-0.2,
+                                               vjust=-0.5)
+          
+                            }
+                        }
                     } else {
 
                         log_message('**numeric null/categoric - histogram**')
@@ -912,6 +1014,23 @@ reactive__var_plots__ggplot__creator <- function(input, session, dataset) {
                                                 base_size=local_base_size) %>%
                         scale_axes_log10(scale_x=FALSE,
                                          scale_y=local_scale_y_log_base_10)
+
+                    if(!is.null(horizontal_annotations) && horizontal_annotations != "" && length(horizontal_annotations) > 0) {
+
+                        for(annotation in horizontal_annotations) {
+
+                            y_value <- as.numeric(annotation[1])
+                            ggplot_object <- ggplot_object +
+                                 geom_hline(yintercept = y_value, color='red') +
+                                 geom_text(y=y_value,
+                                           x=0,
+                                           label=annotation[2],
+                                           color="red",
+                                           hjust=-0.2,
+                                           vjust=-0.5)
+      
+                        }
+                    }
                 ##########################################################################################
                 # NULL Or Categoric Secondary Variable
                 ##########################################################################################
@@ -1314,6 +1433,8 @@ hide_show_date <- function(session, has_comparison_variable) {
     
     shinyjs::show('div_var_plots__group_y_zoom_controls')
     shinyjs::show('var_plots__base_size')
+    shinyjs::show('var_plots__vertical_annotations')
+    shinyjs::show('var_plots__horizontal_annotations')
     shinyjs::show('var_plots__annotate_points')
     shinyjs::show('var_plots__show_points')
     shinyjs::show('var_plots__color_variable__UI')
@@ -1415,6 +1536,8 @@ hide_show_numeric_numeric <- function(session,
     shinyjs::show('div_var_plots__group_x_zoom_controls')
     shinyjs::show('div_var_plots__group_y_zoom_controls')
     shinyjs::show('var_plots__base_size')
+    shinyjs::show('var_plots__vertical_annotations')
+    shinyjs::show('var_plots__horizontal_annotations')
     
     shinyjs::hide('div_var_plots__group_time_series_controls')
     shinyjs::hide('var_plots__histogram_bins')
@@ -1471,6 +1594,8 @@ hide_show_numeric_categoric <- function(session, showing_boxplot, has_comparison
     shinyjs::hide('var_plots__numeric_numeric_show_resampled_confidence_interval')
 
     shinyjs::show('var_plots__base_size')
+    shinyjs::hide('var_plots__vertical_annotations')
+    shinyjs::show('var_plots__horizontal_annotations')
     shinyjs::show('var_plots__numeric_graph_type')
 
     shinyjs::hide('div_var_plots__group_scatter_controls')
@@ -1504,6 +1629,8 @@ hide_show_categoric_numeric <- function(session) {
 
     shinyjs::show('div_var_plots__group_y_zoom_controls')
     shinyjs::show('var_plots__base_size')
+    shinyjs::hide('var_plots__vertical_annotations')
+    shinyjs::show('var_plots__horizontal_annotations')
 
     shinyjs::hide('div_var_plots__group_x_zoom_controls')
     # if we are hiding the x-controls, uncheck the scale_x_log10 option so it isn't carried over
@@ -1557,6 +1684,8 @@ hide_show_categoric_categoric <- function(session, input, has_comparison_variabl
     shinyjs::show('div_var_plots__group_barchar_controls')
     shinyjs::show('var_plots__order_by_variable')
     shinyjs::show('var_plots__base_size')
+    shinyjs::hide('var_plots__vertical_annotations')
+    shinyjs::hide('var_plots__horizontal_annotations')
 
     shinyjs::hide('var_plots__numeric_aggregation')
     shinyjs::hide('div_var_plots__group_x_zoom_controls')

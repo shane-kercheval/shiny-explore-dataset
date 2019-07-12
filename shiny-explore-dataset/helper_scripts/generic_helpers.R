@@ -264,8 +264,11 @@ filter_data <- function(dataset, filter_list, callback=NULL) {
                     filter(!!symbol_column_name >= hm(filter_values[1]) & !!symbol_column_name <= hm(filter_values[2]))
 
             } else {
-                #class(.)[1]
+
+                print("ERROR: unknown class")
+                print(paste0(class(dataset[, column_name]), collapse=', '))
                 stopifnot(FALSE)
+
             }
         }
  
