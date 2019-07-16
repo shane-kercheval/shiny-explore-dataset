@@ -924,16 +924,28 @@ reactive__var_plots__ggplot__creator <- function(input, session, dataset) {
 
                         log_message('**numeric null/categoric - boxplot**')
 
+                        log_message_variable('var_plots__order_by_variable', local_order_by_variable)
                         log_message_variable('var_plots__y_zoom_min', local_y_zoom_min)
                         log_message_variable('var_plots__y_zoom_max', local_y_zoom_max)
                         log_message_variable('var_plots__scale_y_log_base_10', local_scale_y_log_base_10)
 
+                        if(local_order_by_variable %in% colnames(local_dataset)) {
+                            
+                            temp_order_by_variable <- local_order_by_variable
+
+                        } else {
+
+                            temp_order_by_variable <- NULL
+                        }
+
                         ggplot_object <- local_dataset %>%
-                            mutate_factor_reorder(local_order_by_variable, local_comparison_variable) %>%
                             select(local_primary_variable,
                                    local_comparison_variable,
-                                   local_color_variable) %>%
+                                   local_color_variable,
+                                   temp_order_by_variable) %>%
                             mutate_factor_lump(factor_lump_number=local_var_plots__filter_factor_lump_number) %>%
+                            mutate_factor_reorder(variable_to_order_by=local_order_by_variable,
+                                                  variable_to_order=local_comparison_variable) %>%
                             rt_explore_plot_boxplot(variable=local_primary_variable,
                                                     comparison_variable=local_comparison_variable,
                                                     color_variable=local_color_variable,
@@ -996,16 +1008,28 @@ reactive__var_plots__ggplot__creator <- function(input, session, dataset) {
 
                     log_message('**categoric numeric**')
 
+                    log_message_variable('var_plots__order_by_variable', local_order_by_variable)
                     log_message_variable('var_plots__y_zoom_min', local_y_zoom_min)
                     log_message_variable('var_plots__y_zoom_max', local_y_zoom_max)
                     log_message_variable('var_plots__scale_y_log_base_10', local_scale_y_log_base_10)
 
+                    if(local_order_by_variable %in% colnames(local_dataset)) {
+                            
+                        temp_order_by_variable <- local_order_by_variable
+
+                    } else {
+
+                        temp_order_by_variable <- NULL
+                    }
+
                     ggplot_object <- local_dataset %>%
-                        mutate_factor_reorder(local_order_by_variable, local_primary_variable) %>%
                         select(local_primary_variable,
                                local_comparison_variable,
-                               local_color_variable) %>%
+                               local_color_variable,
+                               temp_order_by_variable) %>%
                         mutate_factor_lump(factor_lump_number=local_var_plots__filter_factor_lump_number) %>%
+                        mutate_factor_reorder(variable_to_order_by=local_order_by_variable,
+                                              variable_to_order=local_primary_variable) %>%
                         rt_explore_plot_boxplot(variable=local_comparison_variable,
                                                 comparison_variable=local_primary_variable,
                                                 color_variable=local_color_variable,
@@ -1053,10 +1077,23 @@ reactive__var_plots__ggplot__creator <- function(input, session, dataset) {
                     log_message_variable('var_plots__multi_value_delimiter', local_multi_value_delimiter)
                     log_message_variable('var_plots__categoric_view_type', local_categoric_view_type)
 
+                    if(local_order_by_variable %in% colnames(local_dataset)) {
+                            
+                        temp_order_by_variable <- local_order_by_variable
+
+                    } else {
+
+                        temp_order_by_variable <- NULL
+                    }
+
                     ggplot_object <- local_dataset %>%
-                        mutate_factor_reorder(local_order_by_variable, local_primary_variable) %>%
-                        select(c(local_primary_variable, local_comparison_variable, local_sum_by_variable)) %>%
+                        select(local_primary_variable,
+                               local_comparison_variable,
+                               local_sum_by_variable,
+                               temp_order_by_variable) %>%
                         mutate_factor_lump(factor_lump_number=local_var_plots__filter_factor_lump_number) %>%
+                        mutate_factor_reorder(variable_to_order_by=local_order_by_variable,
+                                              variable_to_order=local_primary_variable) %>%
                         rt_explore_plot_value_totals(variable=local_primary_variable,
                                                      comparison_variable=local_comparison_variable,
                                                      sum_by_variable=local_sum_by_variable,
