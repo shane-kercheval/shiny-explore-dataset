@@ -41,7 +41,7 @@ reactive__filter_controls_list__creator <- function(input, dataset) {
 
                 } else if(is.factor(.x)) {
 
-                    if(length(levels(.x)) <= 1000) {
+                    if(length(levels(.x)) <= 1500) {
                         choices <- levels(.x)
 
                         if(any(is.na(.x))) {
@@ -58,7 +58,7 @@ reactive__filter_controls_list__creator <- function(input, dataset) {
                     }
                 } else if(is.character(.x)) {
                     
-                    if(length(unique(.x)) <= 1000) {
+                    if(length(unique(.x)) <= 1500) {
 
                         choices <- as.character((as.data.frame(table(as.character(.x))) %>%
                                                      arrange(desc(Freq)))$Var1)
