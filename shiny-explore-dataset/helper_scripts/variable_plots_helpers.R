@@ -38,7 +38,6 @@ reactive__filter_controls_list__creator <- function(input, dataset) {
                                                     start=min_value,
                                                     end=max_value,
                                                     width='100%')
-
                 } else if(is.factor(.x)) {
 
                     if(length(levels(.x)) <= 1500) {
@@ -85,7 +84,6 @@ reactive__filter_controls_list__creator <- function(input, dataset) {
                                                  max=max_value,
                                                  value=c(min_value, max_value),
                                                  width='100%')
-
                 } else if(is.logical(.x)) {
 
                     filter_object <- selectInput(inputId=input_id,
@@ -109,7 +107,6 @@ reactive__filter_controls_list__creator <- function(input, dataset) {
                                                      selected=c("00:00", "24:00"),
                                                      grid=FALSE,
                                                      width='100%')
-
                 } else {
                     #class(.)[1]
                     stopifnot(FALSE)
@@ -177,9 +174,9 @@ observeEvent__var_plots__graph_options_clear <- function(input, session) {
         updateCollapse(session, "var_plots__bscollapse", style = list("Graph Options" = "danger"))
 
         updateSliderTextInput(session,
-                          'var_plots__filter_factor_lump_number',
-                          choices=as.character(c("Off", seq(1, 10), seq(15, 50, 5))),
-                          selected="10")
+                              'var_plots__filter_factor_lump_number',
+                              choices=as.character(c("Off", seq(1, 10), seq(15, 50, 5))),
+                              selected="10")
         updateSelectInput(session, 'var_plots__label_variables', selected=character(0))
         updateCheckboxInput(session, 'var_plots__annotate_points', value=FALSE)
         updateCheckboxInput(session, 'var_plots__show_points', value=FALSE)
@@ -191,8 +188,8 @@ observeEvent__var_plots__graph_options_clear <- function(input, session) {
         updateNumericInput(session, 'var_plots__histogram_bins', value=30)
         updateSliderTextInput(session, 'var_plots__transparency', selected=60)
         updateCheckboxInput(session, 'var_plots__jitter', value=FALSE)
-        updateNumericInput(session, 'var_plots__numeric_numeric_aggregation_count_minimum', value=30)
-        updateCheckboxInput(session, 'var_plots__numeric_numeric_show_resampled_confidence_interval', value=FALSE)
+        updateNumericInput(session, 'var_plots__numeric_aggregation_count_minimum', value=30)
+        updateCheckboxInput(session, 'var_plots__numeric_show_resampled_conf_int', value=FALSE)
         updateRadioButtons(session, 'var_plots__trend_line', selected='None')
         updateRadioButtons(session, 'var_plots__trend_line_se', selected='Yes')
         updateSelectInput(session, 'var_plots__ts_date_floor', selected=names(global__date_part_vector)[1])
@@ -219,8 +216,8 @@ hide_graph_options <- function(input) {
     shinyjs::hide('var_plots__order_by_variable')
     shinyjs::hide('var_plots__histogram_bins')
     shinyjs::hide('div_var_plots__group_scatter_controls')
-    shinyjs::hide('var_plots__numeric_numeric_aggregation_count_minimum')
-    shinyjs::hide('var_plots__numeric_numeric_show_resampled_confidence_interval')
+    shinyjs::hide('var_plots__numeric_aggregation_count_minimum')
+    shinyjs::hide('var_plots__numeric_show_resampled_conf_int')
     shinyjs::hide('div_var_plots__group_trend_controls')
     shinyjs::hide('div_var_plots__group_time_series_controls')
     shinyjs::hide('div_var_plots__group_x_zoom_controls')
@@ -242,8 +239,8 @@ observeEvent__var_plots__graph_options__any_used <- function(input, session) {
                    input$var_plots__histogram_bins,
                    input$var_plots__transparency,
                    input$var_plots__jitter,
-                   input$var_plots__numeric_numeric_aggregation_count_minimum,
-                   input$var_plots__numeric_numeric_show_resampled_confidence_interval,
+                   input$var_plots__numeric_aggregation_count_minimum,
+                   input$var_plots__numeric_show_resampled_conf_int,
                    input$var_plots__trend_line,
                    input$var_plots__trend_line_se,
                    input$var_plots__ts_date_floor,
@@ -396,7 +393,8 @@ observe__var_plots__bscollapse__dynamic_inputs <- function(input, session, datas
 
 ##############################################################################################################
 # FILTERED DATASET - Variable Plot's filtered dataset
-# duplicate dataset (which is bad for large datasets) so that the filters don't have to be reapplied every time.
+# duplicate dataset (which is bad for large datasets) so that the filters don't have to be reapplied every
+# time.
 ##############################################################################################################
 reactive__var_plots__filtered_data__creator <- function(input, dataset, reactive_filter_message_list) {
 
@@ -407,6 +405,7 @@ reactive__var_plots__filtered_data__creator <- function(input, dataset, reactive
         # these are the columns we want to filter on; if the column is not in the selection, don't filter
         filter_controls_selections <- isolate(input$var_plots__filter_controls_selections)
         if('All Variables' %in% filter_controls_selections) {
+
             filter_controls_selections <- colnames(dataset())
         }
 
@@ -480,7 +479,6 @@ reactive__var_plots__ggplot__creator <- function(input, session, dataset) {
 
         req(input$var_plots__variable)
         req(input$var_plots__comparison)
-        #req(input$var_plots__filter_factor_lump_number)
 
         input$var_plots__graph_options_apply  # trigger update if applying custom labels
         input$var_plots__custom_labels_apply  # trigger update if applying graph options
@@ -506,21 +504,22 @@ reactive__var_plots__ggplot__creator <- function(input, session, dataset) {
                                                       local_size_variable,
                                                       local_color_variable)
 
-        local_numeric_numeric_group_comp_variable <- input$var_plots__numeric_numeric_group_comp_variable
-        local_numeric_numeric_aggregation_function <- input$var_plots__numeric_numeric_aggregation_function
-        local_numeric_numeric_aggregation_count_minimum <- isolate(input$var_plots__numeric_numeric_aggregation_count_minimum)
-        local_numeric_numeric_show_resampled_confidence_interval <- isolate(input$var_plots__numeric_numeric_show_resampled_confidence_interval)
+        local_numeric_group_comp_variable <- input$var_plots__numeric_group_comp_variable
+        local_numeric_aggregation_function <- input$var_plots__numeric_aggregation_function
+        local_numeric_aggregation_count_minimum <- isolate(input$var_plots__numeric_aggregation_count_minimum)
+        local_numeric_show_resampled_confidence_interval <- isolate(input$var_plots__numeric_show_resampled_conf_int)
 
         local_vertical_annotations <- isolate(input$var_plots__vertical_annotations)
         vertical_annotations <- str_split(local_vertical_annotations, "\n")[[1]]
         vertical_annotations <- purrr::map(vertical_annotations, ~ str_split(., ';')[[1]])
-        log_message_variable('var_plots__vertical_annotations', paste0(vertical_annotations, collapse="..."))
+        log_message_variable('var_plots__vertical_annotations',
+                             paste0(vertical_annotations, collapse="..."))
 
         local_horizontal_annotations <- isolate(input$var_plots__horizontal_annotations)
         horizontal_annotations <- str_split(local_horizontal_annotations, "\n")[[1]]
         horizontal_annotations <- purrr::map(horizontal_annotations, ~ str_split(., ';')[[1]])
-        log_message_variable('var_plots__horizontal_annotations', paste0(horizontal_annotations, collapse="..."))
-
+        log_message_variable('var_plots__horizontal_annotations',
+                             paste0(horizontal_annotations, collapse="..."))
 
         local_transparency <- isolate(input$var_plots__transparency) / 100
         local_annotate_points <- isolate(input$var_plots__annotate_points)
@@ -545,14 +544,18 @@ reactive__var_plots__ggplot__creator <- function(input, session, dataset) {
         local_y_zoom_max <- isolate(input$var_plots__y_zoom_max)
 
         # for time series plot
-        local_show_points <- default_if_null_or_empty_string(isolate(input$var_plots__show_points), default=FALSE)
-        local_ts_date_floor <- default_if_null_or_empty_string(isolate(input$var_plots__ts_date_floor), string_values_as_null='None')
-        local_ts_date_break_format <- default_if_null_or_empty_string(isolate(input$var_plots__ts_date_break_format), string_values_as_null='Auto')
+        local_show_points <- default_if_null_or_empty_string(isolate(input$var_plots__show_points),
+                                                             default=FALSE)
+        local_ts_date_floor <- default_if_null_or_empty_string(isolate(input$var_plots__ts_date_floor),
+                                                             string_values_as_null='None')
+        local_ts_date_break_format <- default_if_null_or_empty_string(isolate(input$var_plots__ts_date_break_format),
+                                                             string_values_as_null='Auto')
         local_ts_date_breaks_width <- default_if_null_or_empty_string(isolate(input$var_plots__ts_breaks_width))
 
         ggplot_object <- NULL
 
-        if(local_primary_variable != global__select_variable && local_primary_variable %in% colnames(local_dataset)) {
+        if(local_primary_variable != global__select_variable &&
+                local_primary_variable %in% colnames(local_dataset)) {
 
             log_message_block_start('Creating ggplot object')
 
@@ -577,13 +580,13 @@ reactive__var_plots__ggplot__creator <- function(input, session, dataset) {
             log_message_variable('var_plots__base_size', local_base_size)
             log_message_variable('var_plots__pretty_text', local_pretty_text)
             log_message_variable('var_plots__annotate_points', local_annotate_points)
-            log_message_variable('var_plots__filter_factor_lump_number', local_var_plots__filter_factor_lump_number)
+            log_message_variable('var_plots__filter_factor_lump_number',
+                                 local_var_plots__filter_factor_lump_number)
             
             if(local_pretty_text) {
                 # if we change to pretty text, it will update the columns and all values to be "pretty",
                 # but that means we have to take the variables they selected and change them to be
                 # "pretty" as well so subsetting by them finds the correct column
-
                 local_dataset <- rt_pretty_dataset(dataset=local_dataset %>%
                                                                 select(c(default_if_null_or_empty_string(local_primary_variable),
                                                                          default_if_null_or_empty_string(local_comparison_variable),
@@ -605,10 +608,6 @@ reactive__var_plots__ggplot__creator <- function(input, session, dataset) {
 
                     local_size_variable <- rt_pretty_text(local_size_variable)
                 }
-                # if(!is_null_or_empty_string(local_size_variable)) {
-
-                #     local_label_variables <- rt_pretty_text(local_label_variables)
-                # }
                 if(!is_null_or_empty_string(local_color_variable)) {
 
                     local_color_variable <- rt_pretty_text(local_color_variable)
@@ -618,7 +617,6 @@ reactive__var_plots__ggplot__creator <- function(input, session, dataset) {
                 log_message_variable('updated comparison_variable', local_comparison_variable)
                 log_message_variable('updated sum_by_variable', local_sum_by_variable)
                 log_message_variable('updated var_plots__size_variable', local_size_variable)
-                # log_message_variable('updated var_plots__label_variables', local_label_variables)
                 log_message_variable('updated var_plots__color_variable', local_color_variable)
                 log_message_generic('column names', paste0(colnames(local_dataset), collapse = '; '))
             }
@@ -686,7 +684,9 @@ reactive__var_plots__ggplot__creator <- function(input, session, dataset) {
                                    confidence_interval=add_confidence_interval,
                                    color_variable=local_color_variable)
 
-                if(!is.null(vertical_annotations) && vertical_annotations != "" && length(vertical_annotations) > 0) {
+                if(!is.null(vertical_annotations) &&
+                        vertical_annotations != "" &&
+                        length(vertical_annotations) > 0) {
 
                     for(annotation in vertical_annotations) {
 
@@ -697,14 +697,14 @@ reactive__var_plots__ggplot__creator <- function(input, session, dataset) {
                                        label=annotation[2],
                                        color="red",
                                        angle=90,
-                                       #text=element_text(size=3),
                                        hjust=0,
                                        vjust=-0.5)
-  
                     }
                 }
 
-                if(!is.null(horizontal_annotations) && horizontal_annotations != "" && length(horizontal_annotations) > 0) {
+                if(!is.null(horizontal_annotations) &&
+                        horizontal_annotations != "" &&
+                        length(horizontal_annotations) > 0) {
 
                     for(annotation in horizontal_annotations) {
 
@@ -717,15 +717,8 @@ reactive__var_plots__ggplot__creator <- function(input, session, dataset) {
                                        color="red",
                                        hjust=-0.2,
                                        vjust=-0.5)
-  
                     }
                 }
-
-                # if(local_annotate_points && !is.null(local_comparison_variable)) {
-
-                #     ggplot_object <- prettyfy_plot(plot=ggplot_object,
-                #         annotations=pretyfy_annotations((local_dataset %>% arrange(!!sym(local_primary_variable)))[, local_comparison_variable]))
-                # }
             ##############################################################################################
             # Numeric Primary Variable
             ##############################################################################################
@@ -738,8 +731,8 @@ reactive__var_plots__ggplot__creator <- function(input, session, dataset) {
                         is.numeric(local_dataset[, local_comparison_variable])) {
 
                     hide_show_numeric_numeric(session, 
-                        local_numeric_numeric_group_comp_variable,
-                        local_numeric_numeric_aggregation_function == "Boxplot")
+                                              local_numeric_group_comp_variable,
+                                              local_numeric_aggregation_function == "Boxplot")
 
                     log_message('**numeric numeric**')
 
@@ -765,34 +758,36 @@ reactive__var_plots__ggplot__creator <- function(input, session, dataset) {
                     log_message_variable('var_plots__map_borders_database', local_map_borders_database)
                     log_message_variable('var_plots__map_borders_regions', local_map_borders_regions)
 
-                    log_message_variable('var_plots__numeric_numeric_group_comp_variable', local_numeric_numeric_group_comp_variable)
-                    log_message_variable('var_plots__numeric_numeric_aggregation_function', local_numeric_numeric_aggregation_function)
-                    log_message_variable('var_plots__numeric_numeric_aggregation_count_minimum', local_numeric_numeric_aggregation_count_minimum)
-                    log_message_variable('var_plots__numeric_numeric_show_resampled_confidence_interval', local_numeric_numeric_show_resampled_confidence_interval)
+                    log_message_variable('var_plots__numeric_group_comp_variable',
+                                         local_numeric_group_comp_variable)
+                    log_message_variable('var_plots__numeric_aggregation_function',
+                                         local_numeric_aggregation_function)
+                    log_message_variable('var_plots__numeric_aggregation_count_minimum',
+                                         local_numeric_aggregation_count_minimum)
+                    log_message_variable('var_plots__numeric_show_resampled_conf_int',
+                                         local_numeric_show_resampled_confidence_interval)
 
-
-                    if(local_numeric_numeric_group_comp_variable) {
-
+                    if(local_numeric_group_comp_variable) {
 
                         aggregation_function <- NULL
                         aggregation_function_name <- NULL
-                        if(local_numeric_numeric_aggregation_function != 'Boxplot') {
+                        if(local_numeric_aggregation_function != 'Boxplot') {
 
-                            aggregation_function_name <- local_numeric_numeric_aggregation_function
+                            aggregation_function_name <- local_numeric_aggregation_function
 
-                            if(local_numeric_numeric_aggregation_function == 'Mean') {
+                            if(local_numeric_aggregation_function == 'Mean') {
 
                                 aggregation_function <- function(x) { return (mean(x, na.rm=TRUE)) }
 
-                            } else if (local_numeric_numeric_aggregation_function == 'Geometric Mean') {
+                            } else if (local_numeric_aggregation_function == 'Geometric Mean') {
 
                                 aggregation_function <- rt_geometric_mean
 
-                            } else if (local_numeric_numeric_aggregation_function == 'Median') {
+                            } else if (local_numeric_aggregation_function == 'Median') {
 
                                 aggregation_function <- function(x) { return (median(x, na.rm=TRUE)) }
 
-                            } else if (local_numeric_numeric_aggregation_function == 'Sum') {
+                            } else if (local_numeric_aggregation_function == 'Sum') {
 
                                 aggregation_function_name = 'Sum of'
                                 aggregation_function <- function(x) { return (sum(x, na.rm=TRUE)) }
@@ -803,14 +798,13 @@ reactive__var_plots__ggplot__creator <- function(input, session, dataset) {
                             }
                         }
 
-                        ggplot_object <- local_dataset %>%#  select(local_primary_variable, local_comparison_variable) %>%
-                            #mutate_factor_lump(factor_lump_number=local_var_plots__filter_factor_lump_number) %>%
+                        ggplot_object <- local_dataset %>%
                             rt_explore_plot_aggregate_2_numerics(variable=local_primary_variable,
                                                                  comparison_variable=local_comparison_variable,
                                                                  aggregation_function=aggregation_function,
                                                                  aggregation_function_name=aggregation_function_name,
-                                                                 aggregation_count_minimum=local_numeric_numeric_aggregation_count_minimum,
-                                                                 show_resampled_confidence_interval=local_numeric_numeric_show_resampled_confidence_interval,
+                                                                 aggregation_count_minimum=local_numeric_aggregation_count_minimum,
+                                                                 show_resampled_confidence_interval=local_numeric_show_resampled_confidence_interval,
                                                                  show_points=local_show_points,
                                                                  show_labels=local_annotate_points,
                                                                  x_zoom_min=local_x_zoom_min,
@@ -865,7 +859,6 @@ reactive__var_plots__ggplot__creator <- function(input, session, dataset) {
                                 regions <- str_split(local_map_borders_regions, pattern = ', ', simplify = TRUE)
                                 regions <- as.character(regions)
 
-
                                 ggplot_object <- ggplot_object +
                                     borders(database=local_map_borders_database,
                                             regions=regions)
@@ -885,10 +878,8 @@ reactive__var_plots__ggplot__creator <- function(input, session, dataset) {
                                            label=annotation[2],
                                            color="red",
                                            angle=90,
-                                           #text=element_text(size=3),
                                            hjust=0,
                                            vjust=-0.5)
-      
                         }
                     }
 
@@ -905,7 +896,6 @@ reactive__var_plots__ggplot__creator <- function(input, session, dataset) {
                                            color="red",
                                            hjust=-0.2,
                                            vjust=-0.5)
-      
                         }
                     }
 
@@ -919,7 +909,6 @@ reactive__var_plots__ggplot__creator <- function(input, session, dataset) {
                     hide_show_numeric_categoric(session=session,
                                                 showing_boxplot=show_boxplot,
                                                 has_comparison_variable=!is.null(local_comparison_variable))
-
                     if(show_boxplot) {
 
                         log_message('**numeric null/categoric - boxplot**')
@@ -968,7 +957,6 @@ reactive__var_plots__ggplot__creator <- function(input, session, dataset) {
                                                color="red",
                                                hjust=-0.2,
                                                vjust=-0.5)
-          
                             }
                         }
                     } else {
@@ -1052,7 +1040,6 @@ reactive__var_plots__ggplot__creator <- function(input, session, dataset) {
                                            color="red",
                                            hjust=-0.2,
                                            vjust=-0.5)
-      
                         }
                     }
                 ##########################################################################################
@@ -1173,7 +1160,8 @@ renderUI__var_plots__comparison__UI <- function(input, dataset) {
 
         req(input$var_plots__variable)
 
-        selected_variable <- default_if_null_or_empty_string(input$var_plots__comparison, global__select_variable_optional)
+        selected_variable <- default_if_null_or_empty_string(input$var_plots__comparison,
+                                                             global__select_variable_optional)
 
         local_dataset <- dataset()
         local_primary_variable <- input$var_plots__variable
@@ -1345,7 +1333,11 @@ observeEvent__var_plots__categoric_view_type <- function(input, session) {
 
         } else if(!is.null(local_comparison_variable) && is.null(local_sum_by_variable)) {
 
-            view_type_options <- c("Bar", "Confidence Interval", "Facet by Comparison", "Confidence Interval - within Variable", "Stack")
+            view_type_options <- c("Bar",
+                                   "Confidence Interval",
+                                   "Facet by Comparison",
+                                   "Confidence Interval - within Variable",
+                                   "Stack")
 
         } else { # both are not null
             
@@ -1380,7 +1372,6 @@ renderUI__var_plots__filter_controls_selections__UI <- function(input, dataset) 
         selectInput(inputId='var_plots__filter_controls_selections',
                     label = 'Filters',
                     choices = choices,
-                    #choices = c('All Variables', colnames(dataset())),
                     selected = NULL,
                     multiple = TRUE,
                     selectize = TRUE,
@@ -1391,28 +1382,7 @@ renderUI__var_plots__filter_controls_selections__UI <- function(input, dataset) 
 
 renderUI__var_plots__filter_bscollapse__UI <- function(input, dataset, filter_controls_list) {
  
-    renderUI({
-        tagList(list=filter_controls_list())
-
-        # filter_controls_selections <- input$var_plots__filter_controls_selections
-        # if('All Variables' %in% filter_controls_selections) {
-        #     filter_controls_selections <- colnames(dataset())
-        # }
-        # tagList(list=filter_controls_list()[filter_controls_selections])
-        
-        # control_list <- list()
-        # for(selection in filter_controls_selections) {
-        #     if(is.null(isolate(input[[paste0('var_plots__dynamic_filter__', selection)]]))) {
-
-        #         control_list <- append(control_list, filter_controls_list()[selection])
-
-        #     } else {
-
-        #         control_list <- append(control_list, isolate(output[[paste0('var_plots__dynamic_filter__', selection)]]))
-        #     }
-        # }
-        #tagList(list=control_list)
-    })
+    renderUI({ tagList(list=filter_controls_list()) })
 }
 
 clear_variables <- function(session, input, swap_primary_and_comparison=FALSE) {
@@ -1435,15 +1405,14 @@ clear_variables <- function(session, input, swap_primary_and_comparison=FALSE) {
     updateSelectInput(session, 'var_plots__color_variable', selected=global__select_variable_optional)
     updateSelectInput(session, 'var_plots__size_variable', selected=global__select_variable_optional)
 
-    updateCheckboxInput(session, 'var_plots__numeric_numeric_group_comp_variable', value=FALSE)
+    updateCheckboxInput(session, 'var_plots__numeric_group_comp_variable', value=FALSE)
     updateSelectInput(session,
-                      'var_plots__numeric_numeric_aggregation_function',
+                      'var_plots__numeric_aggregation_function',
                       selected=global__num_num_aggregation_function_default)
     updateSelectInput(session,
                       'var_plots__numeric_aggregation',
                       selected=global__var_plots__numeric_aggregation_default)
     updateTextInput(session, 'var_plots__multi_value_delimiter', value="")
-
 }
 
 observeEvent__var_plots__variables_buttons_clear_swap <- function(session, input) {
@@ -1451,13 +1420,11 @@ observeEvent__var_plots__variables_buttons_clear_swap <- function(session, input
     observeEvent(input$var_plots__variables_buttons_clear, {
 
         clear_variables(session, input, swap_primary_and_comparison=FALSE)
-
     })
 
     observeEvent(input$var_plots__variables_buttons_swap, {
 
         clear_variables(session, input, swap_primary_and_comparison=TRUE)
-
     })
 }
 
@@ -1489,10 +1456,10 @@ hide_show_date <- function(session, has_comparison_variable) {
 
     shinyjs::hide('var_plots__size_variable__UI')
     shinyjs::hide('var_plots__label_variables__UI')
-    shinyjs::hide('var_plots__numeric_numeric_group_comp_variable')
-    shinyjs::hide('var_plots__numeric_numeric_aggregation_function')
-    shinyjs::hide('var_plots__numeric_numeric_aggregation_count_minimum')
-    shinyjs::hide('var_plots__numeric_numeric_show_resampled_confidence_interval')
+    shinyjs::hide('var_plots__numeric_group_comp_variable')
+    shinyjs::hide('var_plots__numeric_aggregation_function')
+    shinyjs::hide('var_plots__numeric_aggregation_count_minimum')
+    shinyjs::hide('var_plots__numeric_show_resampled_conf_int')
     shinyjs::hide('div_var_plots__group_scatter_controls')
     shinyjs::hide('div_var_plots__group_x_zoom_controls')
     shinyjs::hide('var_plots__histogram_bins')
@@ -1518,24 +1485,24 @@ hide_show_numeric_numeric <- function(session,
     # scatterplot; or if grouping the main variable, then boxplot or custom aggregation_function
 
     shinyjs::hide('var_plots__numeric_aggregation')
-    shinyjs::show('var_plots__numeric_numeric_group_comp_variable')
+    shinyjs::show('var_plots__numeric_group_comp_variable')
 
     if(is_grouping_main_variable) {
 
-        shinyjs::show('var_plots__numeric_numeric_aggregation_function')
-        shinyjs::show('var_plots__numeric_numeric_aggregation_count_minimum')
+        shinyjs::show('var_plots__numeric_aggregation_function')
+        shinyjs::show('var_plots__numeric_aggregation_count_minimum')
 
         if(grouping_is_boxplot) {
             
             shinyjs::hide('var_plots__show_points')
             shinyjs::hide('var_plots__annotate_points')
-            shinyjs::hide('var_plots__numeric_numeric_show_resampled_confidence_interval')
+            shinyjs::hide('var_plots__numeric_show_resampled_conf_int')
 
         } else {
 
             shinyjs::show('var_plots__show_points')
             shinyjs::show('var_plots__annotate_points')
-            shinyjs::show('var_plots__numeric_numeric_show_resampled_confidence_interval')
+            shinyjs::show('var_plots__numeric_show_resampled_conf_int')
         }
     
         shinyjs::hide('var_plots__size_variable__UI')
@@ -1552,9 +1519,9 @@ hide_show_numeric_numeric <- function(session,
 
     } else {
 
-        shinyjs::hide('var_plots__numeric_numeric_aggregation_function')
-        shinyjs::hide('var_plots__numeric_numeric_aggregation_count_minimum')
-        shinyjs::hide('var_plots__numeric_numeric_show_resampled_confidence_interval')
+        shinyjs::hide('var_plots__numeric_aggregation_function')
+        shinyjs::hide('var_plots__numeric_aggregation_count_minimum')
+        shinyjs::hide('var_plots__numeric_show_resampled_conf_int')
 
         shinyjs::show('var_plots__size_variable__UI')
         shinyjs::show('var_plots__label_variables__UI')
@@ -1584,7 +1551,6 @@ hide_show_numeric_numeric <- function(session,
     shinyjs::hide('var_plots__numeric_graph_type')
     shinyjs::hide('var_plots__sum_by_variable__UI')
     shinyjs::hide('var_plots__multi_value_delimiter')
-    #shinyjs::hide('var_plots__filter_factor_lump_number')
 }
 
 hide_show_numeric_categoric <- function(session, showing_boxplot, has_comparison_variable) {
@@ -1597,6 +1563,7 @@ hide_show_numeric_categoric <- function(session, showing_boxplot, has_comparison
         shinyjs::hide('var_plots__histogram_bins')
         shinyjs::show('div_var_plots__group_y_zoom_controls')
         shinyjs::hide('div_var_plots__group_x_zoom_controls')
+
         if(has_comparison_variable) {
 
             shinyjs::show('var_plots__color_variable__UI')
@@ -1610,7 +1577,6 @@ hide_show_numeric_categoric <- function(session, showing_boxplot, has_comparison
 
         # if we are hiding the x-controls, uncheck the scale_x_log10 option so it isn't carried over
         updateCheckboxInput(session, 'var_plots__scale_x_log_base_10', value=FALSE)
-    
 
     } else {
 
@@ -1625,10 +1591,10 @@ hide_show_numeric_categoric <- function(session, showing_boxplot, has_comparison
     shinyjs::hide('var_plots__numeric_aggregation')
     shinyjs::hide('var_plots__size_variable__UI')
     shinyjs::hide('var_plots__label_variables__UI')
-    shinyjs::hide('var_plots__numeric_numeric_group_comp_variable')
-    shinyjs::hide('var_plots__numeric_numeric_aggregation_function')
-    shinyjs::hide('var_plots__numeric_numeric_aggregation_count_minimum')
-    shinyjs::hide('var_plots__numeric_numeric_show_resampled_confidence_interval')
+    shinyjs::hide('var_plots__numeric_group_comp_variable')
+    shinyjs::hide('var_plots__numeric_aggregation_function')
+    shinyjs::hide('var_plots__numeric_aggregation_count_minimum')
+    shinyjs::hide('var_plots__numeric_show_resampled_conf_int')
 
     shinyjs::show('var_plots__base_size')
     shinyjs::hide('var_plots__vertical_annotations')
@@ -1648,7 +1614,6 @@ hide_show_numeric_categoric <- function(session, showing_boxplot, has_comparison
     shinyjs::hide('var_plots__map_format')
     shinyjs::hide('var_plots___map_borders_database')
     shinyjs::hide('var_plots___map_borders_regions')
-
 }
 
 hide_show_categoric_numeric <- function(session) {
@@ -1658,10 +1623,10 @@ hide_show_categoric_numeric <- function(session) {
     # multi-boxplot
     shinyjs::hide('var_plots__size_variable__UI')
     shinyjs::hide('var_plots__label_variables__UI')
-    shinyjs::hide('var_plots__numeric_numeric_group_comp_variable')
-    shinyjs::hide('var_plots__numeric_numeric_aggregation_function')
-    shinyjs::hide('var_plots__numeric_numeric_aggregation_count_minimum')
-    shinyjs::hide('var_plots__numeric_numeric_show_resampled_confidence_interval')
+    shinyjs::hide('var_plots__numeric_group_comp_variable')
+    shinyjs::hide('var_plots__numeric_aggregation_function')
+    shinyjs::hide('var_plots__numeric_aggregation_count_minimum')
+    shinyjs::hide('var_plots__numeric_show_resampled_conf_int')
     shinyjs::show('var_plots__color_variable__UI')
 
     shinyjs::show('div_var_plots__group_y_zoom_controls')
@@ -1690,7 +1655,6 @@ hide_show_categoric_numeric <- function(session) {
     shinyjs::hide('var_plots__map_format')
     shinyjs::hide('var_plots___map_borders_database')
     shinyjs::hide('var_plots___map_borders_regions')
-
 }
 
 hide_show_categoric_categoric <- function(session, input, has_comparison_variable) {
@@ -1711,10 +1675,10 @@ hide_show_categoric_categoric <- function(session, input, has_comparison_variabl
 
     shinyjs::hide('var_plots__size_variable__UI')
     shinyjs::hide('var_plots__label_variables__UI')
-    shinyjs::hide('var_plots__numeric_numeric_group_comp_variable')
-    shinyjs::hide('var_plots__numeric_numeric_aggregation_function')
-    shinyjs::hide('var_plots__numeric_numeric_aggregation_count_minimum')
-    shinyjs::hide('var_plots__numeric_numeric_show_resampled_confidence_interval')
+    shinyjs::hide('var_plots__numeric_group_comp_variable')
+    shinyjs::hide('var_plots__numeric_aggregation_function')
+    shinyjs::hide('var_plots__numeric_aggregation_count_minimum')
+    shinyjs::hide('var_plots__numeric_show_resampled_conf_int')
     shinyjs::hide('var_plots__color_variable__UI')
 
     shinyjs::show('var_plots__categoric_view_type')
@@ -1742,7 +1706,6 @@ hide_show_categoric_categoric <- function(session, input, has_comparison_variabl
     shinyjs::hide('var_plots__map_format')
     shinyjs::hide('var_plots___map_borders_database')
     shinyjs::hide('var_plots___map_borders_regions')
-
 }
 
 observe__var_plots__hide_show_uncollapse_on_primary_vars <- function(session, input) {
@@ -1760,10 +1723,10 @@ observe__var_plots__hide_show_uncollapse_on_primary_vars <- function(session, in
             shinyjs::hide('var_plots__sum_by_variable__UI')
             shinyjs::hide('var_plots__multi_value_delimiter')
             shinyjs::hide('var_plots__size_variable__UI')
-            shinyjs::hide('var_plots__numeric_numeric_group_comp_variable')
-            shinyjs::hide('var_plots__numeric_numeric_aggregation_function')
-            shinyjs::hide('var_plots__numeric_numeric_aggregation_count_minimum')
-            shinyjs::hide('var_plots__numeric_numeric_show_resampled_confidence_interval')
+            shinyjs::hide('var_plots__numeric_group_comp_variable')
+            shinyjs::hide('var_plots__numeric_aggregation_function')
+            shinyjs::hide('var_plots__numeric_aggregation_count_minimum')
+            shinyjs::hide('var_plots__numeric_show_resampled_conf_int')
             shinyjs::hide('var_plots__color_variable__UI')
         }
 

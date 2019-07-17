@@ -2,6 +2,7 @@ library(lubridate)
 
 # defualt placement is 'bottom', but I want the default to be 'top'
 add_tooltip <- function(element, tooltip_text, placement='top', trigger='hover') {
+
     return ( tipify(element, title=tooltip_text, placement=placement, trigger=trigger) )
 }
 
