@@ -909,3 +909,149 @@ test_that("generic_helpers::mutate_factor_reorder", {
         mutate_factor_reorder('carat', 'cut')
     expect_identical(levels(mutated$cut), as.character(diamonds_order_by_median$cut))
 })
+
+#' @param vertical_annotations list of vectors; each list item is an annotation; first value of vector is x location of line; second value is text annotation
+#' @param y_location y location of text
+add_vertical_annotations <- function(ggplot_object, vertical_annotations, y_location=0, is_date=FALSE) {
+    
+    if(!is.null(vertical_annotations) &&
+       vertical_annotations != "" &&
+       length(vertical_annotations) > 0) {
+        
+        for(annotation in vertical_annotations) {
+            
+            if(is_date) {
+                x_location <- ymd(annotation[1])
+            } else {
+                x_location <- as.numeric(annotation[1])
+            }
+            
+            ggplot_object <- ggplot_object +
+                geom_vline(xintercept = x_location, color='red') +
+                geom_text(x=x_location,
+                          y=y_location,
+                          label=annotation[2],
+                          color="red",
+                          check_overlap=TRUE,
+                          angle=90,
+                          hjust=0,
+                          vjust=-0.5)
+        }
+    }
+    
+    return (ggplot_object)
+}
+
+#' @param horizontal_annotations list of vectors; each list item is an annotation; first value of vector is y location of line; second value is text annotation
+#' @param x_location x location of text
+add_horizontal_annotations <- function(ggplot_object, horizontal_annotations, x_location=0) {
+    
+    if(!is.null(horizontal_annotations) &&
+       horizontal_annotations != "" &&
+       length(horizontal_annotations) > 0) {
+        
+        for(annotation in horizontal_annotations) {
+            
+            y_value <- as.numeric(annotation[1])
+            ggplot_object <- ggplot_object +
+                geom_hline(yintercept = y_value, color='red') +
+                geom_text(y=y_value,
+                          x=x_location,
+                          label=annotation[2],
+                          color="red",
+                          check_overlap=TRUE,
+                          hjust=-0.2,
+                          vjust=-0.5)
+        }
+    }
+    return (ggplot_object)
+}
+
+test_that("add_x_annotations", {
+    local_dataset <- data.frame(nycflights13::flights %>%
+        mutate(date = make_date(year, month, day)) %>%
+        select(-year, -month, -day) %>%
+        select(date, everything()))
+    
+    vertical_annotations <- list(c("2013-03-15", "Event 3 (2013-03-15)"),
+                                 c("2013-01-01", "Event 1"),
+                                 c("2013-02-01", "Event 2"))
+    
+    horizontal_annotations <- list(c(5000, "Event A"),
+                                   c(6000, "Event B"),
+                                   c(8000, "Event C"))
+
+    local_primary_variable <- 'date'
+    local_y_zoom_min <- NULL
+    local_y_zoom_max <- NULL
+    ggplot_object <- local_dataset %>%
+        select(local_primary_variable) %>%
+        mutate_factor_lump(factor_lump_number=10) %>%
+        rt_explore_plot_time_series(variable=local_primary_variable,
+                                    comparison_variable=NULL,
+                                    comparison_function=NULL,
+                                    comparison_function_name=NULL,
+                                    color_variable=NULL,
+                                    y_zoom_min=local_y_zoom_min,
+                                    y_zoom_max=local_y_zoom_max,
+                                    show_points=TRUE,
+                                    show_labels=TRUE,
+                                    date_floor='week',
+                                    date_break_format='%Y-%m-%d',
+                                    date_breaks_width='2 weeks',
+                                    base_size=11)
+    annotated_object <- ggplot_object %>%
+        add_vertical_annotations(NULL, y_location=max(0, local_y_zoom_min), is_date=TRUE) %>%
+        add_horizontal_annotations(NULL, x_location=max(min(local_dataset[, local_primary_variable]), local_x_zoom_min))
+    test_save_plot(file_name='output_files/annotations__v__h__date_NULL.png', annotated_object)
+
+    annotated_object <- ggplot_object %>%
+        add_vertical_annotations(vertical_annotations, y_location=max(0, local_y_zoom_min), is_date=TRUE) %>%
+        add_horizontal_annotations(horizontal_annotations, x_location=max(min(local_dataset[, local_primary_variable]), local_x_zoom_min))
+    test_save_plot(file_name='output_files/annotations__v__h__date.png', annotated_object)
+    
+    local_x_zoom_min <- ymd('2013-06-10')
+    local_y_zoom_min <- 1000
+    annotated_object <- ggplot_object %>%
+        add_vertical_annotations(vertical_annotations, y_location=max(0, local_y_zoom_min), is_date=TRUE) %>%
+        add_horizontal_annotations(horizontal_annotations, x_location=max(min(local_dataset[, local_primary_variable]), local_x_zoom_min))
+    test_save_plot(file_name='output_files/annotations__v__h__date__adjusted.png', annotated_object)
+
+    # scatter
+    local_dataset <- dataset_or_null('../example_datasets/credit.csv')
+    
+    vertical_annotations <- list(c(0, "Event 1"),
+                                 c(2000, "Event 2"),
+                                 c(12000, "Event 3"))
+    
+    horizontal_annotations <- list(c(10, "Event A"),
+                                   c(30, "Event B"),
+                                   c(40, "Event C"))
+    
+    local_primary_variable <- 'months_loan_duration'
+    local_comparison_variable <- 'amount'
+    local_y_zoom_min <- NULL
+    local_x_zoom_min <- NULL
+    ggplot_object <- local_dataset %>%
+        rt_explore_plot_scatter(variable=local_primary_variable,
+                                    comparison_variable=local_comparison_variable,
+                                    y_zoom_min=local_y_zoom_min,
+                                    y_zoom_max=local_y_zoom_max,
+                                    base_size=11)
+    annotated_object <- ggplot_object %>%
+        add_vertical_annotations(NULL, y_location=max(0, local_y_zoom_min)) %>%
+        add_horizontal_annotations(NULL, x_location=max(min(local_dataset[, local_primary_variable]), local_x_zoom_min))
+    test_save_plot(file_name='output_files/annotations__v__h__scatter_NULL.png', annotated_object)
+    
+    annotated_object <- ggplot_object %>%
+        add_vertical_annotations(vertical_annotations, y_location=max(0, local_y_zoom_min)) %>%
+        add_horizontal_annotations(horizontal_annotations, x_location=max(min(local_dataset[, local_primary_variable]), local_x_zoom_min))
+    test_save_plot(file_name='output_files/annotations__v__h__scatter.png', annotated_object)
+    
+    local_x_zoom_min <- 6000
+    local_y_zoom_min <- 60
+    annotated_object <- ggplot_object %>%
+        add_vertical_annotations(vertical_annotations, y_location=max(0, local_y_zoom_min)) %>%
+        add_horizontal_annotations(horizontal_annotations, x_location=max(min(local_dataset[, local_primary_variable]), local_x_zoom_min))
+    test_save_plot(file_name='output_files/annotations__v__h__scatter__adjusted.png', annotated_object)
+})
