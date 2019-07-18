@@ -474,6 +474,10 @@ hide_show_top_n_categories <- function(dataset, variable, comparison_variable, s
 ##############################################################################################################
 # CREATE GGPLOT OBJECT
 ##############################################################################################################
+custom_max_min <- function(x_vector, y_value) {
+    max(min(x_vector, na.rm=TRUE), y_value, na.rm=TRUE)
+}
+
 reactive__var_plots__ggplot__creator <- function(input, session, dataset) {
     reactive({
 
@@ -682,43 +686,10 @@ reactive__var_plots__ggplot__creator <- function(input, session, dataset) {
                                      scale_y=local_scale_y_log_base_10) %>%
                     add_trend_line(trend_line_type=local_trend_line,
                                    confidence_interval=add_confidence_interval,
-                                   color_variable=local_color_variable)
+                                   color_variable=local_color_variable) %>%
+                    add_vertical_annotations(vertical_annotations, y_location=max(0, local_y_zoom_min, na.rm=TRUE), is_date=TRUE) %>%
+                    add_horizontal_annotations(horizontal_annotations, x_location=min(local_dataset[[local_primary_variable]], na.rm=TRUE))
 
-                if(!is.null(vertical_annotations) &&
-                        vertical_annotations != "" &&
-                        length(vertical_annotations) > 0) {
-
-                    for(annotation in vertical_annotations) {
-
-                        ggplot_object <- ggplot_object +
-                             geom_vline(xintercept = ymd(annotation[1]), color='red') +
-                             geom_text(x=ymd(annotation[1]),
-                                       y=0,
-                                       label=annotation[2],
-                                       color="red",
-                                       angle=90,
-                                       hjust=0,
-                                       vjust=-0.5)
-                    }
-                }
-
-                if(!is.null(horizontal_annotations) &&
-                        horizontal_annotations != "" &&
-                        length(horizontal_annotations) > 0) {
-
-                    for(annotation in horizontal_annotations) {
-
-                        y_value <- as.numeric(annotation[1])
-                        ggplot_object <- ggplot_object +
-                             geom_hline(yintercept = y_value, color='red') +
-                             geom_text(y=y_value,
-                                       x=0,
-                                       label=annotation[2],
-                                       color="red",
-                                       hjust=-0.2,
-                                       vjust=-0.5)
-                    }
-                }
             ##############################################################################################
             # Numeric Primary Variable
             ##############################################################################################
@@ -866,38 +837,15 @@ reactive__var_plots__ggplot__creator <- function(input, session, dataset) {
                         }
                     }
 
-                    if(!is.null(vertical_annotations) && vertical_annotations != "" && length(vertical_annotations) > 0) {
+                    ggplot_object <- ggplot_object %>%
+                            add_horizontal_annotations(horizontal_annotations,
+                                                       x_location=custom_max_min(local_dataset[[local_comparison_variable]],
+                                                                                 local_x_zoom_min)) %>%
+                            add_vertical_annotations(vertical_annotations,
+                                                       y_location=custom_max_min(local_dataset[[local_primary_variable]],
+                                                                                 local_y_zoom_min))
 
-                        for(annotation in vertical_annotations) {
-
-                            x_value <- as.numeric(annotation[1])
-                            ggplot_object <- ggplot_object +
-                                 geom_vline(xintercept = x_value, color='red') +
-                                 geom_text(x=x_value,
-                                           y=0,
-                                           label=annotation[2],
-                                           color="red",
-                                           angle=90,
-                                           hjust=0,
-                                           vjust=-0.5)
-                        }
-                    }
-
-                    if(!is.null(horizontal_annotations) && horizontal_annotations != "" && length(horizontal_annotations) > 0) {
-
-                        for(annotation in horizontal_annotations) {
-
-                            y_value <- as.numeric(annotation[1])
-                            ggplot_object <- ggplot_object +
-                                 geom_hline(yintercept = y_value, color='red') +
-                                 geom_text(y=y_value,
-                                           x=0,
-                                           label=annotation[2],
-                                           color="red",
-                                           hjust=-0.2,
-                                           vjust=-0.5)
-                        }
-                    }
+                            
 
                 ##########################################################################################
                 # NULL Or Categoric Secondary Variable
@@ -927,6 +875,12 @@ reactive__var_plots__ggplot__creator <- function(input, session, dataset) {
                             temp_order_by_variable <- NULL
                         }
 
+                        annotation_x_location <- 0.5
+                        if(is.null(local_comparison_variable)) {
+                            # need this logic because the position changes depending on if it is a single boxplot or multiple
+                            annotation_x_location <- -0.9
+                        }
+
                         ggplot_object <- local_dataset %>%
                             select(local_primary_variable,
                                    local_comparison_variable,
@@ -942,23 +896,10 @@ reactive__var_plots__ggplot__creator <- function(input, session, dataset) {
                                                     y_zoom_max=local_y_zoom_max,
                                                     base_size=local_base_size) %>%
                             scale_axes_log10(scale_x=FALSE,
-                                             scale_y=local_scale_y_log_base_10)
+                                             scale_y=local_scale_y_log_base_10) %>%
+                            add_horizontal_annotations(horizontal_annotations,
+                                                       x_location=annotation_x_location)
 
-                        if(!is.null(horizontal_annotations) && horizontal_annotations != "" && length(horizontal_annotations) > 0) {
-
-                            for(annotation in horizontal_annotations) {
-
-                                y_value <- as.numeric(annotation[1])
-                                ggplot_object <- ggplot_object +
-                                     geom_hline(yintercept = y_value, color='red') +
-                                     geom_text(y=y_value,
-                                               x=0,
-                                               label=annotation[2],
-                                               color="red",
-                                               hjust=-0.2,
-                                               vjust=-0.5)
-                            }
-                        }
                     } else {
 
                         log_message('**numeric null/categoric - histogram**')
@@ -1025,23 +966,10 @@ reactive__var_plots__ggplot__creator <- function(input, session, dataset) {
                                                 y_zoom_max=local_y_zoom_max,
                                                 base_size=local_base_size) %>%
                         scale_axes_log10(scale_x=FALSE,
-                                         scale_y=local_scale_y_log_base_10)
+                                         scale_y=local_scale_y_log_base_10)  %>%
+                        add_horizontal_annotations(horizontal_annotations,
+                                                   x_location=0.5)
 
-                    if(!is.null(horizontal_annotations) && horizontal_annotations != "" && length(horizontal_annotations) > 0) {
-
-                        for(annotation in horizontal_annotations) {
-
-                            y_value <- as.numeric(annotation[1])
-                            ggplot_object <- ggplot_object +
-                                 geom_hline(yintercept = y_value, color='red') +
-                                 geom_text(y=y_value,
-                                           x=0,
-                                           label=annotation[2],
-                                           color="red",
-                                           hjust=-0.2,
-                                           vjust=-0.5)
-                        }
-                    }
                 ##########################################################################################
                 # NULL Or Categoric Secondary Variable
                 ##########################################################################################

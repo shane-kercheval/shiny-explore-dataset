@@ -925,63 +925,6 @@ test_that("generic_helpers::mutate_factor_reorder", {
     expect_identical(levels(mutated$default), c('TRUE', 'FALSE'))
 })
 
-#' @param vertical_annotations list of vectors; each list item is an annotation; first value of vector is x location of line; second value is text annotation
-#' @param y_location y location of text
-add_vertical_annotations <- function(ggplot_object, vertical_annotations, y_location=0, is_date=FALSE) {
-    
-    if(!is.null(vertical_annotations) &&
-       vertical_annotations != "" &&
-       length(vertical_annotations) > 0) {
-        
-        for(annotation in vertical_annotations) {
-            
-            if(is_date) {
-                x_location <- ymd(annotation[1])
-            } else {
-                x_location <- as.numeric(annotation[1])
-            }
-            
-            ggplot_object <- ggplot_object +
-                geom_vline(xintercept = x_location, color='red') +
-                geom_text(x=x_location,
-                          y=y_location,
-                          label=annotation[2],
-                          color="red",
-                          check_overlap=TRUE,
-                          angle=90,
-                          hjust=0,
-                          vjust=-0.5)
-        }
-    }
-    
-    return (ggplot_object)
-}
-
-#' @param horizontal_annotations list of vectors; each list item is an annotation; first value of vector is y location of line; second value is text annotation
-#' @param x_location x location of text
-add_horizontal_annotations <- function(ggplot_object, horizontal_annotations, x_location=0) {
-    
-    if(!is.null(horizontal_annotations) &&
-       horizontal_annotations != "" &&
-       length(horizontal_annotations) > 0) {
-        
-        for(annotation in horizontal_annotations) {
-            
-            y_value <- as.numeric(annotation[1])
-            ggplot_object <- ggplot_object +
-                geom_hline(yintercept = y_value, color='red') +
-                geom_text(y=y_value,
-                          x=x_location,
-                          label=annotation[2],
-                          color="red",
-                          check_overlap=TRUE,
-                          hjust=-0.2,
-                          vjust=-0.5)
-        }
-    }
-    return (ggplot_object)
-}
-
 test_that("add_x_annotations", {
     local_dataset <- data.frame(nycflights13::flights %>%
         mutate(date = make_date(year, month, day)) %>%
