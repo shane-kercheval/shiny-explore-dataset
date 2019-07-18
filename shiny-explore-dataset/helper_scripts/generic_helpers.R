@@ -24,7 +24,7 @@ is_date_type <- function(x) {
 }
 
 is_categoric <- function(x) {
-    return (is.character(x) || is.factor(x))
+    return (is.character(x) || is.factor(x) || is.logical(x))
 }
 
 null_if_select_variable_optional <- function(value) {
@@ -93,7 +93,7 @@ mutate_factor_reorder <- function(dataset, variable_to_order_by, variable_to_ord
     
     if (variable_to_order_by == "Frequency") {
 
-        dataset[, variable_to_order] <- fct_infreq(dataset[[variable_to_order]], ordered = TRUE)
+        dataset[, variable_to_order] <- fct_infreq(as.character(dataset[[variable_to_order]]), ordered = TRUE)
     
     } else if (variable_to_order_by != "Default") {
 
@@ -155,10 +155,10 @@ capture_messages_warnings <- function(func) {
 #'      index 2: string containing information about what was filtered
 filter_data <- function(dataset, filter_list, callback=NULL) {
 
-    end_message <- function(message, num_is_na, num_removing) {
+    end_message <- function(message, num_is_na) {
         if(num_is_na > 0) {
         
-            message <- paste0(message, "; Removing ", num_is_na, " rows with missing values", ")")
+            message <- paste0(message, "; Removing ", my_number_format(num_is_na), " rows with missing values", ")")
         } else {
             message <- paste0(message, ")")
         }
@@ -197,8 +197,8 @@ filter_data <- function(dataset, filter_list, callback=NULL) {
                 num_removing <- sum(!is.na(day_column) & # already counting is.na() above
                                     (day_column < filter_values[1] | day_column > filter_values[2]))
 
-                message <- paste0(column_name, ": ", filter_values[1], " <= x <= ", filter_values[2], " (Removing ", num_removing, " rows") %>%
-                    end_message(num_is_na, num_removing)
+                message <- paste0(column_name, ": ", filter_values[1], " <= x <= ", filter_values[2], " (Removing ", my_number_format(num_removing), " rows") %>%
+                    end_message(num_is_na)
 
                 valid_indexes <- which(!is.na(day_column) & day_column >= filter_values[1] & day_column <= filter_values[2])
                 dataset <- dataset[valid_indexes, ]
@@ -210,8 +210,8 @@ filter_data <- function(dataset, filter_list, callback=NULL) {
                 num_removing <- sum(!is.na(dataset[, column_name]) & 
                                     (dataset[, column_name] < filter_values[1] | dataset[, column_name] > filter_values[2]))
 
-                message <- paste0(column_name, ": ", filter_values[1], " <= x <= ", filter_values[2], " (Removing ", num_removing, " rows") %>%
-                    end_message(num_is_na, num_removing)
+                message <- paste0(column_name, ": ", my_number_format(filter_values[1]), " <= x <= ", my_number_format(filter_values[2]), " (Removing ", my_number_format(num_removing), " rows") %>%
+                    end_message(num_is_na)
 
                 dataset <- dataset %>%
                     filter(!is.na(!!symbol_column_name)) %>%
@@ -241,8 +241,8 @@ filter_data <- function(dataset, filter_list, callback=NULL) {
                         filter(!!symbol_column_name %in% filter_values)
                 }
                 
-                message <- paste0(column_name, ": ", paste0(filter_values, collapse=", "), " (Removing ", num_removing, " rows") %>%
-                    end_message(num_is_na, num_removing)
+                message <- paste0(column_name, ": ", paste0(filter_values, collapse=", "), " (Removing ", my_number_format(num_removing), " rows") %>%
+                    end_message(num_is_na)
                 
             } else if(is.logical(dataset[, column_name])) {
 
@@ -250,8 +250,8 @@ filter_data <- function(dataset, filter_list, callback=NULL) {
                 num_removing <- sum(!is.na(dataset[, column_name]) & 
                                     !dataset[, column_name] %in% filter_values)
 
-                message <- paste0(column_name, ": ", paste0(filter_values, collapse=", "), " (Removing ", num_removing, " rows") %>%
-                    end_message(num_is_na, num_removing)
+                message <- paste0(column_name, ": ", paste0(filter_values, collapse=", "), " (Removing ", my_number_format(num_removing), " rows") %>%
+                    end_message(num_is_na)
 
                 #'logical'
                 dataset <- dataset %>%
@@ -263,8 +263,8 @@ filter_data <- function(dataset, filter_list, callback=NULL) {
                 num_removing <- sum(!is.na(dataset[, column_name]) & 
                                     (dataset[, column_name] < hm(filter_values[1]) | dataset[, column_name] > hm(filter_values[2])))
 
-                message <- paste0(column_name, ": ", filter_values[1], " <= x <= ", filter_values[2], " (Removing ", num_removing, " rows") %>%
-                    end_message(num_is_na, num_removing)
+                message <- paste0(column_name, ": ", filter_values[1], " <= x <= ", filter_values[2], " (Removing ", my_number_format(num_removing), " rows") %>%
+                    end_message(num_is_na)
 
                 # hours minutes seconds
                 dataset <- dataset %>%
@@ -285,4 +285,8 @@ filter_data <- function(dataset, filter_list, callback=NULL) {
     }
 
     return (list(dataset, filter_messages))
+}
+
+my_number_format <- function(x) {
+    format_format(big.mark=",", preserve.width="none", digits=4, scientific=FALSE)(x)
 }

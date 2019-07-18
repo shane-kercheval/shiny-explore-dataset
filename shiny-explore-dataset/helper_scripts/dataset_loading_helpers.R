@@ -36,7 +36,8 @@ reactive__source_data__creator <- function(session, input, custom_triggers) {
                 
                 if(local_preloaded_dataset == 'Credit') {
 
-                    loaded_dataset <- dataset_or_null('example_datasets/credit.csv')
+                    loaded_dataset <- dataset_or_null('example_datasets/credit.csv') %>%
+                        mutate(default = ifelse(default == 'yes', TRUE, FALSE))
 
                 } else if(local_preloaded_dataset == 'Housing') {
 
@@ -72,9 +73,84 @@ reactive__source_data__creator <- function(session, input, custom_triggers) {
                         as.data.frame() %>%
                         extract(title, 'year', '([20]\\d\\d\\d)', convert=TRUE, remove=FALSE) %>%
                         mutate(year = ifelse(year < 1900, NA, year),
-                               points_per_price = points / price) %>%
+                               points_per_price = points / price)
+                    
+                    us_red_varieties <- c(
+                        
+                        'Cabernet Sauvignon',
+                        'Pinot Noir',
+                        'Syrah',
+                        'Red Blend',
+                        'Merlot',
+                        'Bordeaux-style Red Blend',
+                        'Petite Sirah',
+                        'Rhône-style Red Blend',
+                        'Cabernet Franc',
+                        'Grenache',
+                        'Malbec',
+                        'Sangiovese',
+                        'Tempranillo',
+                        'Meritage',
+                        'Mourvèdre',
+                        'Petit Verdot',
+                        'G-S-M',
+                        'Cabernet Sauvignon-Syrah',
+                        'Shiraz',
+                        'Carmenère',
+                        'Syrah-Grenache',
+                        'Syrah-Cabernet Sauvignon',
+                        'Cabernet Sauvignon-Merlot',
+                        'Grenache-Syrah',
+                        'Cabernet Blend',
+                        'Petite Verdot',
+                        'Syrah-Petite Sirah',
+                        'Merlot-Cabernet Sauvignon',
+                        'Cabernet Sauvignon-Cabernet Franc',
+                        'Merlot-Cabernet Franc',
+                        'Cabernet Franc-Merlot',
+                        'Syrah-Mourvèdre',
+                        'Syrah-Viognier',
+                        'Cabernet Merlot',
+                        'Cabernet Sauvignon-Sangiovese',
+                        'Syrah-Tempranillo',
+                        'Tempranillo Blend',
+                        'Grenache-Carignan',
+                        'Grenache-Mourvèdre',
+                        'Merlot-Cabernet',
+                        'Sangiovese-Cabernet Sauvignon',
+                        'Sangiovese-Syrah',
+                        'Syrah-Cabernet',
+                        'Cabernet-Syrah',
+                        'Grenache Blend',
+                        'Sangiovese Cabernet',
+                        'Syrah-Cabernet Franc',
+                        'Cabernet Sauvignon-Malbec',
+                        'Malbec-Merlot',
+                        'Carignan-Grenache',
+                        'Malbec-Syrah',
+                        'Mourvèdre-Syrah',
+                        'Tempranillo-Cabernet Sauvignon',
+                        'Cabernet',
+                        'Cabernet Sauvignon-Barbera',
+                        'Cabernet Sauvignon-Carmenère',
+                        'Cabernet Sauvignon-Shiraz',
+                        'Cabernet Sauvignon-Tempranillo',
+                        'Cabernet-Shiraz',
+                        'Malbec-Cabernet Sauvignon',
+                        'Merlot-Malbec',
+                        'Rosado',
+                        'Syrah-Grenache-Viognier',
+                        'Syrah-Merlot',
+                        'Syrah-Petit Verdot',
+                        'Tannat-Syrah'
+                    )
+                    
+                    loaded_dataset$type <- map_chr(loaded_dataset$variety, ~ ifelse(. %in% us_red_varieties, 'Red', 'White/Other'))
+                    loaded_dataset$type <- ifelse(loaded_dataset$country == "US", loaded_dataset$type, NA)
+                    
+                    loaded_dataset <- loaded_dataset %>%
                         select(-X1) %>%
-                        select(country, province, variety, year, points, price, points_per_price, title, winery, everything())
+                        select(country, province, variety, type, year, points, price, points_per_price, title, winery, everything())
 
                 } else if(local_preloaded_dataset == 'Gapminder') {
 

@@ -60,8 +60,8 @@ test_that("filter", {
     expect_true(str_detect(filter_results[[2]][[1]], "carat:"))
     expect_true(str_detect(filter_results[[2]][[1]], "0.5"))
     expect_true(str_detect(filter_results[[2]][[1]], "2"))
-    expect_true(str_detect(filter_results[[2]][[1]], paste(as.character(num_na), "rows with missing values")))
-    expect_true(str_detect(filter_results[[2]][[1]], paste(as.character(num_filtered_out), "rows")))
+    expect_true(str_detect(filter_results[[2]][[1]], paste(my_number_format(num_na), "rows with missing values")))
+    expect_true(str_detect(filter_results[[2]][[1]], paste(my_number_format(num_filtered_out), "rows")))
     
     ##########################################################################################################
     filter_selections <- c('carat', 'cut')
@@ -85,8 +85,8 @@ test_that("filter", {
     expect_true(str_detect(filter_results[[2]][[1]], "carat:"))
     expect_true(str_detect(filter_results[[2]][[1]], "0.5"))
     expect_true(str_detect(filter_results[[2]][[1]], "2"))
-    expect_true(str_detect(filter_results[[2]][[1]], paste(as.character(num_na), "rows with missing values")))
-    expect_true(str_detect(filter_results[[2]][[1]], paste(as.character(num_filtered_out), "rows")))
+    expect_true(str_detect(filter_results[[2]][[1]], paste(my_number_format(num_na), "rows with missing values")))
+    expect_true(str_detect(filter_results[[2]][[1]], paste(my_number_format(num_filtered_out), "rows")))
     
     # dataset at time of cut being filtered
     t <- dataset %>% filter(!is.na(carat),
@@ -96,9 +96,8 @@ test_that("filter", {
     num_filtered_out <- sum(!is.na(t$cut) & !t$cut %in% c('Ideal', 'Premium', 'Good'))
     expect_true(str_detect(filter_results[[2]][[2]], "cut:"))
     expect_true(str_detect(filter_results[[2]][[2]], "Ideal, Premium, Good"))
-    expect_true(str_detect(filter_results[[2]][[2]], paste(as.character(num_na), "rows with missing values")))
-    expect_true(str_detect(filter_results[[2]][[2]], paste(as.character(num_filtered_out), "rows")))
-
+    expect_true(str_detect(filter_results[[2]][[2]], paste(my_number_format(num_na), "rows with missing values")))
+    expect_true(str_detect(filter_results[[2]][[2]], paste(my_number_format(num_filtered_out), "rows")))
 
     ##########################################################################################################
     filter_selections <- c('carat', 'cut')
@@ -122,8 +121,8 @@ test_that("filter", {
     expect_true(str_detect(filter_results[[2]][[1]], "carat:"))
     expect_true(str_detect(filter_results[[2]][[1]], "0.5"))
     expect_true(str_detect(filter_results[[2]][[1]], "2"))
-    expect_true(str_detect(filter_results[[2]][[1]], paste(as.character(num_na), "rows with missing values")))
-    expect_true(str_detect(filter_results[[2]][[1]], paste(as.character(num_filtered_out), "rows")))
+    expect_true(str_detect(filter_results[[2]][[1]], paste(my_number_format(num_na), "rows with missing values")))
+    expect_true(str_detect(filter_results[[2]][[1]], paste(my_number_format(num_filtered_out), "rows")))
     
     # dataset at time of cut being filtered
     t <- dataset %>% filter(!is.na(carat),
@@ -133,8 +132,8 @@ test_that("filter", {
     num_filtered_out <- sum(!is.na(t$cut) & !t$cut %in% c('Ideal', 'Premium', 'Good'))
     expect_true(str_detect(filter_results[[2]][[2]], "cut:"))
     expect_true(str_detect(filter_results[[2]][[2]], "Ideal, Premium, Good"))
-    expect_true(str_detect(filter_results[[2]][[2]], paste(as.character(num_na), "rows with missing values")))
-    expect_true(str_detect(filter_results[[2]][[2]], paste(as.character(num_filtered_out), "rows")))
+    expect_true(str_detect(filter_results[[2]][[2]], paste(my_number_format(num_na), "rows with missing values")))
+    expect_true(str_detect(filter_results[[2]][[2]], paste(my_number_format(num_filtered_out), "rows")))
     
     ##########################################################################################################
     filter_selections <- c('carat', 'cut', 'color')
@@ -159,8 +158,8 @@ test_that("filter", {
     expect_true(str_detect(filter_results[[2]][[1]], "carat:"))
     expect_true(str_detect(filter_results[[2]][[1]], "0.5"))
     expect_true(str_detect(filter_results[[2]][[1]], "2"))
-    expect_true(str_detect(filter_results[[2]][[1]], paste(as.character(num_na), "rows with missing values")))
-    expect_true(str_detect(filter_results[[2]][[1]], paste(as.character(num_filtered_out), "rows")))
+    expect_true(str_detect(filter_results[[2]][[1]], paste(my_number_format(num_na), "rows with missing values")))
+    expect_true(str_detect(filter_results[[2]][[1]], paste(my_number_format(num_filtered_out), "rows")))
     
     # dataset at time of cut being filtered
     t <- dataset %>% filter(!is.na(carat),
@@ -170,8 +169,8 @@ test_that("filter", {
     num_filtered_out <- sum(!is.na(t$cut) & !t$cut %in% c('Ideal', 'Premium', 'Good'))
     expect_true(str_detect(filter_results[[2]][[2]], "cut:"))
     expect_true(str_detect(filter_results[[2]][[2]], "Ideal, Premium, Good"))
-    expect_true(str_detect(filter_results[[2]][[2]], paste(as.character(num_na), "rows with missing values")))
-    expect_true(str_detect(filter_results[[2]][[2]], paste(as.character(num_filtered_out), "rows")))
+    expect_true(str_detect(filter_results[[2]][[2]], paste(my_number_format(num_na), "rows with missing values")))
+    expect_true(str_detect(filter_results[[2]][[2]], paste(my_number_format(num_filtered_out), "rows")))
     
     expect_equal(filter_results[[2]][[3]], "color: Not Filtering")
 
@@ -198,8 +197,8 @@ test_that("filter", {
     expect_true(str_detect(filter_results[[2]][[1]], "carat:"))
     expect_true(str_detect(filter_results[[2]][[1]], "0.5"))
     expect_true(str_detect(filter_results[[2]][[1]], "2"))
-    expect_true(str_detect(filter_results[[2]][[1]], paste(as.character(num_na), "rows with missing values")))
-    expect_true(str_detect(filter_results[[2]][[1]], paste(as.character(num_filtered_out), "rows")))
+    expect_true(str_detect(filter_results[[2]][[1]], paste(my_number_format(num_na), "rows with missing values")))
+    expect_true(str_detect(filter_results[[2]][[1]], paste(my_number_format(num_filtered_out), "rows")))
     
     # dataset at time of cut being filtered
     t <- dataset %>% filter(!is.na(carat),
@@ -209,15 +208,14 @@ test_that("filter", {
     num_filtered_out <- sum(!is.na(t$cut) & !t$cut %in% c('Ideal', 'Premium', 'Good'))
     expect_true(str_detect(filter_results[[2]][[2]], "cut:"))
     expect_true(str_detect(filter_results[[2]][[2]], "Ideal, Premium, Good"))
-    expect_true(str_detect(filter_results[[2]][[2]], paste(as.character(num_na), "rows with missing values")))
-    expect_true(str_detect(filter_results[[2]][[2]], paste(as.character(num_filtered_out), "rows")))
+    expect_true(str_detect(filter_results[[2]][[2]], paste(my_number_format(num_na), "rows with missing values")))
+    expect_true(str_detect(filter_results[[2]][[2]], paste(my_number_format(num_filtered_out), "rows")))
     
     expect_equal(filter_results[[2]][[3]], "color: Not Filtering")
-    
 
     expect_true(str_detect(filter_results[[2]][[4]], "price:"))
     expect_true(str_detect(filter_results[[2]][[4]], "326"))
-    expect_true(str_detect(filter_results[[2]][[4]], "18823"))
+    expect_true(str_detect(filter_results[[2]][[4]], "18,823"))
     expect_true(str_detect(filter_results[[2]][[4]], "Removing 0 rows"))
     
     ##########################################################################################################
@@ -243,8 +241,8 @@ test_that("filter", {
     expect_true(str_detect(filter_results[[2]][[1]], "carat:"))
     expect_true(str_detect(filter_results[[2]][[1]], "0.5"))
     expect_true(str_detect(filter_results[[2]][[1]], "2"))
-    expect_true(str_detect(filter_results[[2]][[1]], paste(as.character(num_na), "rows with missing values")))
-    expect_true(str_detect(filter_results[[2]][[1]], paste(as.character(num_filtered_out), "rows")))
+    expect_true(str_detect(filter_results[[2]][[1]], paste(my_number_format(num_na), "rows with missing values")))
+    expect_true(str_detect(filter_results[[2]][[1]], paste(my_number_format(num_filtered_out), "rows")))
     
     # dataset at time of cut being filtered
     t <- dataset %>% filter(!is.na(carat),
@@ -254,13 +252,13 @@ test_that("filter", {
     num_filtered_out <- sum(!is.na(t$cut) & !t$cut %in% c('Ideal', 'Premium', 'Good'))
     expect_true(str_detect(filter_results[[2]][[2]], "cut:"))
     expect_true(str_detect(filter_results[[2]][[2]], "Ideal, Premium, Good"))
-    expect_true(str_detect(filter_results[[2]][[2]], paste(as.character(num_na), "rows with missing values")))
-    expect_true(str_detect(filter_results[[2]][[2]], paste(as.character(num_filtered_out), "rows")))
+    expect_true(str_detect(filter_results[[2]][[2]], paste(my_number_format(num_na), "rows with missing values")))
+    expect_true(str_detect(filter_results[[2]][[2]], paste(my_number_format(num_filtered_out), "rows")))
     
 
     expect_true(str_detect(filter_results[[2]][[3]], "price:"))
     expect_true(str_detect(filter_results[[2]][[3]], "326"))
-    expect_true(str_detect(filter_results[[2]][[3]], "18823"))
+    expect_true(str_detect(filter_results[[2]][[3]], "18,823"))
     expect_true(str_detect(filter_results[[2]][[3]], "Removing 0 rows"))
     ##########################################################################################################
     filter_selections <- c('color', 'price')
@@ -275,7 +273,7 @@ test_that("filter", {
 
     expect_true(str_detect(filter_results[[2]][[2]], "price:"))
     expect_true(str_detect(filter_results[[2]][[2]], "326"))
-    expect_true(str_detect(filter_results[[2]][[2]], "18823"))
+    expect_true(str_detect(filter_results[[2]][[2]], "18,823"))
     expect_true(str_detect(filter_results[[2]][[2]], "Removing 0 rows"))
 })
 
@@ -330,8 +328,8 @@ test_that("filter: missing_values_options", {
     expect_true(str_detect(filter_results[[2]][[1]], "carat:"))
     expect_true(str_detect(filter_results[[2]][[1]], "0.5"))
     expect_true(str_detect(filter_results[[2]][[1]], "2"))
-    expect_true(str_detect(filter_results[[2]][[1]], paste(as.character(num_na), "rows with missing values")))
-    expect_true(str_detect(filter_results[[2]][[1]], paste(as.character(num_filtered_out), "rows")))
+    expect_true(str_detect(filter_results[[2]][[1]], paste(my_number_format(num_na), "rows with missing values")))
+    expect_true(str_detect(filter_results[[2]][[1]], paste(my_number_format(num_filtered_out), "rows")))
     
     ##########################################################################################################
     filter_selections <- c('cut')
@@ -354,7 +352,7 @@ test_that("filter: missing_values_options", {
     expect_equal(length(filter_results[[2]]), length(filter_selections))
     expect_true(str_detect(filter_results[[2]][[1]], "cut:"))
     expect_true(grepl(paste0(global_filter_list$cut, collapse = ', '), filter_results[[2]][[1]], fixed=TRUE))
-    expect_true(str_detect(filter_results[[2]][[1]], paste(as.character(num_filtered_out), "rows")))
+    expect_true(str_detect(filter_results[[2]][[1]], paste(my_number_format(num_filtered_out), "rows")))
 
     ##########################################################################################################
     filter_selections <- c('carat', 'cut')
@@ -378,8 +376,8 @@ test_that("filter: missing_values_options", {
     expect_true(str_detect(filter_results[[2]][[1]], "carat:"))
     expect_true(str_detect(filter_results[[2]][[1]], "0.5"))
     expect_true(str_detect(filter_results[[2]][[1]], "2"))
-    expect_true(str_detect(filter_results[[2]][[1]], paste(as.character(num_na), "rows with missing values")))
-    expect_true(str_detect(filter_results[[2]][[1]], paste(as.character(num_filtered_out), "rows")))
+    expect_true(str_detect(filter_results[[2]][[1]], paste(my_number_format(num_na), "rows with missing values")))
+    expect_true(str_detect(filter_results[[2]][[1]], paste(my_number_format(num_filtered_out), "rows")))
     
     # dataset at time of cut being filtered
     t <- dataset %>% filter(!is.na(carat),
@@ -395,7 +393,7 @@ test_that("filter: missing_values_options", {
     expect_equal(length(filter_results[[2]]), length(filter_selections))
     expect_true(str_detect(filter_results[[2]][[2]], "cut:"))
     expect_true(grepl(paste0(global_filter_list$cut, collapse = ', '), filter_results[[2]][[2]], fixed=TRUE))
-    expect_true(str_detect(filter_results[[2]][[2]], paste(as.character(num_filtered_out), "rows")))
+    expect_true(str_detect(filter_results[[2]][[2]], paste(my_number_format(num_filtered_out), "rows")))
     carat_cut_factor_results <- filter_results[[2]][[2]]
     ##########################################################################################################
     filter_selections <- c('carat', 'cut')
@@ -419,8 +417,8 @@ test_that("filter: missing_values_options", {
     expect_true(str_detect(filter_results[[2]][[1]], "carat:"))
     expect_true(str_detect(filter_results[[2]][[1]], "0.5"))
     expect_true(str_detect(filter_results[[2]][[1]], "2"))
-    expect_true(str_detect(filter_results[[2]][[1]], paste(as.character(num_na), "rows with missing values")))
-    expect_true(str_detect(filter_results[[2]][[1]], paste(as.character(num_filtered_out), "rows")))
+    expect_true(str_detect(filter_results[[2]][[1]], paste(my_number_format(num_na), "rows with missing values")))
+    expect_true(str_detect(filter_results[[2]][[1]], paste(my_number_format(num_filtered_out), "rows")))
     
     # dataset at time of cut being filtered
     t <- dataset %>% filter(!is.na(carat),
@@ -436,7 +434,7 @@ test_that("filter: missing_values_options", {
     expect_equal(length(filter_results[[2]]), length(filter_selections))
     expect_true(str_detect(filter_results[[2]][[2]], "cut:"))
     expect_true(grepl(paste0(global_filter_list$cut, collapse = ', '), filter_results[[2]][[2]], fixed=TRUE))
-    expect_true(str_detect(filter_results[[2]][[2]], paste(as.character(num_filtered_out), "rows")))
+    expect_true(str_detect(filter_results[[2]][[2]], paste(my_number_format(num_filtered_out), "rows")))
     expect_equal(carat_cut_factor_results, filter_results[[2]][[2]])
     ##########################################################################################################
     filter_selections <- c('carat', 'cut', 'color')
@@ -461,8 +459,8 @@ test_that("filter: missing_values_options", {
     expect_true(str_detect(filter_results[[2]][[1]], "carat:"))
     expect_true(str_detect(filter_results[[2]][[1]], "0.5"))
     expect_true(str_detect(filter_results[[2]][[1]], "2"))
-    expect_true(str_detect(filter_results[[2]][[1]], paste(as.character(num_na), "rows with missing values")))
-    expect_true(str_detect(filter_results[[2]][[1]], paste(as.character(num_filtered_out), "rows")))
+    expect_true(str_detect(filter_results[[2]][[1]], paste(my_number_format(num_na), "rows with missing values")))
+    expect_true(str_detect(filter_results[[2]][[1]], paste(my_number_format(num_filtered_out), "rows")))
     
     # dataset at time of cut being filtered
     t <- dataset %>% filter(!is.na(carat),
@@ -478,7 +476,7 @@ test_that("filter: missing_values_options", {
     expect_equal(length(filter_results[[2]]), length(filter_selections))
     expect_true(str_detect(filter_results[[2]][[2]], "cut:"))
     expect_true(grepl(paste0(global_filter_list$cut, collapse = ', '), filter_results[[2]][[2]], fixed=TRUE))
-    expect_true(str_detect(filter_results[[2]][[2]], paste(as.character(num_filtered_out), "rows")))
+    expect_true(str_detect(filter_results[[2]][[2]], paste(my_number_format(num_filtered_out), "rows")))
     expect_equal(carat_cut_factor_results, filter_results[[2]][[2]])
     
     expect_equal(filter_results[[2]][[3]], "color: Not Filtering")
@@ -529,8 +527,8 @@ test_that("generic_helpers::filter_data - flights/date", {
     expect_true(str_detect(filter_results[[2]][[1]], "date:"))
     expect_true(str_detect(filter_results[[2]][[1]], as.character(global_filter_list[[1]][1])))
     expect_true(str_detect(filter_results[[2]][[1]], as.character(global_filter_list[[1]][1])))
-    expect_true(str_detect(filter_results[[2]][[1]], paste(as.character(num_na), "rows with missing values")))
-    expect_true(str_detect(filter_results[[2]][[1]], paste(as.character(num_filtered_out), "rows")))
+    expect_true(str_detect(filter_results[[2]][[1]], paste(my_number_format(num_na), "rows with missing values")))
+    expect_true(str_detect(filter_results[[2]][[1]], paste(my_number_format(num_filtered_out), "rows")))
     writeLines(paste0(filter_results[[2]], collapse = "\n\n"), "output_files/filter_message__flights__date.txt")
 
     ##########################################################################################################
@@ -557,8 +555,8 @@ test_that("generic_helpers::filter_data - flights/date", {
     expect_true(str_detect(filter_results[[2]][[1]], "time_hour:"))
     expect_true(str_detect(filter_results[[2]][[1]], as.character(global_filter_list[[2]][1])))
     expect_true(str_detect(filter_results[[2]][[1]], as.character(global_filter_list[[2]][1])))
-    expect_true(str_detect(filter_results[[2]][[1]], paste(as.character(num_na), "rows with missing values")))
-    expect_true(str_detect(filter_results[[2]][[1]], paste(as.character(num_filtered_out), "rows")))
+    expect_true(str_detect(filter_results[[2]][[1]], paste(my_number_format(num_na), "rows with missing values")))
+    expect_true(str_detect(filter_results[[2]][[1]], paste(my_number_format(num_filtered_out), "rows")))
     writeLines(paste0(filter_results[[2]], collapse = "\n\n"), "output_files/filter_message__flights__time_hour.txt")
     ##########################################################################################################
     filter_selections <- c('date', 'time_hour')
@@ -588,8 +586,8 @@ test_that("generic_helpers::filter_data - flights/date", {
     expect_true(str_detect(filter_results[[2]][[1]], "date:"))
     expect_true(str_detect(filter_results[[2]][[1]], as.character(global_filter_list[[1]][1])))
     expect_true(str_detect(filter_results[[2]][[1]], as.character(global_filter_list[[1]][2])))
-    expect_true(str_detect(filter_results[[2]][[1]], paste(as.character(num_na), "rows with missing values")))
-    expect_true(str_detect(filter_results[[2]][[1]], paste(as.character(num_filtered_out), "rows")))
+    expect_true(str_detect(filter_results[[2]][[1]], paste(my_number_format(num_na), "rows with missing values")))
+    expect_true(str_detect(filter_results[[2]][[1]], paste(my_number_format(num_filtered_out), "rows")))
     
     # get dataset to the point time_hour will be filtered, which is after date is filtered
     t <- dataset %>% filter(!is.na(date),
@@ -602,9 +600,9 @@ test_that("generic_helpers::filter_data - flights/date", {
     expect_true(str_detect(filter_results[[2]][[2]], "time_hour:"))
     expect_true(str_detect(filter_results[[2]][[2]], as.character(global_filter_list[[2]][1])))
     expect_true(str_detect(filter_results[[2]][[2]], as.character(global_filter_list[[2]][2])))
-    expect_false(str_detect(filter_results[[2]][[2]], paste(as.character(num_na), "rows with missing values")))
-    #expect_true(str_detect(filter_results[[2]][[2]], paste(as.character(num_na), "rows with missing values")))
-    expect_true(str_detect(filter_results[[2]][[2]], paste(as.character(num_filtered_out), "rows")))
+    expect_false(str_detect(filter_results[[2]][[2]], paste(my_number_format(num_na), "rows with missing values")))
+    #expect_true(str_detect(filter_results[[2]][[2]], paste(my_number_format(num_na), "rows with missing values")))
+    expect_true(str_detect(filter_results[[2]][[2]], paste(my_number_format(num_filtered_out), "rows")))
 
     writeLines(paste0(filter_results[[2]], collapse = "\n\n"), "output_files/filter_message__flights__date__time_hour.txt")
     ##########################################################################################################
@@ -637,8 +635,8 @@ test_that("generic_helpers::filter_data - flights/date", {
     expect_true(str_detect(filter_results[[2]][[1]], "hms:"))
     expect_true(str_detect(filter_results[[2]][[1]], as.character(global_filter_list[[filter_selections[1]]][1])))
     expect_true(str_detect(filter_results[[2]][[1]], as.character(global_filter_list[[filter_selections[1]]][2])))
-    expect_true(str_detect(filter_results[[2]][[1]], paste(as.character(num_na), "rows with missing values")))
-    expect_true(str_detect(filter_results[[2]][[1]], paste(as.character(num_filtered_out), "rows")))
+    expect_true(str_detect(filter_results[[2]][[1]], paste(my_number_format(num_na), "rows with missing values")))
+    expect_true(str_detect(filter_results[[2]][[1]], paste(my_number_format(num_filtered_out), "rows")))
 
     # get dataset to the point date will be filtered, which is after hms is filtered
     t <- dataset %>% filter(!is.na(hms),
@@ -649,9 +647,9 @@ test_that("generic_helpers::filter_data - flights/date", {
     expect_true(str_detect(filter_results[[2]][[2]], "date:"))
     expect_true(str_detect(filter_results[[2]][[2]], as.character(global_filter_list[[filter_selections[2]]][1])))
     expect_true(str_detect(filter_results[[2]][[2]], as.character(global_filter_list[[filter_selections[2]]][2])))
-    #expect_false(str_detect(filter_results[[2]][[2]], paste(as.character(num_na), "rows with missing values")))
-    expect_true(str_detect(filter_results[[2]][[2]], paste(as.character(num_na), "rows with missing values")))
-    expect_true(str_detect(filter_results[[2]][[2]], paste(as.character(num_filtered_out), "rows")))
+    #expect_false(str_detect(filter_results[[2]][[2]], paste(my_number_format(num_na), "rows with missing values")))
+    expect_true(str_detect(filter_results[[2]][[2]], paste(my_number_format(num_na), "rows with missing values")))
+    expect_true(str_detect(filter_results[[2]][[2]], paste(my_number_format(num_filtered_out), "rows")))
     
     # get dataset to the point time_hour will be filtered, which is after hms/date is filtered
     t <- dataset %>% filter(!is.na(hms),
@@ -668,9 +666,9 @@ test_that("generic_helpers::filter_data - flights/date", {
     expect_true(str_detect(filter_results[[2]][[3]], "time_hour:"))
     expect_true(str_detect(filter_results[[2]][[3]], as.character(global_filter_list[[filter_selections[3]]][1])))
     expect_true(str_detect(filter_results[[2]][[3]], as.character(global_filter_list[[filter_selections[3]]][2])))
-    expect_false(str_detect(filter_results[[2]][[3]], paste(as.character(num_na), "rows with missing values")))
-    #expect_true(str_detect(filter_results[[2]][[3]], paste(as.character(num_na), "rows with missing values")))
-    expect_true(str_detect(filter_results[[2]][[3]], paste(as.character(num_filtered_out), "rows")))
+    expect_false(str_detect(filter_results[[2]][[3]], paste(my_number_format(num_na), "rows with missing values")))
+    #expect_true(str_detect(filter_results[[2]][[3]], paste(my_number_format(num_na), "rows with missing values")))
+    expect_true(str_detect(filter_results[[2]][[3]], paste(my_number_format(num_filtered_out), "rows")))
     writeLines(paste0(filter_results[[2]], collapse = "\n\n"), "output_files/filter_message__flights__hms__date__time_hour.txt")
     
     ##########################################################################################################
@@ -692,8 +690,8 @@ test_that("generic_helpers::filter_data - flights/date", {
     expect_true(str_detect(filter_results[[2]][[1]], "hms:"))
     expect_true(str_detect(filter_results[[2]][[1]], as.character(global_filter_list[[filter_selections[1]]][1])))
     expect_true(str_detect(filter_results[[2]][[1]], as.character(global_filter_list[[filter_selections[1]]][2])))
-    expect_true(str_detect(filter_results[[2]][[1]], paste(as.character(num_na), "rows with missing values")))
-    expect_true(str_detect(filter_results[[2]][[1]], paste(as.character(num_filtered_out), "rows")))
+    expect_true(str_detect(filter_results[[2]][[1]], paste(my_number_format(num_na), "rows with missing values")))
+    expect_true(str_detect(filter_results[[2]][[1]], paste(my_number_format(num_filtered_out), "rows")))
     writeLines(paste0(filter_results[[2]], collapse = "\n\n"), "output_files/filter_message__flights__hms.txt")
     ##########################################################################################################
     filter_selections <- c('date', 'hms')
@@ -718,8 +716,8 @@ test_that("generic_helpers::filter_data - flights/date", {
     expect_true(str_detect(filter_results[[2]][[1]], "date:"))
     expect_true(str_detect(filter_results[[2]][[1]], as.character(global_filter_list[[1]][1])))
     expect_true(str_detect(filter_results[[2]][[1]], as.character(global_filter_list[[1]][2])))
-    expect_true(str_detect(filter_results[[2]][[1]], paste(as.character(num_na), "rows with missing values")))
-    expect_true(str_detect(filter_results[[2]][[1]], paste(as.character(num_filtered_out), "rows")))
+    expect_true(str_detect(filter_results[[2]][[1]], paste(my_number_format(num_na), "rows with missing values")))
+    expect_true(str_detect(filter_results[[2]][[1]], paste(my_number_format(num_filtered_out), "rows")))
     
     # get dataset to the point hms will be filtered, which is after date is filtered
     t <- dataset %>% filter(!is.na(date),
@@ -731,9 +729,9 @@ test_that("generic_helpers::filter_data - flights/date", {
     expect_true(str_detect(filter_results[[2]][[2]], "hms:"))
     expect_true(str_detect(filter_results[[2]][[2]], as.character(global_filter_list[[3]][1])))
     expect_true(str_detect(filter_results[[2]][[2]], as.character(global_filter_list[[3]][2])))
-    expect_false(str_detect(filter_results[[2]][[2]], paste(as.character(num_na), "rows with missing values")))
-    #expect_true(str_detect(filter_results[[2]][[2]], paste(as.character(num_na), "rows with missing values")))
-    expect_true(str_detect(filter_results[[2]][[2]], paste(as.character(num_filtered_out), "rows")))
+    expect_false(str_detect(filter_results[[2]][[2]], paste(my_number_format(num_na), "rows with missing values")))
+    #expect_true(str_detect(filter_results[[2]][[2]], paste(my_number_format(num_na), "rows with missing values")))
+    expect_true(str_detect(filter_results[[2]][[2]], paste(my_number_format(num_filtered_out), "rows")))
     writeLines(paste0(filter_results[[2]], collapse = "\n\n"), "output_files/filter_message__flights__date__hms.txt")
 })
 
@@ -908,6 +906,23 @@ test_that("generic_helpers::mutate_factor_reorder", {
     mutated <- diamonds %>% 
         mutate_factor_reorder('carat', 'cut')
     expect_identical(levels(mutated$cut), as.character(diamonds_order_by_median$cut))
+
+
+    # LOGICAL
+    local_dataset <- dataset_or_null('../example_datasets/credit.csv') %>%
+        mutate(default = ifelse(default == 'yes', TRUE, FALSE))
+
+    mutated <- local_dataset %>% 
+        mutate_factor_reorder('Frequency', 'default')
+    expect_identical(levels(mutated$default), c('FALSE', 'TRUE'))
+
+    mutated <- local_dataset %>% 
+        mutate_factor_reorder('Default', 'default')
+    expect_true(is.logical(mutated$default))  # default should not change the variable type
+    
+    mutated <- local_dataset %>% 
+        mutate_factor_reorder('amount', 'default')
+    expect_identical(levels(mutated$default), c('TRUE', 'FALSE'))
 })
 
 #' @param vertical_annotations list of vectors; each list item is an annotation; first value of vector is x location of line; second value is text annotation
@@ -1002,12 +1017,12 @@ test_that("add_x_annotations", {
                                     base_size=11)
     annotated_object <- ggplot_object %>%
         add_vertical_annotations(NULL, y_location=max(0, local_y_zoom_min), is_date=TRUE) %>%
-        add_horizontal_annotations(NULL, x_location=max(min(local_dataset[, local_primary_variable]), local_x_zoom_min))
+        add_horizontal_annotations(NULL, x_location=max(min(local_dataset[, local_primary_variable]), NULL))
     test_save_plot(file_name='output_files/annotations__v__h__date_NULL.png', annotated_object)
 
     annotated_object <- ggplot_object %>%
         add_vertical_annotations(vertical_annotations, y_location=max(0, local_y_zoom_min), is_date=TRUE) %>%
-        add_horizontal_annotations(horizontal_annotations, x_location=max(min(local_dataset[, local_primary_variable]), local_x_zoom_min))
+        add_horizontal_annotations(horizontal_annotations, x_location=max(min(local_dataset[, local_primary_variable]), NULL))
     test_save_plot(file_name='output_files/annotations__v__h__date.png', annotated_object)
     
     local_x_zoom_min <- ymd('2013-06-10')
@@ -1050,6 +1065,7 @@ test_that("add_x_annotations", {
     
     local_x_zoom_min <- 6000
     local_y_zoom_min <- 60
+
     annotated_object <- ggplot_object %>%
         add_vertical_annotations(vertical_annotations, y_location=max(0, local_y_zoom_min)) %>%
         add_horizontal_annotations(horizontal_annotations, x_location=max(min(local_dataset[, local_primary_variable]), local_x_zoom_min))

@@ -83,7 +83,7 @@ shinyServer(function(input, output, session) {
     # cached dataset after the filters have been applied (which is bad for large datasets :( ) so that the
     # filters don't have to be reapplied every time; sacrificing memory for speed 
     reactiveValues__vp_filtering_message <- reactiveValues(value=NULL)
-    output$var_plots__filtering_messages <- renderPrint__reactiveValues__vp_filtering_message(reactiveValues__vp_filtering_message)
+    output$var_plots__filtering_messages <- renderPrint__reactiveValues__vp_filtering_message(reactiveValues__vp_filtering_message, reactive__var_plots__filtered_data)
     
     reactive__var_plots__filtered_data <- reactive__var_plots__filtered_data__creator(input,
                                                                                       reactive__source_data,

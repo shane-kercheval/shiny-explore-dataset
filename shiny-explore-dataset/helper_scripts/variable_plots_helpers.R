@@ -434,7 +434,7 @@ reactive__var_plots__filtered_data__creator <- function(input, dataset, reactive
                                               callback=progress_bar_callback)
                 local_dataset <- filter_results[[1]]
 
-                log_message(format_filtering_message(filter_results[[2]]))
+                log_message(format_filtering_message(filter_results[[2]], local_dataset))
                 reactive_filter_message_list$value <- filter_results[[2]]
             })
         } else {
@@ -1766,21 +1766,23 @@ renderPrint__reactiveValues__vp__ggplot_message <- function(message) {
 
 #' @param reactive_filter_message_list is a reactive object, whos' `value` is list object that contains a
 #' string value for each variable being filtered
-renderPrint__reactiveValues__vp_filtering_message <- function(reactive_filter_message_list) {
+renderPrint__reactiveValues__vp_filtering_message <- function(reactive_filter_message_list, dataset) {
 
     renderPrint({
-        cat(format_filtering_message(reactive_filter_message_list$value))
+        cat(format_filtering_message(reactive_filter_message_list$value, dataset()))
     })
 }
 
 #' @param filter_message_list list object that contains a string value for each variable being filtered
-format_filtering_message <- function(filter_message_list) {
+format_filtering_message <- function(filter_message_list, dataset) {
 
     message <- NULL
     
     if(!is.null(filter_message_list) && length(filter_message_list) != 0) {
 
         message <- paste0("Filtering Variables:\n\n", paste0(filter_message_list, collapse="\n"))
+
+        message <- paste0(message, "\n\n", my_number_format(nrow(dataset)), " Records Remaining")
     }
 
     return (message)

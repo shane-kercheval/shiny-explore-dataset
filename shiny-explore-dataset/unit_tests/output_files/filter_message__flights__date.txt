@@ -1,1 +1,1 @@
-date: 2013-02-05 <= x <= 2013-10-31 (Removing 85261 rows; Removing 500 rows with missing values)
+date: 2013-02-05 <= x <= 2013-10-31 (Removing 85,261 rows; Removing 500 rows with missing values)
