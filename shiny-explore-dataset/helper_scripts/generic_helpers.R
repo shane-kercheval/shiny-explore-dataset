@@ -307,23 +307,19 @@ add_vertical_annotations <- function(ggplot_object, vertical_annotations, y_loca
                 x_location <- as.numeric(annotation[1])
             }
             
-            # log_message_variable('annotation x_location', x_location)
-            # log_message_variable('annotation y_location', y_location)
-            # log_message_variable('annotation label', annotation[2])
-
             ggplot_object <- ggplot_object +
                 geom_vline(xintercept = x_location, color='red') +
-                geom_text(x=x_location,
-                          y=y_location,
-                          label=annotation[2],
-                          color="red",
-                          check_overlap=TRUE,
-                          angle=90,
-                          hjust=0,
-                          vjust=-0.5)
+                annotate(geom="text",
+                         x=x_location,
+                         y=y_location,
+                         label=annotation[2],
+                         color="red",
+                         angle=90,
+                         hjust=0,
+                         vjust=-0.5)
         }
     }
-    
+
     return (ggplot_object)
 }
 
@@ -339,19 +335,15 @@ add_horizontal_annotations <- function(ggplot_object, horizontal_annotations, x_
             
             y_location <- as.numeric(annotation[1])
 
-            # log_message_variable('annotation x_location', x_location)
-            # log_message_variable('annotation y_location', y_location)
-            # log_message_variable('annotation label', annotation[2])
-
             ggplot_object <- ggplot_object +
                 geom_hline(yintercept = y_location, color='red') +
-                geom_text(y=y_location,
-                          x=x_location,
-                          label=annotation[2],
-                          color="red",
-                          check_overlap=TRUE,
-                          hjust=-0.2,
-                          vjust=-0.5)
+                annotate(geom="text",
+                         y=y_location,
+                         x=x_location,
+                         label=annotation[2],
+                         color="red",
+                         hjust=-0.2,
+                         vjust=-0.5)
         }
     }
     return (ggplot_object)
