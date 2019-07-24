@@ -4,8 +4,8 @@ library(hms)
 # MAIN DATASET
 # initialize with small default dataset or upload from file, by user
 ##########################################################################################################
-reactive__source_data__creator <- function(session, input, custom_triggers) {
-    reactive({
+observeEvent__source_data <- function(session, input, custom_triggers, reactive__source_data) {
+    observe({
 
         withProgress(value=1/2, message='Loading Data',{
 
@@ -214,11 +214,14 @@ reactive__source_data__creator <- function(session, input, custom_triggers) {
                                     rt_get_date_fields(date_vector = loaded_dataset[, local_add_date_column]))
                 }
             }
+
+
+
         })
 
         updateTextInput(session, inputId='load_data__url_csv', value = '')
 
-        return (loaded_dataset)
+        reactive__source_data$data <- loaded_dataset
     })
 }
 
@@ -227,10 +230,10 @@ reactive__source_data__creator <- function(session, input, custom_triggers) {
 ##############################################################################################################
 renderUI__source_data__add_date_fields__UI <- function(dataset) {
     renderUI({
-
+        req(dataset$data)
         selectInput(inputId='source_data__add_date_fields',
                     label = 'Add Date Fields based on Date Variable',
-                    choices = c(global__select_variable_optional, colnames(dataset())),
+                    choices = c(global__select_variable_optional, colnames(dataset$data)),
                     selected = global__select_variable_optional,
                     multiple = FALSE,
                     selectize = TRUE,
@@ -246,7 +249,7 @@ renderDataTable__source_data__head <- function(dataset) {
 
     renderDataTable({
 
-        return (head(dataset(), 500))
+        return (head(dataset$data, 500))
     })
 }
 
@@ -256,7 +259,7 @@ renderDataTable__source_data__types <- function(dataset) {
 
         withProgress(value=1/2, message='Loading Types',{
 
-            local_dataset <- dataset()
+            local_dataset <- dataset$data
             types <- map_chr(colnames(local_dataset), ~ class(local_dataset[, .])[1])
             return (data.frame(variable=colnames(local_dataset), type=types))
         })

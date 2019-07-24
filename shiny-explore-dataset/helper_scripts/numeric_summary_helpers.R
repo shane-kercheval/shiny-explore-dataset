@@ -10,7 +10,7 @@ reactive__numeric_summary__creator <- function(dataset) {
         withProgress(value=1/2, message='Calculating Numeric Summary',{
 
             log_message_block_start('Calculating Numeric Summary')
-            return (rt_explore_numeric_summary(dataset=dataset()))
+            return (rt_explore_numeric_summary(dataset=dataset$data))
         })
     })
 }

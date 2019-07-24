@@ -7,7 +7,7 @@ renderPlot__correlation__plot <- function(input, session, dataset) {
 
         withProgress(value=1/2, message='Calculating Correlations', {
 
-            local_dataset <- dataset()
+            local_dataset <- dataset$data
 
             if(input$correlation__pretty_text) {
 

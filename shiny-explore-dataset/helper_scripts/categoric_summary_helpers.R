@@ -8,7 +8,7 @@ reactive__categoric_summary__creator <- function(dataset) {
         withProgress(value=1/2, message='Calculating Categoric Summary',{
 
             log_message_block_start('Calculating Categoric Summary')
-            return (rt_explore_categoric_summary(dataset=dataset()))
+            return (rt_explore_categoric_summary(dataset=dataset$data))
         })
     })
 }
@@ -21,7 +21,7 @@ renderPrint__categoric_summary__text <- function(dataset, categoric_summary) {
     renderPrint({
         
         # get R's summary of the categoric data
-        return (summary(dataset()[, as.character(categoric_summary()$feature)]))
+        return (summary(dataset$data[, as.character(categoric_summary()$feature)]))
     })
 }
 

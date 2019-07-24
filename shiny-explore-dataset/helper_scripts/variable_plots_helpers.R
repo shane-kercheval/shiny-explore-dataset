@@ -17,12 +17,12 @@ reactive__filter_controls_list__creator <- function(input, dataset) {
 
     reactive({
 
-        req(dataset())
+        req(dataset$data)
         input$var_plots__filter_clear
 
         withProgress(value=1/2, message='Generating Filters', {
             
-            ui_list <- imap(dataset(), ~ {
+            ui_list <- imap(dataset$data, ~ {
 
                 input_id <- paste0('var_plots__dynamic_filter__', .y)
                 filter_object <- NULL
@@ -342,7 +342,7 @@ observeEvent__var_plots__show_hide_dynamic_filters <- function(input, session, d
             updateCollapse(session, "var_plots__bscollapse", style = list('Filters' = 'danger'))
         }
 
-        dataset_columns <- colnames(dataset())
+        dataset_columns <- colnames(dataset$data)
         filter_controls_selections <- input$var_plots__filter_controls_selections
         if('All Variables' %in% filter_controls_selections) {
             filter_controls_selections <- dataset_columns
@@ -371,12 +371,12 @@ observe__var_plots__bscollapse__dynamic_inputs <- function(input, session, datas
 
     observe({
 
-        req(dataset())
+        req(dataset$data)
 
         # this is a hack to register all of the dynamic controls to the reactive event listener
         # also use it to check values (i.e. only update colors if the filters are active i.e. any are not null)
         selections <- list()
-        for(column_name in colnames(dataset())) {
+        for(column_name in colnames(dataset$data)) {
             value <- input[[paste0('var_plots__dynamic_filter__', column_name)]]
             selections <- append(selections, value)
         }
@@ -400,13 +400,13 @@ reactive__var_plots__filtered_data__creator <- function(input, dataset, reactive
 
     reactive({
 
-        local_dataset <- dataset()  # clear on new datasets
+        local_dataset <- dataset$data  # clear on new datasets
 
         # these are the columns we want to filter on; if the column is not in the selection, don't filter
         filter_controls_selections <- isolate(input$var_plots__filter_controls_selections)
         if('All Variables' %in% filter_controls_selections) {
 
-            filter_controls_selections <- colnames(dataset())
+            filter_controls_selections <- colnames(local_dataset)
         }
 
         if(!is.null(input$var_plots__filter_use) && input$var_plots__filter_use) {
@@ -1069,9 +1069,10 @@ reactive__var_plots__ggplot__creator <- function(input, session, dataset) {
 renderUI__var_plots__variable__UI <- function(dataset) {
 
     renderUI({
+        req(dataset$data)
         selectInput(inputId='var_plots__variable',
                     label = 'Variable',
-                    choices = c(global__select_variable, colnames(dataset())),
+                    choices = c(global__select_variable, colnames(dataset$data)),
                     selected = global__select_variable,
                     multiple = FALSE,
                     selectize = TRUE,
@@ -1087,11 +1088,11 @@ renderUI__var_plots__comparison__UI <- function(input, dataset) {
         # if we have a date type as the primary variable, the comparison should only be numeric
 
         req(input$var_plots__variable)
-
+        req(dataset$data)
         selected_variable <- default_if_null_or_empty_string(input$var_plots__comparison,
                                                              global__select_variable_optional)
 
-        local_dataset <- dataset()
+        local_dataset <- dataset$data
         local_primary_variable <- input$var_plots__variable
 
         dataset_columns <- colnames(local_dataset)
@@ -1124,9 +1125,11 @@ renderUI__var_plots__sum_by_variable__UI <- function(dataset) {
 
     renderUI({
 
+        req(dataset$data)
+
         selectInput(inputId='var_plots__sum_by_variable',
                     label = 'Sum By Variable',
-                    choices = c(global__select_variable_optional, colnames(dataset() %>% select_if(is.numeric))),
+                    choices = c(global__select_variable_optional, colnames(dataset$data %>% select_if(is.numeric))),
                     selected = global__select_variable_optional,
                     multiple = FALSE,
                     selectize = TRUE,
@@ -1142,8 +1145,8 @@ renderUI__var_plots__color_variable__UI <- function(input, dataset) {
         # if we have a date type as the primary variable, color should only be non-numeric
 
         req(input$var_plots__variable)
-
-        local_dataset <- dataset()
+        req(dataset$data)
+        local_dataset <- dataset$data
         
         local_primary_variable <- input$var_plots__variable
         local_comparison_variable <- null_if_select_variable_optional(input$var_plots__comparison)
@@ -1191,10 +1194,10 @@ renderUI__var_plots__color_variable__UI <- function(input, dataset) {
 renderUI__var_plots__size_variable__UI <- function(dataset) {
 
     renderUI({
-
+	req(dataset$data)
         selectInput(inputId='var_plots__size_variable',
                     label = 'Size Variable',
-                    choices = c(global__select_variable_optional, colnames(dataset())),
+                    choices = c(global__select_variable_optional, colnames(dataset$data)),
                     selected = global__select_variable_optional,
                     multiple = FALSE,
                     selectize = TRUE,
@@ -1206,10 +1209,10 @@ renderUI__var_plots__size_variable__UI <- function(dataset) {
 renderUI__var_plots__label_variables__UI <- function(dataset) {
 
     renderUI({
-
+	req(dataset$data)
         selectInput(inputId='var_plots__label_variables',
                     label = 'Label Variables',
-                    choices = colnames(dataset()),
+                    choices = colnames(dataset$data),
                     selected = NULL,
                     multiple = TRUE,
                     selectize = TRUE,
@@ -1221,10 +1224,10 @@ renderUI__var_plots__label_variables__UI <- function(dataset) {
 renderUI__var_plots__order_by_variable__UI <- function(dataset) {
 
     renderUI({
-
+        req(dataset$data)
         selectInput(inputId='var_plots__order_by_variable',
                     label = 'Order By',
-                    choices = c("Default", "Frequency", colnames(dataset() %>% select_if(is.numeric))),
+                    choices = c("Default", "Frequency", colnames(dataset$data %>% select_if(is.numeric))),
                     selected = "Default",
                     multiple = FALSE,
                     selectize = TRUE,
@@ -1290,11 +1293,11 @@ observeEvent__var_plots__categoric_view_type <- function(input, session) {
 
 renderUI__var_plots__filter_controls_selections__UI <- function(input, dataset) {
     renderUI({
-
+	req(dataset$data)
         input$var_plots__filter_clear
         choices <- list(
             "All Variables" = c("All Variables"),
-            "Individual Variables" = colnames(dataset())
+            "Individual Variables" = colnames(dataset$data)
         )
 
         selectInput(inputId='var_plots__filter_controls_selections',

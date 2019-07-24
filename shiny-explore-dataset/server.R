@@ -37,7 +37,9 @@ shinyServer(function(input, output, session) {
     ##########################################################################################################
     custom_triggers <- reactiveValues(reload_source_data=0)
     # loads dataset depending on drop down or upload
-    reactive__source_data <- reactive__source_data__creator(session, input, custom_triggers)
+
+    reactive__source_data <- reactiveValues(data=NULL)
+    observeEvent__source_data(session, input, custom_triggers, reactive__source_data)
     # shows the first 500 rows of the data
     output$source_data__head_table <- renderDataTable__source_data__head(reactive__source_data)
     # shows the types of the data's variables/columns
@@ -48,13 +50,29 @@ shinyServer(function(input, output, session) {
         # this should trigger a reload of the dataset (perhaps not the best approach, but TBD on alternatives)
         # however, it shouldn't trigger a reload if it is set back to the default global__select_variable_optional
         # which will trigger false positive loadings
-        if(!is.null(reactive__source_data()) &&
+        if(!is.null(reactive__source_data$data) &&
                 !is.null(input$source_data__add_date_fields) &&
                 input$source_data__add_date_fields != global__select_variable_optional &&
-                input$source_data__add_date_fields %in% colnames(reactive__source_data())) {
+                input$source_data__add_date_fields %in% colnames(reactive__source_data$data)) {
 
             custom_triggers$reload_source_data <- runif(1, 1, 1000000)
         }
+    })
+
+    observeEvent(input$load_data__r_code_apply, {
+
+        dataset  <- reactive__source_data$data
+
+
+        if(!is.null(input$load_data__r_code_text) && input$load_data__r_code_text != "") {
+
+            log_message_variable("R Code", input$load_data__r_code_text)
+
+            eval(parse(text=input$load_data__r_code_text))
+        }
+
+
+        reactive__source_data$data <- dataset
     })
 
     ##########################################################################################################
@@ -83,11 +101,12 @@ shinyServer(function(input, output, session) {
     # cached dataset after the filters have been applied (which is bad for large datasets :( ) so that the
     # filters don't have to be reapplied every time; sacrificing memory for speed 
     reactiveValues__vp_filtering_message <- reactiveValues(value=NULL)
-    output$var_plots__filtering_messages <- renderPrint__reactiveValues__vp_filtering_message(reactiveValues__vp_filtering_message, reactive__var_plots__filtered_data)
     
     reactive__var_plots__filtered_data <- reactive__var_plots__filtered_data__creator(input,
                                                                                       reactive__source_data,
                                                                                       reactiveValues__vp_filtering_message)
+    output$var_plots__filtering_messages <- renderPrint__reactiveValues__vp_filtering_message(reactiveValues__vp_filtering_message,
+                                                                                              reactive__var_plots__filtered_data)
     # creates the ggplot object
     reactive__var_plots__ggplot <- reactive__var_plots__ggplot__creator(input,
                                                                         session,

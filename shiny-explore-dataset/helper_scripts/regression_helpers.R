@@ -25,7 +25,7 @@ eventReactive__regression__results__creator <- function(input, dataset) {
             }
 
             # updates to reactive variables will not trigger an update here, only regression__run_button
-            results <- rt_regression(dataset=dataset(),
+            results <- rt_regression(dataset=dataset$data,
                                      dependent_variable=input$regression__dependent_variable,
                                      independent_variables=input$regression__independent_variables,
                                      # list of vectors, each element in the list is a pair of interaction terms
@@ -50,7 +50,7 @@ renderUI__regression__dependent_variable__UI <- function(dataset) {
 
         selectInput(inputId='regression__dependent_variable',
                     label='Dependent Variable',
-                    choices=c(global__select_variable, colnames(dataset())),
+                    choices=c(global__select_variable, colnames(dataset$data)),
                     selected=global__select_variable,
                     multiple=FALSE,
                     selectize=TRUE,
@@ -65,7 +65,7 @@ renderUI__regression__independent_variables__UI <- function(input, dataset) {
 
         req(input$regression__dependent_variable)
 
-        column_names <- colnames(dataset())
+        column_names <- colnames(dataset$data)
         possible_variables <- column_names[! column_names %in% input$regression__dependent_variable]        
 
         selectInput(inputId='regression__independent_variables',
@@ -107,7 +107,7 @@ renderUI__regression__interaction_term1__UI <- function(input, dataset) {
         req(input$regression__dependent_variable)
 
         # cannot select dependent_variable
-        column_names <- colnames(dataset())
+        column_names <- colnames(dataset$data)
         possible_variables <- column_names[! column_names %in% input$regression__dependent_variable]
 
         selectInput(inputId='regression__interaction_term1',
@@ -129,7 +129,7 @@ renderUI__regression__interaction_term2__UI <- function(input, dataset) {
         req(input$regression__interaction_term1)
 
         # cannot select dependent_variable or the first term
-        column_names <- colnames(dataset())
+        column_names <- colnames(dataset$data)
         possible_variables <- column_names[! column_names %in% c(input$regression__dependent_variable,
                                                                  input$regression__interaction_term1)]
 
@@ -151,7 +151,7 @@ observeEvent__regression__toggle_all_ind_variables <- function(input, dataset, s
         # if none selected, select all, otherwise (if any selected); unselect all
         if(length(input$regression__independent_variables) == 0) {
 
-            column_names <- colnames(dataset())
+            column_names <- colnames(dataset$data)
             possible_variables <- column_names[! column_names %in% input$regression__dependent_variable]
 
             updateSelectInput(session=session,
@@ -245,7 +245,7 @@ render_diagnostic_plot__actual_vs_predicted <- function(input, session, dataset,
         regression__results,
         graph_function=function() {
             rt_regression_plot_actual_vs_predicted(regression__results()$model)
-            # xyplot(dataset()[, isolate({input$regression__dependent_variable})] ~ predict(regression__results()$model),
+            # xyplot(dataset$data[, isolate({input$regression__dependent_variable})] ~ predict(regression__results()$model),
             #        type=c('p', 'g'),
             #        xlab='Predicted', ylab='Actual')
         },
@@ -271,7 +271,7 @@ render_diagnostic_plot__residuals_vs_predictors <- function(input, session, data
             req(input$regression__residuals_vs_predictors_var)
             rt_regression_plot_residual_vs_variable(regression__results()$model,
                                                     input$regression__residuals_vs_predictors_var,
-                                                    dataset())
+                                                    dataset$data)
         },
         graph_width_function=function() {0.55 * session$clientData$output_regression__diagnostic_residuals_vs_predictors_width}
     )
@@ -282,7 +282,7 @@ render_diagnostic_plot__actual_vs_observed <- function(input, session, dataset, 
     render_diagnostic_plot(
         regression__results,
         graph_function=function() {
-            xyplot(predict(regression__results()$model) ~ 1:nrow(dataset()),
+            xyplot(predict(regression__results()$model) ~ 1:nrow(dataset$data),
                    type=c('p', 'g'),
                    xlab='Observation Number', ylab='Predicted')
         },
