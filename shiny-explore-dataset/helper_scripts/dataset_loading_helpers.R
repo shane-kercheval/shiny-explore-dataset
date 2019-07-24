@@ -4,7 +4,7 @@ library(hms)
 # MAIN DATASET
 # initialize with small default dataset or upload from file, by user
 ##########################################################################################################
-observeEvent__source_data <- function(session, input, custom_triggers, reactive__source_data) {
+observeEvent__source_data <- function(session, input, output, custom_triggers, reactive__source_data) {
     observe({
 
         withProgress(value=1/2, message='Loading Data',{
@@ -27,6 +27,7 @@ observeEvent__source_data <- function(session, input, custom_triggers, reactive_
             log_message_variable('input$source_data__add_date_fields', local_add_date_column)
 
             loaded_dataset <- NULL
+            data_description <- NULL
 
             if(!is.null(local_csv_url) && local_csv_url != "") {
 
@@ -39,22 +40,28 @@ observeEvent__source_data <- function(session, input, custom_triggers, reactive_
                     loaded_dataset <- dataset_or_null('example_datasets/credit.csv') %>%
                         mutate(default = ifelse(default == 'yes', TRUE, FALSE))
 
+                    data_description <- "This is where a description of the Credit dataset should be given."
+
                 } else if(local_preloaded_dataset == 'Housing') {
 
                     loaded_dataset <- dataset_or_null('example_datasets/housing.csv')
+                    data_description <- "This is where a description of the Housing dataset should be given."
 
                 } else if(local_preloaded_dataset == 'Insurance') {
 
                     loaded_dataset <- dataset_or_null('example_datasets/insurance.csv')
+                    data_description <- "This is where a description of the Insurance dataset should be given."
 
                 } else if(local_preloaded_dataset == 'Iris') {
 
                     loaded_dataset <- data.frame(iris)
+                    data_description <- "This is where a description of the Insurance dataset should be given."
 
                 } else if(local_preloaded_dataset == 'Diamonds') {
 
                     loaded_dataset <- data.frame(diamonds)
                     loaded_dataset[1:500, 'cut'] <- NA
+                    data_description <- "This is where a description of the Insurance dataset should be given."
 
                 } else if(local_preloaded_dataset == 'Flights') {
 
@@ -65,6 +72,7 @@ observeEvent__source_data <- function(session, input, custom_triggers, reactive_
                             select(date, everything()))
 
                     loaded_dataset$hms <- as.hms(loaded_dataset$time_hour)
+                    data_description <- "This is where a description of the Flights dataset should be given."
 
                 } else if(local_preloaded_dataset == 'Wine Ratings') {
 
@@ -152,6 +160,8 @@ observeEvent__source_data <- function(session, input, custom_triggers, reactive_
                         select(-X1) %>%
                         select(country, province, variety, type, year, points, price, points_per_price, title, winery, everything())
 
+                    data_description <- "This was a Tidy Tuesday dataset.\nhttps://github.com/rfordatascience/tidytuesday/tree/master/data/2019/2019-05-28"
+
                 } else if(local_preloaded_dataset == 'Gapminder') {
 
                     loaded_dataset <- data.frame(gapminder::gapminder)
@@ -215,13 +225,53 @@ observeEvent__source_data <- function(session, input, custom_triggers, reactive_
                 }
             }
 
+            if(is.null(data_description)) {
 
+                shinyjs::hide('load_data__description')
 
+            } else {
+
+                output$load_data__description <- renderText({ data_description })
+                shinyjs::show('load_data__description')
+            }
         })
 
         updateTextInput(session, inputId='load_data__url_csv', value = '')
 
         reactive__source_data$data <- loaded_dataset
+    })
+}
+
+observeEvent__source_data__add_date_fields  <- function(reactive__source_data, input) {
+    observeEvent(input$source_data__add_date_fields, {
+        # this should trigger a reload of the dataset (perhaps not the best approach, but TBD on alternatives)
+        # however, it shouldn't trigger a reload if it is set back to the default global__select_variable_optional
+        # which will trigger false positive loadings
+        if(!is.null(reactive__source_data$data) &&
+                !is.null(input$source_data__add_date_fields) &&
+                input$source_data__add_date_fields != global__select_variable_optional &&
+                input$source_data__add_date_fields %in% colnames(reactive__source_data$data)) {
+
+            custom_triggers$reload_source_data <- runif(1, 1, 1000000)
+        }
+    })
+}
+
+observeEvent__load_data__r_code_apply <- function(reactive__source_data, input) {
+    # update dataset based on R code
+    # the string `load_data__r_code_text` should contain code which manipulates `dataset` which is then
+    # assigned into the master dataset
+    observeEvent(input$load_data__r_code_apply, {
+
+        dataset  <- reactive__source_data$data
+
+        if(!is.null(input$load_data__r_code_text) && input$load_data__r_code_text != "") {
+
+            log_message_variable("R Code", input$load_data__r_code_text)
+            eval(parse(text=input$load_data__r_code_text))
+        }
+
+        reactive__source_data$data <- dataset
     })
 }
 

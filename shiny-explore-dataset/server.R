@@ -39,42 +39,15 @@ shinyServer(function(input, output, session) {
     # loads dataset depending on drop down or upload
 
     reactive__source_data <- reactiveValues(data=NULL)
-    observeEvent__source_data(session, input, custom_triggers, reactive__source_data)
+    observeEvent__source_data(session, input, output, custom_triggers, reactive__source_data)
     # shows the first 500 rows of the data
     output$source_data__head_table <- renderDataTable__source_data__head(reactive__source_data)
     # shows the types of the data's variables/columns
     output$source_data__types_table <- renderDataTable__source_data__types(reactive__source_data)
     output$source_data__add_date_fields__UI <- renderUI__source_data__add_date_fields__UI(reactive__source_data)
+    observeEvent__source_data__add_date_fields(reactive__source_data, input)
 
-    observeEvent(input$source_data__add_date_fields, {
-        # this should trigger a reload of the dataset (perhaps not the best approach, but TBD on alternatives)
-        # however, it shouldn't trigger a reload if it is set back to the default global__select_variable_optional
-        # which will trigger false positive loadings
-        if(!is.null(reactive__source_data$data) &&
-                !is.null(input$source_data__add_date_fields) &&
-                input$source_data__add_date_fields != global__select_variable_optional &&
-                input$source_data__add_date_fields %in% colnames(reactive__source_data$data)) {
-
-            custom_triggers$reload_source_data <- runif(1, 1, 1000000)
-        }
-    })
-
-    observeEvent(input$load_data__r_code_apply, {
-
-        dataset  <- reactive__source_data$data
-
-
-        if(!is.null(input$load_data__r_code_text) && input$load_data__r_code_text != "") {
-
-            log_message_variable("R Code", input$load_data__r_code_text)
-
-            eval(parse(text=input$load_data__r_code_text))
-        }
-
-
-        reactive__source_data$data <- dataset
-    })
-
+    observeEvent__load_data__r_code_apply(reactive__source_data, input)
     ##########################################################################################################
     # numeric summary data
     ##########################################################################################################

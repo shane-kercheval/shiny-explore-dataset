@@ -40,12 +40,12 @@ shinyUI(fluidPage(theme="custom.css",
                     actionButton(inputId='load_data__url_csv_button', label='Load Data')
                 ),
                 tabPanel(
-                    'Custom R Code',
+                    'Update Dataset w/ R Code',
                     textAreaInput(inputId='load_data__r_code_text', label="", value = "", width = 800, height = 300, cols = NULL, rows = NULL, placeholder = NULL, resize = NULL),
                     bsTooltip(id='load_data__r_code_text',
-                                  title="Write R code to manipulate the currently loaded dataset. The dataset should be referred to explicitly as `dataset` in the code.",
+                                  title="Write R code to manipulate the currently loaded dataset. The loaded dataset should be referred to explicitly as `dataset` in the code.",
                                   placement='top', trigger='hover'),
-                    actionButton(inputId='load_data__r_code_apply', label='Apply')
+                    actionButton(inputId='load_data__r_code_apply', label='Run Code')
                 )
             ),
             tags$br(),
@@ -53,6 +53,7 @@ shinyUI(fluidPage(theme="custom.css",
             # uiOutput('source_data__add_date_fields__UI'),
             # tags$br(),
             # tags$br(),
+            verbatimTextOutput(outputId='load_data__description'),
             tabsetPanel(type='tabs',
                 tabPanel(
                     "First 500 Records of Dataset",
