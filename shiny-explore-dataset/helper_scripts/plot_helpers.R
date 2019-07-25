@@ -59,17 +59,6 @@ pretyfy_annotations <- function(annotations) {
     return (annotations)
 }
 
-prettyfy_plot <- function(plot, annotations=NULL) {
-
-    if(!is.null(annotations) ) {
-
-        plot <- plot + 
-            geom_text(aes(label=annotations), check_overlap=TRUE, vjust=1, hjust=1)
-    }
-
-    return (plot)
-}
-
 scale_axes_log10 <- function(plot, scale_x, scale_y) {
     
     if(scale_x) {

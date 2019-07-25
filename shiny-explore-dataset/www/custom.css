@@ -47,3 +47,7 @@
 .progress-text .progress-detail {
     display: block;
 }
+
+.error_output pre {
+    color: red;
+}

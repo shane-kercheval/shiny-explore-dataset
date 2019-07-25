@@ -815,12 +815,6 @@ reactive__var_plots__ggplot__creator <- function(input, session, dataset) {
                                            confidence_interval=add_confidence_interval,
                                            color_variable=local_color_variable)
 
-                        if(local_annotate_points && !is.null(local_comparison_variable)) {
-
-                            ggplot_object <- prettyfy_plot(plot=ggplot_object,
-                                                           annotations=pretyfy_annotations(local_dataset[, local_comparison_variable]))
-                        }
-
                         if(local_map_format) {
 
                             ggplot_object <- ggplot_object + coord_map()

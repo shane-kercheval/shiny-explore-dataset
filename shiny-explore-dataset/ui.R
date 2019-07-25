@@ -42,6 +42,11 @@ shinyUI(fluidPage(theme="custom.css",
                 tabPanel(
                     'Update Dataset w/ R Code',
                     textAreaInput(inputId='load_data__r_code_text', label="", value = "", width = 800, height = 300, cols = NULL, rows = NULL, placeholder = NULL, resize = NULL),
+                    tags$div(class='error_output',
+                        shinyjs::hidden(
+                            verbatimTextOutput(outputId='load_data__r_code_error')
+                        )
+                    ),
                     bsTooltip(id='load_data__r_code_text',
                                   title="Write R code to manipulate the currently loaded dataset. The loaded dataset should be referred to explicitly as `dataset` in the code.",
                                   placement='top', trigger='hover'),

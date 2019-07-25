@@ -257,7 +257,7 @@ observeEvent__source_data__add_date_fields  <- function(reactive__source_data, i
     })
 }
 
-observeEvent__load_data__r_code_apply <- function(reactive__source_data, input) {
+observeEvent__load_data__r_code_apply <- function(reactive__source_data, input, output) {
     # update dataset based on R code
     # the string `load_data__r_code_text` should contain code which manipulates `dataset` which is then
     # assigned into the master dataset
@@ -267,8 +267,36 @@ observeEvent__load_data__r_code_apply <- function(reactive__source_data, input) 
 
         if(!is.null(input$load_data__r_code_text) && input$load_data__r_code_text != "") {
 
-            log_message_variable("R Code", input$load_data__r_code_text)
-            eval(parse(text=input$load_data__r_code_text))
+            withProgress(value=1/2, message="Running R Code", {
+
+                log_message_variable("R Code", input$load_data__r_code_text)
+
+                #messages$value <- capture_messages_warnings(function() eval(parse(text=input$load_data__r_code_text)))
+                
+                returned_value <- tryCatch(
+                    {
+                        eval(parse(text=input$load_data__r_code_text))
+
+                        # if successful, return NULL; otherwise an error/warning message will be returned
+                        NULL
+                    },
+                    error=function(cond) { return(cond) },
+                    warning=function(cond) { return(cond) })
+
+                # if successful, return NULL; otherwise an error/warning message will be returned
+                if(is.null(returned_value)) {
+                    
+                    shinyjs::hide('load_data__r_code_error')
+
+                } else {
+
+                    r_code_error_message <- str_trim(as.character(returned_value))
+                    r_code_error_message <- str_replace(r_code_error_message, fixed("Error in eval(parse(text = input$load_data__r_code_text)): "), "")
+                    log_message_variable('R Code Error', r_code_error_message)
+                    output$load_data__r_code_error <- renderText({ r_code_error_message })
+                    shinyjs::show('load_data__r_code_error')
+                }
+            })
         }
 
         reactive__source_data$data <- dataset

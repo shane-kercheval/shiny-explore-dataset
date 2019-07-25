@@ -47,7 +47,7 @@ shinyServer(function(input, output, session) {
     output$source_data__add_date_fields__UI <- renderUI__source_data__add_date_fields__UI(reactive__source_data)
     observeEvent__source_data__add_date_fields(reactive__source_data, input)
 
-    observeEvent__load_data__r_code_apply(reactive__source_data, input)
+    observeEvent__load_data__r_code_apply(reactive__source_data, input, output)
     ##########################################################################################################
     # numeric summary data
     ##########################################################################################################
@@ -122,7 +122,6 @@ shinyServer(function(input, output, session) {
     output$var_plots__label_variables__UI <- renderUI__var_plots__label_variables__UI(reactive__source_data)
     output$var_plots__order_by_variable__UI <- renderUI__var_plots__order_by_variable__UI(reactive__source_data)
     observeEvent__var_plots__categoric_view_type(input, session)
-
 
     # the `outputOptions` options code below makes it so that these variables/selectInput update even if they
     # are hidden; why? e.g. if using the "Pretty Text" option, these variables are accessed whether hidden
