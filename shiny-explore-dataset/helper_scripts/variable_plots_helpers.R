@@ -689,8 +689,12 @@ reactive__var_plots__ggplot__creator <- function(input, session, dataset) {
                     add_trend_line(trend_line_type=local_trend_line,
                                    confidence_interval=add_confidence_interval,
                                    color_variable=local_color_variable) %>%
-                    add_vertical_annotations(vertical_annotations, y_location=max(0, local_y_zoom_min, na.rm=TRUE), is_date=TRUE) %>%
-                    add_horizontal_annotations(horizontal_annotations, x_location=min(local_dataset[[local_primary_variable]], na.rm=TRUE))
+                    add_vertical_annotations(vertical_annotations,
+                                             y_location=max(0, local_y_zoom_min, na.rm=TRUE),
+                                             is_date=TRUE) %>%
+                    add_horizontal_annotations(horizontal_annotations,
+                                               x_location=min(local_dataset[[local_primary_variable]], na.rm=TRUE),
+                                               x_location_is_date=TRUE)
 
             ##############################################################################################
             # Numeric Primary Variable
