@@ -1065,5 +1065,4 @@ test_that("add_x_annotations:POSIXct", {
                                    x_location=max(min(local_dataset[, local_primary_variable]), local_x_zoom_min),
                                    x_location_is_date=TRUE)
     test_save_plot(file_name='output_files/annotations__v__h__date__adjusted__POSIXct.png', annotated_object)
-    
 })
