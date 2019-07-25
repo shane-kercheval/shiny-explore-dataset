@@ -160,7 +160,7 @@ observeEvent__source_data <- function(session, input, output, custom_triggers, r
                         select(-X1) %>%
                         select(country, province, variety, type, year, points, price, points_per_price, title, winery, everything())
 
-                    data_description <- "This was a Tidy Tuesday dataset.\nhttps://github.com/rfordatascience/tidytuesday/tree/master/data/2019/2019-05-28"
+                    data_description <- "This was a Tidy Tuesday dataset.\n\nhttps://github.com/rfordatascience/tidytuesday/tree/master/data/2019/2019-05-28\n\nThe `year` is extracted from the title, and may not be 100% accurate.\nThe `type` (Red/White) is manually constructed from the varity and is currently only available for the US."
 
                 } else if(local_preloaded_dataset == 'Gapminder') {
 

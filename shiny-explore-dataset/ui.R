@@ -58,11 +58,15 @@ shinyUI(fluidPage(theme="custom.css",
             # uiOutput('source_data__add_date_fields__UI'),
             # tags$br(),
             # tags$br(),
-            verbatimTextOutput(outputId='load_data__description'),
             tabsetPanel(type='tabs',
                 tabPanel(
                     "First 500 Records of Dataset",
                     tags$div(class='results-table', dataTableOutput(outputId='source_data__head_table'))
+                ),
+                tabPanel(
+                    'Dataset Description',
+                    tags$br(),
+                    verbatimTextOutput(outputId='load_data__description')
                 ),
                 tabPanel(
                     'Variable Types',
