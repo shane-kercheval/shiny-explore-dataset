@@ -325,7 +325,8 @@ add_vertical_annotations <- function(ggplot_object, vertical_annotations, y_loca
 
 #' @param horizontal_annotations list of vectors; each list item is an annotation; first value of vector is y location of line; second value is text annotation
 #' @param x_location x location of text
-add_horizontal_annotations <- function(ggplot_object, horizontal_annotations, x_location=0) {
+#' @param x_location_is_date true if the x-axis is a date. Because we need to convert e.g. POSIXct types to Date type
+add_horizontal_annotations <- function(ggplot_object, horizontal_annotations, x_location=0, x_location_is_date=FALSE) {
     
     if(!is.null(horizontal_annotations) &&
            horizontal_annotations != "" &&
@@ -334,6 +335,12 @@ add_horizontal_annotations <- function(ggplot_object, horizontal_annotations, x_
         for(annotation in horizontal_annotations) {
             
             y_location <- as.numeric(annotation[1])
+
+            if(x_location_is_date) {
+
+                # need to do this because even if it is e.g. POSIXct it will actually cause an error
+                x_location <- as.Date(x_location)
+            }
 
             ggplot_object <- ggplot_object +
                 geom_hline(yintercept = y_location, color='red') +

@@ -516,14 +516,10 @@ reactive__var_plots__ggplot__creator <- function(input, session, dataset) {
         local_vertical_annotations <- isolate(input$var_plots__vertical_annotations)
         vertical_annotations <- str_split(local_vertical_annotations, "\n")[[1]]
         vertical_annotations <- purrr::map(vertical_annotations, ~ str_split(., ';')[[1]])
-        log_message_variable('var_plots__vertical_annotations',
-                             paste0(vertical_annotations, collapse="..."))
 
         local_horizontal_annotations <- isolate(input$var_plots__horizontal_annotations)
         horizontal_annotations <- str_split(local_horizontal_annotations, "\n")[[1]]
         horizontal_annotations <- purrr::map(horizontal_annotations, ~ str_split(., ';')[[1]])
-        log_message_variable('var_plots__horizontal_annotations',
-                             paste0(horizontal_annotations, collapse="..."))
 
         local_transparency <- isolate(input$var_plots__transparency) / 100
         local_annotate_points <- isolate(input$var_plots__annotate_points)
@@ -586,6 +582,12 @@ reactive__var_plots__ggplot__creator <- function(input, session, dataset) {
             log_message_variable('var_plots__annotate_points', local_annotate_points)
             log_message_variable('var_plots__filter_factor_lump_number',
                                  local_var_plots__filter_factor_lump_number)
+
+            log_message_variable('var_plots__horizontal_annotations',
+                             paste0(horizontal_annotations, collapse="..."))
+
+            log_message_variable('var_plots__vertical_annotations',
+                             paste0(vertical_annotations, collapse="..."))
             
             if(local_pretty_text) {
                 # if we change to pretty text, it will update the columns and all values to be "pretty",

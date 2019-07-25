@@ -1014,3 +1014,56 @@ test_that("add_x_annotations", {
         add_horizontal_annotations(horizontal_annotations, x_location=max(min(local_dataset[, local_primary_variable]), local_x_zoom_min))
     test_save_plot(file_name='output_files/annotations__v__h__scatter__adjusted.png', annotated_object)
 })
+
+test_that("add_x_annotations:POSIXct", {
+    local_dataset <- data.frame(nycflights13::flights %>%
+                                    mutate(date = make_date(year, month, day)) %>%
+                                    select(-year, -month, -day) %>%
+                                    select(date, everything())) %>%
+        mutate(date = as.POSIXct(date))
+    
+    vertical_annotations <- list(c("2013-03-15", "Event 3 (2013-03-15)"),
+                                 c("2013-01-01", "Event 1"),
+                                 c("2013-02-01", "Event 2"))
+    
+    horizontal_annotations <- list(c(5000, "Event A"),
+                                   c(6000, "Event B"),
+                                   c(8000, "Event C"))
+    
+    local_primary_variable <- 'date'
+    local_y_zoom_min <- NULL
+    local_y_zoom_max <- NULL
+    ggplot_object <- local_dataset %>%
+        select(local_primary_variable) %>%
+        mutate_factor_lump(factor_lump_number=10) %>%
+        rt_explore_plot_time_series(variable=local_primary_variable,
+                                    comparison_variable=NULL,
+                                    comparison_function=NULL,
+                                    comparison_function_name=NULL,
+                                    color_variable=NULL,
+                                    y_zoom_min=local_y_zoom_min,
+                                    y_zoom_max=local_y_zoom_max,
+                                    show_points=TRUE,
+                                    show_labels=TRUE,
+                                    date_floor='week',
+                                    date_break_format='%Y-%m-%d',
+                                    date_breaks_width='2 weeks',
+                                    base_size=11)
+    
+    annotated_object <- ggplot_object %>%
+        add_vertical_annotations(vertical_annotations, y_location=max(0, local_y_zoom_min), is_date=TRUE) %>%
+        add_horizontal_annotations(horizontal_annotations,
+                                   x_location=max(min(local_dataset[, local_primary_variable]), NULL),
+                                   x_location_is_date=TRUE)
+    test_save_plot(file_name='output_files/annotations__v__h__date__POSIXct.png', annotated_object)
+    
+    local_x_zoom_min <- ymd('2013-06-10')
+    local_y_zoom_min <- 1000
+    annotated_object <- ggplot_object %>%
+        add_vertical_annotations(vertical_annotations, y_location=max(0, local_y_zoom_min), is_date=TRUE) %>%
+        add_horizontal_annotations(horizontal_annotations,
+                                   x_location=max(min(local_dataset[, local_primary_variable]), local_x_zoom_min),
+                                   x_location_is_date=TRUE)
+    test_save_plot(file_name='output_files/annotations__v__h__date__adjusted__POSIXct.png', annotated_object)
+    
+})
