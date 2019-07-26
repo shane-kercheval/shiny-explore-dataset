@@ -38,26 +38,10 @@ shinyUI(fluidPage(theme="custom.css",
                     tags$br(),
                     textInput(inputId='load_data__url_csv', label="URL", value=NULL, width=600),
                     actionButton(inputId='load_data__url_csv_button', label='Load Data')
-                ),
-                tabPanel(
-                    'Update Dataset w/ R Code',
-                    textAreaInput(inputId='load_data__r_code_text', label="", value = "", width = 800, height = 300, cols = NULL, rows = NULL, placeholder = NULL, resize = NULL),
-                    tags$div(class='error_output',
-                        shinyjs::hidden(
-                            verbatimTextOutput(outputId='load_data__r_code_error')
-                        )
-                    ),
-                    bsTooltip(id='load_data__r_code_text',
-                                  title="Write R code to manipulate the currently loaded dataset. The loaded dataset should be referred to explicitly as `dataset` in the code.",
-                                  placement='top', trigger='hover'),
-                    actionButton(inputId='load_data__r_code_apply', label='Run Code')
                 )
             ),
             tags$br(),
-            # tags$br(),
             # uiOutput('source_data__add_date_fields__UI'),
-            # tags$br(),
-            # tags$br(),
             tabsetPanel(type='tabs',
                 tabPanel(
                     "First 500 Records of Dataset",
@@ -71,6 +55,19 @@ shinyUI(fluidPage(theme="custom.css",
                 tabPanel(
                     'Variable Types',
                     tags$div(class='results-table', dataTableOutput(outputId='source_data__types_table'))
+                ),
+                tabPanel(
+                    'Update Dataset w/ R Code',
+                    textAreaInput(inputId='load_data__r_code_text', label="", value = "", width = 800, height = 300, cols = NULL, rows = NULL, placeholder = NULL, resize = NULL),
+                    tags$div(class='error_output',
+                        shinyjs::hidden(
+                            verbatimTextOutput(outputId='load_data__r_code_error')
+                        )
+                    ),
+                    bsTooltip(id='load_data__r_code_text',
+                                  title="Write R code to manipulate the currently loaded dataset. The loaded dataset should be referred to explicitly as `dataset` in the code.",
+                                  placement='top', trigger='hover'),
+                    actionButton(inputId='load_data__r_code_apply', label='Run Code')
                 )
             )
         ),
