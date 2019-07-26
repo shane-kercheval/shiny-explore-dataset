@@ -4,169 +4,15 @@ library(hms)
 # MAIN DATASET
 # initialize with small default dataset or upload from file, by user
 ##########################################################################################################
-observeEvent__source_data <- function(session, input, output, custom_triggers, reactive__source_data) {
-    observe({
-
+observeEvent__source_data__upload <- function(session, input, output, custom_triggers, reactive__source_data) {
+    observeEvent(input$uploadFile, {
         withProgress(value=1/2, message='Loading Data',{
 
-            req(input$preloaded_dataset)
-
-            input$load_data__url_csv_button  # reload data if this button is pressed
-            custom_triggers$reload_source_data  # update based on changes to this reactiveValue
-
-            # reactive data
             upload_file_path <- input$uploadFile$datapath
-            local_preloaded_dataset <- input$preloaded_dataset
-            local_add_date_column <- isolate(input$source_data__add_date_fields)
-            local_csv_url <- isolate(input$load_data__url_csv)
 
-            log_message_block_start('Loading Dataset')
             log_message_variable('input$uploadFile$datapath', upload_file_path)
-            log_message_variable('input$load_data__url_csv', local_csv_url)
-            log_message_variable('input$preloaded_dataset', local_preloaded_dataset)
-            log_message_variable('input$source_data__add_date_fields', local_add_date_column)
 
-            loaded_dataset <- NULL
-            data_description <- NULL
-
-            if(!is.null(local_csv_url) && local_csv_url != "") {
-
-                loaded_dataset <- as.data.frame(read_csv(local_csv_url)) %>% mutate_if(is.character, factor)
-
-            } else if(is.null(upload_file_path)) {
-                
-                if(local_preloaded_dataset == 'Credit') {
-
-                    loaded_dataset <- dataset_or_null('example_datasets/credit.csv') %>%
-                        mutate(default = ifelse(default == 'yes', TRUE, FALSE))
-
-                    data_description <- "This is where a description of the Credit dataset should be given."
-
-                } else if(local_preloaded_dataset == 'Housing') {
-
-                    loaded_dataset <- dataset_or_null('example_datasets/housing.csv')
-                    data_description <- "This is where a description of the Housing dataset should be given."
-
-                } else if(local_preloaded_dataset == 'Insurance') {
-
-                    loaded_dataset <- dataset_or_null('example_datasets/insurance.csv')
-                    data_description <- "This is where a description of the Insurance dataset should be given."
-
-                } else if(local_preloaded_dataset == 'Iris') {
-
-                    loaded_dataset <- data.frame(iris)
-                    data_description <- "This is where a description of the Insurance dataset should be given."
-
-                } else if(local_preloaded_dataset == 'Diamonds') {
-
-                    loaded_dataset <- data.frame(diamonds)
-                    loaded_dataset[1:500, 'cut'] <- NA
-                    data_description <- "This is where a description of the Insurance dataset should be given."
-
-                } else if(local_preloaded_dataset == 'Flights') {
-
-                    loaded_dataset <-
-                        data.frame(nycflights13::flights %>%
-                            mutate(date = make_date(year, month, day)) %>%
-                            select(-year, -month, -day) %>%
-                            select(date, everything()))
-
-                    loaded_dataset$hms <- as.hms(loaded_dataset$time_hour)
-                    data_description <- "This is where a description of the Flights dataset should be given."
-
-                } else if(local_preloaded_dataset == 'Wine Ratings') {
-
-                    # originally from 'https://raw.githubusercontent.com/rfordatascience/tidytuesday/master/data/2019/2019-05-28/winemag-data-130k-v2.csv'
-                    loaded_dataset <- readRDS('example_datasets/wine_ratings.RDS') %>%
-                        as.data.frame() %>%
-                        extract(title, 'year', '([20]\\d\\d\\d)', convert=TRUE, remove=FALSE) %>%
-                        mutate(year = ifelse(year < 1900, NA, year),
-                               points_per_price = points / price)
-                    
-                    us_red_varieties <- c(
-                        
-                        'Cabernet Sauvignon',
-                        'Pinot Noir',
-                        'Syrah',
-                        'Red Blend',
-                        'Merlot',
-                        'Bordeaux-style Red Blend',
-                        'Petite Sirah',
-                        'Rhône-style Red Blend',
-                        'Cabernet Franc',
-                        'Grenache',
-                        'Malbec',
-                        'Sangiovese',
-                        'Tempranillo',
-                        'Meritage',
-                        'Mourvèdre',
-                        'Petit Verdot',
-                        'G-S-M',
-                        'Cabernet Sauvignon-Syrah',
-                        'Shiraz',
-                        'Carmenère',
-                        'Syrah-Grenache',
-                        'Syrah-Cabernet Sauvignon',
-                        'Cabernet Sauvignon-Merlot',
-                        'Grenache-Syrah',
-                        'Cabernet Blend',
-                        'Petite Verdot',
-                        'Syrah-Petite Sirah',
-                        'Merlot-Cabernet Sauvignon',
-                        'Cabernet Sauvignon-Cabernet Franc',
-                        'Merlot-Cabernet Franc',
-                        'Cabernet Franc-Merlot',
-                        'Syrah-Mourvèdre',
-                        'Syrah-Viognier',
-                        'Cabernet Merlot',
-                        'Cabernet Sauvignon-Sangiovese',
-                        'Syrah-Tempranillo',
-                        'Tempranillo Blend',
-                        'Grenache-Carignan',
-                        'Grenache-Mourvèdre',
-                        'Merlot-Cabernet',
-                        'Sangiovese-Cabernet Sauvignon',
-                        'Sangiovese-Syrah',
-                        'Syrah-Cabernet',
-                        'Cabernet-Syrah',
-                        'Grenache Blend',
-                        'Sangiovese Cabernet',
-                        'Syrah-Cabernet Franc',
-                        'Cabernet Sauvignon-Malbec',
-                        'Malbec-Merlot',
-                        'Carignan-Grenache',
-                        'Malbec-Syrah',
-                        'Mourvèdre-Syrah',
-                        'Tempranillo-Cabernet Sauvignon',
-                        'Cabernet',
-                        'Cabernet Sauvignon-Barbera',
-                        'Cabernet Sauvignon-Carmenère',
-                        'Cabernet Sauvignon-Shiraz',
-                        'Cabernet Sauvignon-Tempranillo',
-                        'Cabernet-Shiraz',
-                        'Malbec-Cabernet Sauvignon',
-                        'Merlot-Malbec',
-                        'Rosado',
-                        'Syrah-Grenache-Viognier',
-                        'Syrah-Merlot',
-                        'Syrah-Petit Verdot',
-                        'Tannat-Syrah'
-                    )
-                    
-                    loaded_dataset$type <- map_chr(loaded_dataset$variety, ~ ifelse(. %in% us_red_varieties, 'Red', 'White/Other'))
-                    loaded_dataset$type <- ifelse(loaded_dataset$country == "US", loaded_dataset$type, NA)
-                    
-                    loaded_dataset <- loaded_dataset %>%
-                        select(-X1) %>%
-                        select(country, province, variety, type, year, points, price, points_per_price, title, winery, everything())
-
-                    data_description <- "This was a Tidy Tuesday dataset.\n\nhttps://github.com/rfordatascience/tidytuesday/tree/master/data/2019/2019-05-28\n\nThe `year` is extracted from the title, and may not be 100% accurate.\nThe `type` (Red/White) is manually constructed from the varity and is currently only available for the US."
-
-                } else if(local_preloaded_dataset == 'Gapminder') {
-
-                    loaded_dataset <- data.frame(gapminder::gapminder)
-                }
-            } else {
+            if(!is.null(upload_file_path)) {
 
                 if(str_sub(upload_file_path, -4) == '.csv') {
                     
@@ -184,45 +30,181 @@ observeEvent__source_data <- function(session, input, output, custom_triggers, r
                 }
             }
 
-            if(!is.null(loaded_dataset) &&
-                    !is.null(local_add_date_column) &&
-                    local_add_date_column != global__select_variable_optional &&
-                    local_add_date_column %in% colnames(loaded_dataset)) {
+            shinyjs::hide('load_data__description')
+        })
 
-                log_message('Adding date fields...')
+        reactive__source_data$data <- loaded_dataset
+    })
+}
 
-                if(is.numeric(loaded_dataset[, local_add_date_column])) {
+observeEvent__source_data__csv_url <- function(session, input, output, custom_triggers, reactive__source_data) {
+    observeEvent(input$load_data__url_csv_button, {
+        
+        loaded_dataset <- NULL
+        withProgress(value=1/2, message='Loading Data',{
 
-                    log_message('Adding date fields...numeric')
-                    is_invalid <- TRUE
+            local_csv_url <- isolate(input$load_data__url_csv)
 
-                } else {
+            log_message_variable('input$load_data__url_csv', local_csv_url)
 
-                    is_invalid <- tryCatch({
+            if(!is.null(local_csv_url) && local_csv_url != "") {
 
-                        log_message('Adding date fields...tryCatch()')
-                        (all(is.na(lubridate::as_date(loaded_dataset[, local_add_date_column]))))
+                loaded_dataset <- as.data.frame(read_csv(local_csv_url)) %>% mutate_if(is.character, factor)
+            }
 
-                    }, error = function(error_condition) {
+            shinyjs::hide('load_data__description')
+        })
 
-                        log_message(paste('Adding date fields...ERROR CONVERTING', local_add_date_column, 'TO DATE'))                    
-                        TRUE
-                    })
-                }
+        updateTextInput(session, inputId='load_data__url_csv', value = '')
+        reactive__source_data$data <- loaded_dataset
+    })
+}
 
-                log_message_variable('Adding date fields...is_invalid', is_invalid)
 
-                if(is_invalid) {
+observeEvent__source_data__preloaded <- function(session, input, output, custom_triggers, reactive__source_data) {
+    observeEvent(input$preloaded_dataset, {
+        withProgress(value=1/2, message='Loading Data',{
 
-                    showModal(
-                        modalDialog(title = 'Cannot Convert to Date',
-                                    paste0('Cannot convert `', local_add_date_column, '` to a date.')))
+            # reactive data
+            local_preloaded_dataset <- input$preloaded_dataset
+            #local_add_date_column <- isolate(input$source_data__add_date_fields)
+
+            log_message_block_start('Loading Dataset')
+            log_message_variable('input$preloaded_dataset', local_preloaded_dataset)
+
+            loaded_dataset <- NULL
+            data_description <- NULL
+
+            if(local_preloaded_dataset == 'Credit') {
+
+                loaded_dataset <- dataset_or_null('example_datasets/credit.csv') %>%
+                    mutate(default = ifelse(default == 'yes', TRUE, FALSE))
+
+                data_description <- "This is where a description of the Credit dataset should be given."
+
+            } else if(local_preloaded_dataset == 'Housing') {
+
+                loaded_dataset <- dataset_or_null('example_datasets/housing.csv')
+                data_description <- "This is where a description of the Housing dataset should be given."
+
+            } else if(local_preloaded_dataset == 'Insurance') {
+
+                loaded_dataset <- dataset_or_null('example_datasets/insurance.csv')
+                data_description <- "This is where a description of the Insurance dataset should be given."
+
+            } else if(local_preloaded_dataset == 'Iris') {
+
+                loaded_dataset <- data.frame(iris)
+                data_description <- "This is where a description of the Insurance dataset should be given."
+
+            } else if(local_preloaded_dataset == 'Diamonds') {
+
+                loaded_dataset <- data.frame(diamonds)
+                loaded_dataset[1:500, 'cut'] <- NA
+                data_description <- "This is where a description of the Insurance dataset should be given."
+
+            } else if(local_preloaded_dataset == 'Flights') {
+
+                loaded_dataset <-
+                    data.frame(nycflights13::flights %>%
+                        mutate(date = make_date(year, month, day)) %>%
+                        select(-year, -month, -day) %>%
+                        select(date, everything()))
+
+                loaded_dataset$hms <- as.hms(loaded_dataset$time_hour)
+                data_description <- "This is where a description of the Flights dataset should be given."
+
+            } else if(local_preloaded_dataset == 'Wine Ratings') {
+
+                # originally from 'https://raw.githubusercontent.com/rfordatascience/tidytuesday/master/data/2019/2019-05-28/winemag-data-130k-v2.csv'
+                loaded_dataset <- readRDS('example_datasets/wine_ratings.RDS') %>%
+                    as.data.frame() %>%
+                    extract(title, 'year', '([20]\\d\\d\\d)', convert=TRUE, remove=FALSE) %>%
+                    mutate(year = ifelse(year < 1900, NA, year),
+                           points_per_price = points / price)
+                
+                us_red_varieties <- c(
                     
-                } else {
+                    'Cabernet Sauvignon',
+                    'Pinot Noir',
+                    'Syrah',
+                    'Red Blend',
+                    'Merlot',
+                    'Bordeaux-style Red Blend',
+                    'Petite Sirah',
+                    'Rhône-style Red Blend',
+                    'Cabernet Franc',
+                    'Grenache',
+                    'Malbec',
+                    'Sangiovese',
+                    'Tempranillo',
+                    'Meritage',
+                    'Mourvèdre',
+                    'Petit Verdot',
+                    'G-S-M',
+                    'Cabernet Sauvignon-Syrah',
+                    'Shiraz',
+                    'Carmenère',
+                    'Syrah-Grenache',
+                    'Syrah-Cabernet Sauvignon',
+                    'Cabernet Sauvignon-Merlot',
+                    'Grenache-Syrah',
+                    'Cabernet Blend',
+                    'Petite Verdot',
+                    'Syrah-Petite Sirah',
+                    'Merlot-Cabernet Sauvignon',
+                    'Cabernet Sauvignon-Cabernet Franc',
+                    'Merlot-Cabernet Franc',
+                    'Cabernet Franc-Merlot',
+                    'Syrah-Mourvèdre',
+                    'Syrah-Viognier',
+                    'Cabernet Merlot',
+                    'Cabernet Sauvignon-Sangiovese',
+                    'Syrah-Tempranillo',
+                    'Tempranillo Blend',
+                    'Grenache-Carignan',
+                    'Grenache-Mourvèdre',
+                    'Merlot-Cabernet',
+                    'Sangiovese-Cabernet Sauvignon',
+                    'Sangiovese-Syrah',
+                    'Syrah-Cabernet',
+                    'Cabernet-Syrah',
+                    'Grenache Blend',
+                    'Sangiovese Cabernet',
+                    'Syrah-Cabernet Franc',
+                    'Cabernet Sauvignon-Malbec',
+                    'Malbec-Merlot',
+                    'Carignan-Grenache',
+                    'Malbec-Syrah',
+                    'Mourvèdre-Syrah',
+                    'Tempranillo-Cabernet Sauvignon',
+                    'Cabernet',
+                    'Cabernet Sauvignon-Barbera',
+                    'Cabernet Sauvignon-Carmenère',
+                    'Cabernet Sauvignon-Shiraz',
+                    'Cabernet Sauvignon-Tempranillo',
+                    'Cabernet-Shiraz',
+                    'Malbec-Cabernet Sauvignon',
+                    'Merlot-Malbec',
+                    'Rosado',
+                    'Syrah-Grenache-Viognier',
+                    'Syrah-Merlot',
+                    'Syrah-Petit Verdot',
+                    'Tannat-Syrah'
+                )
+                
+                loaded_dataset$type <- map_chr(loaded_dataset$variety, ~ ifelse(. %in% us_red_varieties, 'Red', 'White/Other'))
+                loaded_dataset$type <- ifelse(loaded_dataset$country == "US", loaded_dataset$type, NA)
+                
+                loaded_dataset <- loaded_dataset %>%
+                    select(-X1) %>%
+                    select(country, province, variety, type, year, points, price, points_per_price, title, winery, everything())
 
-                    loaded_dataset <- cbind(loaded_dataset,
-                                    rt_get_date_fields(date_vector = loaded_dataset[, local_add_date_column]))
-                }
+                data_description <- "This was a Tidy Tuesday dataset.\n\nhttps://github.com/rfordatascience/tidytuesday/tree/master/data/2019/2019-05-28\n\nThe `year` is extracted from the title, and may not be 100% accurate.\nThe `type` (Red/White) is manually constructed from the varity and is currently only available for the US."
+
+            } else if(local_preloaded_dataset == 'Gapminder') {
+
+                loaded_dataset <- data.frame(gapminder::gapminder)
             }
 
             if(is.null(data_description)) {
@@ -236,24 +218,7 @@ observeEvent__source_data <- function(session, input, output, custom_triggers, r
             }
         })
 
-        updateTextInput(session, inputId='load_data__url_csv', value = '')
-
         reactive__source_data$data <- loaded_dataset
-    })
-}
-
-observeEvent__source_data__add_date_fields  <- function(reactive__source_data, input) {
-    observeEvent(input$source_data__add_date_fields, {
-        # this should trigger a reload of the dataset (perhaps not the best approach, but TBD on alternatives)
-        # however, it shouldn't trigger a reload if it is set back to the default global__select_variable_optional
-        # which will trigger false positive loadings
-        if(!is.null(reactive__source_data$data) &&
-                !is.null(input$source_data__add_date_fields) &&
-                input$source_data__add_date_fields != global__select_variable_optional &&
-                input$source_data__add_date_fields %in% colnames(reactive__source_data$data)) {
-
-            custom_triggers$reload_source_data <- runif(1, 1, 1000000)
-        }
     })
 }
 

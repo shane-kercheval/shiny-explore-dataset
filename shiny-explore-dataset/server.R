@@ -39,7 +39,9 @@ shinyServer(function(input, output, session) {
     # loads dataset depending on drop down or upload
 
     reactive__source_data <- reactiveValues(data=NULL)
-    observeEvent__source_data(session, input, output, custom_triggers, reactive__source_data)
+    observeEvent__source_data__preloaded(session, input, output, custom_triggers, reactive__source_data)
+    observeEvent__source_data__upload(session, input, output, custom_triggers, reactive__source_data)
+    observeEvent__source_data__csv_url(session, input, output, custom_triggers, reactive__source_data)
     # shows the first 500 rows of the data
     output$source_data__head_table <- renderDataTable__source_data__head(reactive__source_data)
     # shows the types of the data's variables/columns
