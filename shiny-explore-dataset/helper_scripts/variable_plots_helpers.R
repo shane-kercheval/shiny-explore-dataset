@@ -478,6 +478,100 @@ custom_max_min <- function(x_vector, y_value) {
     max(min(x_vector, na.rm=TRUE), y_value, na.rm=TRUE)
 }
 
+#' @param local_primary_variable numeric
+#' @param local_comparison_variable categoric
+helper__plot_numeric_categoric <- function(session,
+                                           local_dataset,
+                                           local_numeric_graph_type,
+                                           local_primary_variable,
+                                           local_comparison_variable,
+                                           local_color_variable,
+                                           local_order_by_variable,
+                                           local_var_plots__filter_factor_lump_number,
+                                           local_histogram_bins,
+                                           horizontal_annotations,
+                                           local_scale_x_log_base_10,
+                                           local_x_zoom_min,
+                                           local_x_zoom_max,
+                                           local_scale_y_log_base_10,
+                                           local_y_zoom_min,
+                                           local_y_zoom_max,
+                                           local_base_size
+                                           ) {
+
+
+    show_boxplot <- local_numeric_graph_type == 'Boxplot'
+
+    hide_show_numeric_categoric(session=session,
+                                showing_boxplot=show_boxplot,
+                                has_comparison_variable=!is.null(local_comparison_variable))
+    if(show_boxplot) {
+
+        log_message('**numeric null/categoric - boxplot**')
+
+        log_message_variable('var_plots__order_by_variable', local_order_by_variable)
+        log_message_variable('var_plots__y_zoom_min', local_y_zoom_min)
+        log_message_variable('var_plots__y_zoom_max', local_y_zoom_max)
+        log_message_variable('var_plots__scale_y_log_base_10', local_scale_y_log_base_10)
+
+        if(local_order_by_variable %in% colnames(local_dataset)) {
+            
+            temp_order_by_variable <- local_order_by_variable
+
+        } else {
+
+            temp_order_by_variable <- NULL
+        }
+
+        annotation_x_location <- 0.5
+        if(is.null(local_comparison_variable)) {
+            # need this logic because the position changes depending on if it is a single boxplot or multiple
+            annotation_x_location <- -0.9
+        }
+
+        ggplot_object <- local_dataset %>%
+            select(local_primary_variable,
+                   local_comparison_variable,
+                   local_color_variable,
+                   temp_order_by_variable) %>%
+            mutate_factor_lump(factor_lump_number=local_var_plots__filter_factor_lump_number) %>%
+            mutate_factor_reorder(variable_to_order_by=local_order_by_variable,
+                                  variable_to_order=local_comparison_variable) %>%
+            rt_explore_plot_boxplot(variable=local_primary_variable,
+                                    comparison_variable=local_comparison_variable,
+                                    color_variable=local_color_variable,
+                                    y_zoom_min=local_y_zoom_min,
+                                    y_zoom_max=local_y_zoom_max,
+                                    base_size=local_base_size) %>%
+            scale_axes_log10(scale_x=FALSE,
+                             scale_y=local_scale_y_log_base_10) %>%
+            add_horizontal_annotations(horizontal_annotations,
+                                       x_location=annotation_x_location)
+
+    } else {
+
+        log_message('**numeric null/categoric - histogram**')
+
+        log_message_variable('var_plots__histogram_bins', local_histogram_bins)
+        log_message_variable('var_plots__x_zoom_min', local_x_zoom_min)
+        log_message_variable('var_plots__x_zoom_max', local_x_zoom_max)
+        log_message_variable('var_plots__scale_x_log_base_10', local_scale_x_log_base_10)
+        
+        ggplot_object <- local_dataset %>% select(local_primary_variable, local_comparison_variable) %>%
+            mutate_factor_lump(factor_lump_number=local_var_plots__filter_factor_lump_number) %>%
+            rt_explore_plot_histogram(variable=local_primary_variable,
+                                      comparison_variable=local_comparison_variable,
+                                      num_bins=local_histogram_bins,
+                                      x_zoom_min=local_x_zoom_min,
+                                      x_zoom_max=local_x_zoom_max,
+                                      base_size=local_base_size) %>%
+            scale_axes_log10(scale_x=local_scale_x_log_base_10,
+                             scale_y=FALSE)
+    }
+
+    return (ggplot_object)
+}
+
 reactive__var_plots__ggplot__creator <- function(input, session, dataset) {
     reactive({
 
@@ -852,74 +946,23 @@ reactive__var_plots__ggplot__creator <- function(input, session, dataset) {
                 ##########################################################################################
                 } else {
 
-                    show_boxplot <- local_numeric_graph_type == 'Boxplot'
-
-                    hide_show_numeric_categoric(session=session,
-                                                showing_boxplot=show_boxplot,
-                                                has_comparison_variable=!is.null(local_comparison_variable))
-                    if(show_boxplot) {
-
-                        log_message('**numeric null/categoric - boxplot**')
-
-                        log_message_variable('var_plots__order_by_variable', local_order_by_variable)
-                        log_message_variable('var_plots__y_zoom_min', local_y_zoom_min)
-                        log_message_variable('var_plots__y_zoom_max', local_y_zoom_max)
-                        log_message_variable('var_plots__scale_y_log_base_10', local_scale_y_log_base_10)
-
-                        if(local_order_by_variable %in% colnames(local_dataset)) {
-                            
-                            temp_order_by_variable <- local_order_by_variable
-
-                        } else {
-
-                            temp_order_by_variable <- NULL
-                        }
-
-                        annotation_x_location <- 0.5
-                        if(is.null(local_comparison_variable)) {
-                            # need this logic because the position changes depending on if it is a single boxplot or multiple
-                            annotation_x_location <- -0.9
-                        }
-
-                        ggplot_object <- local_dataset %>%
-                            select(local_primary_variable,
-                                   local_comparison_variable,
-                                   local_color_variable,
-                                   temp_order_by_variable) %>%
-                            mutate_factor_lump(factor_lump_number=local_var_plots__filter_factor_lump_number) %>%
-                            mutate_factor_reorder(variable_to_order_by=local_order_by_variable,
-                                                  variable_to_order=local_comparison_variable) %>%
-                            rt_explore_plot_boxplot(variable=local_primary_variable,
-                                                    comparison_variable=local_comparison_variable,
-                                                    color_variable=local_color_variable,
-                                                    y_zoom_min=local_y_zoom_min,
-                                                    y_zoom_max=local_y_zoom_max,
-                                                    base_size=local_base_size) %>%
-                            scale_axes_log10(scale_x=FALSE,
-                                             scale_y=local_scale_y_log_base_10) %>%
-                            add_horizontal_annotations(horizontal_annotations,
-                                                       x_location=annotation_x_location)
-
-                    } else {
-
-                        log_message('**numeric null/categoric - histogram**')
-
-                        log_message_variable('var_plots__histogram_bins', local_histogram_bins)
-                        log_message_variable('var_plots__x_zoom_min', local_x_zoom_min)
-                        log_message_variable('var_plots__x_zoom_max', local_x_zoom_max)
-                        log_message_variable('var_plots__scale_x_log_base_10', local_scale_x_log_base_10)
-                        
-                        ggplot_object <- local_dataset %>% select(local_primary_variable, local_comparison_variable) %>%
-                            mutate_factor_lump(factor_lump_number=local_var_plots__filter_factor_lump_number) %>%
-                            rt_explore_plot_histogram(variable=local_primary_variable,
-                                                      comparison_variable=local_comparison_variable,
-                                                      num_bins=local_histogram_bins,
-                                                      x_zoom_min=local_x_zoom_min,
-                                                      x_zoom_max=local_x_zoom_max,
-                                                      base_size=local_base_size) %>%
-                            scale_axes_log10(scale_x=local_scale_x_log_base_10,
-                                             scale_y=FALSE)
-                    }
+                    ggplot_object <- helper__plot_numeric_categoric(session,
+                                                                    local_dataset,
+                                                                    local_numeric_graph_type,
+                                                                    local_primary_variable,
+                                                                    local_comparison_variable,
+                                                                    local_color_variable,
+                                                                    local_order_by_variable,
+                                                                    local_var_plots__filter_factor_lump_number,
+                                                                    local_histogram_bins,
+                                                                    horizontal_annotations,
+                                                                    local_scale_x_log_base_10,
+                                                                    local_x_zoom_min,
+                                                                    local_x_zoom_max,
+                                                                    local_scale_y_log_base_10,
+                                                                    local_y_zoom_min,
+                                                                    local_y_zoom_max,
+                                                                    local_base_size)
                 }
 
             ##############################################################################################
@@ -933,42 +976,24 @@ reactive__var_plots__ggplot__creator <- function(input, session, dataset) {
                 if(!is.null(local_comparison_variable) &&
                         is.numeric(local_dataset[, local_comparison_variable])) {
 
-                    hide_show_categoric_numeric(session)
-
-                    log_message('**categoric numeric**')
-
-                    log_message_variable('var_plots__order_by_variable', local_order_by_variable)
-                    log_message_variable('var_plots__y_zoom_min', local_y_zoom_min)
-                    log_message_variable('var_plots__y_zoom_max', local_y_zoom_max)
-                    log_message_variable('var_plots__scale_y_log_base_10', local_scale_y_log_base_10)
-
-                    if(local_order_by_variable %in% colnames(local_dataset)) {
-                            
-                        temp_order_by_variable <- local_order_by_variable
-
-                    } else {
-
-                        temp_order_by_variable <- NULL
-                    }
-
-                    ggplot_object <- local_dataset %>%
-                        select(local_primary_variable,
-                               local_comparison_variable,
-                               local_color_variable,
-                               temp_order_by_variable) %>%
-                        mutate_factor_lump(factor_lump_number=local_var_plots__filter_factor_lump_number) %>%
-                        mutate_factor_reorder(variable_to_order_by=local_order_by_variable,
-                                              variable_to_order=local_primary_variable) %>%
-                        rt_explore_plot_boxplot(variable=local_comparison_variable,
-                                                comparison_variable=local_primary_variable,
-                                                color_variable=local_color_variable,
-                                                y_zoom_min=local_y_zoom_min,
-                                                y_zoom_max=local_y_zoom_max,
-                                                base_size=local_base_size) %>%
-                        scale_axes_log10(scale_x=FALSE,
-                                         scale_y=local_scale_y_log_base_10)  %>%
-                        add_horizontal_annotations(horizontal_annotations,
-                                                   x_location=0.5)
+                    ggplot_object <- helper__plot_numeric_categoric(session=session,
+                                                                    local_dataset=local_dataset,
+                                                                    local_numeric_graph_type=local_numeric_graph_type,
+                                                                    # same as above, except we need to swap the numeric/categoric variables
+                                                                    local_primary_variable=local_comparison_variable,
+                                                                    local_comparison_variable=local_primary_variable,
+                                                                    local_color_variable=local_color_variable,
+                                                                    local_order_by_variable=local_order_by_variable,
+                                                                    local_var_plots__filter_factor_lump_number=local_var_plots__filter_factor_lump_number,
+                                                                    local_histogram_bins=local_histogram_bins,
+                                                                    horizontal_annotations=horizontal_annotations,
+                                                                    local_scale_x_log_base_10=local_scale_x_log_base_10,
+                                                                    local_x_zoom_min=local_x_zoom_min,
+                                                                    local_x_zoom_max=local_x_zoom_max,
+                                                                    local_scale_y_log_base_10=local_scale_y_log_base_10,
+                                                                    local_y_zoom_min=local_y_zoom_min,
+                                                                    local_y_zoom_max=local_y_zoom_max,
+                                                                    local_base_siz=local_base_size)
 
                 ##########################################################################################
                 # NULL Or Categoric Secondary Variable
@@ -1537,47 +1562,6 @@ hide_show_numeric_categoric <- function(session, showing_boxplot, has_comparison
     shinyjs::hide('div_var_plots__group_time_series_controls')
     shinyjs::hide('div_var_plots__group_barchar_controls')
     shinyjs::hide('var_plots__categoric_view_type')
-    shinyjs::hide('var_plots__annotate_points')
-    shinyjs::hide('var_plots__show_points')
-    shinyjs::hide('var_plots__sum_by_variable__UI')
-    shinyjs::hide('var_plots__multi_value_delimiter')
-    updateCollapse(session, 'var_plots__bscollapse', close="Map Options")
-    shinyjs::hide('var_plots__map_format')
-    shinyjs::hide('var_plots___map_borders_database')
-    shinyjs::hide('var_plots___map_borders_regions')
-}
-
-hide_show_categoric_numeric <- function(session) {
-    
-    log_message('hide_show_categoric_numeric')
-    
-    # multi-boxplot
-    shinyjs::hide('var_plots__size_variable__UI')
-    shinyjs::hide('var_plots__label_variables__UI')
-    shinyjs::hide('var_plots__numeric_group_comp_variable')
-    shinyjs::hide('var_plots__numeric_aggregation_function')
-    shinyjs::hide('var_plots__numeric_aggregation_count_minimum')
-    shinyjs::hide('var_plots__numeric_show_resampled_conf_int')
-    shinyjs::show('var_plots__color_variable__UI')
-
-    shinyjs::show('div_var_plots__group_y_zoom_controls')
-    shinyjs::show('var_plots__base_size')
-    shinyjs::hide('var_plots__vertical_annotations')
-    shinyjs::show('var_plots__horizontal_annotations')
-
-    shinyjs::hide('div_var_plots__group_x_zoom_controls')
-    # if we are hiding the x-controls, uncheck the scale_x_log10 option so it isn't carried over
-    updateCheckboxInput(session, 'var_plots__scale_x_log_base_10', value=FALSE)
-
-    shinyjs::hide('var_plots__numeric_aggregation')
-    shinyjs::hide('div_var_plots__group_scatter_controls')
-    shinyjs::hide('div_var_plots__group_trend_controls')
-    shinyjs::hide('div_var_plots__group_time_series_controls')
-    shinyjs::hide('var_plots__histogram_bins')
-    shinyjs::hide('div_var_plots__group_barchar_controls')
-    shinyjs::show('var_plots__order_by_variable')
-    shinyjs::hide('var_plots__categoric_view_type')
-    shinyjs::hide('var_plots__numeric_graph_type')
     shinyjs::hide('var_plots__annotate_points')
     shinyjs::hide('var_plots__show_points')
     shinyjs::hide('var_plots__sum_by_variable__UI')
