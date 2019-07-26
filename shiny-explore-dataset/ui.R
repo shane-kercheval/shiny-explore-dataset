@@ -41,7 +41,6 @@ shinyUI(fluidPage(theme="custom.css",
                 )
             ),
             tags$br(),
-            # uiOutput('source_data__add_date_fields__UI'),
             tabsetPanel(type='tabs',
                 tabPanel(
                     "First 500 Records of Dataset",

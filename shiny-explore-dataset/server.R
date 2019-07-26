@@ -46,8 +46,6 @@ shinyServer(function(input, output, session) {
     output$source_data__head_table <- renderDataTable__source_data__head(reactive__source_data)
     # shows the types of the data's variables/columns
     output$source_data__types_table <- renderDataTable__source_data__types(reactive__source_data)
-    output$source_data__add_date_fields__UI <- renderUI__source_data__add_date_fields__UI(reactive__source_data)
-    observeEvent__source_data__add_date_fields(reactive__source_data, input)
 
     observeEvent__load_data__r_code_apply(reactive__source_data, input, output)
     ##########################################################################################################
