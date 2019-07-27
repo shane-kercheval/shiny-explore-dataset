@@ -608,6 +608,13 @@ reactive__var_plots__ggplot__creator <- function(input, session, dataset) {
         local_include_zero_y_axis <- default_if_null_or_empty_string(isolate(input$var_plots__include_zero_y_axis),
                                                              default=TRUE)
 
+        if(!is.null(local_comparison_variable) && is_date_type(local_dataset[[local_comparison_variable]])) {
+
+            showModal(modalDialog(title = "Only the primary 'Variable' selection can be used with date types."))
+            updateSelectInput(session, 'var_plots__comparison', selected=global__select_variable_optional)
+            return (NULL)
+        }
+
         if(is_date_type(local_dataset[[local_primary_variable]]) && !is.null(local_color_variable) && local_year_over_year) {
             # we cannot use YOY and color (year will be the color)
             # So, if we aren't faceting, let's move color to the facet variable.
