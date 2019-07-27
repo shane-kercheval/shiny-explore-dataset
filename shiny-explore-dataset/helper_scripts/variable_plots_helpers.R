@@ -180,6 +180,7 @@ observeEvent__var_plots__graph_options_clear <- function(input, session) {
         updateSelectInput(session, 'var_plots__label_variables', selected=character(0))
         updateCheckboxInput(session, 'var_plots__annotate_points', value=FALSE)
         updateCheckboxInput(session, 'var_plots__show_points', value=FALSE)
+        updateCheckboxInput(session, 'var_plots__year_over_year', value=FALSE)
         updateSelectInput(session, 'var_plots__numeric_graph_type', selected="Boxplot")
         updateSelectInput(session, 'var_plots__categoric_view_type', selected="Bar")
         updateSelectInput(session, 'var_plots__order_by_variable', selected="Default")
@@ -210,6 +211,7 @@ hide_graph_options <- function(input) {
     shinyjs::hide('var_plots__label_variables__UI')
     shinyjs::hide('var_plots__annotate_points')
     shinyjs::hide('var_plots__show_points')
+    shinyjs::hide('var_plots__year_over_year')
     shinyjs::hide('var_plots__numeric_graph_type')
     shinyjs::hide('var_plots__categoric_view_type')
     shinyjs::hide('div_var_plots__group_barchar_controls')
@@ -231,6 +233,7 @@ observeEvent__var_plots__graph_options__any_used <- function(input, session) {
                    input$var_plots__label_variables,
                    input$var_plots__annotate_points,
                    input$var_plots__show_points,
+                   input$var_plots__year_over_year,
                    input$var_plots__numeric_graph_type,
                    input$var_plots__categoric_view_type,
                    input$var_plots__order_by_variable,
@@ -447,7 +450,7 @@ reactive__var_plots__filtered_data__creator <- function(input, dataset, reactive
     })
 }
 
-hide_show_top_n_categories <- function(dataset, variable, comparison_variable, size_variable, color_variable) {
+hide_show_top_n_categories <- function(dataset, variable, comparison_variable, size_variable, color_variable, facet_variable) {
 
     if(variable == global__select_variable || !(variable %in% colnames(dataset))) {
 
@@ -456,7 +459,7 @@ hide_show_top_n_categories <- function(dataset, variable, comparison_variable, s
     }
 
     dataset <- dataset %>% 
-        select(c(variable, comparison_variable, size_variable, color_variable)) %>%
+        select(c(variable, comparison_variable, size_variable, color_variable, facet_variable)) %>%
         select_if(is_categoric)
 
     if(ncol(dataset) > 0) {
@@ -595,12 +598,14 @@ reactive__var_plots__ggplot__creator <- function(input, session, dataset) {
         local_size_variable <- null_if_select_variable_optional(input$var_plots__size_variable)
         local_label_variables <- null_if_select_variable_optional(isolate(input$var_plots__label_variables))
         local_color_variable <- null_if_select_variable_optional(input$var_plots__color_variable)
+        local_facet_variable <- null_if_select_variable_optional(input$var_plots__facet_variable)
 
         top_n_is_hidden <- hide_show_top_n_categories(dataset(),
                                                       local_primary_variable,
                                                       local_comparison_variable,
                                                       local_size_variable,
-                                                      local_color_variable)
+                                                      local_color_variable,
+                                                      local_facet_variable)
 
         local_numeric_group_comp_variable <- input$var_plots__numeric_group_comp_variable
         local_numeric_aggregation_function <- input$var_plots__numeric_aggregation_function
@@ -640,6 +645,8 @@ reactive__var_plots__ggplot__creator <- function(input, session, dataset) {
         # for time series plot
         local_show_points <- default_if_null_or_empty_string(isolate(input$var_plots__show_points),
                                                              default=FALSE)
+        local_year_over_year <- default_if_null_or_empty_string(isolate(input$var_plots__year_over_year),
+                                                             default=FALSE)
         local_ts_date_floor <- default_if_null_or_empty_string(isolate(input$var_plots__ts_date_floor),
                                                              string_values_as_null='None')
         local_ts_date_break_format <- default_if_null_or_empty_string(isolate(input$var_plots__ts_date_break_format),
@@ -671,9 +678,11 @@ reactive__var_plots__ggplot__creator <- function(input, session, dataset) {
             log_message_variable('var_plots__size_variable', local_size_variable)
             log_message_variable('var_plots__label_variables', paste0(local_label_variables, collapse=', '))
             log_message_variable('var_plots__color_variable', local_color_variable)
+            log_message_variable('var_plots__facet_variable', local_facet_variable)
             log_message_variable('var_plots__base_size', local_base_size)
             log_message_variable('var_plots__pretty_text', local_pretty_text)
             log_message_variable('var_plots__annotate_points', local_annotate_points)
+            log_message_variable('var_plots__year_over_year', local_year_over_year)
             log_message_variable('var_plots__filter_factor_lump_number',
                                  local_var_plots__filter_factor_lump_number)
 
@@ -692,7 +701,8 @@ reactive__var_plots__ggplot__creator <- function(input, session, dataset) {
                                                                          default_if_null_or_empty_string(local_comparison_variable),
                                                                          default_if_null_or_empty_string(local_sum_by_variable),
                                                                          default_if_null_or_empty_string(local_size_variable),
-                                                                         default_if_null_or_empty_string(local_color_variable))))
+                                                                         default_if_null_or_empty_string(local_color_variable),
+                                                                         default_if_null_or_empty_string(local_facet_variable))))
 
                 # R uses the "`My Variable`" syntax for variables with spaces which dplyr's xxx_() relies on
                 local_primary_variable <- rt_pretty_text(local_primary_variable)
@@ -712,12 +722,17 @@ reactive__var_plots__ggplot__creator <- function(input, session, dataset) {
 
                     local_color_variable <- rt_pretty_text(local_color_variable)
                 }
+                if(!is_null_or_empty_string(local_facet_variable)) {
+
+                    local_facet_variable <- rt_pretty_text(local_facet_variable)
+                }
 
                 log_message_variable('updated primary_variable', local_primary_variable)
                 log_message_variable('updated comparison_variable', local_comparison_variable)
                 log_message_variable('updated sum_by_variable', local_sum_by_variable)
                 log_message_variable('updated var_plots__size_variable', local_size_variable)
                 log_message_variable('updated var_plots__color_variable', local_color_variable)
+                log_message_variable('updated var_plots__facet_variable', local_facet_variable)
                 log_message_generic('column names', paste0(colnames(local_dataset), collapse = '; '))
             }
 
@@ -763,13 +778,16 @@ reactive__var_plots__ggplot__creator <- function(input, session, dataset) {
 
                 add_confidence_interval <- !is.null(local_trend_line_se) && local_trend_line_se == 'Yes'
                 ggplot_object <- local_dataset %>%
-                    select(local_primary_variable, local_comparison_variable, local_color_variable) %>%
+                    select(local_primary_variable, local_comparison_variable, local_color_variable,
+                           local_facet_variable) %>%
                     mutate_factor_lump(factor_lump_number=local_var_plots__filter_factor_lump_number) %>%
                     rt_explore_plot_time_series(variable=local_primary_variable,
                                                 comparison_variable=local_comparison_variable,
                                                 comparison_function=comparison_function,
                                                 comparison_function_name=comparison_function_name,
                                                 color_variable=local_color_variable,
+                                                facet_variable=local_facet_variable,
+                                                year_over_year=local_year_over_year,
                                                 y_zoom_min=local_y_zoom_min,
                                                 y_zoom_max=local_y_zoom_max,
                                                 show_points=local_show_points,
@@ -1216,6 +1234,24 @@ renderUI__var_plots__color_variable__UI <- function(input, dataset) {
     })
 }
 
+renderUI__var_plots__facet_variable__UI <- function(dataset) {
+
+    renderUI({
+        # if we have a date type as the primary variable, color should only be non-numeric
+        req(dataset$data)
+        variable_options <- colnames(dataset$data %>% select_if(purrr::negate(is.numeric)))
+
+        selectInput(inputId='var_plots__facet_variable',
+                    label = 'Facet Variable',
+                    choices = c(global__select_variable_optional, variable_options),
+                    selected = global__select_variable_optional,
+                    multiple = FALSE,
+                    selectize = TRUE,
+                    width='100%',
+                    size = NULL)
+    })
+}
+
 renderUI__var_plots__size_variable__UI <- function(dataset) {
 
     renderUI({
@@ -1359,6 +1395,7 @@ clear_variables <- function(session, input, swap_primary_and_comparison=FALSE) {
 
     updateSelectInput(session, 'var_plots__sum_by_variable', selected=global__select_variable_optional)
     updateSelectInput(session, 'var_plots__color_variable', selected=global__select_variable_optional)
+    updateSelectInput(session, 'var_plots__facet_variable', selected=global__select_variable_optional)
     updateSelectInput(session, 'var_plots__size_variable', selected=global__select_variable_optional)
 
     updateCheckboxInput(session, 'var_plots__numeric_group_comp_variable', value=FALSE)
@@ -1397,7 +1434,9 @@ hide_show_date <- function(session, has_comparison_variable) {
     shinyjs::show('var_plots__horizontal_annotations')
     shinyjs::show('var_plots__annotate_points')
     shinyjs::show('var_plots__show_points')
+    shinyjs::show('var_plots__year_over_year')
     shinyjs::show('var_plots__color_variable__UI')
+    shinyjs::show('var_plots__facet_variable__UI')
     shinyjs::show('div_var_plots__group_trend_controls')
     shinyjs::show('div_var_plots__group_time_series_controls')
 
@@ -1499,6 +1538,8 @@ hide_show_numeric_numeric <- function(session,
     shinyjs::show('var_plots__vertical_annotations')
     shinyjs::show('var_plots__horizontal_annotations')
     
+    shinyjs::hide('var_plots__facet_variable__UI')
+    shinyjs::hide('var_plots__year_over_year')
     shinyjs::hide('div_var_plots__group_time_series_controls')
     shinyjs::hide('var_plots__histogram_bins')
     shinyjs::hide('div_var_plots__group_barchar_controls')
@@ -1544,6 +1585,8 @@ hide_show_numeric_categoric <- function(session, showing_boxplot, has_comparison
         updateCheckboxInput(session, 'var_plots__scale_y_log_base_10', value=FALSE)
     }
 
+    shinyjs::hide('var_plots__facet_variable__UI')
+    shinyjs::hide('var_plots__year_over_year')
     shinyjs::hide('var_plots__numeric_aggregation')
     shinyjs::hide('var_plots__size_variable__UI')
     shinyjs::hide('var_plots__label_variables__UI')
@@ -1588,6 +1631,8 @@ hide_show_categoric_categoric <- function(session, input, has_comparison_variabl
         shinyjs::hide('var_plots__multi_value_delimiter')
     }
 
+    shinyjs::hide('var_plots__facet_variable__UI')
+    shinyjs::hide('var_plots__year_over_year')
     shinyjs::hide('var_plots__size_variable__UI')
     shinyjs::hide('var_plots__label_variables__UI')
     shinyjs::hide('var_plots__numeric_group_comp_variable')
@@ -1643,6 +1688,8 @@ observe__var_plots__hide_show_uncollapse_on_primary_vars <- function(session, in
             shinyjs::hide('var_plots__numeric_aggregation_count_minimum')
             shinyjs::hide('var_plots__numeric_show_resampled_conf_int')
             shinyjs::hide('var_plots__color_variable__UI')
+            shinyjs::hide('var_plots__facet_variable__UI')
+            shinyjs::hide('var_plots__year_over_year')
         }
 
         if(local_primary_variable != global__select_variable || local_comparison_variable != global__select_variable_optional) {

@@ -118,6 +118,7 @@ shinyServer(function(input, output, session) {
     output$var_plots__comparison__UI <- renderUI__var_plots__comparison__UI(input, reactive__source_data)
     output$var_plots__sum_by_variable__UI <- renderUI__var_plots__sum_by_variable__UI(reactive__source_data)
     output$var_plots__color_variable__UI <- renderUI__var_plots__color_variable__UI(input, reactive__source_data)
+    output$var_plots__facet_variable__UI <- renderUI__var_plots__facet_variable__UI(reactive__source_data)
     output$var_plots__size_variable__UI <- renderUI__var_plots__size_variable__UI(reactive__source_data)
     output$var_plots__label_variables__UI <- renderUI__var_plots__label_variables__UI(reactive__source_data)
     output$var_plots__order_by_variable__UI <- renderUI__var_plots__order_by_variable__UI(reactive__source_data)
