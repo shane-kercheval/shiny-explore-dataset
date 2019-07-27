@@ -181,6 +181,7 @@ observeEvent__var_plots__graph_options_clear <- function(input, session) {
         updateCheckboxInput(session, 'var_plots__annotate_points', value=FALSE)
         updateCheckboxInput(session, 'var_plots__show_points', value=FALSE)
         updateCheckboxInput(session, 'var_plots__year_over_year', value=FALSE)
+        updateCheckboxInput(session, 'var_plots__include_zero_y_axis', value=TRUE)
         updateSelectInput(session, 'var_plots__numeric_graph_type', selected="Boxplot")
         updateSelectInput(session, 'var_plots__categoric_view_type', selected="Bar")
         updateSelectInput(session, 'var_plots__order_by_variable', selected="Default")
@@ -212,6 +213,7 @@ hide_graph_options <- function(input) {
     shinyjs::hide('var_plots__annotate_points')
     shinyjs::hide('var_plots__show_points')
     shinyjs::hide('var_plots__year_over_year')
+    shinyjs::hide('var_plots__include_zero_y_axis')
     shinyjs::hide('var_plots__numeric_graph_type')
     shinyjs::hide('var_plots__categoric_view_type')
     shinyjs::hide('div_var_plots__group_barchar_controls')
@@ -234,6 +236,7 @@ observeEvent__var_plots__graph_options__any_used <- function(input, session) {
                    input$var_plots__annotate_points,
                    input$var_plots__show_points,
                    input$var_plots__year_over_year,
+                   input$var_plots__include_zero_y_axis,
                    input$var_plots__numeric_graph_type,
                    input$var_plots__categoric_view_type,
                    input$var_plots__order_by_variable,
@@ -602,6 +605,8 @@ reactive__var_plots__ggplot__creator <- function(input, session, dataset) {
         local_facet_variable <- null_if_select_variable_optional(input$var_plots__facet_variable)
         local_year_over_year <- default_if_null_or_empty_string(isolate(input$var_plots__year_over_year),
                                                              default=FALSE)
+        local_include_zero_y_axis <- default_if_null_or_empty_string(isolate(input$var_plots__include_zero_y_axis),
+                                                             default=TRUE)
 
         if(is_date_type(local_dataset[[local_primary_variable]]) && !is.null(local_color_variable) && local_year_over_year) {
             # we cannot use YOY and color (year will be the color)
@@ -705,6 +710,7 @@ reactive__var_plots__ggplot__creator <- function(input, session, dataset) {
             log_message_variable('var_plots__pretty_text', local_pretty_text)
             log_message_variable('var_plots__annotate_points', local_annotate_points)
             log_message_variable('var_plots__year_over_year', local_year_over_year)
+            log_message_variable('var_plots__include_zero_y_axis', local_include_zero_y_axis)
             log_message_variable('var_plots__filter_factor_lump_number',
                                  local_var_plots__filter_factor_lump_number)
 
@@ -812,6 +818,7 @@ reactive__var_plots__ggplot__creator <- function(input, session, dataset) {
                                                 year_over_year=local_year_over_year,
                                                 y_zoom_min=local_y_zoom_min,
                                                 y_zoom_max=local_y_zoom_max,
+                                                include_zero_y_axis=local_include_zero_y_axis,
                                                 show_points=local_show_points,
                                                 show_labels=local_annotate_points,
                                                 date_floor=local_ts_date_floor,
@@ -1457,6 +1464,7 @@ hide_show_date <- function(session, has_comparison_variable) {
     shinyjs::show('var_plots__annotate_points')
     shinyjs::show('var_plots__show_points')
     shinyjs::show('var_plots__year_over_year')
+    shinyjs::show('var_plots__include_zero_y_axis')
     shinyjs::show('var_plots__color_variable__UI')
     shinyjs::show('var_plots__facet_variable__UI')
     shinyjs::show('div_var_plots__group_trend_controls')
@@ -1562,6 +1570,7 @@ hide_show_numeric_numeric <- function(session,
     
     shinyjs::hide('var_plots__facet_variable__UI')
     shinyjs::hide('var_plots__year_over_year')
+    shinyjs::hide('var_plots__include_zero_y_axis')
     shinyjs::hide('div_var_plots__group_time_series_controls')
     shinyjs::hide('var_plots__histogram_bins')
     shinyjs::hide('div_var_plots__group_barchar_controls')
@@ -1609,6 +1618,7 @@ hide_show_numeric_categoric <- function(session, showing_boxplot, has_comparison
 
     shinyjs::hide('var_plots__facet_variable__UI')
     shinyjs::hide('var_plots__year_over_year')
+    shinyjs::hide('var_plots__include_zero_y_axis')
     shinyjs::hide('var_plots__numeric_aggregation')
     shinyjs::hide('var_plots__size_variable__UI')
     shinyjs::hide('var_plots__label_variables__UI')
@@ -1655,6 +1665,7 @@ hide_show_categoric_categoric <- function(session, input, has_comparison_variabl
 
     shinyjs::hide('var_plots__facet_variable__UI')
     shinyjs::hide('var_plots__year_over_year')
+    shinyjs::hide('var_plots__include_zero_y_axis')
     shinyjs::hide('var_plots__size_variable__UI')
     shinyjs::hide('var_plots__label_variables__UI')
     shinyjs::hide('var_plots__numeric_group_comp_variable')
@@ -1712,6 +1723,7 @@ observe__var_plots__hide_show_uncollapse_on_primary_vars <- function(session, in
             shinyjs::hide('var_plots__color_variable__UI')
             shinyjs::hide('var_plots__facet_variable__UI')
             shinyjs::hide('var_plots__year_over_year')
+            shinyjs::hide('var_plots__include_zero_y_axis')
         }
 
         if(local_primary_variable != global__select_variable || local_comparison_variable != global__select_variable_optional) {

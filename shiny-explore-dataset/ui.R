@@ -295,6 +295,11 @@ shinyUI(fluidPage(theme="custom.css",
                                       title='"Zoom" into the graph, using this value as the maximum x-axis coordinate',
                                       placement='top', trigger='hover')
                         ),
+                        checkboxInput(inputId='var_plots__include_zero_y_axis',
+                                          label='Include 0 in Y-Axis', value=TRUE, width='100%'),
+                        bsTooltip(id='var_plots__include_zero_y_axis',
+                                      title="If selected, expand the lower bound of the y-axis to incldue 0 (which is the best practice).",
+                                      placement='top', trigger='hover'),
                         tags$div(id='div_var_plots__group_y_zoom_controls',
 
                             checkboxInput(inputId='var_plots__scale_y_log_base_10',
