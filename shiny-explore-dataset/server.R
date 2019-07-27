@@ -128,10 +128,13 @@ shinyServer(function(input, output, session) {
     # are hidden; why? e.g. if using the "Pretty Text" option, these variables are accessed whether hidden
     # or not. If the dataset has been changed, then the variables might refer to a column that doesn't exist.
     # So, even if they are hidden, we need them to update behind the scenes.
+    # Also, for example, the date graph will load twice (because the facet_variable will be created after the
+    # first time it loads)
     outputOptions(output, "var_plots__variable__UI", suspendWhenHidden = FALSE)
     outputOptions(output, "var_plots__comparison__UI", suspendWhenHidden = FALSE)
     outputOptions(output, "var_plots__sum_by_variable__UI", suspendWhenHidden = FALSE)
     outputOptions(output, "var_plots__color_variable__UI", suspendWhenHidden = FALSE)
+    outputOptions(output, "var_plots__facet_variable__UI", suspendWhenHidden = FALSE)
     outputOptions(output, "var_plots__size_variable__UI", suspendWhenHidden = FALSE)
     outputOptions(output, "var_plots__label_variables__UI", suspendWhenHidden = FALSE)
     outputOptions(output, "var_plots__order_by_variable__UI", suspendWhenHidden = FALSE)
