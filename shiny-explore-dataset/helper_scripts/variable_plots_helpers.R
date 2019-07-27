@@ -580,6 +580,7 @@ reactive__var_plots__ggplot__creator <- function(input, session, dataset) {
 
         req(input$var_plots__variable)
         req(input$var_plots__comparison)
+        req(dataset())
 
         input$var_plots__graph_options_apply  # trigger update if applying custom labels
         input$var_plots__custom_labels_apply  # trigger update if applying graph options
@@ -599,6 +600,30 @@ reactive__var_plots__ggplot__creator <- function(input, session, dataset) {
         local_label_variables <- null_if_select_variable_optional(isolate(input$var_plots__label_variables))
         local_color_variable <- null_if_select_variable_optional(input$var_plots__color_variable)
         local_facet_variable <- null_if_select_variable_optional(input$var_plots__facet_variable)
+        local_year_over_year <- default_if_null_or_empty_string(isolate(input$var_plots__year_over_year),
+                                                             default=FALSE)
+
+        if(is_date_type(local_dataset[[local_primary_variable]]) && !is.null(local_color_variable) && local_year_over_year) {
+            # we cannot use YOY and color (year will be the color)
+            # So, if we aren't faceting, let's move color to the facet variable.
+            # Otherwise, we will need to clear the color variable
+
+            if(is.null(local_facet_variable)) {
+
+                showModal(modalDialog(title = "Cannot select Color Variable & Year-over-Year simultaneously (the year will be used as the color). The Facet Variable will be set and the Color Variable will be cleared."))
+                updateSelectInput(session, 'var_plots__facet_variable', selected=local_color_variable)
+                updateSelectInput(session, 'var_plots__color_variable', selected=global__select_variable_optional)
+                log_message_block_start("Clearing Color Variable For Year-over-Year and setting Facet Variable")
+
+            } else {
+
+                showModal(modalDialog(title = "Cannot select Color Variable & Year-over-Year simultaneously (the year will be used as the color). The Color Variable will be cleared."))
+                updateSelectInput(session, 'var_plots__color_variable', selected=global__select_variable_optional)
+                log_message_block_start("Clearing Color Variable For Year-over-Year")
+            }
+
+            return (NULL)            
+        }
 
         top_n_is_hidden <- hide_show_top_n_categories(dataset(),
                                                       local_primary_variable,
@@ -645,8 +670,6 @@ reactive__var_plots__ggplot__creator <- function(input, session, dataset) {
         # for time series plot
         local_show_points <- default_if_null_or_empty_string(isolate(input$var_plots__show_points),
                                                              default=FALSE)
-        local_year_over_year <- default_if_null_or_empty_string(isolate(input$var_plots__year_over_year),
-                                                             default=FALSE)
         local_ts_date_floor <- default_if_null_or_empty_string(isolate(input$var_plots__ts_date_floor),
                                                              string_values_as_null='None')
         local_ts_date_break_format <- default_if_null_or_empty_string(isolate(input$var_plots__ts_date_break_format),
@@ -654,7 +677,6 @@ reactive__var_plots__ggplot__creator <- function(input, session, dataset) {
         local_ts_date_breaks_width <- default_if_null_or_empty_string(isolate(input$var_plots__ts_breaks_width))
 
         ggplot_object <- NULL
-
         if(local_primary_variable != global__select_variable &&
                 local_primary_variable %in% colnames(local_dataset)) {
 
