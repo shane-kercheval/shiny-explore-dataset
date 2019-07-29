@@ -4,6 +4,7 @@ library(rtools)
 library(hms)
 
 source('../helper_scripts/generic_helpers.R', chdir = TRUE)
+source('../helper_scripts/definitions.R', chdir = TRUE)
 Sys.setenv(TZ='UTC')
 
 #source('unit_test_helper.R', chdir = TRUE)
@@ -1065,4 +1066,44 @@ test_that("add_x_annotations:POSIXct", {
                                    x_location=max(min(local_dataset[, local_primary_variable]), local_x_zoom_min),
                                    x_location_is_date=TRUE)
     test_save_plot(file_name='output_files/annotations__v__h__date__adjusted__POSIXct.png', annotated_object)
+})
+
+test_that("create_url_param_step", {
+
+    # make sure creating the step creates a factor that follows the rules
+    a <- create_url_param_step("Parsed Parameters")
+    c <- create_url_param_step("Loaded Dataset")
+    c2 <- create_url_param_step("Loaded Dataset")
+    d <- create_url_param_step("Successfully Created Graph from URL Parameters")
+
+    expect_true(is.factor(a))
+    expect_true(is.ordered(a))
+    expect_identical(levels(a), global__url_param_step_levels)
+    
+    expect_true(is.factor(c))
+    expect_true(is.ordered(c))
+    expect_identical(levels(c), global__url_param_step_levels)
+    
+    expect_true(is.factor(c2))
+    expect_true(is.ordered(c2))
+    expect_identical(levels(c2), global__url_param_step_levels)
+    
+    expect_true(is.factor(d))
+    expect_true(is.ordered(d))
+    expect_identical(levels(d), global__url_param_step_levels)
+    
+    expect_true(a < c)
+    expect_true(c == c2)
+    expect_true(c < d)
+    expect_true(a < c2)
+    expect_true(a < d)
+    expect_true(d > c2)
+    
+    # make sure expected behavior works because we'll use this convension when updating the steps to 
+    # ensure we don't replace with a lower level step
+    expect_true(max(a, c) == c)
+    expect_true(max(c, c) == c)
+    expect_true(max(c, c2) == c)
+    expect_true(max(c, d) == d)
+    expect_true(max(d, c) == d)
 })
