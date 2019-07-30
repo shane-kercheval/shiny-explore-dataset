@@ -199,20 +199,13 @@ shinyServer(function(input, output, session) {
         # }
     })
 
-    #observeEvent(input$generate_graph_from_url, {
     observeEvent(session$clientData$url_search, {
-        # http://127.0.0.1:3158/?data=Insurance&tab=Graphs&variable=bmi&plot_title=My%20Title%20From%20the%20URL
-        # http://127.0.0.1:3158/?data=Flights&tab=Graphs&variable=date&facet_variable=origin&plot_title=My%20Title%20From%20the%20URL
         
         query <- parseQueryString(session$clientData$url_search)
-        # if (!is.null(query[['bins']])) {
-        #     updateSliderInput(session, "bins", value = query[['bins']])
-        # }
 
         if(!is.null(query) && length(query) > 0) {
             
             log_message_block_start("Detected URL Parameters")
-            
 
             log_message_variable('base url', get_base_url(session))
             log_message_variable('full url', session$clientData$url_search)
@@ -224,15 +217,7 @@ shinyServer(function(input, output, session) {
             
             if (!is.null(query[['data']])) {
                 log_message_variable('data', query[['data']])
-                # select_preloaded_dataset(session=session,
-                #                          output=output,
-                #                          reactive__source_data=reactive__source_data,
-                #                          dataset_name=query[['data']])
 
-# TODO IF THE DATASET IS THE SAME AS THE CURRENTLY LOADED DATASET, WE WILL NOT HAVE TO LOAD A DATASET
-# AND THE STEP WILL NOT HAVE BEEN INCREMENTED, SET THE STEP HERE OR AT (!is.null(query[['data']]))
-# IN ORDER TO INDICATE THIS STEP HAS BEEN COMPLETED
-                
                 if(input$preloaded_dataset == query[['data']]) {
 
                     parameter_info$step <- create_url_param_step("Loaded Dataset")
@@ -790,7 +775,7 @@ shinyServer(function(input, output, session) {
 
     observeEvent(input$var_plots__generate_link, {
 
-        custom_link <- build_custom_url(get_base_url(session), buld_parameters_list(input))
+        custom_link <- build_custom_url(get_base_url(session), build_parameters_list(input, input$preloaded_dataset))
         
         if(nchar(custom_link) > 2000) {
 

@@ -401,6 +401,10 @@ private__variable_value_is_default <- function(variable_name, variable_value) {
 
         return (is.null(variable_value))
 
+    } else if(is.na(default_value)) {
+
+        return (is.na(variable_value))
+
     } else {
 
         return (all(default_value == variable_value))
@@ -426,7 +430,7 @@ build_parameters_list <- function(input, preloaded_dataset) {
         variable_value <- input[[variable_name]]
         #print(variable_value)
         # if it exists in the input and is not the default value, then add it to our list
-        if(!is.null(variable_value) && !private__variable_value_is_default(variable_name, variable_value)) {
+        if(!private__variable_value_is_default(variable_name, variable_value)) {
 
             param_name <- str_replace(variable_name, 'var_plots__', '')
             parameters_list[[param_name]] <- variable_value
