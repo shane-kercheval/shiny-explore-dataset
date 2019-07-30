@@ -35,9 +35,8 @@ global__variable_lookup <- c()
 shinyServer(function(input, output, session) {
     log_message_block_start("##########################################################################################\nStarting Server\n##########################################################################################")
     
-    parameter_info <- reactiveValues(query=NULL,
-                                     step=NULL,
-                                     can_update=TRUE)
+    parameter_info <- reactiveValues(params=NULL,
+                                     step=NULL)
     
     ##########################################################################################################
     # LOAD DATA
@@ -120,31 +119,6 @@ shinyServer(function(input, output, session) {
     output$var_plots <- renderPlot__variable_plot(session,
                                                   reactive__var_plots__ggplot,
                                                   reactiveValues__vp__ggplot_message)
-    # output$var_plots__variable__UI <- renderUI__var_plots__variable__UI(reactive__source_data, isolate(parameter_info))
-    # output$var_plots__comparison__UI <- renderUI__var_plots__comparison__UI(input, reactive__source_data, isolate(parameter_info))
-    # output$var_plots__sum_by_variable__UI <- renderUI__var_plots__sum_by_variable__UI(reactive__source_data, isolate(parameter_info))
-    # output$var_plots__color_variable__UI <- renderUI__var_plots__color_variable__UI(input, reactive__source_data, isolate(parameter_info))
-    # output$var_plots__facet_variable__UI <- renderUI__var_plots__facet_variable__UI(reactive__source_data, isolate(parameter_info))
-    # output$var_plots__size_variable__UI <- renderUI__var_plots__size_variable__UI(reactive__source_data, isolate(parameter_info))
-    # output$var_plots__label_variables__UI <- renderUI__var_plots__label_variables__UI(reactive__source_data, isolate(parameter_info))
-    #output$var_plots__order_by_variable__UI <- renderUI__var_plots__order_by_variable__UI(reactive__source_data, isolate(parameter_info))
-    #observeEvent__var_plots__categoric_view_type(input, session)
-
-    # the `outputOptions` options code below makes it so that these variables/selectInput update even if they
-    # are hidden; why? e.g. if using the "Pretty Text" option, these variables are accessed whether hidden
-    # or not. If the dataset has been changed, then the variables might refer to a column that doesn't exist.
-    # So, even if they are hidden, we need them to update behind the scenes.
-    # Also, for example, the date graph will load twice (because the facet_variable will be created after the
-    # first time it loads)
-    # outputOptions(output, "var_plots__variable", suspendWhenHidden = FALSE)
-    # outputOptions(output, "var_plots__comparison", suspendWhenHidden = FALSE)
-    # outputOptions(output, "var_plots__sum_by_variable", suspendWhenHidden = FALSE)
-    # outputOptions(output, "var_plots__color_variable", suspendWhenHidden = FALSE)
-    # outputOptions(output, "var_plots__facet_variable", suspendWhenHidden = FALSE)
-    # outputOptions(output, "var_plots__size_variable", suspendWhenHidden = FALSE)
-    # outputOptions(output, "var_plots__label_variables", suspendWhenHidden = FALSE)
-    #outputOptions(output, "var_plots__order_by_variable", suspendWhenHidden = FALSE)
-    #outputOptions(output, "var_plots__categoric_view_type__UI", suspendWhenHidden = FALSE)
 
     observe__var_plots__hide_show_uncollapse_on_primary_vars(session, input)
     observeEvent__var_plots__variables_buttons_clear_swap(session, input)
@@ -193,7 +167,7 @@ shinyServer(function(input, output, session) {
 
         #     log_message_block_start('Finished with URL Parameters')
 
-        #     parameter_info$query <- NULL
+        #     parameter_info$params <- NULL
         #     # can't set step to null because then it will trigger graph and graph won't know it is being re-created for nothing
         #     #parameter_info$step <- NULL
         # }
@@ -201,234 +175,234 @@ shinyServer(function(input, output, session) {
 
     observeEvent(session$clientData$url_search, {
         
-        query <- parseQueryString(session$clientData$url_search)
+        params <- parseQueryString(session$clientData$url_search)
 
-        if(!is.null(query) && length(query) > 0) {
+        if(!is.null(params) && length(params) > 0) {
             
             log_message_block_start("Detected URL Parameters")
 
             log_message_variable('base url', get_base_url(session))
             log_message_variable('full url', session$clientData$url_search)
-            log_message_variable('param_names', paste0(names(query), collapse='; '))
+            log_message_variable('param_names', paste0(names(params), collapse='; '))
 
-            parameter_info$query <- query
+            parameter_info$params <- params
             parameter_info$possible_steps <- global__url_param_possible_steps
             parameter_info$step <- create_url_param_step("Parsed Parameters")
             
-            if (!is.null(query[['data']])) {
-                log_message_variable('data', query[['data']])
+            if (!is.null(params[['data']])) {
+                log_message_variable('data', params[['data']])
 
-                if(input$preloaded_dataset == query[['data']]) {
+                if(input$preloaded_dataset == params[['data']]) {
 
                     parameter_info$step <- create_url_param_step("Loaded Dataset")
 
                 } else {
 
-                    updateSelectInput(session, 'preloaded_dataset', selected=query[['data']])
+                    updateSelectInput(session, 'preloaded_dataset', selected=params[['data']])
                 }
             }
-            if (!is.null(query[['tab']])) {
-                log_message_variable('tab', query[['tab']])
-                updateNavbarPage(session, 'navbar_page_app', selected = query[['tab']])
+            if (!is.null(params[['tab']])) {
+                log_message_variable('tab', params[['tab']])
+                updateNavbarPage(session, 'navbar_page_app', selected = params[['tab']])
             }
 
-            # if (!is.null(query[['variable']])) {
+            # if (!is.null(params[['variable']])) {
 
-            #     log_message_variable('variable', query[['variable']])
-            #     updateSelectInput(session, 'var_plots__variable', selected=query[['variable']])
+            #     log_message_variable('variable', params[['variable']])
+            #     updateSelectInput(session, 'var_plots__variable', selected=params[['variable']])
             # }
-            # if (!is.null(query[['comparison']])) {
+            # if (!is.null(params[['comparison']])) {
 
-            #     log_message_variable('comparison', query[['comparison']])
-            #     updateSelectInput(session, 'var_plots__comparison', selected=query[['comparison']])
+            #     log_message_variable('comparison', params[['comparison']])
+            #     updateSelectInput(session, 'var_plots__comparison', selected=params[['comparison']])
             # }
-            # if (!is.null(query[['sum_by_variable']])) {
+            # if (!is.null(params[['sum_by_variable']])) {
 
-            #     log_message_variable('sum_by_variable', query[['sum_by_variable']])
-            #     updateSelectInput(session, 'var_plots__sum_by_variable', selected=query[['sum_by_variable']])
+            #     log_message_variable('sum_by_variable', params[['sum_by_variable']])
+            #     updateSelectInput(session, 'var_plots__sum_by_variable', selected=params[['sum_by_variable']])
             # }
-            # if (!is.null(query[['color_variable']])) {
+            # if (!is.null(params[['color_variable']])) {
 
-            #     log_message_variable('color_variable', query[['color_variable']])
-            #     updateSelectInput(session, 'var_plots__color_variable', selected=query[['color_variable']])
+            #     log_message_variable('color_variable', params[['color_variable']])
+            #     updateSelectInput(session, 'var_plots__color_variable', selected=params[['color_variable']])
             # }
-            # if (!is.null(query[['facet_variable']])) {
+            # if (!is.null(params[['facet_variable']])) {
 
-            #     log_message_variable('facet_variable', query[['facet_variable']])
-            #     updateSelectInput(session, 'var_plots__facet_variable', selected=query[['facet_variable']])
+            #     log_message_variable('facet_variable', params[['facet_variable']])
+            #     updateSelectInput(session, 'var_plots__facet_variable', selected=params[['facet_variable']])
             # }
-            # if (!is.null(query[['size_variable']])) {
+            # if (!is.null(params[['size_variable']])) {
 
-            #     log_message_variable('size_variable', query[['size_variable']])
-            #     updateSelectInput(session, 'var_plots__size_variable', selected=query[['size_variable']])
+            #     log_message_variable('size_variable', params[['size_variable']])
+            #     updateSelectInput(session, 'var_plots__size_variable', selected=params[['size_variable']])
             # }
-            if (!is.null(query[['numeric_group_comp_variable']])) {
+            if (!is.null(params[['numeric_group_comp_variable']])) {
 
-                log_message_variable('numeric_group_comp_variable', query[['numeric_group_comp_variable']])
-                updateCheckboxInput(session, 'var_plots__numeric_group_comp_variable', value=query[['numeric_group_comp_variable']])
+                log_message_variable('numeric_group_comp_variable', params[['numeric_group_comp_variable']])
+                updateCheckboxInput(session, 'var_plots__numeric_group_comp_variable', value=params[['numeric_group_comp_variable']])
             }
-            if (!is.null(query[['numeric_aggregation_function']])) {
+            if (!is.null(params[['numeric_aggregation_function']])) {
 
-                log_message_variable('numeric_aggregation_function', query[['numeric_aggregation_function']])
-                updateSelectInput(session, 'var_plots__numeric_aggregation_function', selected=query[['numeric_aggregation_function']])
+                log_message_variable('numeric_aggregation_function', params[['numeric_aggregation_function']])
+                updateSelectInput(session, 'var_plots__numeric_aggregation_function', selected=params[['numeric_aggregation_function']])
             }
-            if (!is.null(query[['numeric_aggregation']])) {
+            if (!is.null(params[['numeric_aggregation']])) {
 
-                log_message_variable('numeric_aggregation', query[['numeric_aggregation']])
-                updateSelectInput(session, 'var_plots__numeric_aggregation', selected=query[['numeric_aggregation']])
+                log_message_variable('numeric_aggregation', params[['numeric_aggregation']])
+                updateSelectInput(session, 'var_plots__numeric_aggregation', selected=params[['numeric_aggregation']])
             }
-            if (!is.null(query[['multi_value_delimiter']])) {
+            if (!is.null(params[['multi_value_delimiter']])) {
 
-                log_message_variable('multi_value_delimiter', query[['multi_value_delimiter']])
-                updateTextInput(session, 'var_plots__multi_value_delimiter', value=query[['multi_value_delimiter']])
+                log_message_variable('multi_value_delimiter', params[['multi_value_delimiter']])
+                updateTextInput(session, 'var_plots__multi_value_delimiter', value=params[['multi_value_delimiter']])
             }
-            if (!is.null(query[['filter_factor_lump_number']])) {
-                log_message_variable('filter_factor_lump_number', query[['filter_factor_lump_number']])
-                updateSliderTextInput(session, 'var_plots__filter_factor_lump_number', selected=query[['filter_factor_lump_number']])
+            if (!is.null(params[['filter_factor_lump_number']])) {
+                log_message_variable('filter_factor_lump_number', params[['filter_factor_lump_number']])
+                updateSliderTextInput(session, 'var_plots__filter_factor_lump_number', selected=params[['filter_factor_lump_number']])
             }
-            if (!is.null(query[['label_variables']])) {
-                log_message_variable('label_variables', query[['label_variables']])
-                updateSelectInput(session, 'var_plots__label_variables', selected=query[['label_variables']])
+            if (!is.null(params[['label_variables']])) {
+                log_message_variable('label_variables', params[['label_variables']])
+                updateSelectInput(session, 'var_plots__label_variables', selected=params[['label_variables']])
             }
-            if (!is.null(query[['annotate_points']])) {
-                log_message_variable('annotate_points', query[['annotate_points']])
-                updateCheckboxInput(session, 'var_plots__annotate_points', value=query[['annotate_points']])
+            if (!is.null(params[['annotate_points']])) {
+                log_message_variable('annotate_points', params[['annotate_points']])
+                updateCheckboxInput(session, 'var_plots__annotate_points', value=params[['annotate_points']])
             }
-            if (!is.null(query[['show_points']])) {
-                log_message_variable('show_points', query[['show_points']])
-                updateCheckboxInput(session, 'var_plots__show_points', value=query[['show_points']])
+            if (!is.null(params[['show_points']])) {
+                log_message_variable('show_points', params[['show_points']])
+                updateCheckboxInput(session, 'var_plots__show_points', value=params[['show_points']])
             }
-            if (!is.null(query[['year_over_year']])) {
-                log_message_variable('year_over_year', query[['year_over_year']])
-                updateCheckboxInput(session, 'var_plots__year_over_year', value=query[['year_over_year']])
+            if (!is.null(params[['year_over_year']])) {
+                log_message_variable('year_over_year', params[['year_over_year']])
+                updateCheckboxInput(session, 'var_plots__year_over_year', value=params[['year_over_year']])
             }
-            if (!is.null(query[['include_zero_y_axis']])) {
-                log_message_variable('include_zero_y_axis', query[['include_zero_y_axis']])
-                updateCheckboxInput(session, 'var_plots__include_zero_y_axis', value=query[['include_zero_y_axis']])
+            if (!is.null(params[['include_zero_y_axis']])) {
+                log_message_variable('include_zero_y_axis', params[['include_zero_y_axis']])
+                updateCheckboxInput(session, 'var_plots__include_zero_y_axis', value=params[['include_zero_y_axis']])
             }
-            if (!is.null(query[['numeric_graph_type']])) {
-                log_message_variable('numeric_graph_type', query[['numeric_graph_type']])
-                updateSelectInput(session, 'var_plots__numeric_graph_type', selected=query[['numeric_graph_type']])
+            if (!is.null(params[['numeric_graph_type']])) {
+                log_message_variable('numeric_graph_type', params[['numeric_graph_type']])
+                updateSelectInput(session, 'var_plots__numeric_graph_type', selected=params[['numeric_graph_type']])
             }
-            if (!is.null(query[['categoric_view_type']])) {
-                log_message_variable('categoric_view_type', query[['categoric_view_type']])
-                updateSelectInput(session, 'var_plots__categoric_view_type', selected=query[['categoric_view_type']])
+            if (!is.null(params[['categoric_view_type']])) {
+                log_message_variable('categoric_view_type', params[['categoric_view_type']])
+                updateSelectInput(session, 'var_plots__categoric_view_type', selected=params[['categoric_view_type']])
             }
-            if (!is.null(query[['order_by_variable']])) {
-                log_message_variable('order_by_variable', query[['order_by_variable']])
-                updateSelectInput(session, 'var_plots__order_by_variable', selected=query[['order_by_variable']])
+            if (!is.null(params[['order_by_variable']])) {
+                log_message_variable('order_by_variable', params[['order_by_variable']])
+                updateSelectInput(session, 'var_plots__order_by_variable', selected=params[['order_by_variable']])
             }
-            if (!is.null(query[['show_variable_totals']])) {
-                log_message_variable('show_variable_totals', query[['show_variable_totals']])
-                updateCheckboxInput(session, 'var_plots__show_variable_totals', value=query[['show_variable_totals']])
+            if (!is.null(params[['show_variable_totals']])) {
+                log_message_variable('show_variable_totals', params[['show_variable_totals']])
+                updateCheckboxInput(session, 'var_plots__show_variable_totals', value=params[['show_variable_totals']])
             }
-            if (!is.null(query[['show_comparison_totals']])) {
-                log_message_variable('show_comparison_totals', query[['show_comparison_totals']])
-                updateCheckboxInput(session, 'var_plots__show_comparison_totals', value=query[['show_comparison_totals']])
+            if (!is.null(params[['show_comparison_totals']])) {
+                log_message_variable('show_comparison_totals', params[['show_comparison_totals']])
+                updateCheckboxInput(session, 'var_plots__show_comparison_totals', value=params[['show_comparison_totals']])
             }
-            if (!is.null(query[['histogram_bins']])) {
-                log_message_variable('histogram_bins', query[['histogram_bins']])
-                updateNumericInput(session, 'var_plots__histogram_bins', value=query[['histogram_bins']])
+            if (!is.null(params[['histogram_bins']])) {
+                log_message_variable('histogram_bins', params[['histogram_bins']])
+                updateNumericInput(session, 'var_plots__histogram_bins', value=params[['histogram_bins']])
             }
-            if (!is.null(query[['transparency']])) {
-                log_message_variable('transparency', query[['transparency']])
-                updateSliderTextInput(session, 'var_plots__transparency', selected=query[['transparency']])
+            if (!is.null(params[['transparency']])) {
+                log_message_variable('transparency', params[['transparency']])
+                updateSliderTextInput(session, 'var_plots__transparency', selected=params[['transparency']])
             }
-            if (!is.null(query[['jitter']])) {
-                log_message_variable('jitter', query[['jitter']])
-                updateCheckboxInput(session, 'var_plots__jitter', value=query[['jitter']])
+            if (!is.null(params[['jitter']])) {
+                log_message_variable('jitter', params[['jitter']])
+                updateCheckboxInput(session, 'var_plots__jitter', value=params[['jitter']])
             }
-            if (!is.null(query[['numeric_aggregation_count_minimum']])) {
-                log_message_variable('numeric_aggregation_count_minimum', query[['numeric_aggregation_count_minimum']])
-                updateNumericInput(session, 'var_plots__numeric_aggregation_count_minimum', value=query[['numeric_aggregation_count_minimum']])
+            if (!is.null(params[['numeric_aggregation_count_minimum']])) {
+                log_message_variable('numeric_aggregation_count_minimum', params[['numeric_aggregation_count_minimum']])
+                updateNumericInput(session, 'var_plots__numeric_aggregation_count_minimum', value=params[['numeric_aggregation_count_minimum']])
             }
-            if (!is.null(query[['numeric_show_resampled_conf_int']])) {
-                log_message_variable('numeric_show_resampled_conf_int', query[['numeric_show_resampled_conf_int']])
-                updateCheckboxInput(session, 'var_plots__numeric_show_resampled_conf_int', value=query[['numeric_show_resampled_conf_int']])
+            if (!is.null(params[['numeric_show_resampled_conf_int']])) {
+                log_message_variable('numeric_show_resampled_conf_int', params[['numeric_show_resampled_conf_int']])
+                updateCheckboxInput(session, 'var_plots__numeric_show_resampled_conf_int', value=params[['numeric_show_resampled_conf_int']])
             }
-            if (!is.null(query[['trend_line']])) {
-                log_message_variable('trend_line', query[['trend_line']])
-                updateRadioButtons(session, 'var_plots__trend_line', selected=query[['trend_line']])
+            if (!is.null(params[['trend_line']])) {
+                log_message_variable('trend_line', params[['trend_line']])
+                updateRadioButtons(session, 'var_plots__trend_line', selected=params[['trend_line']])
             }
-            if (!is.null(query[['trend_line_se']])) {
-                log_message_variable('trend_line_se', query[['trend_line_se']])
-                updateRadioButtons(session, 'var_plots__trend_line_se', selected=query[['trend_line_se']])
+            if (!is.null(params[['trend_line_se']])) {
+                log_message_variable('trend_line_se', params[['trend_line_se']])
+                updateRadioButtons(session, 'var_plots__trend_line_se', selected=params[['trend_line_se']])
             }
-            if (!is.null(query[['ts_date_floor']])) {
-                log_message_variable('ts_date_floor', query[['ts_date_floor']])
-                updateSelectInput(session, 'var_plots__ts_date_floor', selected=query[['ts_date_floor']])
+            if (!is.null(params[['ts_date_floor']])) {
+                log_message_variable('ts_date_floor', params[['ts_date_floor']])
+                updateSelectInput(session, 'var_plots__ts_date_floor', selected=params[['ts_date_floor']])
             }
-            if (!is.null(query[['ts_date_break_format']])) {
-                log_message_variable('ts_date_break_format', query[['ts_date_break_format']])
-                updateSelectInput(session, 'var_plots__ts_date_break_format', selected=query[['ts_date_break_format']])
+            if (!is.null(params[['ts_date_break_format']])) {
+                log_message_variable('ts_date_break_format', params[['ts_date_break_format']])
+                updateSelectInput(session, 'var_plots__ts_date_break_format', selected=params[['ts_date_break_format']])
             }
-            if (!is.null(query[['ts_breaks_width']])) {
-                log_message_variable('ts_breaks_width', query[['ts_breaks_width']])
-                updateTextInput(session, 'var_plots__ts_breaks_width', value=query[['ts_breaks_width']])
+            if (!is.null(params[['ts_breaks_width']])) {
+                log_message_variable('ts_breaks_width', params[['ts_breaks_width']])
+                updateTextInput(session, 'var_plots__ts_breaks_width', value=params[['ts_breaks_width']])
             }
-            if (!is.null(query[['scale_x_log_base_10']])) {
-                log_message_variable('scale_x_log_base_10', query[['scale_x_log_base_10']])
-                updateCheckboxInput(session, 'var_plots__scale_x_log_base_10', value=query[['scale_x_log_base_10']])
+            if (!is.null(params[['scale_x_log_base_10']])) {
+                log_message_variable('scale_x_log_base_10', params[['scale_x_log_base_10']])
+                updateCheckboxInput(session, 'var_plots__scale_x_log_base_10', value=params[['scale_x_log_base_10']])
             }
-            if (!is.null(query[['x_zoom_min']])) {
-                log_message_variable('x_zoom_min', query[['x_zoom_min']])
-                updateNumericInput(session, 'var_plots__x_zoom_min', value=query[['x_zoom_min']])
+            if (!is.null(params[['x_zoom_min']])) {
+                log_message_variable('x_zoom_min', params[['x_zoom_min']])
+                updateNumericInput(session, 'var_plots__x_zoom_min', value=params[['x_zoom_min']])
             }
-            if (!is.null(query[['x_zoom_max']])) {
-                log_message_variable('x_zoom_max', query[['x_zoom_max']])
-                updateNumericInput(session, 'var_plots__x_zoom_max', value=query[['x_zoom_max']])
+            if (!is.null(params[['x_zoom_max']])) {
+                log_message_variable('x_zoom_max', params[['x_zoom_max']])
+                updateNumericInput(session, 'var_plots__x_zoom_max', value=params[['x_zoom_max']])
             }
-            if (!is.null(query[['scale_y_log_base_10']])) {
-                log_message_variable('scale_y_log_base_10', query[['scale_y_log_base_10']])
-                updateCheckboxInput(session, 'var_plots__scale_y_log_base_10', value=query[['scale_y_log_base_10']])
+            if (!is.null(params[['scale_y_log_base_10']])) {
+                log_message_variable('scale_y_log_base_10', params[['scale_y_log_base_10']])
+                updateCheckboxInput(session, 'var_plots__scale_y_log_base_10', value=params[['scale_y_log_base_10']])
             }
-            if (!is.null(query[['y_zoom_min']])) {
-                log_message_variable('y_zoom_min', query[['y_zoom_min']])
-                updateNumericInput(session, 'var_plots__y_zoom_min', value=query[['y_zoom_min']])
+            if (!is.null(params[['y_zoom_min']])) {
+                log_message_variable('y_zoom_min', params[['y_zoom_min']])
+                updateNumericInput(session, 'var_plots__y_zoom_min', value=params[['y_zoom_min']])
             }
-            if (!is.null(query[['y_zoom_max']])) {
-                log_message_variable('y_zoom_max', query[['y_zoom_max']])
-                updateNumericInput(session, 'var_plots__y_zoom_max', value=query[['y_zoom_max']])
+            if (!is.null(params[['y_zoom_max']])) {
+                log_message_variable('y_zoom_max', params[['y_zoom_max']])
+                updateNumericInput(session, 'var_plots__y_zoom_max', value=params[['y_zoom_max']])
             }
-            if (!is.null(query[['custom_title']])) {
-                log_message_variable('custom_title', query[['custom_title']])
-                updateTextInput(session, 'var_plots__custom_title', value=query[['custom_title']])
+            if (!is.null(params[['custom_title']])) {
+                log_message_variable('custom_title', params[['custom_title']])
+                updateTextInput(session, 'var_plots__custom_title', value=params[['custom_title']])
             }
-            if (!is.null(query[['custom_subtitle']])) {
-                log_message_variable('custom_subtitle', query[['custom_subtitle']])
-                updateTextInput(session, 'var_plots__custom_subtitle', value=query[['custom_subtitle']])
+            if (!is.null(params[['custom_subtitle']])) {
+                log_message_variable('custom_subtitle', params[['custom_subtitle']])
+                updateTextInput(session, 'var_plots__custom_subtitle', value=params[['custom_subtitle']])
             }
-            if (!is.null(query[['custom_x_axis_label']])) {
-                log_message_variable('custom_x_axis_label', query[['custom_x_axis_label']])
-                updateTextInput(session, 'var_plots__custom_x_axis_label', value=query[['custom_x_axis_label']])
+            if (!is.null(params[['custom_x_axis_label']])) {
+                log_message_variable('custom_x_axis_label', params[['custom_x_axis_label']])
+                updateTextInput(session, 'var_plots__custom_x_axis_label', value=params[['custom_x_axis_label']])
             }
-            if (!is.null(query[['custom_y_axis_label']])) {
-                log_message_variable('custom_y_axis_label', query[['custom_y_axis_label']])
-                updateTextInput(session, 'var_plots__custom_y_axis_label', value=query[['custom_y_axis_label']])
+            if (!is.null(params[['custom_y_axis_label']])) {
+                log_message_variable('custom_y_axis_label', params[['custom_y_axis_label']])
+                updateTextInput(session, 'var_plots__custom_y_axis_label', value=params[['custom_y_axis_label']])
             }
-            if (!is.null(query[['custom_caption']])) {
-                log_message_variable('custom_caption', query[['custom_caption']])
-                updateTextInput(session, 'var_plots__custom_caption', value=query[['custom_caption']])
+            if (!is.null(params[['custom_caption']])) {
+                log_message_variable('custom_caption', params[['custom_caption']])
+                updateTextInput(session, 'var_plots__custom_caption', value=params[['custom_caption']])
             }
-            if (!is.null(query[['custom_tag']])) {
-                log_message_variable('custom_tag', query[['custom_tag']])
-                updateTextInput(session, 'var_plots__custom_tag', value=query[['custom_tag']])
+            if (!is.null(params[['custom_tag']])) {
+                log_message_variable('custom_tag', params[['custom_tag']])
+                updateTextInput(session, 'var_plots__custom_tag', value=params[['custom_tag']])
             }
-            if (!is.null(query[['pretty_text']])) {
-                log_message_variable('pretty_text', query[['pretty_text']])
-                updateCheckboxInput(session, 'var_plots__pretty_text', value=query[['pretty_text']])
+            if (!is.null(params[['pretty_text']])) {
+                log_message_variable('pretty_text', params[['pretty_text']])
+                updateCheckboxInput(session, 'var_plots__pretty_text', value=params[['pretty_text']])
             }
-            if (!is.null(query[['base_size']])) {
-                log_message_variable('base_size', query[['base_size']])
-                updateSliderTextInput(session, 'var_plots__base_size', selected=query[['base_size']])
+            if (!is.null(params[['base_size']])) {
+                log_message_variable('base_size', params[['base_size']])
+                updateSliderTextInput(session, 'var_plots__base_size', selected=params[['base_size']])
             }
-            if (!is.null(query[['vertical_annotations']])) {
-                log_message_variable('vertical_annotations', query[['vertical_annotations']])
-                updateTextAreaInput(session, 'var_plots__vertical_annotations', value=query[['vertical_annotations']])
+            if (!is.null(params[['vertical_annotations']])) {
+                log_message_variable('vertical_annotations', params[['vertical_annotations']])
+                updateTextAreaInput(session, 'var_plots__vertical_annotations', value=params[['vertical_annotations']])
             }
-            if (!is.null(query[['horizontal_annotations']])) {
-                log_message_variable('horizontal_annotations', query[['horizontal_annotations']])
-                updateTextAreaInput(session, 'var_plots__horizontal_annotations', value=query[['horizontal_annotations']])
+            if (!is.null(params[['horizontal_annotations']])) {
+                log_message_variable('horizontal_annotations', params[['horizontal_annotations']])
+                updateTextAreaInput(session, 'var_plots__horizontal_annotations', value=params[['horizontal_annotations']])
             }
             
             shiny::updateQueryString(get_base_url(session), mode = "replace")
@@ -438,27 +412,6 @@ shinyServer(function(input, output, session) {
                                        create_url_param_step("Updated Non-Dynamic Parameters"))
         }
     })
-
-    # observeEvent(input$generate_graph_from_url, {
-
-    #     query <- parseQueryString(session$clientData$url_search)
-
-    #     if (!is.null(query[['variable']])) {
-    #             log_message_variable('variable', query[['variable']])
-    #             updateSelectInput(session, 'var_plots__variable', selected=query[['variable']])
-    #     }
-    #     if (!is.null(query[['facet_variable']])) {
-    #             log_message_variable('facet_variable', query[['facet_variable']])
-    #             updateSelectInput(session, 'var_plots__facet_variable', selected=query[['facet_variable']])
-    #     }
-
-    #      if(!is.null(query[['plot_title']])) {
-
-    #             updateTextInput(session, 'var_plots__custom_title', value=query[['plot_title']])
-    #     }
-
-    #     updateSelectInput(session, 'var_plots__ts_date_floor', selected="month")
-    # })
     
     observeEvent(reactive__source_data$data, {
 
@@ -494,51 +447,51 @@ shinyServer(function(input, output, session) {
             # everything is loaded, and there should be parameters
             if(!is.null(parameter_info$step) && parameter_info$step >= create_url_param_step("Loaded Dataset")) {
 
-                query <- parameter_info$query
-                rt_stopif(is.null(query))
+                params <- parameter_info$params
+                rt_stopif(is.null(params))
 
                 log_message_block_start("Updating variables based URL parameters")
 
-                if (!is.null(query[['variable']])) {
+                if (!is.null(params[['variable']])) {
 
-                    log_message_variable('variable', query[['variable']])
-                    selection__variable <- query[['variable']]
+                    log_message_variable('variable', params[['variable']])
+                    selection__variable <- params[['variable']]
                 }
-                if (!is.null(query[['comparison']])) {
+                if (!is.null(params[['comparison']])) {
 
-                    log_message_variable('comparison', query[['comparison']])
-                    selection__comparison <- query[['comparison']]
+                    log_message_variable('comparison', params[['comparison']])
+                    selection__comparison <- params[['comparison']]
                 }
-                if (!is.null(query[['sum_by_variable']])) {
+                if (!is.null(params[['sum_by_variable']])) {
 
-                    log_message_variable('sum_by_variable', query[['sum_by_variable']])
-                    selection__sum_by_variable <- query[['sum_by_variable']]
+                    log_message_variable('sum_by_variable', params[['sum_by_variable']])
+                    selection__sum_by_variable <- params[['sum_by_variable']]
                 }
-                if (!is.null(query[['color_variable']])) {
+                if (!is.null(params[['color_variable']])) {
 
-                    log_message_variable('color_variable', query[['color_variable']])
-                    selection__color_variable <- query[['color_variable']]
+                    log_message_variable('color_variable', params[['color_variable']])
+                    selection__color_variable <- params[['color_variable']]
                 }
-                if (!is.null(query[['facet_variable']])) {
+                if (!is.null(params[['facet_variable']])) {
 
-                    log_message_variable('facet_variable', query[['facet_variable']])
-                    selection__facet_variable <- query[['facet_variable']]
+                    log_message_variable('facet_variable', params[['facet_variable']])
+                    selection__facet_variable <- params[['facet_variable']]
                 }
-                if (!is.null(query[['size_variable']])) {
+                if (!is.null(params[['size_variable']])) {
 
-                    log_message_variable('size_variable', query[['size_variable']])
-                    selection__size_variable <- query[['size_variable']]
+                    log_message_variable('size_variable', params[['size_variable']])
+                    selection__size_variable <- params[['size_variable']]
                 }
 # TODO: label_have multiple values.
-                if (!is.null(query[['label_variables']])) {
+                if (!is.null(params[['label_variables']])) {
 
-                    log_message_variable('label_variables', query[['label_variables']])
-                    selection__label_variables <- query[['label_variables']]
+                    log_message_variable('label_variables', params[['label_variables']])
+                    selection__label_variables <- params[['label_variables']]
                 }
-                if (!is.null(query[['order_by_variable']])) {
+                if (!is.null(params[['order_by_variable']])) {
 
-                    log_message_variable('order_by_variable', query[['order_by_variable']])
-                    selection__order_by_variable <- query[['order_by_variable']]
+                    log_message_variable('order_by_variable', params[['order_by_variable']])
+                    selection__order_by_variable <- params[['order_by_variable']]
                 }
 
                 parameter_info$step <- max(parameter_info$step,
@@ -617,10 +570,10 @@ shinyServer(function(input, output, session) {
                 }
 
                 current_selection <- input$var_plots__comparison
-                if(!is.null(parameter_info$step) && !is.null(parameter_info$query[['comparison']])) {
+                if(!is.null(parameter_info$step) && !is.null(parameter_info$params[['comparison']])) {
                     # if parameter$step is not null, then regardless of the primary variable/etc., we want that value
 
-                    current_selection <- parameter_info$query[['comparison']]
+                    current_selection <- parameter_info$params[['comparison']]
 
                 } else if(input$var_plots__variable == global__select_variable) {
 
@@ -676,10 +629,10 @@ shinyServer(function(input, output, session) {
                 }
 
                 current_selection <- input$var_plots__color_variable
-                if(!is.null(parameter_info$step) && !is.null(parameter_info$query[['color_variable']])) {
+                if(!is.null(parameter_info$step) && !is.null(parameter_info$params[['color_variable']])) {
                     # if parameter$step is not null, then regardless of the primary variable/etc., we want that value
 
-                    current_selection <- parameter_info$query[['color_variable']]
+                    current_selection <- parameter_info$params[['color_variable']]
 
                 } else if(input$var_plots__variable == global__select_variable) {
 

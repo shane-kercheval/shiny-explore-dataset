@@ -579,24 +579,24 @@ helper__plot_numeric_categoric <- function(session,
     return (ggplot_object)
 }
 
-reactive__var_plots__ggplot__creator <- function(input, session, dataset, query_parameters) {
+reactive__var_plots__ggplot__creator <- function(input, session, dataset, parameter_info) {
+    
     reactive({
-
         
-        if(!is.null(query_parameters$step)) {
+        if(!is.null(parameter_info$step)) {
 
-            if(query_parameters$step < create_url_param_step("Can Create Graph from URL Parameters") ||
-                query_parameters$step >= create_url_param_step("Successfully Created Graph from URL Parameters")) {
+            if(parameter_info$step < create_url_param_step("Can Create Graph from URL Parameters") ||
+                parameter_info$step >= create_url_param_step("Successfully Created Graph from URL Parameters")) {
 
                 log_message_block_start("Ignoring plot creation")
-                log_message_variable('query_parameters$step', isolate(query_parameters$step))
+                log_message_variable('parameter_info$step', isolate(parameter_info$step))
 
                 return (NULL)
 
             } else {
 
                 log_message_block_start("Can Plot From URL Parameters")
-                #query_parameters$step <- NULL
+                #parameter_info$step <- NULL
             }
         }
 
@@ -1172,9 +1172,9 @@ reactive__var_plots__ggplot__creator <- function(input, session, dataset, query_
 
             shinyjs::show('var_plots__generate_link')
 
-            # if(!is.null(query_parameters$step)) {
+            # if(!is.null(parameter_info$step)) {
 
-            #     query_parameters$step <- max(query_parameters$step,
+            #     parameter_info$step <- max(parameter_info$step,
             #                                create_url_param_step("Successfully Created Graph from URL Parameters"))
             # }
         }
@@ -1186,315 +1186,6 @@ reactive__var_plots__ggplot__creator <- function(input, session, dataset, query_
 ##############################################################################################################
 # INPUT
 ##############################################################################################################
-get_selection_from_query_or_default <- function(query_parameters, variable_name, default_if_null_or_invalid, valid_options) {
-
-    selection <- default_if_null_or_invalid
-
-    if(!is.null(isolate(query_parameters$query)) &&
-            length(isolate(query_parameters$query)) > 0 &&
-            !is.null(isolate(query_parameters$query[[variable_name]]))) {
-
-        query_value <- isolate(query_parameters$query[[variable_name]])
-
-        if(is.null(valid_options) || query_value %in% valid_options) {
-
-            selection <- query_value
-        }
-
-        log_message_variable(variable_name, query_value)
-        log_message_variable(variable_name, selection)
-        #query_parameters$query[[variable_name]] <- NULL  # clear from the list so it is not used again.
-    }
-
-    log_message_variable(variable_name, selection)
-    return(selection)
-}
-
-# renderUI__var_plots__variable__UI <- function(dataset, query_parameters) {
-
-#     renderUI({
-#         req(dataset$data)
-
-#         log_message_block_start("Creating Primary Variable")
-#         selection = get_selection_from_query_or_default(isolate(query_parameters), 'variable', global__select_variable, colnames(dataset$data))
-#         selectInput(inputId='var_plots__variable',
-#                     label = 'Variable',
-#                     choices = c(global__select_variable, colnames(dataset$data)),
-#                     selected = selection,
-#                     multiple = FALSE,
-#                     selectize = TRUE,
-#                     width='100%',
-#                     size = NULL)
-#     })
-# }
-
-# renderUI__var_plots__comparison__UI <- function(input, dataset, query_parameters) {
-
-#     renderUI({
-
-#         # if we have a date type as the primary variable, the comparison should only be numeric
-
-#         req(input$var_plots__variable)
-#         req(dataset$data)
-#         req(query_parameters$can_update)
-#         log_message_block_start("Creating Comparison Variable")
-
-#         current_selection <- input$var_plots__comparison
-#         if(is.null(input$var_plots__variable) || input$var_plots__variable == global__select_variable) {
-
-#             current_selection <- NULL
-#         }
-#         selected_variable <- default_if_null_or_empty_string(current_selection,
-#                                                              global__select_variable_optional)
-
-#         log_message_variable('selected_variable 1', selected_variable)
-
-#         local_dataset <- dataset$data
-#         local_primary_variable <- input$var_plots__variable
-
-#         dataset_columns <- colnames(local_dataset)
-
-#         variable_options <- NULL
-#         # only show numeric variables for dates
-#         if(local_primary_variable != global__select_variable &&
-#                 local_primary_variable %in% dataset_columns &&  # in case datasets change
-#                 is_date_type(local_dataset[, local_primary_variable])) {
-
-#             variable_options <- colnames(local_dataset %>% select_if(is.numeric))
-
-#         } else {
-
-#             variable_options <- dataset_columns
-#         }
-
-#         selection = get_selection_from_query_or_default(isolate(query_parameters), 'comparison', selected_variable, variable_options)
-
-
-
-#         selectInput(inputId='var_plots__comparison',
-#                     label = 'Comparison Variable',
-#                     choices = c(global__select_variable_optional, variable_options),
-#                     selected = selection,
-#                     multiple = FALSE,
-#                     selectize = TRUE,
-#                     width='100%',
-#                     size = NULL)
-#     })
-# }
-
-# renderUI__var_plots__sum_by_variable <- function(dataset, query_parameters) {
-
-#     renderUI({
-
-#         req(dataset$data)
-
-#         log_message_block_start("Creating Sum-By Variable")
-#         variable_options <- colnames(dataset$data %>% select_if(is.numeric))
-#         selection = get_selection_from_query_or_default(isolate(query_parameters), 'sum_by_variable', global__select_variable_optional, variable_options)
-
-#         selectInput(inputId='var_plots__sum_by_variable',
-#                     label = 'Sum By Variable',
-#                     choices = c(global__select_variable_optional, variable_options),
-#                     selected = selection,
-#                     multiple = FALSE,
-#                     selectize = TRUE,
-#                     width='100%',
-#                     size = NULL) %>%
-#             add_tooltip("Sums the selected variable associated with each instance.")
-#     })
-# }
-
-# renderUI__var_plots__color_variable <- function(input, dataset, query_parameters) {
-
-#     renderUI({
-#         # if we have a date type as the primary variable, color should only be non-numeric
-
-#         req(input$var_plots__variable)
-#         req(dataset$data)
-#         req(query_parameters$can_update)
-#         local_dataset <- dataset$data
-
-#         log_message_block_start("Creating Color Variable")
-        
-#         local_primary_variable <- input$var_plots__variable
-#         local_comparison_variable <- null_if_select_variable_optional(input$var_plots__comparison)
-
-#         dataset_columns <- colnames(local_dataset)
-
-#         variable_options <- NULL
-#         # only show categoric variables for dates
-#         if(local_primary_variable != global__select_variable &&
-#                 local_primary_variable %in% dataset_columns &&  # in case datasets change
-#                 is_date_type(local_dataset[, local_primary_variable])) {
-
-#            log_message_block_start('Creating Color Variable - Dates') 
-
-#             variable_options <- colnames(local_dataset %>% select_if(purrr::negate(is.numeric)))
-
-#         } else if(!is.null(local_primary_variable) &&
-#                   !is.null(local_comparison_variable) &&
-#                   local_primary_variable != global__select_variable &&
-#                   local_primary_variable %in% dataset_columns &&  # in case datasets change
-#                   xor(is.numeric(local_dataset[, local_primary_variable]),
-#                       is.numeric(local_dataset[, local_comparison_variable]))) {
-#             # if we have one numeric and one categoric variable (regardless which is which)
-#             # then we are displaying a boxplot and we only want to display categoric variables
-#             log_message_block_start('Creating Color Variable - XOR numeric/categoric')
-#             variable_options <- colnames(local_dataset %>% select_if(purrr::negate(is.numeric)))
-
-#         } else {
-
-#             log_message_block_start('Creating Color Variable - other')
-#             variable_options <- dataset_columns
-#         }
-
-#         selection = get_selection_from_query_or_default(isolate(query_parameters), 'color_variable', global__select_variable_optional, variable_options)
-
-#         selectInput(inputId='var_plots__color_variable',
-#                     label = 'Color Variable',
-#                     choices = c(global__select_variable_optional, variable_options),
-#                     selected = selection,
-#                     multiple = FALSE,
-#                     selectize = TRUE,
-#                     width='100%',
-#                     size = NULL)
-#     })
-# }
-
-# renderUI__var_plots__facet_variable <- function(dataset, query_parameters) {
-
-#     renderUI({
-#         # if we have a date type as the primary variable, color should only be non-numeric
-#         req(dataset$data)
-#         log_message_block_start("Creating Facet Variable")
-
-#         variable_options <- colnames(dataset$data %>% select_if(purrr::negate(is.numeric)))
-#         selection = get_selection_from_query_or_default(isolate(query_parameters), 'facet_variable', global__select_variable_optional, variable_options)
-#         selectInput(inputId='var_plots__facet_variable',
-#                     label = 'Facet Variable',
-#                     choices = c(global__select_variable_optional, variable_options),
-#                     selected = selection,
-#                     multiple = FALSE,
-#                     selectize = TRUE,
-#                     width='100%',
-#                     size = NULL)
-#     })
-# }
-
-# renderUI__var_plots__size_variable <- function(dataset, query_parameters) {
-
-#     renderUI({
-
-# 	    req(dataset$data)
-#         log_message_block_start("Creating Size Variable")
-
-#         selection = get_selection_from_query_or_default(isolate(query_parameters), 'size_variable', global__select_variable_optional, colnames(dataset$data))
-        
-#         selectInput(inputId='var_plots__size_variable',
-#                     label = 'Size Variable',
-#                     choices = c(global__select_variable_optional, colnames(dataset$data)),
-#                     selected = selection,
-#                     multiple = FALSE,
-#                     selectize = TRUE,
-#                     width='100%',
-#                     size = NULL)
-#     })
-# }
-
-# renderUI__var_plots__label_variables <- function(dataset, query_parameters) {
-
-#     renderUI({
-#         req(dataset$data)
-#         log_message_block_start("Creating Label Variables")
-
-#         selection = get_selection_from_query_or_default(isolate(query_parameters), 'label_variables', NULL, colnames(dataset$data))
-
-#         selectInput(inputId='var_plots__label_variables',
-#                     label = 'Label Variables',
-#                     choices = colnames(dataset$data),
-#                     selected = selection,
-#                     multiple = TRUE,
-#                     selectize = TRUE,
-#                     width='100%',
-#                     size = NULL)
-#     })
-# }
-
-# renderUI__var_plots__order_by_variable__UI <- function(dataset, query_parameters) {
-
-#     renderUI({
-#         req(dataset$data)
-#         log_message_block_start("Creating Order By Variable")
-
-#         valid_options <- c("Default", "Frequency", colnames(dataset$data %>% select_if(is.numeric)))
-#         selection = get_selection_from_query_or_default(isolate(query_parameters), 'order_by_variable', "Default", valid_options)
-
-#         selectInput(inputId='var_plots__order_by_variable',
-#                     label = 'Order By',
-#                     choices = valid_options,
-#                     selected = selection,
-#                     multiple = FALSE,
-#                     selectize = TRUE,
-#                     width='100%') %>%
-#             add_tooltip("If a numeric variable is selected, the categories are ordered by the categories\\' median value of the variable.")
-#     })
-# }
-
-# observeEvent__var_plots__categoric_view_type <- function(input, session) {
-
-#     observeEvent(c(#input$var_plots__categoric_view_type,
-#                    input$var_plots__comparison,
-#                    input$var_plots__sum_by_variable), {
-        
-#         # used for Categoric Primary and optionally Categoric Secondary variables
-#         log_message_block_start("Creating Categoric View Type")
-
-#         log_message_variable('input$var_plots__categoric_view_type', input$var_plots__categoric_view_type)
-#         log_message_variable('input$var_plots__comparison', input$var_plots__comparison)
-#         log_message_variable('input$var_plots__sum_by_variable', input$var_plots__sum_by_variable)
-
-#         previous_selection <- input$var_plots__categoric_view_type
-#         local_comparison_variable <- null_if_select_variable_optional(input$var_plots__comparison)
-#         local_sum_by_variable <- null_if_select_variable_optional(input$var_plots__sum_by_variable)                    
-
-#         view_type_options <- NULL
-#         if(is.null(local_comparison_variable) && is.null(local_sum_by_variable)) {
-
-#             view_type_options <- c("Bar", "Confidence Interval")
-
-#         } else if(is.null(local_comparison_variable) && !is.null(local_sum_by_variable)) {
-
-#             view_type_options <- c("Bar")
-
-#         } else if(!is.null(local_comparison_variable) && is.null(local_sum_by_variable)) {
-
-#             view_type_options <- c("Bar",
-#                                    "Confidence Interval",
-#                                    "Facet by Comparison",
-#                                    "Confidence Interval - within Variable",
-#                                    "Stack")
-
-#         } else { # both are not null
-            
-#             view_type_options <- c("Bar", "Facet by Comparison", "Stack")
-#         }
-
-#         if(!is.null(previous_selection) && previous_selection %in% view_type_options) {
-            
-#             selected_option <- previous_selection
-
-#         } else {
-
-#             selected_option <- "Bar"
-#         }
-
-#         updateSelectInput(session,
-#                           'var_plots__categoric_view_type',
-#                           choices = view_type_options,
-#                           selected = selected_option)
-#     })
-# }
-
 renderUI__var_plots__filter_controls_selections__UI <- function(input, dataset) {
     renderUI({
 	req(dataset$data)
