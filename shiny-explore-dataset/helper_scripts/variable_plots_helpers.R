@@ -1,3 +1,4 @@
+library(scales)
 ##############################################################################################################
 # FILTERS
 ##############################################################################################################
@@ -605,6 +606,19 @@ reactive__var_plots__ggplot__creator <- function(input, session, dataset, query_
 
         input$var_plots__graph_options_apply  # trigger update if applying custom labels
         input$var_plots__custom_labels_apply  # trigger update if applying graph options
+
+        # log_message_variable('is_null', is.null(isolate(input$var_plots__multi_value_delimiter)))
+        # log_message_variable('is_na', is.na(isolate(input$var_plots__multi_value_delimiter)))
+        # log_message_variable('is_empty', isolate(input$var_plots__multi_value_delimiter) == "")
+
+        # log_message_variable('is_null', is.null(isolate(input$var_plots__vertical_annotations)))
+        # log_message_variable('is_na', is.na(isolate(input$var_plots__vertical_annotations)))
+        # log_message_variable('is_empty', isolate(input$var_plots__vertical_annotations) == "")
+
+        # log_message_variable('is_null', is.null(isolate(input$var_plots__custom_title)))
+        # log_message_variable('is_na', is.na(isolate(input$var_plots__custom_title)))
+        # log_message_variable('is_empty', isolate(input$var_plots__custom_title) == "")
+
 
         # reactive data
         local_dataset <- dataset()
@@ -1883,3 +1897,53 @@ format_filtering_message <- function(filter_message_list, dataset) {
 
     return (message)
 }
+
+var_plots__input_list_default_values <- list(
+
+    'var_plots__variable' = global__select_variable,
+    'var_plots__comparison' = global__select_variable_optional,
+    'var_plots__sum_by_variable' = global__select_variable_optional,
+    'var_plots__color_variable' = global__select_variable_optional,
+    'var_plots__facet_variable' = global__select_variable_optional,
+    'var_plots__size_variable' = global__select_variable_optional,
+    'var_plots__numeric_group_comp_variable' = FALSE,
+    'var_plots__numeric_aggregation_function' = global__num_num_aggregation_function_default,
+    'var_plots__numeric_aggregation' = global__var_plots__numeric_aggregation_default,
+    'var_plots__multi_value_delimiter' = "",
+    'var_plots__label_variables' = NULL,
+    'var_plots__annotate_points' = FALSE,
+    'var_plots__show_points' = FALSE,
+    'var_plots__year_over_year' = FALSE,
+    'var_plots__include_zero_y_axis' = TRUE,
+    'var_plots__numeric_graph_type' = "Boxplot",
+    'var_plots__categoric_view_type' = "Bar",
+    'var_plots__order_by_variable' = "Default",
+    'var_plots__show_variable_totals' = TRUE,
+    'var_plots__show_comparison_totals' = TRUE,
+    'var_plots__histogram_bins' = 30,
+    'var_plots__transparency' = 60,
+    'var_plots__jitter' = FALSE,
+    'var_plots__numeric_aggregation_count_minimum' = 30,
+    'var_plots__numeric_show_resampled_conf_int' = FALSE,
+    'var_plots__trend_line' = 'None',
+    'var_plots__trend_line_se' = 'Yes',
+    'var_plots__ts_date_floor' = 'None',
+    'var_plots__ts_date_break_format' = 'Auto',
+    'var_plots__ts_breaks_width' = NULL,
+    'var_plots__scale_x_log_base_10' = FALSE,
+    'var_plots__x_zoom_min' = NULL,
+    'var_plots__x_zoom_max' = NULL,
+    'var_plots__scale_y_log_base_10' = FALSE,
+    'var_plots__y_zoom_min' = NULL,
+    'var_plots__y_zoom_max' = NULL,
+    'var_plots__custom_title' = "",
+    'var_plots__custom_subtitle' = "",
+    'var_plots__custom_x_axis_label' = "",
+    'var_plots__custom_y_axis_label' = "",
+    'var_plots__custom_caption' = "",
+    'var_plots__custom_tag' = "",
+    'var_plots__pretty_text' = FALSE,
+    'var_plots__base_size' = 15,
+    'var_plots__vertical_annotations' = "",
+    'var_plots__horizontal_annotations' = ""
+)

@@ -213,6 +213,11 @@ shinyServer(function(input, output, session) {
             
             log_message_block_start("Detected URL Parameters")
             
+
+            log_message_variable('base url', get_base_url(session))
+            log_message_variable('full url', session$clientData$url_search)
+            log_message_variable('param_names', paste0(names(query), collapse='; '))
+
             parameter_info$query <- query
             parameter_info$possible_steps <- global__url_param_possible_steps
             parameter_info$step <- create_url_param_step("Parsed Parameters")
@@ -448,28 +453,6 @@ shinyServer(function(input, output, session) {
                                        create_url_param_step("Updated Non-Dynamic Parameters"))
         }
     })
-
-    get_base_url <- function(session) {
-        
-        # url_elements <- list(protocol=session$clientData$url_protocol,
-        #                      hostname=session$clientData$url_hostname,
-        #                      #pathname=session$clientData$url_pathname,
-        #                      port=session$clientData$url_port)
-        # #search=session$clientData$url_search)
-        # attr(url_elements, 'class') <- 'url'
-        # 
-        # return (httr::build_url(url_elements))
-        
-        
-        url_string <- paste0(session$clientData$url_protocol,
-                             "//",
-                             session$clientData$url_hostname,
-                             ":",
-                             session$clientData$url_port)
-        #print(url_string)
-        url <- httr::parse_url(url_string)
-        return (httr::build_url(url))
-    }
 
     # observeEvent(input$generate_graph_from_url, {
 
@@ -805,104 +788,9 @@ shinyServer(function(input, output, session) {
         }
     })
 
-
-    get_base_url <- function(session) {
-        url_string <- paste0(session$clientData$url_protocol,
-                             "//",
-                             session$clientData$url_hostname,
-                             ":",
-                             session$clientData$url_port)
-        url <- httr::parse_url(url_string)
-        return (httr::build_url(url))
-    }
-
-
-    build_custom_url <- function(session, input) {
-        url <- httr::parse_url(get_base_url(session))
-        url$query <- build_parameters_list(input)
-        return (httr::build_url(url))
-    }
-
-    mergeUrlArgs <- function(x) sapply(unique(names(x)), function(z) unlist(x[names(x) == z], use.names=FALSE), simplify=FALSE)
-    expandUrlArgs <- function(x) structure(do.call(c, lapply(x, function(z) as.list(z))), names=rep(names(x), sapply(x, length)))
-
-    build_parameters_list <- function(input) {
-
-        # parameters_list <- reactiveValuesToList(input)
-        # #my_list <- list("var_plots__asdf"=1, "dddd"=2, "var_plots__ffff"=3)
-        # parameters_list <- parameters_list[grep("var_plots__", names(parameters_list))]
-        parameters_list <- list("data"=input$preloaded_dataset,
-                                "tab"="Graphs",
-                                "variable"=input$var_plots__variable)
-
-        if(!is.null(input$var_plots__comparison) && input$var_plots__comparison != global__select_variable_optional) {
-
-            parameters_list <- c(parameters_list, list("comparison"=input$var_plots__comparison))
-        }
-
-        if(!is.null(input$var_plots__label_variables) && input$var_plots__label_variables != global__select_variable_optional) {
-
-            parameters_list <- c(parameters_list, list("label_variables"=input$var_plots__label_variables))
-        }
-
-        return (expandUrlArgs(parameters_list))
-
-
-        # updateSelectInput(session, 'var_plots__variable', selected=current_comparison_selected)
-        # updateSelectInput(session, 'var_plots__comparison', selected=current_variable_selected)
-
-        # updateSelectInput(session, 'var_plots__sum_by_variable', selected=global__select_variable_optional)
-        # updateSelectInput(session, 'var_plots__color_variable', selected=global__select_variable_optional)
-        # updateSelectInput(session, 'var_plots__facet_variable', selected=global__select_variable_optional)
-        # updateSelectInput(session, 'var_plots__size_variable', selected=global__select_variable_optional)
-
-        # updateCheckboxInput(session, 'var_plots__numeric_group_comp_variable', value=FALSE)
-        # updateSelectInput(session, 'var_plots__numeric_aggregation_function', selected=global__num_num_aggregation_function_default)
-        # updateSelectInput(session, 'var_plots__numeric_aggregation', selected=global__var_plots__numeric_aggregation_default)
-        # updateTextInput(session, 'var_plots__multi_value_delimiter', value="")
-
-        # updateSelectInput(session, 'var_plots__label_variables', selected=character(0))
-        # updateCheckboxInput(session, 'var_plots__annotate_points', value=FALSE)
-        # updateCheckboxInput(session, 'var_plots__show_points', value=FALSE)
-        # updateCheckboxInput(session, 'var_plots__year_over_year', value=FALSE)
-        # updateCheckboxInput(session, 'var_plots__include_zero_y_axis', value=TRUE)
-        # updateSelectInput(session, 'var_plots__numeric_graph_type', selected="Boxplot")
-        # updateSelectInput(session, 'var_plots__categoric_view_type', selected="Bar")
-        # updateSelectInput(session, 'var_plots__order_by_variable', selected="Default")
-        # updateCheckboxInput(session, 'var_plots__show_variable_totals', value=TRUE)
-        # updateCheckboxInput(session, 'var_plots__show_comparison_totals', value=TRUE)
-        # updateNumericInput(session, 'var_plots__histogram_bins', value=30)
-        # updateSliderTextInput(session, 'var_plots__transparency', selected=60)
-        # updateCheckboxInput(session, 'var_plots__jitter', value=FALSE)
-        # updateNumericInput(session, 'var_plots__numeric_aggregation_count_minimum', value=30)
-        # updateCheckboxInput(session, 'var_plots__numeric_show_resampled_conf_int', value=FALSE)
-        # updateRadioButtons(session, 'var_plots__trend_line', selected='None')
-        # updateRadioButtons(session, 'var_plots__trend_line_se', selected='Yes')
-        # updateSelectInput(session, 'var_plots__ts_date_floor', selected=names(global__date_part_vector)[1])
-        # updateSelectInput(session, 'var_plots__ts_date_break_format', selected=names(global__date_break_format_vector)[1])
-        # updateTextInput(session, 'var_plots__ts_breaks_width', value=integer(0))
-        # updateCheckboxInput(session, 'var_plots__scale_x_log_base_10', value=FALSE)
-        # updateNumericInput(session, 'var_plots__x_zoom_min', value=integer(0))
-        # updateNumericInput(session, 'var_plots__x_zoom_max', value=integer(0))
-        # updateCheckboxInput(session, 'var_plots__scale_y_log_base_10', value=FALSE)
-        # updateNumericInput(session, 'var_plots__y_zoom_min', value=integer(0))
-        # updateNumericInput(session, 'var_plots__y_zoom_max', value=integer(0))
-        # updateTextInput(session, 'var_plots__custom_title', value='')
-        # updateTextInput(session, 'var_plots__custom_subtitle', value='')
-        # updateTextInput(session, 'var_plots__custom_x_axis_label', value='')
-        # updateTextInput(session, 'var_plots__custom_y_axis_label', value='')
-        # updateTextInput(session, 'var_plots__custom_caption', value='')
-        # updateTextInput(session, 'var_plots__custom_tag', value='')
-        # updateCheckboxInput(session, 'var_plots__pretty_text', value=FALSE)
-        # updateSliderTextInput(session, 'var_plots__base_size', selected=15)
-        # updateTextAreaInput(session, 'var_plots__vertical_annotations', value="")
-        # updateTextAreaInput(session, 'var_plots__horizontal_annotations', value="")
-
-    }
-
     observeEvent(input$var_plots__generate_link, {
 
-        custom_link <- build_custom_url(session, input)
+        custom_link <- build_custom_url(get_base_url(session), buld_parameters_list(input))
         
         if(nchar(custom_link) > 2000) {
 
@@ -922,3 +810,4 @@ shinyServer(function(input, output, session) {
 
 #http://127.0.0.1:3158/?data=Flights&tab=Graphs&variable=date&comparison=arr_delay&color_variable=dest&facet_variable=origin&ts_date_floor=month
 #http://127.0.0.1:3158/?data=Flights&tab=Graphs&custom_title=This%20is%20my%20title%20from%20URL%20parameter&variable=date&comparison=arr_delay&color_variable=dest&facet_variable=origin&ts_date_floor=month
+

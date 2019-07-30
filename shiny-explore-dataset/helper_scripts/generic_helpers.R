@@ -355,3 +355,98 @@ add_horizontal_annotations <- function(ggplot_object, horizontal_annotations, x_
     }
     return (ggplot_object)
 }
+
+#' gets the current URL of the app
+#' 
+#' @param session the session provided by the shiny app
+get_base_url <- function(session) {
+    url_string <- paste0(session$clientData$url_protocol,
+                         "//",
+                         session$clientData$url_hostname,
+                         ":",
+                         session$clientData$url_port)
+    url <- httr::parse_url(url_string)
+    return (httr::build_url(url))
+}
+
+#' builds a url based on the base_url of the shiny app and a list of parameters to change to a query string
+#' 
+#' @param base_url base url of the shiny app
+#' @param parameters_list a named list of values 
+build_custom_url <- function(base_url, parameters_list) {
+    url <- httr::parse_url(base_url)
+    url$query <- parameters_list
+    return (httr::build_url(url))
+}
+
+#' takes a list that has repeated named list elements with single values and transfers them to single named value with multiple values
+#' i.e. list('a'='b', 'a'='c') -> list('a'=c('b', 'c'))
+#' 
+#' @param list 
+mergeUrlArgs <- function(x) sapply(unique(names(x)), function(z) unlist(x[names(x) == z], use.names=FALSE), simplify=FALSE)
+
+#' opposite of mergeUrlArgs
+#' i.e. list('a'='b', 'a'='c') -> list('a'=c('b', 'c'))
+#' 
+#' @param list 
+expandUrlArgs <- function(x) structure(do.call(c, lapply(x, function(z) as.list(z))), names=rep(names(x), sapply(x, length)))
+
+
+#' helper function to determine if the variable/value is the defualt value
+private__variable_value_is_default <- function(variable_name, variable_value) {
+
+    default_value <- var_plots__input_list_default_values[[variable_name]]
+
+    if(is.null(default_value)) {
+
+        return (is.null(variable_value))
+
+    } else {
+
+        return (all(default_value == variable_value))
+    }
+}
+
+#' takes an input (provided by the server) and extracts all of the non-default values and builds a named list
+#' which will be used to build the url; only want non-defaults in order to limit the length of our url
+#' 
+#' @param input input object from the app
+#' @param preloaded_dataset the name of the preloaded-dataset to load
+build_parameters_list <- function(input, preloaded_dataset) {
+
+    # parameters_list <- reactiveValuesToList(input)
+    # #my_list <- list("var_plots__asdf"=1, "dddd"=2, "var_plots__ffff"=3)
+    # parameters_list <- parameters_list[grep("var_plots__", names(parameters_list))]
+    parameters_list <- list("data"=preloaded_dataset,
+                            "tab"="Graphs")
+
+    # lets loop through list of default values (real input$ will contain main irrevant variables)
+    for(variable_name in names(var_plots__input_list_default_values)) {
+        #print(variable_name)
+        variable_value <- input[[variable_name]]
+        #print(variable_value)
+        # if it exists in the input and is not the default value, then add it to our list
+        if(!is.null(variable_value) && !private__variable_value_is_default(variable_name, variable_value)) {
+
+            param_name <- str_replace(variable_name, 'var_plots__', '')
+            parameters_list[[param_name]] <- variable_value
+        }
+    }
+
+    # change multi-value parameters to single-value but occuring multiple times e.g. list('a'=c('b', 'c')) -> list('a'='b', 'a'='c')
+    return (expandUrlArgs(parameters_list))
+}
+
+#' takes a url search string e.g. ?data=flights&tab=Graphs&variable=Test and extracts all of the parameters into a named list
+#' transforms all parameters except 'data' and 'tab' to 'var_plots__xxx'
+#' 
+#' @param url_search the search part of the url 
+extract_url_parameters <- function(url_search) {
+
+    parameters_list <- mergeUrlArgs(shiny::parseQueryString(url_search))
+    default_params <- c('data', 'tab')
+    names(parameters_list) <- c(default_params, paste0('var_plots__', names(parameters_list) %>% rt_remove_val(default_params)))
+    parameters_list <- type.convert(parameters_list, as.is=TRUE)
+
+    return (parameters_list)
+}

@@ -36,4 +36,3 @@ create_url_param_step <- function(step_name) {
     
     return(factor(step_name, levels=global__url_param_step_levels, ordered=TRUE))
 }
-

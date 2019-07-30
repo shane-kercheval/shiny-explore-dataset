@@ -5,9 +5,9 @@ library(hms)
 
 source('../helper_scripts/generic_helpers.R', chdir = TRUE)
 source('../helper_scripts/definitions.R', chdir = TRUE)
-Sys.setenv(TZ='UTC')
+source('../helper_scripts/variable_plots_helpers.R', chdir = TRUE)
 
-#source('unit_test_helper.R', chdir = TRUE)
+Sys.setenv(TZ='UTC')
 
 # to run from command line, use:
 # test_file("unit_tests.R")
@@ -737,6 +737,7 @@ test_that("generic_helpers::filter_data - flights/date", {
 })
 
 test_that("generic_helpers::mutate_factor_lump", {
+    context("generic_helpers::mutate_factor_lump")
     
     dataset <- dataset_or_null('../example_datasets/credit.csv') %>%
         mutate(checking_balance = as.character(checking_balance),
@@ -822,6 +823,7 @@ test_that("generic_helpers::mutate_factor_lump", {
 })
 
 test_that("generic_helpers::mutate_factor_lump::single_character", {
+    context("generic_helpers::mutate_factor_lump:single_character")
     
     dataset <- dataset_or_null('../example_datasets/credit.csv') %>%
         select(checking_balance) %>%
@@ -842,6 +844,7 @@ test_that("generic_helpers::mutate_factor_lump::single_character", {
 })
 
 test_that("generic_helpers::mutate_factor_lump::all_numeric", {
+    context("generic_helpers::mutate_factor_lump::all_numeric")
     
     dataset <- dataset_or_null('../example_datasets/credit.csv') %>%
         select(months_loan_duration)
@@ -873,6 +876,7 @@ test_that("generic_helpers::mutate_factor_lump::all_numeric", {
 })
 
 test_that("generic_helpers::mutate_factor_reorder", {
+    context("generic_helpers::mutate_factor_reorder")
 
     diamonds_order_by_freq <- diamonds %>% count(cut, sort=TRUE)
     diamonds_order_by_median <- diamonds %>%
@@ -927,6 +931,7 @@ test_that("generic_helpers::mutate_factor_reorder", {
 })
 
 test_that("add_x_annotations", {
+    context("add_x_annotations")
     local_dataset <- data.frame(nycflights13::flights %>%
         mutate(date = make_date(year, month, day)) %>%
         select(-year, -month, -day) %>%
@@ -1017,6 +1022,7 @@ test_that("add_x_annotations", {
 })
 
 test_that("add_x_annotations:POSIXct", {
+    context("add_x_annotations:POSIXct")
     local_dataset <- data.frame(nycflights13::flights %>%
                                     mutate(date = make_date(year, month, day)) %>%
                                     select(-year, -month, -day) %>%
@@ -1069,6 +1075,7 @@ test_that("add_x_annotations:POSIXct", {
 })
 
 test_that("create_url_param_step", {
+    context("create_url_param_step")
 
     # make sure creating the step creates a factor that follows the rules
     a <- create_url_param_step("Parsed Parameters")
@@ -1106,4 +1113,99 @@ test_that("create_url_param_step", {
     expect_true(max(c, c2) == c)
     expect_true(max(c, d) == d)
     expect_true(max(d, c) == d)
+})
+
+test_that("build_parse_url_params", {
+    context("build_parse_url_params")
+    input <- var_plots__input_list_default_values
+    parameters <- build_parameters_list(input=input, preloaded_dataset='flights')
+    
+    expect_equal(length(parameters), 2)
+    expect_true(!is.null(parameters$data))
+    expect_equal(parameters$data, 'flights')
+    expect_true(!is.null(parameters$tab))
+    expect_equal(parameters$tab, 'Graphs')
+    
+    mock_input <- list(
+        'var_plots__variable' = 'Test values with spaces and sh*&%t.!',
+        'var_plots__comparison' = 'expected_value_comparison',
+        'var_plots__sum_by_variable' = 'expected_value_sum_by_variable',
+        'var_plots__color_variable' = 'expected_value_color_variable',
+        'var_plots__facet_variable' = 'expected_value_facet_variable',
+        'var_plots__size_variable' = 'expected_value_size_variable',
+        'var_plots__numeric_group_comp_variable' = TRUE,
+        'var_plots__numeric_aggregation_function' = 'month',
+        'var_plots__numeric_aggregation' = 'week',
+        'var_plots__multi_value_delimiter' = "; ",
+        'var_plots__label_variables' = c('this', 'has', 'multiple', 'values'),
+        'var_plots__annotate_points' = TRUE,
+        'var_plots__show_points' = TRUE,
+        'var_plots__year_over_year' = TRUE,
+        'var_plots__include_zero_y_axis' = FALSE,
+        'var_plots__numeric_graph_type' = "Boxplot Whoot",
+        'var_plots__categoric_view_type' = "Bar Whoot",
+        'var_plots__order_by_variable' = "Default Whoot",
+        'var_plots__show_variable_totals' = FALSE,
+        'var_plots__show_comparison_totals' = FALSE,
+        'var_plots__histogram_bins' = 1000,
+        'var_plots__transparency' = 1999,
+        'var_plots__jitter' = TRUE,
+        'var_plots__numeric_aggregation_count_minimum' = 3009,
+        'var_plots__numeric_show_resampled_conf_int' = TRUE,
+        'var_plots__trend_line' = 'None Whoot',
+        'var_plots__trend_line_se' = 'Yes Whoot',
+        'var_plots__ts_date_floor' = 'None Whoot',
+        'var_plots__ts_date_break_format' = 'Auto Whoot',
+        'var_plots__ts_breaks_width' = 'not null',
+        'var_plots__scale_x_log_base_10' = TRUE,
+        'var_plots__x_zoom_min' = 'not null',
+        'var_plots__x_zoom_max' = 'not null',
+        'var_plots__scale_y_log_base_10' = TRUE,
+        'var_plots__y_zoom_min' = 'not null',
+        'var_plots__y_zoom_max' = 'not null',
+        'var_plots__custom_title' = "This is my title",
+        'var_plots__custom_subtitle' = "This is my subtitle",
+        'var_plots__custom_x_axis_label' = "This is my X Axis Label",
+        'var_plots__custom_y_axis_label' = "This is my Y Axis Label",
+        'var_plots__custom_caption' = "This is my caption",
+        'var_plots__custom_tag' = "This is my Tag",
+        'var_plots__pretty_text' = TRUE,
+        'var_plots__base_size' = 155,
+        'var_plots__vertical_annotations' = "vertical annotations",
+        'var_plots__horizontal_annotations' = "horizontal annotations"
+    )
+    parameters <- build_parameters_list(input=mock_input, preloaded_dataset='flights')
+    
+    expected_names <- str_replace(c('data', 'tab', names(mock_input)), 'var_plots__', '')
+    # need unique(names) because var_plots__label_variables has multiple values which should be expanded
+    expect_identical(unique(names(parameters)), expected_names)
+    
+    # this list should have been converted to 4 list elements with the same names and different values
+    label_variable_list <- parameters[which(names(parameters) == 'label_variables')]
+    expect_equal(length(label_variable_list), length(mock_input$var_plots__label_variables))
+    expect_equal(label_variable_list[[1]], mock_input$var_plots__label_variables[1])
+    expect_equal(label_variable_list[[2]], mock_input$var_plots__label_variables[2])
+    expect_equal(label_variable_list[[3]], mock_input$var_plots__label_variables[3])
+    expect_equal(label_variable_list[[4]], mock_input$var_plots__label_variables[4])
+    
+    for(variable in names(parameters) %>% rt_remove_val(c('data', 'tab', 'label_variables'))) {
+
+        expect_equal(parameters[[variable]], mock_input[[paste0('var_plots__',variable)]])
+    }
+    
+    custom_url <- build_custom_url(base_url = 'http://127.0.0.1:3158/', parameters_list = parameters)
+    expected_url <- "http://127.0.0.1:3158/?data=flights&tab=Graphs&variable=Test%20values%20with%20spaces%20and%20sh%2A%26%25t.%21&comparison=expected_value_comparison&sum_by_variable=expected_value_sum_by_variable&color_variable=expected_value_color_variable&facet_variable=expected_value_facet_variable&size_variable=expected_value_size_variable&numeric_group_comp_variable=TRUE&numeric_aggregation_function=month&numeric_aggregation=week&multi_value_delimiter=%3B%20&label_variables=this&label_variables=has&label_variables=multiple&label_variables=values&annotate_points=TRUE&show_points=TRUE&year_over_year=TRUE&include_zero_y_axis=FALSE&numeric_graph_type=Boxplot%20Whoot&categoric_view_type=Bar%20Whoot&order_by_variable=Default%20Whoot&show_variable_totals=FALSE&show_comparison_totals=FALSE&histogram_bins=1000&transparency=1999&jitter=TRUE&numeric_aggregation_count_minimum=3009&numeric_show_resampled_conf_int=TRUE&trend_line=None%20Whoot&trend_line_se=Yes%20Whoot&ts_date_floor=None%20Whoot&ts_date_break_format=Auto%20Whoot&ts_breaks_width=not%20null&scale_x_log_base_10=TRUE&x_zoom_min=not%20null&x_zoom_max=not%20null&scale_y_log_base_10=TRUE&y_zoom_min=not%20null&y_zoom_max=not%20null&custom_title=This%20is%20my%20title&custom_subtitle=This%20is%20my%20subtitle&custom_x_axis_label=This%20is%20my%20X%20Axis%20Label&custom_y_axis_label=This%20is%20my%20Y%20Axis%20Label&custom_caption=This%20is%20my%20caption&custom_tag=This%20is%20my%20Tag&pretty_text=TRUE&base_size=155&vertical_annotations=vertical%20annotations&horizontal_annotations=horizontal%20annotations"
+    expect_equal(custom_url, expected_url)
+    expect_equal(nchar(custom_url), 1562)
+    
+    # extract_url_parameters only expects the ?.... part of the url
+    extracted_parameters <- extract_url_parameters(url_search=str_replace(custom_url, 'http://127.0.0.1:3158/', ''))
+    expect_identical(names(extracted_parameters), c('data', 'tab', names(mock_input)))
+    
+    var_plots_extracted_parameters <- extracted_parameters[which(!names(extracted_parameters) %in% c('data', 'tab'))]
+    expect_identical(names(var_plots_extracted_parameters), names(mock_input))
+    
+    for(variable in names(mock_input)) {
+        expect_equal(var_plots_extracted_parameters[[variable]], mock_input[[variable]])
+    }
 })
