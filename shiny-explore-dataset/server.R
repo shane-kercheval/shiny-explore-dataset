@@ -204,29 +204,23 @@ shinyServer(function(input, output, session) {
                 (input$var_plots__variable == global__select_variable ||
                     input$var_plots__variable %in% column_names)) {
 
-            log_message_block_start("Updating Comparison Variables based on new Variable")
-            log_message_variable('var_plots__variable', input$var_plots__variable)
-            log_message_variable('var_plots__comparison', input$var_plots__comparison)
-       
-            if(is_date_type(reactive__source_data$data[[input$var_plots__variable]])) {
+            log_message_block_start("Updating var_plots__comparison based on var_plots__variable")
 
-                column_names <- colnames(reactive__source_data$data %>% select_if(is.numeric))
-            }
+            results <- var_plots__comparison__logic(dataset=reactive__source_data$data,
+                                                    primary_variable=input$var_plots__variable,
+                                                    current_value=input$var_plots__comparison)
 
-            current_selection <- input$var_plots__comparison
-            if(input$var_plots__variable == global__select_variable) {
-
-                current_selection <- NULL
-            }
-            selected_variable <- default_if_null_or_empty_string(current_selection,
-                                                                 global__select_variable_optional)
-
-            log_message_variable('selected_variable', selected_variable)
             updateSelectInput(session, 'var_plots__comparison',
-                              choices=c(global__select_variable_optional, column_names),
-                              selected=selected_variable)
+                              choices=results$choices,
+                              selected=results$selected)
         }
     }, suspended=TRUE)
+
+
+    # var_plots__color__logic <- function(dataset, primary_variable, comparison_variable, current_value) {
+
+        
+    # }
 
 
     observeEvent_color <- observeEvent(c(input$var_plots__variable, input$var_plots__comparison), {
@@ -442,7 +436,7 @@ shinyServer(function(input, output, session) {
 
 
             log_message_block_start("Updating all variables From URL Params")
-            update_var_plot_variables_from_url_params(session, parameter_info$params, reactive__source_data$data)
+            update_var_plot_variables_from_url_params(session, parameter_info$params, reactive__source_data$data, input)
 
             parameter_info$has_updated_variables <- TRUE
 
