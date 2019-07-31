@@ -216,13 +216,6 @@ shinyServer(function(input, output, session) {
         }
     }, suspended=TRUE)
 
-
-    # var_plots__color__logic <- function(dataset, primary_variable, comparison_variable, current_value) {
-
-        
-    # }
-
-
     observeEvent_color <- observeEvent(c(input$var_plots__variable, input$var_plots__comparison), {
 
         req(!isolate(parameter_info$has_params))  # should never update if we have params (until set to false)
@@ -233,32 +226,14 @@ shinyServer(function(input, output, session) {
                 input$var_plots__variable != global__select_variable &&
                 input$var_plots__variable %in% column_names) {
 
-            log_message_block_start("Updating Color based on new variable/comparison")
-            log_message_variable('var_plots__comparison', input$color_variable)
+            results <- var_plots__color__logic(dataset=reactive__source_data$data,
+                                               primary_variable=input$var_plots__variable,
+                                               comparison_variable=input$var_plots__comparison,
+                                               current_value=input$var_plots__color_variable)
 
-            if(is_date_type(reactive__source_data$data[[input$var_plots__variable]])) {
-
-                column_names <- colnames(reactive__source_data$data %>% select_if(purrr::negate(is.numeric)))
-
-            } else if(xor(is.numeric(reactive__source_data$data[[input$var_plots__variable]]),
-                      is.numeric(reactive__source_data$data[[input$var_plots__comparison]]))) {
-
-                column_names <- colnames(reactive__source_data$data %>% select_if(purrr::negate(is.numeric)))
-
-            }
-
-            current_selection <- input$var_plots__color_variable
-            if(input$var_plots__variable == global__select_variable) {
-
-                current_selection <- NULL
-            }
-            selected_variable <- default_if_null_or_empty_string(current_selection,
-                                                                 global__select_variable_optional)
-
-            log_message_variable('selected_variable', selected_variable)
             updateSelectInput(session, 'var_plots__color_variable',
-                              choices=c(global__select_variable_optional, column_names),
-                              selected=selected_variable)
+                              choices=results$choices,
+                              selected=results$selected)
         }
     }, suspended=TRUE)
 

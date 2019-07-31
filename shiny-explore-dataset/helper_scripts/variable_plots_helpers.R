@@ -1632,7 +1632,7 @@ var_plots__input_list_default_values <- list(
 #' based on the primary variables' current value, returns the `choices` and `selected` values to be sent to updateSelectInput
 var_plots__comparison__logic <- function(dataset, primary_variable, current_value) {
 
-    log_message_block_start("Executing Logic for Comparison Variables based on Variable")
+    log_message_block_start("Executing Logic for Comparison Variable")
     log_message_variable('var_plots__variable', primary_variable)
     log_message_variable('var_plots__comparison', current_value)
 
@@ -1651,8 +1651,39 @@ var_plots__comparison__logic <- function(dataset, primary_variable, current_valu
                                                          global__select_variable_optional)
 
     log_message_variable('Final Value', selected_variable)
-
     return(list(choices=c(global__select_variable_optional, column_names),
                 selected=selected_variable))
+}
 
+var_plots__color__logic <- function(dataset, primary_variable, comparison_variable, current_value) {
+
+    log_message_block_start("Executing Logic for Color Variable")
+    log_message_variable('var_plots__variable', primary_variable)
+    log_message_variable('var_plots__comparison', comparison_variable)
+    log_message_variable('var_plots__color_variable', current_value)
+
+    if(is_date_type(dataset[[primary_variable]])) {
+
+        column_names <- colnames(dataset %>% select_if(purrr::negate(is.numeric)))
+
+    } else if(xor(is.numeric(dataset[[primary_variable]]), is.numeric(dataset[[comparison_variable]]))) {
+
+        column_names <- colnames(dataset %>% select_if(purrr::negate(is.numeric)))
+
+    } else {
+
+        column_names <- colnames(dataset)
+    }
+
+    if(primary_variable == global__select_variable) {
+
+        current_value <- NULL
+    }
+    selected_variable <- default_if_null_or_empty_string(current_value,
+                                                         global__select_variable_optional)
+
+
+    log_message_variable('Final Value', selected_variable)
+    return(list(choices=c(global__select_variable_optional, column_names),
+                selected=selected_variable))
 }

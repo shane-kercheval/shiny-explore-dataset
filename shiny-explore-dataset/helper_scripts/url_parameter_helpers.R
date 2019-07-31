@@ -6,7 +6,9 @@ update_var_plot_variables_from_url_params <- function(session, params, dataset, 
     numeric_column_names <- colnames(dataset %>% select_if(is.numeric))
     categoric_column_names <- colnames(dataset %>% select_if(purrr::negate(is.numeric)))
 
-
+    #######################################################################
+    # Update Primary Variable - cache selected for comparison/color logic
+    #######################################################################
     selected_variable <- global__select_variable
     if (!is.null(params[['variable']])) {
 
@@ -17,6 +19,9 @@ update_var_plot_variables_from_url_params <- function(session, params, dataset, 
                       choices=c(global__select_variable, column_names),
                       selected=selected_variable)   
     
+    #######################################################################
+    # Update Comparison Variable - cache selected for color logic
+    #######################################################################
     selected_comparison <- global__select_variable_optional
     if (!is.null(params[['comparison']])) {
 
@@ -30,18 +35,42 @@ update_var_plot_variables_from_url_params <- function(session, params, dataset, 
                       choices=results$choices,
                       selected=results$selected)
     
+    #######################################################################
+    # Update Color Variable
+    #######################################################################
+    selected_color <- global__select_variable_optional
+    if (!is.null(params[['color_variable']])) {
+
+        selected_color <- params[['color_variable']]
+        log_message_variable('updating color_variable', params[['color_variable']])
+    }
+    results <- var_plots__color__logic(dataset=dataset,
+                                            primary_variable=selected_variable,
+                                            comparison_variable=selected_comparison,
+                                            current_value=selected_color)
+    updateSelectInput(session, 'var_plots__color_variable',
+                      choices=results$choices,
+                      selected=results$selected)
+
+    #######################################################################
+    # Update Categoric View
+    #######################################################################
+    if (!is.null(params[['categoric_view_type']])) {
+        log_message_variable('updating categoric_view_type', params[['categoric_view_type']])
+        updateSelectInput(session, 'var_plots__categoric_view_type', selected=params[['categoric_view_type']])
+    }
+
+
+    #######################################################################
+    # Update Non-Dynamic 
+    #######################################################################
+
     if (!is.null(params[['sum_by_variable']])) {
 
         log_message_variable('updating sum_by_variable', params[['sum_by_variable']])
         updateSelectInput(session, 'var_plots__sum_by_variable', selected=params[['sum_by_variable']])
     }
-    
-    if (!is.null(params[['color_variable']])) {
-
-        log_message_variable('updating color_variable', params[['color_variable']])
-        updateSelectInput(session, 'var_plots__color_variable', selected=params[['color_variable']])
-    }
-    
+        
     if (!is.null(params[['facet_variable']])) {
 
         log_message_variable('updating facet_variable', params[['facet_variable']])
@@ -100,10 +129,6 @@ update_var_plot_variables_from_url_params <- function(session, params, dataset, 
     if (!is.null(params[['numeric_graph_type']])) {
         log_message_variable('updating numeric_graph_type', params[['numeric_graph_type']])
         updateSelectInput(session, 'var_plots__numeric_graph_type', selected=params[['numeric_graph_type']])
-    }
-    if (!is.null(params[['categoric_view_type']])) {
-        log_message_variable('updating categoric_view_type', params[['categoric_view_type']])
-        updateSelectInput(session, 'var_plots__categoric_view_type', selected=params[['categoric_view_type']])
     }
     if (!is.null(params[['order_by_variable']])) {
         log_message_variable('updating order_by_variable', params[['order_by_variable']])
