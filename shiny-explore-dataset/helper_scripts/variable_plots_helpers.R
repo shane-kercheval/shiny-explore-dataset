@@ -1172,11 +1172,10 @@ reactive__var_plots__ggplot__creator <- function(input, session, dataset, parame
 
             shinyjs::show('var_plots__generate_link')
 
-            # if(!is.null(parameter_info$step)) {
+            if(!is.null(parameter_info$step)) {
 
-            #     parameter_info$step <- max(parameter_info$step,
-            #                                create_url_param_step("Successfully Created Graph from URL Parameters"))
-            # }
+                parameter_info$has_plotted <- TRUE
+            }
         }
 
         return (ggplot_object)

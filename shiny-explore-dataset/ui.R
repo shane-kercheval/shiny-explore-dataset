@@ -28,7 +28,7 @@ shinyUI(fluidPage(theme="custom.css",
                                               'Flights',
                                               'Wine Ratings',
                                               'Gapminder'),
-                                    selected='Credit'))
+                                    selected=NULL))
                 ),
                 tabPanel(
                     'Load .csv/.RDS',

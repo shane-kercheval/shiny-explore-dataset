@@ -231,7 +231,7 @@ observeEvent__source_data__preloaded <- function(session, input, output, reactiv
                                     dataset_name=input$preloaded_dataset,
                                     parameter_info=parameter_info)
         })
-    })
+    }, suspended=TRUE)
 }
 
 observeEvent__load_data__r_code_apply <- function(reactive__source_data, input, output) {
