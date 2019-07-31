@@ -1,37 +1,44 @@
 #' @param session session from the app server
 #' @param params named list of url params with corresponding values; should only be var_plot__ params
-update_var_plot_variables_from_url_params <- function(session, params) {
+update_var_plot_variables_from_url_params <- function(session, params, dataset) {
 
-    # if (!is.null(params[['variable']])) {
+    column_names <- colnames(dataset)
+    numeric_column_names <- colnames(dataset %>% select_if(is.numeric))
+    categoric_column_names <- colnames(dataset %>% select_if(purrr::negate(is.numeric)))
 
-    #     log_message_variable('variable', params[['variable']])
-    #     updateSelectInput(session, 'var_plots__variable', selected=params[['variable']])
-    # }
-    # if (!is.null(params[['comparison']])) {
 
-    #     log_message_variable('comparison', params[['comparison']])
-    #     updateSelectInput(session, 'var_plots__comparison', selected=params[['comparison']])
-    # }
-    # if (!is.null(params[['sum_by_variable']])) {
+    if (!is.null(params[['variable']])) {
 
-    #     log_message_variable('sum_by_variable', params[['sum_by_variable']])
-    #     updateSelectInput(session, 'var_plots__sum_by_variable', selected=params[['sum_by_variable']])
-    # }
-    # if (!is.null(params[['color_variable']])) {
+        log_message_variable('variable', params[['variable']])
+        updateSelectInput(session, 'var_plots__variable',
+                          choices=c(global__select_variable, column_names),
+                          selected=params[['variable']])
+    }
+    if (!is.null(params[['comparison']])) {
 
-    #     log_message_variable('color_variable', params[['color_variable']])
-    #     updateSelectInput(session, 'var_plots__color_variable', selected=params[['color_variable']])
-    # }
-    # if (!is.null(params[['facet_variable']])) {
+        log_message_variable('comparison', params[['comparison']])
+        updateSelectInput(session, 'var_plots__comparison', selected=params[['comparison']])
+    }
+    if (!is.null(params[['sum_by_variable']])) {
 
-    #     log_message_variable('facet_variable', params[['facet_variable']])
-    #     updateSelectInput(session, 'var_plots__facet_variable', selected=params[['facet_variable']])
-    # }
-    # if (!is.null(params[['size_variable']])) {
+        log_message_variable('sum_by_variable', params[['sum_by_variable']])
+        updateSelectInput(session, 'var_plots__sum_by_variable', selected=params[['sum_by_variable']])
+    }
+    if (!is.null(params[['color_variable']])) {
 
-    #     log_message_variable('size_variable', params[['size_variable']])
-    #     updateSelectInput(session, 'var_plots__size_variable', selected=params[['size_variable']])
-    # }
+        log_message_variable('color_variable', params[['color_variable']])
+        updateSelectInput(session, 'var_plots__color_variable', selected=params[['color_variable']])
+    }
+    if (!is.null(params[['facet_variable']])) {
+
+        log_message_variable('facet_variable', params[['facet_variable']])
+        updateSelectInput(session, 'var_plots__facet_variable', selected=params[['facet_variable']])
+    }
+    if (!is.null(params[['size_variable']])) {
+
+        log_message_variable('size_variable', params[['size_variable']])
+        updateSelectInput(session, 'var_plots__size_variable', selected=params[['size_variable']])
+    }
     if (!is.null(params[['numeric_group_comp_variable']])) {
 
         log_message_variable('numeric_group_comp_variable', params[['numeric_group_comp_variable']])

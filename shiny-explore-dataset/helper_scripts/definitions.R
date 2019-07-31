@@ -23,8 +23,7 @@ global__url_param_step_levels <- c("Parsed Parameters",
                                    "Updated Comparison Variable",
                                    "Updated Color Variable",
                                    "Updated Categoric View Variable",
-                                   "Can Create Graph from URL Parameters",
-                                   "Successfully Created Graph from URL Parameters")
+                                   "Can Create Graph from URL Parameters")
 
 global__url_param_possible_steps <- factor(global__url_param_step_levels,
                                            levels=global__url_param_step_levels,

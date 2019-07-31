@@ -583,21 +583,9 @@ reactive__var_plots__ggplot__creator <- function(input, session, dataset, parame
     
     reactive({
         
-        if(!is.null(parameter_info$step)) {
+        if(isolate(parameter_info$has_params)) {
 
-            if(parameter_info$step < create_url_param_step("Can Create Graph from URL Parameters") ||
-                parameter_info$step >= create_url_param_step("Successfully Created Graph from URL Parameters")) {
-
-                log_message_block_start("Ignoring plot creation")
-                log_message_variable('parameter_info$step', isolate(parameter_info$step))
-
-                return (NULL)
-
-            } else {
-
-                log_message_block_start("Can Plot From URL Parameters")
-                #parameter_info$step <- NULL
-            }
+            req(parameter_info$can_plot)
         }
 
         req(input$var_plots__variable)
@@ -1172,8 +1160,9 @@ reactive__var_plots__ggplot__creator <- function(input, session, dataset, parame
 
             shinyjs::show('var_plots__generate_link')
 
-            if(!is.null(parameter_info$step)) {
+            if(isolate(parameter_info$has_params)) {
 
+                log_message("Detected that we're updating from URL parameters, setting `has_plotted` to TRUE")
                 parameter_info$has_plotted <- TRUE
             }
         }
