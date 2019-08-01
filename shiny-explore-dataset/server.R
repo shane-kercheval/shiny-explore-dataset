@@ -385,29 +385,6 @@ shinyServer(function(input, output, session) {
 
         }
     })
-    
-    # observeEvent(url_parameter_info$init_finished, {
-        
-    #     log_message_variable('WTF', url_parameter_info$params[['data']])
-    #     log_message_variable('WTF input$preloaded_dataset', input$preloaded_dataset)
-    #     updateSelectInput(session, 'preloaded_dataset', selected=url_parameter_info$params[['data']])
-    # })
-
-
-    # observeEvent(url_parameter_info$preloaded_dataset_var_updated, {
-    #     # preloaded_dataset_var_updated will be TRUE when the dataset to load form the URL parameter is the 
-    #     # same as the default selection, or after input$preloaded_dataset_var_updated is updated
-
-    #     # once the input$preloaded_dataset has been updated, we can update the variables with the url params
-    #     if(url_parameter_info$preloaded_dataset_var_updated) {
-
-    #         log_message_block_start('Detected Dataset Loader Has Finished - Updating Variable From URL Params')
-    #         log_message_variable('WTF', input$preloaded_dataset)
-    #         update_var_plot_variables_from_url_params(session, url_parameter_info$params, reactive__source_data$data)
-
-    #         url_parameter_info$has_updated_variables <- TRUE
-    #     }
-    # })
 
     observeEvent(url_parameter_info$has_updated_variables, {
 
