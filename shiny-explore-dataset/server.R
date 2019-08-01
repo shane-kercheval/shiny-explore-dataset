@@ -28,7 +28,6 @@ source('helper_scripts/url_parameter_helpers.R')
 source('helper_scripts/regression_helpers.R')
 
 options(shiny.maxRequestSize=200*1024^2)
-global__variable_lookup <- c()
 
 
 # Define server logic required to draw a histogram
