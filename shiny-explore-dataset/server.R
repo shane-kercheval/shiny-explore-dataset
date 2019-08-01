@@ -119,9 +119,9 @@ shinyServer(function(input, output, session) {
     observeEvent__var_plots__custom_labels_clear(input, session)
     observeEvent__var_plots__graph_options_clear(input, session)
     observeEvent__var_plots__graph_options_apply(input, session)
-    observeEvent__var_plots__graph_options__any_used(input, session)
+    observeEvent__var_plots__graph_options__any_used <- observeEvent__var_plots__graph_options__any_used__function(input, session, url_parameter_info)
     observeEvent__var_plots__custom_labels_apply(input, session)
-    observeEvent__var_plots__other_options__any_used(input, session)
+    observeEvent__var_plots__other_options__any_used <- observeEvent__var_plots__other_options__any_used__function(input, session, url_parameter_info)
 
     # main plot
     output$var_plots <- renderPlot__variable_plot(session,
@@ -259,15 +259,18 @@ shinyServer(function(input, output, session) {
                                                       observeEvent_dynamic_variables,
                                                       observeEvent_comparison,
                                                       observeEvent_color,
-                                                      observeEvent_categoric) {
+                                                      observeEvent_categoric,
+                                                      observeEvent__var_plots__graph_options__any_used,
+                                                      observeEvent__var_plots__other_options__any_used) {
         # resume data loading and dynamic variables, then trigger loading with updateSelectInput
             observeEvent_preloaded_dataset$resume()
             observeEvent_dynamic_variables$resume()
             observeEvent_comparison$resume()
             observeEvent_color$resume()
             observeEvent_categoric$resume()
+            observeEvent__var_plots__graph_options__any_used$resume()
+            observeEvent__var_plots__other_options__any_used$resume()
 
-#TODO resume dynamic variables
             log_message("Loading initial dataset")
             log_message_variable('Initial Dataset', isolate(input$preloaded_dataset))
             updateSelectInput(session, 'preloaded_dataset', selected=isolate(input$preloaded_dataset))
@@ -292,7 +295,9 @@ shinyServer(function(input, output, session) {
                                                   observeEvent_dynamic_variables,
                                                   observeEvent_comparison,
                                                   observeEvent_color,
-                                                  observeEvent_categoric)
+                                                  observeEvent_categoric,
+                                                  observeEvent__var_plots__graph_options__any_used,
+                                                  observeEvent__var_plots__other_options__any_used)
 
         } else {
 
@@ -313,7 +318,9 @@ shinyServer(function(input, output, session) {
                                                       observeEvent_dynamic_variables,
                                                       observeEvent_comparison,
                                                       observeEvent_color,
-                                                      observeEvent_categoric)
+                                                      observeEvent_categoric,
+                                                      observeEvent__var_plots__graph_options__any_used,
+                                                      observeEvent__var_plots__other_options__any_used)
 
             } else {
 
@@ -415,6 +422,8 @@ shinyServer(function(input, output, session) {
             observeEvent_comparison$resume()
             observeEvent_color$resume()
             observeEvent_categoric$resume()
+            observeEvent__var_plots__graph_options__any_used$resume()
+            observeEvent__var_plots__other_options__any_used$resume()
 
             log_message('Setting `can_plot` to TRUE')
             url_parameter_info$can_plot <- TRUE  # should trigger the plot

@@ -229,7 +229,7 @@ hide_graph_options <- function(input) {
     shinyjs::hide('div_var_plots__group_y_zoom_controls')
 }
 
-observeEvent__var_plots__graph_options__any_used <- function(input, session) {
+observeEvent__var_plots__graph_options__any_used__function <- function(input, session, url_parameter_info) {
 
     observeEvent(c(# any of these will trigger the graph options color change
                    input$var_plots__filter_factor_lump_number,
@@ -261,6 +261,8 @@ observeEvent__var_plots__graph_options__any_used <- function(input, session) {
                    input$var_plots__y_zoom_max
         ), {
 
+        req(!isolate(url_parameter_info$currently_updating))  # should never update if we have params (until set to false)
+
         if(isolate(input$var_plots__variable) != global__select_variable) {
 
             log_message_block_start('Graph Options Dirty (Control Used)')
@@ -270,7 +272,7 @@ observeEvent__var_plots__graph_options__any_used <- function(input, session) {
     }, ignoreNULL = TRUE, ignoreInit = TRUE)
 }
 
-observeEvent__var_plots__other_options__any_used <- function(input, session) {
+observeEvent__var_plots__other_options__any_used__function <- function(input, session, url_parameter_info) {
 
     observeEvent(c(# any of these will trigger the graph options color change
                    input$var_plots__custom_title,
@@ -284,6 +286,8 @@ observeEvent__var_plots__other_options__any_used <- function(input, session) {
                    input$var_plots__horizontal_annotations,
                    input$var_plots__pretty_text
         ), {
+
+        req(!isolate(url_parameter_info$currently_updating))  # should never update if we have params (until set to false)
 
         if(isolate(input$var_plots__variable) != global__select_variable) {
 
