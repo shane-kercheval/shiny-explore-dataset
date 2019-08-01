@@ -1,6 +1,6 @@
 log_message <- function(message) {
 
-    if(should_log_message) {
+    if(global__should_log_message) {
 
         cat(paste0('\n', message))
     }
