@@ -2,6 +2,11 @@
 #' @param params named list of url params with corresponding values; should only be var_plot__ params
 update_var_plot_variables_from_url_params <- function(session, params, dataset, input) {
 
+    # the variables that are dynamic based on the dataset will not have been loaded
+    # and will need to be initialized with the list of choices
+    # for some variables, the choices are based on other variables
+    # so we need to manually build them up. 
+
     column_names <- colnames(dataset)
     numeric_column_names <- colnames(dataset %>% select_if(is.numeric))
     categoric_column_names <- colnames(dataset %>% select_if(purrr::negate(is.numeric)))
@@ -52,6 +57,17 @@ update_var_plot_variables_from_url_params <- function(session, params, dataset, 
                       choices=results$choices,
                       selected=results$selected)
 
+
+    #######################################################################
+    # Update Categoric View
+    #######################################################################
+    
+    if (!is.null(params[['sum_by_variable']])) {
+
+        log_message_variable('updating sum_by_variable', params[['sum_by_variable']])
+        updateSelectInput(session, 'var_plots__sum_by_variable', selected=params[['sum_by_variable']])
+    }
+
     #######################################################################
     # Update Categoric View
     #######################################################################
@@ -61,15 +77,6 @@ update_var_plot_variables_from_url_params <- function(session, params, dataset, 
     }
 
 
-    #######################################################################
-    # Update Non-Dynamic 
-    #######################################################################
-
-    if (!is.null(params[['sum_by_variable']])) {
-
-        log_message_variable('updating sum_by_variable', params[['sum_by_variable']])
-        updateSelectInput(session, 'var_plots__sum_by_variable', selected=params[['sum_by_variable']])
-    }
         
     if (!is.null(params[['facet_variable']])) {
 
@@ -82,6 +89,13 @@ update_var_plot_variables_from_url_params <- function(session, params, dataset, 
         log_message_variable('updating size_variable', params[['size_variable']])
         updateSelectInput(session, 'var_plots__size_variable', selected=params[['size_variable']])
     }
+
+
+    #######################################################################
+    # Update Non-Dynamic 
+    #######################################################################
+
+
     if (!is.null(params[['numeric_group_comp_variable']])) {
 
         log_message_variable('updating numeric_group_comp_variable', params[['numeric_group_comp_variable']])

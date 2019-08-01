@@ -1687,3 +1687,49 @@ var_plots__color__logic <- function(dataset, primary_variable, comparison_variab
     return(list(choices=c(global__select_variable_optional, column_names),
                 selected=selected_variable))
 }
+
+var_plots__categoric_view_type__logic <- function(dataset, comparison_variable, sum_by_variable, current_value) {
+
+    log_message_block_start("Executing Logic for Categoric View Type")
+    log_message_variable('var_plots__comparison', comparison_variable)
+    log_message_variable('var_plots__sum_by_variable', sum_by_variable)
+    log_message_variable('var_plots__categoric_view_type', current_value)
+
+    comparison_variable <- null_if_select_variable_optional(comparison_variable)
+    sum_by_variable <- null_if_select_variable_optional(sum_by_variable)
+
+    view_type_options <- NULL
+    if(is.null(comparison_variable) && is.null(sum_by_variable)) {
+
+        view_type_options <- c("Bar", "Confidence Interval")
+
+    } else if(is.null(comparison_variable) && !is.null(sum_by_variable)) {
+
+        view_type_options <- c("Bar")
+
+    } else if(!is.null(comparison_variable) && is.null(sum_by_variable)) {
+
+        view_type_options <- c("Bar",
+                               "Confidence Interval",
+                               "Facet by Comparison",
+                               "Confidence Interval - within Variable",
+                               "Stack")
+
+    } else { # both are not null
+        
+        view_type_options <- c("Bar", "Facet by Comparison", "Stack")
+    }
+
+    if(!is.null(current_value) && current_value %in% view_type_options) {
+        
+        selected_variable <- current_value
+
+    } else {
+
+        selected_variable <- "Bar"
+    }
+
+    log_message_variable('Final Value', selected_variable)
+    return(list(choices=view_type_options,
+                selected=selected_variable))
+}

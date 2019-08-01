@@ -242,53 +242,14 @@ shinyServer(function(input, output, session) {
 
         req(!isolate(parameter_info$has_params))  # should never update if we have params (until set to false)
 
-        # used for Categoric Primary and optionally Categoric Secondary variables
-        log_message_block_start("Creating Categoric View Type")
+        results <- var_plots__categoric_view_type__logic(dataset=reactive__source_data$data,
+                                                         comparison_variable=input$var_plots__comparison,
+                                                         sum_by_variable=input$var_plots__sum_by_variable,
+                                                         current_value=input$var_plots__categoric_view_type)
 
-        log_message_variable('input$var_plots__categoric_view_type', input$var_plots__categoric_view_type)
-        log_message_variable('input$var_plots__comparison', input$var_plots__comparison)
-        log_message_variable('input$var_plots__sum_by_variable', input$var_plots__sum_by_variable)
-
-        previous_selection <- input$var_plots__categoric_view_type
-        local_comparison_variable <- null_if_select_variable_optional(input$var_plots__comparison)
-        local_sum_by_variable <- null_if_select_variable_optional(input$var_plots__sum_by_variable)                    
-
-        view_type_options <- NULL
-        if(is.null(local_comparison_variable) && is.null(local_sum_by_variable)) {
-
-            view_type_options <- c("Bar", "Confidence Interval")
-
-        } else if(is.null(local_comparison_variable) && !is.null(local_sum_by_variable)) {
-
-            view_type_options <- c("Bar")
-
-        } else if(!is.null(local_comparison_variable) && is.null(local_sum_by_variable)) {
-
-            view_type_options <- c("Bar",
-                                   "Confidence Interval",
-                                   "Facet by Comparison",
-                                   "Confidence Interval - within Variable",
-                                   "Stack")
-
-        } else { # both are not null
-            
-            view_type_options <- c("Bar", "Facet by Comparison", "Stack")
-        }
-
-        if(!is.null(previous_selection) && previous_selection %in% view_type_options) {
-            
-            selected_option <- previous_selection
-
-        } else {
-
-            selected_option <- "Bar"
-        }
-
-        log_message_variable('selected_option', selected_option)
-        updateSelectInput(session,
-                          'var_plots__categoric_view_type',
-                          choices = view_type_options,
-                          selected = selected_option)
+        updateSelectInput(session, 'var_plots__categoric_view_type',
+                          choices=results$choices,
+                          selected=results$selected)
 
     }, suspended=TRUE)
 
