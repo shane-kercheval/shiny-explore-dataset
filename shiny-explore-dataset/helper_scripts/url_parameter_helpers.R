@@ -290,11 +290,6 @@ update_var_plot_variables_from_url_params <- function(session, params, dataset, 
                       'var_plots__base_size',
                       choices=seq(6, 20, 1),
                       selected=params[['var_plots__base_size']])
-
-        # updateSliderTextInput(session,
-        #                       'var_plots__base_size',
-        #                       choices=seq(6, 20, 1),
-        #                       selected=20)
     }
     if (!is.null(params[['var_plots__vertical_annotations']])) {
         log_message_variable('updating vertical_annotations', params[['var_plots__vertical_annotations']])
