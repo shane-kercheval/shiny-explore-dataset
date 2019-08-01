@@ -579,13 +579,14 @@ helper__plot_numeric_categoric <- function(session,
     return (ggplot_object)
 }
 
-reactive__var_plots__ggplot__creator <- function(input, session, dataset, parameter_info) {
+reactive__var_plots__ggplot__creator <- function(input, session, dataset, url_parameter_info) {
     
     reactive({
         
-        if(isolate(parameter_info$has_params)) {
+        if(isolate(url_parameter_info$currently_updating)) {
 
-            req(parameter_info$can_plot)
+            # if we are updating from url parameters, need to wait until we can_plot
+            req(url_parameter_info$can_plot)
         }
 
         req(input$var_plots__variable)
@@ -594,19 +595,6 @@ reactive__var_plots__ggplot__creator <- function(input, session, dataset, parame
 
         input$var_plots__graph_options_apply  # trigger update if applying custom labels
         input$var_plots__custom_labels_apply  # trigger update if applying graph options
-
-        # log_message_variable('is_null', is.null(isolate(input$var_plots__multi_value_delimiter)))
-        # log_message_variable('is_na', is.na(isolate(input$var_plots__multi_value_delimiter)))
-        # log_message_variable('is_empty', isolate(input$var_plots__multi_value_delimiter) == "")
-
-        # log_message_variable('is_null', is.null(isolate(input$var_plots__vertical_annotations)))
-        # log_message_variable('is_na', is.na(isolate(input$var_plots__vertical_annotations)))
-        # log_message_variable('is_empty', isolate(input$var_plots__vertical_annotations) == "")
-
-        # log_message_variable('is_null', is.null(isolate(input$var_plots__custom_title)))
-        # log_message_variable('is_na', is.na(isolate(input$var_plots__custom_title)))
-        # log_message_variable('is_empty', isolate(input$var_plots__custom_title) == "")
-
 
         # reactive data
         local_dataset <- dataset()
@@ -1160,10 +1148,10 @@ reactive__var_plots__ggplot__creator <- function(input, session, dataset, parame
 
             shinyjs::show('var_plots__generate_link')
 
-            if(isolate(parameter_info$has_params)) {
+            if(isolate(url_parameter_info$currently_updating)) {
 
                 log_message("Detected that we're updating from URL parameters, setting `has_plotted` to TRUE")
-                parameter_info$has_plotted <- TRUE
+                url_parameter_info$has_plotted <- TRUE
             }
         }
 

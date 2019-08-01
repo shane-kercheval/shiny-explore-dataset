@@ -218,10 +218,10 @@ select_preloaded_dataset <- function(session, output, dataset_name, message) {
     return (loaded_dataset)
 }
 
-observeEvent__source_data__preloaded <- function(session, input, output, reactive__source_data, parameter_info) {
+observeEvent__source_data__preloaded <- function(session, input, output, reactive__source_data, url_parameter_info) {
     observeEvent(input$preloaded_dataset, {
 
-        req(!isolate(parameter_info$has_params))
+        req(!isolate(url_parameter_info$currently_updating))  # never update from input when updating from url
 
         log_message_block_start('Loaded Pre-loaded Dataset')
         log_message_variable('input$preloaded_dataset', input$preloaded_dataset)

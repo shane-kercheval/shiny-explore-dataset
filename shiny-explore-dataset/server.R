@@ -35,12 +35,12 @@ global__variable_lookup <- c()
 shinyServer(function(input, output, session) {
     log_message_block_start("##########################################################################################\nStarting Server\n##########################################################################################")
     
-    parameter_info <- reactiveValues(params=NULL,
-                                     has_params=FALSE,
-                                     preloaded_dataset_var_updated=FALSE,
-                                     has_updated_variables=FALSE,
-                                     can_plot=FALSE,
-                                     has_plotted=FALSE)
+    url_parameter_info <- reactiveValues(params=NULL,
+                                         currently_updating=FALSE,
+                                         preloaded_dataset_var_updated=FALSE,
+                                         has_updated_variables=FALSE,
+                                         can_plot=FALSE,
+                                         has_plotted=FALSE)
     
     ##########################################################################################################
     # LOAD DATA
@@ -49,7 +49,7 @@ shinyServer(function(input, output, session) {
     reactive__source_data <- reactiveValues(data=NULL)
 
     # initially suspended, resume depending on url parameters
-    observeEvent_preloaded_dataset <-  observeEvent__source_data__preloaded(session, input, output, reactive__source_data, parameter_info)
+    observeEvent_preloaded_dataset <-  observeEvent__source_data__preloaded(session, input, output, reactive__source_data, url_parameter_info)
 
     observeEvent__source_data__upload(session, input, output, reactive__source_data)
     observeEvent__source_data__csv_url(session, input, output, reactive__source_data)
@@ -96,7 +96,7 @@ shinyServer(function(input, output, session) {
     reactive__var_plots__ggplot <- reactive__var_plots__ggplot__creator(input,
                                                                         session,
                                                                         reactive__var_plots__filtered_data,
-                                                                        parameter_info)
+                                                                        url_parameter_info)
     # stores any messages/warnings that ggplot produces when rendering the plot (outputs below the graph
     #(var_plots__ggplot_messages))
     reactiveValues__vp__ggplot_message <- reactiveValues(value=NULL)
@@ -160,7 +160,7 @@ shinyServer(function(input, output, session) {
 
     observeEvent_dynamic_variables <- observeEvent(reactive__source_data$data, {
 
-        req(!isolate(parameter_info$has_params))  # should never update if we have params (until set to false)
+        req(!isolate(url_parameter_info$currently_updating))  # should never update if we have params (until set to false)
 
         log_message_block_start("Updating Dynamic Variables (Triggered from new Dataset)")
 
@@ -196,7 +196,7 @@ shinyServer(function(input, output, session) {
 
     observeEvent_comparison <- observeEvent(input$var_plots__variable, {
 
-        req(!isolate(parameter_info$has_params))  # should never update if we have params (until set to false)
+        req(!isolate(url_parameter_info$currently_updating))  # should never update if we have params (until set to false)
 
         column_names <- colnames(reactive__source_data$data)
 
@@ -218,7 +218,7 @@ shinyServer(function(input, output, session) {
 
     observeEvent_color <- observeEvent(c(input$var_plots__variable, input$var_plots__comparison), {
 
-        req(!isolate(parameter_info$has_params))  # should never update if we have params (until set to false)
+        req(!isolate(url_parameter_info$currently_updating))  # should never update if we have params (until set to false)
 
         column_names <- colnames(reactive__source_data$data)
 
@@ -240,7 +240,7 @@ shinyServer(function(input, output, session) {
     observeEvent_categoric <- observeEvent(c(input$var_plots__comparison,
                                              input$var_plots__sum_by_variable), {
 
-        req(!isolate(parameter_info$has_params))  # should never update if we have params (until set to false)
+        req(!isolate(url_parameter_info$currently_updating))  # should never update if we have params (until set to false)
 
         results <- var_plots__categoric_view_type__logic(dataset=reactive__source_data$data,
                                                          comparison_variable=input$var_plots__comparison,
@@ -319,8 +319,8 @@ shinyServer(function(input, output, session) {
 
                 log_message_variable("param_names", paste0(names(params), collapse="; "))
 
-                parameter_info$params <- params
-                parameter_info$has_params <- TRUE
+                url_parameter_info$params <- params
+                url_parameter_info$currently_updating <- TRUE
 
                 rt_stopif(is.null(params[['data']]))
                 rt_stopif(is.null(params[['tab']]))
@@ -338,7 +338,7 @@ shinyServer(function(input, output, session) {
 
                 if(input$preloaded_dataset == params[['data']]) {
 
-                    parameter_info$preloaded_dataset_var_updated <- TRUE
+                    url_parameter_info$preloaded_dataset_var_updated <- TRUE
 
                 } else {
                     # This will trigger an update to input$preloaded_dataset
@@ -357,54 +357,54 @@ shinyServer(function(input, output, session) {
     observeEvent(input$preloaded_dataset, {
 
         req(input$preloaded_dataset)  # only run when there is a value
-        req(parameter_info$has_params)  # only run when we have params (otherwise there is nothing to syncronize)
-        req(!parameter_info$preloaded_dataset_var_updated)  # only care about resuming observer if input$preloaded_data has been updated
+        req(url_parameter_info$currently_updating)  # only run when we have params (otherwise there is nothing to syncronize)
+        req(!url_parameter_info$preloaded_dataset_var_updated)  # only care about resuming observer if input$preloaded_data has been updated
 
         # once preloaded_dataset has updated, set this trigger
-        if(input$preloaded_dataset == parameter_info$params[['data']]) {
+        if(input$preloaded_dataset == url_parameter_info$params[['data']]) {
 
             log_message_block_start("Preloaded Dataset Done Changing")
             log_message_variable("preloaded_dataset", input$preloaded_dataset)
 
             log_message("Resuming observer for Preloaded Dataset Dropdown")
             observeEvent_preloaded_dataset$resume()
-            parameter_info$preloaded_dataset_var_updated <- TRUE
+            url_parameter_info$preloaded_dataset_var_updated <- TRUE
 
 
             log_message_block_start("Updating all variables From URL Params")
-            update_var_plot_variables_from_url_params(session, parameter_info$params, reactive__source_data$data, input)
+            update_var_plot_variables_from_url_params(session, url_parameter_info$params, reactive__source_data$data, input)
 
-            parameter_info$has_updated_variables <- TRUE
+            url_parameter_info$has_updated_variables <- TRUE
 
         }
     })
     
-    # observeEvent(parameter_info$init_finished, {
+    # observeEvent(url_parameter_info$init_finished, {
         
-    #     log_message_variable('WTF', parameter_info$params[['data']])
+    #     log_message_variable('WTF', url_parameter_info$params[['data']])
     #     log_message_variable('WTF input$preloaded_dataset', input$preloaded_dataset)
-    #     updateSelectInput(session, 'preloaded_dataset', selected=parameter_info$params[['data']])
+    #     updateSelectInput(session, 'preloaded_dataset', selected=url_parameter_info$params[['data']])
     # })
 
 
-    # observeEvent(parameter_info$preloaded_dataset_var_updated, {
+    # observeEvent(url_parameter_info$preloaded_dataset_var_updated, {
     #     # preloaded_dataset_var_updated will be TRUE when the dataset to load form the URL parameter is the 
     #     # same as the default selection, or after input$preloaded_dataset_var_updated is updated
 
     #     # once the input$preloaded_dataset has been updated, we can update the variables with the url params
-    #     if(parameter_info$preloaded_dataset_var_updated) {
+    #     if(url_parameter_info$preloaded_dataset_var_updated) {
 
     #         log_message_block_start('Detected Dataset Loader Has Finished - Updating Variable From URL Params')
     #         log_message_variable('WTF', input$preloaded_dataset)
-    #         update_var_plot_variables_from_url_params(session, parameter_info$params, reactive__source_data$data)
+    #         update_var_plot_variables_from_url_params(session, url_parameter_info$params, reactive__source_data$data)
 
-    #         parameter_info$has_updated_variables <- TRUE
+    #         url_parameter_info$has_updated_variables <- TRUE
     #     }
     # })
 
-    observeEvent(parameter_info$has_updated_variables, {
+    observeEvent(url_parameter_info$has_updated_variables, {
 
-        if(parameter_info$has_updated_variables) {
+        if(url_parameter_info$has_updated_variables) {
 
             log_message_block_start('Detected Has Updated Variables - Resuming Dynamic Variable Observers')
 
@@ -417,15 +417,15 @@ shinyServer(function(input, output, session) {
             observeEvent_categoric$resume()
 
             log_message('Setting `can_plot` to TRUE')
-            parameter_info$can_plot <- TRUE  # should trigger the plot
+            url_parameter_info$can_plot <- TRUE  # should trigger the plot
         }
     })
 
-    observeEvent(parameter_info$has_plotted, {
+    observeEvent(url_parameter_info$has_plotted, {
 
-        if(parameter_info$has_plotted) {
+        if(url_parameter_info$has_plotted) {
 
-            parameter_info$has_params <- FALSE
+            url_parameter_info$currently_updating <- FALSE
             log_message_block_start("Finished URL Parameter Process")
         }
     })
