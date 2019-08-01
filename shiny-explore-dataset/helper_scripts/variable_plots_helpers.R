@@ -149,10 +149,14 @@ observeEvent__var_plots__custom_labels_clear <- function(input, session) {
         updateTextInput(session, 'var_plots__custom_caption', value='')
         updateTextInput(session, 'var_plots__custom_tag', value='')
         updateCheckboxInput(session, 'var_plots__pretty_text', value=FALSE)
-        updateSliderTextInput(session, 'var_plots__base_size', selected=15)
+        # perhaps its a bug, but it seems like for all the updateSliderTextInput controls I have to 
+        # pass choices as well
+        updateSliderTextInput(session,
+                              'var_plots__base_size',
+                              choices=seq(6, 20, 1),
+                              selected=15)
         updateTextAreaInput(session, 'var_plots__vertical_annotations', value="")
         updateTextAreaInput(session, 'var_plots__horizontal_annotations', value="")
-
         # even though I call updateTextInput before click, the values haven't been reset yet
         # click('var_plots__custom_labels_apply')
     }))
@@ -174,10 +178,17 @@ observeEvent__var_plots__graph_options_clear <- function(input, session) {
 
         updateCollapse(session, "var_plots__bscollapse", style = list("Graph Options" = "danger"))
 
+        # perhaps its a bug, but it seems like for all the updateSliderTextInput controls I have to 
+        # pass choices as well
         updateSliderTextInput(session,
                               'var_plots__filter_factor_lump_number',
                               choices=as.character(c("Off", seq(1, 10), seq(15, 50, 5))),
                               selected="10")
+        updateSliderTextInput(session,
+                              'var_plots__transparency',
+                              choices=c(seq(0, 90, 10), 99),
+                              selected=60)
+        updateSliderTextInput(session, 'var_plots__transparency', selected=60)
         updateSelectInput(session, 'var_plots__label_variables', selected=character(0))
         updateCheckboxInput(session, 'var_plots__annotate_points', value=FALSE)
         updateCheckboxInput(session, 'var_plots__show_points', value=FALSE)
@@ -189,7 +200,6 @@ observeEvent__var_plots__graph_options_clear <- function(input, session) {
         updateCheckboxInput(session, 'var_plots__show_variable_totals', value=TRUE)
         updateCheckboxInput(session, 'var_plots__show_comparison_totals', value=TRUE)
         updateNumericInput(session, 'var_plots__histogram_bins', value=30)
-        updateSliderTextInput(session, 'var_plots__transparency', selected=60)
         updateCheckboxInput(session, 'var_plots__jitter', value=FALSE)
         updateNumericInput(session, 'var_plots__numeric_aggregation_count_minimum', value=30)
         updateCheckboxInput(session, 'var_plots__numeric_show_resampled_conf_int', value=FALSE)
@@ -1581,6 +1591,7 @@ var_plots__input_list_default_values <- list(
     'var_plots__numeric_aggregation_function' = global__num_num_aggregation_function_default,
     'var_plots__numeric_aggregation' = global__var_plots__numeric_aggregation_default,
     'var_plots__multi_value_delimiter' = "",
+    'var_plots__filter_factor_lump_number'="10",
     'var_plots__label_variables' = NULL,
     'var_plots__annotate_points' = TRUE,
     'var_plots__show_points' = TRUE,

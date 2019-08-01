@@ -303,7 +303,7 @@ shinyServer(function(input, output, session) {
             log_message_block_start("Detected URL Parameters")
             log_message_variable("URL Search", url_search)
 
-            params <- parseQueryString(url_search)
+            params <- extract_url_parameters(url_search)
 
             if(is.null(params) || length(params) == 0 || is.null(params[['data']]) || is.null(params[['tab']])) {
 

@@ -1096,6 +1096,7 @@ test_that("build_parse_url_params", {
         'var_plots__numeric_aggregation_function' = 'month',
         'var_plots__numeric_aggregation' = 'week',
         'var_plots__multi_value_delimiter' = "; ",
+        'var_plots__label_variables'="Off",
         'var_plots__label_variables' = c('this', 'has', 'multiple', 'values'),
         'var_plots__annotate_points' = FALSE,
         'var_plots__show_points' = FALSE,
