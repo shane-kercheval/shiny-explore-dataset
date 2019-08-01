@@ -59,14 +59,17 @@ update_var_plot_variables_from_url_params <- function(session, params, dataset, 
 
 
     #######################################################################
-    # Update Categoric View
+    # Update Sum-By-Variable
     #######################################################################
-    
+    selected_sum_by_variable <- global__select_variable_optional
     if (!is.null(params[['sum_by_variable']])) {
 
+        selected_sum_by_variable <- params[['sum_by_variable']]
         log_message_variable('updating sum_by_variable', params[['sum_by_variable']])
-        updateSelectInput(session, 'var_plots__sum_by_variable', selected=params[['sum_by_variable']])
     }
+    updateSelectInput(session, 'var_plots__sum_by_variable',
+                      choices=c(global__select_variable_optional, numeric_column_names),
+                      selected=selected_sum_by_variable)
 
     #######################################################################
     # Update Categoric View
@@ -75,27 +78,47 @@ update_var_plot_variables_from_url_params <- function(session, params, dataset, 
         log_message_variable('updating categoric_view_type', params[['categoric_view_type']])
         updateSelectInput(session, 'var_plots__categoric_view_type', selected=params[['categoric_view_type']])
     }
+    selected_value <- "Bar"
+    if (!is.null(params[['categoric_view_type']])) {
 
+        selected_value <- params[['categoric_view_type']]
+        log_message_variable('updating categoric_view_type', params[['categoric_view_type']])
+    }
+    results <- var_plots__categoric_view_type__logic(dataset=dataset,
+                                                     comparison_variable=selected_comparison,
+                                                     sum_by_variable=selected_sum_by_variable,
+                                                     current_value=selected_value)
+    updateSelectInput(session, 'var_plots__categoric_view_type',
+                      choices=results$choices,
+                      selected=results$selected)
 
-        
+    #######################################################################
+    # Update Other Dynamic values that don't depend on other variables
+    #######################################################################
+    selected_facet_variable <- global__select_variable_optional
     if (!is.null(params[['facet_variable']])) {
 
+        selected_facet_variable <- params[['facet_variable']]
         log_message_variable('updating facet_variable', params[['facet_variable']])
-        updateSelectInput(session, 'var_plots__facet_variable', selected=params[['facet_variable']])
     }
-    
+    updateSelectInput(session, 'var_plots__facet_variable',
+                      choices=c(global__select_variable_optional, categoric_column_names),
+                      selected=selected_facet_variable)
+
+    selected_size_variable <- global__select_variable_optional
     if (!is.null(params[['size_variable']])) {
 
+        selected_size_variable <- params[['size_variable']]
         log_message_variable('updating size_variable', params[['size_variable']])
-        updateSelectInput(session, 'var_plots__size_variable', selected=params[['size_variable']])
     }
-
+    updateSelectInput(session, 'var_plots__size_variable',
+                      choices=c(global__select_variable_optional, column_names),
+                      selected=selected_size_variable)
 
     #######################################################################
-    # Update Non-Dynamic 
+    # Update Non-Dynamic
+    # These should already have `choices` defined in UI
     #######################################################################
-
-
     if (!is.null(params[['numeric_group_comp_variable']])) {
 
         log_message_variable('updating numeric_group_comp_variable', params[['numeric_group_comp_variable']])
