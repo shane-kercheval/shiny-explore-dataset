@@ -267,15 +267,15 @@ shinyServer(function(input, output, session) {
                                                       observeEvent_color,
                                                       observeEvent_categoric) {
         # resume data loading and dynamic variables, then trigger loading with updateSelectInput
-            observeEvent_preloaded_dataset$resume()
-            observeEvent_dynamic_variables$resume()
-            observeEvent_comparison$resume()
-            observeEvent_color$resume()
-            observeEvent_categoric$resume()
+        observeEvent_preloaded_dataset$resume()
+        observeEvent_dynamic_variables$resume()
+        observeEvent_comparison$resume()
+        observeEvent_color$resume()
+        observeEvent_categoric$resume()
 
-            log_message("Loading initial dataset")
-            log_message_variable('Initial Dataset', isolate(input$preloaded_dataset))
-            updateSelectInput(session, 'preloaded_dataset', selected=isolate(input$preloaded_dataset))
+        log_message("Loading initial dataset")
+        log_message_variable('Initial Dataset', isolate(input$preloaded_dataset))
+        updateSelectInput(session, 'preloaded_dataset', selected=isolate(input$preloaded_dataset))
     }
 
     ##########################################################################################################
@@ -298,7 +298,6 @@ shinyServer(function(input, output, session) {
                                                   observeEvent_comparison,
                                                   observeEvent_color,
                                                   observeEvent_categoric)
-
         } else {
 
             log_message_block_start("Detected URL Parameters")
@@ -319,7 +318,6 @@ shinyServer(function(input, output, session) {
                                                       observeEvent_comparison,
                                                       observeEvent_color,
                                                       observeEvent_categoric)
-
             } else {
 
                 log_message_variable("param_names", paste0(names(params), collapse="; "))
@@ -337,7 +335,6 @@ shinyServer(function(input, output, session) {
                                                                        output=output,
                                                                        dataset_name=params[['data']],
                                                                        message="Loaded Dataset from URL params")
-
 
                 log_message_block_start("Continuing Processing Url Parameter")
 
