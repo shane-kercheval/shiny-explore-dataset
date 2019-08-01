@@ -115,6 +115,16 @@ update_var_plot_variables_from_url_params <- function(session, params, dataset, 
                       choices=c(global__select_variable_optional, column_names),
                       selected=selected_size_variable)
 
+    selected_label_variables <- NULL
+    if (!is.null(params[['var_plots__label_variables']])) {
+
+        selected_label_variables <- params[['var_plots__label_variables']]
+        log_message_variable('updating label_variables', paste0(params[['var_plots__label_variables']], collapse="; "))
+    }
+    updateSelectInput(session, 'var_plots__label_variables',
+                      choices=column_names,
+                      selected=selected_label_variables)
+
     #######################################################################
     # Update Non-Dynamic
     # These should already have `choices` defined in UI
@@ -151,10 +161,6 @@ update_var_plot_variables_from_url_params <- function(session, params, dataset, 
                               'var_plots__filter_factor_lump_number',
                               choices=as.character(c("Off", seq(1, 10), seq(15, 50, 5))),
                               selected=lump_number_string)
-    }
-    if (!is.null(params[['var_plots__label_variables']])) {
-        log_message_variable('updating label_variables', params[['var_plots__label_variables']])
-        updateSelectInput(session, 'var_plots__label_variables', selected=params[['var_plots__label_variables']])
     }
     if (!is.null(params[['var_plots__annotate_points']])) {
         log_message_variable('updating annotate_points', params[['var_plots__annotate_points']])
