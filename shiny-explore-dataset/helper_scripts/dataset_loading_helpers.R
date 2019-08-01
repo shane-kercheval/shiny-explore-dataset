@@ -29,10 +29,8 @@ observeEvent__source_data__upload <- function(session, input, output, reactive__
                                     'Only `.csv` and `.RDS` files are supported at this time.'))
                 }
             }
-
             shinyjs::hide('load_data__description')
         })
-
         reactive__source_data$data <- loaded_dataset
     })
 }
@@ -51,10 +49,8 @@ observeEvent__source_data__csv_url <- function(session, input, output, reactive_
 
                 loaded_dataset <- as.data.frame(read_csv(local_csv_url)) %>% mutate_if(is.character, factor)
             }
-
             shinyjs::hide('load_data__description')
         })
-
         updateTextInput(session, inputId='load_data__url_csv', value = '')
         reactive__source_data$data <- loaded_dataset
     })
@@ -274,7 +270,6 @@ observeEvent__load_data__r_code_apply <- function(reactive__source_data, input, 
                 }
             })
         }
-
         reactive__source_data$data <- dataset
     })
 }

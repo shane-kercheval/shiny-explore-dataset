@@ -337,10 +337,14 @@ shinyServer(function(input, output, session) {
                                                                        message="Loaded Dataset from URL params")
 
                 log_message_block_start("Continuing Processing Url Parameter")
+                log_message("Updating Navbar Tab")
+                updateNavbarPage(session, 'navbar_page_app', selected = params[['tab']])
 
                 if(input$preloaded_dataset == params[['data']]) {
 
                     url_parameter_info$preloaded_dataset_var_updated <- TRUE
+                    # don't need to wait for the observe
+                    helper__update_var_plot_variables_from_url_params(session, url_parameter_info, reactive__source_data, input)
 
                 } else {
                     # This will trigger an update to input$preloaded_dataset
@@ -349,12 +353,15 @@ shinyServer(function(input, output, session) {
                     log_message("Updating Preloaded Dataset Dropdown Selection")
                     updateSelectInput(session, 'preloaded_dataset', selected=params[['data']])
                 }
-
-                log_message("Updating Navbar Tab")
-                updateNavbarPage(session, 'navbar_page_app', selected = params[['tab']])
             }
         }
     })
+
+    helper__update_var_plot_variables_from_url_params <- function(session, url_parameter_info, reactive__source_data, input) {
+        log_message_block_start("Updating all variables From URL Params")
+        update_var_plot_variables_from_url_params(session, url_parameter_info$params, reactive__source_data$data, input)
+        url_parameter_info$has_updated_variables <- TRUE
+    }
 
     observeEvent(input$preloaded_dataset, {
 
@@ -372,12 +379,7 @@ shinyServer(function(input, output, session) {
             observeEvent_preloaded_dataset$resume()
             url_parameter_info$preloaded_dataset_var_updated <- TRUE
 
-
-            log_message_block_start("Updating all variables From URL Params")
-            update_var_plot_variables_from_url_params(session, url_parameter_info$params, reactive__source_data$data, input)
-
-            url_parameter_info$has_updated_variables <- TRUE
-
+            helper__update_var_plot_variables_from_url_params(session, url_parameter_info, reactive__source_data, input)
         }
     })
 
