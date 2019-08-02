@@ -494,6 +494,127 @@ hide_show_top_n_categories <- function(dataset, variable, comparison_variable, s
 }
 
 ##############################################################################################################
+# Dynamic Variable Logic
+##############################################################################################################
+var_plots__comparison__logic <- function(dataset, primary_variable, current_value) {
+
+    log_message_block_start("Executing Logic for Comparison Variable")
+    log_message_variable('var_plots__variable', primary_variable)
+    log_message_variable('var_plots__comparison', current_value)
+
+    column_names <- colnames(dataset)
+
+    if(!is.null(primary_variable) &&
+            primary_variable %in% column_names &&
+            is_date_type(dataset[[primary_variable]])) {
+
+        column_names <- colnames(dataset %>% select_if(is.numeric))
+    }
+
+    if(is.null(primary_variable) || primary_variable == global__select_variable) {
+
+        current_value <- NULL
+    }
+    selected_variable <- default_if_null_or_empty_string(value=current_value,
+                                                         # treat global__select_variable_optional as null
+                                                         string_values_as_null=global__select_variable_optional,
+                                                         default=global__select_variable_optional)
+
+    log_message_variable('Final Value', selected_variable)
+    return(list(choices=c(global__select_variable_optional, column_names),
+                selected=selected_variable))
+}
+
+var_plots__color__logic <- function(dataset, primary_variable, comparison_variable, current_value) {
+
+    log_message_block_start("Executing Logic for Color Variable")
+    log_message_variable('var_plots__variable', primary_variable)
+    log_message_variable('var_plots__comparison', comparison_variable)
+    log_message_variable('var_plots__color_variable', current_value)
+
+    column_names <- colnames(dataset)
+    
+    if(!is.null(primary_variable) &&
+            primary_variable %in% column_names &&
+            is_date_type(dataset[[primary_variable]])) {
+
+        column_names <- colnames(dataset %>% select_if(purrr::negate(is.numeric)))
+
+    } else if(xor(!is.null(primary_variable) &&
+                      primary_variable %in% column_names &&
+                      is.numeric(dataset[[primary_variable]]),
+                  !is.null(comparison_variable) &&
+                  comparison_variable %in% column_names &&
+                  is.numeric(dataset[[comparison_variable]]))) {
+
+        column_names <- colnames(dataset %>% select_if(purrr::negate(is.numeric)))
+
+    } else {
+
+        column_names <- colnames(dataset)
+    }
+
+    if(is.null(primary_variable) || primary_variable == global__select_variable) {
+
+        current_value <- NULL
+    }
+    selected_variable <- default_if_null_or_empty_string(value=current_value,
+                                                         # treat global__select_variable_optional as null
+                                                         string_values_as_null=global__select_variable_optional,
+                                                         default=global__select_variable_optional)
+
+    log_message_variable('Final Value', selected_variable)
+    return(list(choices=c(global__select_variable_optional, column_names),
+                selected=selected_variable))
+}
+
+var_plots__categoric_view_type__logic <- function(dataset, comparison_variable, sum_by_variable, current_value) {
+
+    log_message_block_start("Executing Logic for Categoric View Type")
+    log_message_variable('var_plots__comparison', comparison_variable)
+    log_message_variable('var_plots__sum_by_variable', sum_by_variable)
+    log_message_variable('var_plots__categoric_view_type', current_value)
+
+    comparison_variable <- null_if_select_variable_optional(comparison_variable)
+    sum_by_variable <- null_if_select_variable_optional(sum_by_variable)
+
+    view_type_options <- NULL
+    if(is.null(comparison_variable) && is.null(sum_by_variable)) {
+
+        view_type_options <- c("Bar", "Confidence Interval")
+
+    } else if(is.null(comparison_variable) && !is.null(sum_by_variable)) {
+
+        view_type_options <- c("Bar")
+
+    } else if(!is.null(comparison_variable) && is.null(sum_by_variable)) {
+
+        view_type_options <- c("Bar",
+                               "Confidence Interval",
+                               "Facet by Comparison",
+                               "Confidence Interval - within Variable",
+                               "Stack")
+
+    } else { # both are not null
+        
+        view_type_options <- c("Bar", "Facet by Comparison", "Stack")
+    }
+
+    if(!is.null(current_value) && current_value %in% view_type_options) {
+        
+        selected_variable <- current_value
+
+    } else {
+
+        selected_variable <- "Bar"
+    }
+
+    log_message_variable('Final Value', selected_variable)
+    return(list(choices=view_type_options,
+                selected=selected_variable))
+}
+
+##############################################################################################################
 # CREATE GGPLOT OBJECT
 ##############################################################################################################
 custom_max_min <- function(x_vector, y_value) {
@@ -1750,122 +1871,4 @@ format_filtering_message <- function(filter_message_list, dataset) {
     }
 
     return (message)
-}
-
-var_plots__comparison__logic <- function(dataset, primary_variable, current_value) {
-
-    log_message_block_start("Executing Logic for Comparison Variable")
-    log_message_variable('var_plots__variable', primary_variable)
-    log_message_variable('var_plots__comparison', current_value)
-
-    column_names <- colnames(dataset)
-
-    if(!is.null(primary_variable) &&
-            primary_variable %in% column_names &&
-            is_date_type(dataset[[primary_variable]])) {
-
-        column_names <- colnames(dataset %>% select_if(is.numeric))
-    }
-
-    if(is.null(primary_variable) || primary_variable == global__select_variable) {
-
-        current_value <- NULL
-    }
-    selected_variable <- default_if_null_or_empty_string(value=current_value,
-                                                         # treat global__select_variable_optional as null
-                                                         string_values_as_null=global__select_variable_optional,
-                                                         default=global__select_variable_optional)
-
-    log_message_variable('Final Value', selected_variable)
-    return(list(choices=c(global__select_variable_optional, column_names),
-                selected=selected_variable))
-}
-
-var_plots__color__logic <- function(dataset, primary_variable, comparison_variable, current_value) {
-
-    log_message_block_start("Executing Logic for Color Variable")
-    log_message_variable('var_plots__variable', primary_variable)
-    log_message_variable('var_plots__comparison', comparison_variable)
-    log_message_variable('var_plots__color_variable', current_value)
-
-    column_names <- colnames(dataset)
-    
-    if(!is.null(primary_variable) &&
-            primary_variable %in% column_names &&
-            is_date_type(dataset[[primary_variable]])) {
-
-        column_names <- colnames(dataset %>% select_if(purrr::negate(is.numeric)))
-
-    } else if(xor(!is.null(primary_variable) &&
-                      primary_variable %in% column_names &&
-                      is.numeric(dataset[[primary_variable]]),
-                  !is.null(comparison_variable) &&
-                  comparison_variable %in% column_names &&
-                  is.numeric(dataset[[comparison_variable]]))) {
-
-        column_names <- colnames(dataset %>% select_if(purrr::negate(is.numeric)))
-
-    } else {
-
-        column_names <- colnames(dataset)
-    }
-
-    if(is.null(primary_variable) || primary_variable == global__select_variable) {
-
-        current_value <- NULL
-    }
-    selected_variable <- default_if_null_or_empty_string(value=current_value,
-                                                         # treat global__select_variable_optional as null
-                                                         string_values_as_null=global__select_variable_optional,
-                                                         default=global__select_variable_optional)
-
-    log_message_variable('Final Value', selected_variable)
-    return(list(choices=c(global__select_variable_optional, column_names),
-                selected=selected_variable))
-}
-
-var_plots__categoric_view_type__logic <- function(dataset, comparison_variable, sum_by_variable, current_value) {
-
-    log_message_block_start("Executing Logic for Categoric View Type")
-    log_message_variable('var_plots__comparison', comparison_variable)
-    log_message_variable('var_plots__sum_by_variable', sum_by_variable)
-    log_message_variable('var_plots__categoric_view_type', current_value)
-
-    comparison_variable <- null_if_select_variable_optional(comparison_variable)
-    sum_by_variable <- null_if_select_variable_optional(sum_by_variable)
-
-    view_type_options <- NULL
-    if(is.null(comparison_variable) && is.null(sum_by_variable)) {
-
-        view_type_options <- c("Bar", "Confidence Interval")
-
-    } else if(is.null(comparison_variable) && !is.null(sum_by_variable)) {
-
-        view_type_options <- c("Bar")
-
-    } else if(!is.null(comparison_variable) && is.null(sum_by_variable)) {
-
-        view_type_options <- c("Bar",
-                               "Confidence Interval",
-                               "Facet by Comparison",
-                               "Confidence Interval - within Variable",
-                               "Stack")
-
-    } else { # both are not null
-        
-        view_type_options <- c("Bar", "Facet by Comparison", "Stack")
-    }
-
-    if(!is.null(current_value) && current_value %in% view_type_options) {
-        
-        selected_variable <- current_value
-
-    } else {
-
-        selected_variable <- "Bar"
-    }
-
-    log_message_variable('Final Value', selected_variable)
-    return(list(choices=view_type_options,
-                selected=selected_variable))
 }
