@@ -44,11 +44,13 @@ shinyServer(function(input, output, session) {
     ##########################################################################################################
     # LOAD DATA
     ##########################################################################################################
-
     reactive__source_data <- reactiveValues(data=NULL)
 
-    # initially suspended, resume depending on url parameters
-    observeEvent_preloaded_dataset <-  observeEvent__source_data__preloaded(session, input, output, reactive__source_data, url_parameter_info)
+    observeEvent_preloaded_dataset <-  observeEvent__source_data__preloaded(session,
+                                                                            input,
+                                                                            output,
+                                                                            reactive__source_data,
+                                                                            url_parameter_info)
 
     observeEvent__source_data__upload(session, input, output, reactive__source_data)
     observeEvent__source_data__csv_url(session, input, output, reactive__source_data)
@@ -330,10 +332,8 @@ shinyServer(function(input, output, session) {
                 log_message("Clearing the URL from Browser")
                 shiny::updateQueryString(get_base_url(session), mode = "replace")
                 
-                reactive__source_data$data <- select_preloaded_dataset(session=session,
-                                                                       output=output,
-                                                                       dataset_name=params[['data']],
-                                                                       message="Loaded Dataset from URL params")
+                log_message_block_start("Loaded Dataset from URL params")
+                reactive__source_data$data <- select_preloaded_dataset(dataset_name=params[['data']])$dataset
 
                 log_message_block_start("Continuing Processing Url Parameter")
                 log_message("Updating Navbar Tab")

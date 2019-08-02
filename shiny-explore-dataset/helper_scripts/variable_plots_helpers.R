@@ -1,4 +1,5 @@
 library(scales)
+library(purrr)
 ##############################################################################################################
 # FILTERS
 ##############################################################################################################
@@ -1579,60 +1580,6 @@ format_filtering_message <- function(filter_message_list, dataset) {
     return (message)
 }
 
-var_plots__input_list_default_values <- list(
-
-    'var_plots__variable' = global__select_variable,
-    'var_plots__comparison' = global__select_variable_optional,
-    'var_plots__sum_by_variable' = global__select_variable_optional,
-    'var_plots__color_variable' = global__select_variable_optional,
-    'var_plots__facet_variable' = global__select_variable_optional,
-    'var_plots__size_variable' = global__select_variable_optional,
-    'var_plots__numeric_group_comp_variable' = FALSE,
-    'var_plots__numeric_aggregation_function' = global__num_num_aggregation_function_default,
-    'var_plots__numeric_aggregation' = global__var_plots__numeric_aggregation_default,
-    'var_plots__multi_value_delimiter' = "",
-    'var_plots__filter_factor_lump_number'="10",
-    'var_plots__label_variables' = NULL,
-    'var_plots__annotate_points' = TRUE,
-    'var_plots__show_points' = TRUE,
-    'var_plots__year_over_year' = FALSE,
-    'var_plots__include_zero_y_axis' = TRUE,
-    'var_plots__numeric_graph_type' = "Boxplot",
-    'var_plots__categoric_view_type' = "Bar",
-    'var_plots__order_by_variable' = "Default",
-    'var_plots__show_variable_totals' = TRUE,
-    'var_plots__show_comparison_totals' = TRUE,
-    'var_plots__histogram_bins' = 30,
-    'var_plots__transparency' = 60,
-    'var_plots__jitter' = FALSE,
-    'var_plots__numeric_aggregation_count_minimum' = 30,
-    'var_plots__numeric_show_resampled_conf_int' = FALSE,
-    'var_plots__trend_line' = 'None',
-    'var_plots__trend_line_se' = 'Yes',
-    'var_plots__ts_date_floor' = 'None',
-    'var_plots__ts_date_break_format' = 'Auto',
-    'var_plots__ts_breaks_width' = '',
-    'var_plots__scale_x_log_base_10' = FALSE,
-    'var_plots__x_zoom_min' = NA,
-    'var_plots__x_zoom_max' = NA,
-    'var_plots__scale_y_log_base_10' = FALSE,
-    'var_plots__y_zoom_min' = NA,
-    'var_plots__y_zoom_max' = NA,
-    'var_plots__custom_title' = "",
-    'var_plots__custom_subtitle' = "",
-    'var_plots__custom_x_axis_label' = "",
-    'var_plots__custom_y_axis_label' = "",
-    'var_plots__custom_caption' = "",
-    'var_plots__custom_tag' = "",
-    'var_plots__pretty_text' = FALSE,
-    'var_plots__base_size' = 15,
-    'var_plots__vertical_annotations' = "",
-    'var_plots__horizontal_annotations' = ""
-)
-
-
-#TODO!!!!!! CAN UNIT TEST THIS
-#' based on the primary variables' current value, returns the `choices` and `selected` values to be sent to updateSelectInput
 var_plots__comparison__logic <- function(dataset, primary_variable, current_value) {
 
     log_message_block_start("Executing Logic for Comparison Variable")
@@ -1641,17 +1588,21 @@ var_plots__comparison__logic <- function(dataset, primary_variable, current_valu
 
     column_names <- colnames(dataset)
 
-    if(is_date_type(dataset[[primary_variable]])) {
+    if(!is.null(primary_variable) &&
+            primary_variable %in% column_names &&
+            is_date_type(dataset[[primary_variable]])) {
 
         column_names <- colnames(dataset %>% select_if(is.numeric))
     }
 
-    if(primary_variable == global__select_variable) {
+    if(is.null(primary_variable) || primary_variable == global__select_variable) {
 
         current_value <- NULL
     }
-    selected_variable <- default_if_null_or_empty_string(current_value,
-                                                         global__select_variable_optional)
+    selected_variable <- default_if_null_or_empty_string(value=current_value,
+                                                         # treat global__select_variable_optional as null
+                                                         string_values_as_null=global__select_variable_optional,
+                                                         default=global__select_variable_optional)
 
     log_message_variable('Final Value', selected_variable)
     return(list(choices=c(global__select_variable_optional, column_names),
@@ -1665,11 +1616,20 @@ var_plots__color__logic <- function(dataset, primary_variable, comparison_variab
     log_message_variable('var_plots__comparison', comparison_variable)
     log_message_variable('var_plots__color_variable', current_value)
 
-    if(is_date_type(dataset[[primary_variable]])) {
+    column_names <- colnames(dataset)
+    
+    if(!is.null(primary_variable) &&
+            primary_variable %in% column_names &&
+            is_date_type(dataset[[primary_variable]])) {
 
         column_names <- colnames(dataset %>% select_if(purrr::negate(is.numeric)))
 
-    } else if(xor(is.numeric(dataset[[primary_variable]]), is.numeric(dataset[[comparison_variable]]))) {
+    } else if(xor(!is.null(primary_variable) &&
+                      primary_variable %in% column_names &&
+                      is.numeric(dataset[[primary_variable]]),
+                  !is.null(comparison_variable) &&
+                  comparison_variable %in% column_names &&
+                  is.numeric(dataset[[comparison_variable]]))) {
 
         column_names <- colnames(dataset %>% select_if(purrr::negate(is.numeric)))
 
@@ -1678,13 +1638,14 @@ var_plots__color__logic <- function(dataset, primary_variable, comparison_variab
         column_names <- colnames(dataset)
     }
 
-    if(primary_variable == global__select_variable) {
+    if(is.null(primary_variable) || primary_variable == global__select_variable) {
 
         current_value <- NULL
     }
-    selected_variable <- default_if_null_or_empty_string(current_value,
-                                                         global__select_variable_optional)
-
+    selected_variable <- default_if_null_or_empty_string(value=current_value,
+                                                         # treat global__select_variable_optional as null
+                                                         string_values_as_null=global__select_variable_optional,
+                                                         default=global__select_variable_optional)
 
     log_message_variable('Final Value', selected_variable)
     return(list(choices=c(global__select_variable_optional, column_names),

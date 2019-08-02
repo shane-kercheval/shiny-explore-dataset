@@ -5,8 +5,9 @@ library(hms)
 
 source('../helper_scripts/generic_helpers.R', chdir = TRUE)
 source('../helper_scripts/definitions.R', chdir = TRUE)
+source('../helper_scripts/logging_functions.R', chdir = TRUE)
 source('../helper_scripts/variable_plots_helpers.R', chdir = TRUE)
-
+source('../helper_scripts/dataset_loading_helpers.R', chdir = TRUE)
 Sys.setenv(TZ='UTC')
 
 # to run from command line, use:
@@ -1096,7 +1097,7 @@ test_that("build_parse_url_params", {
         'var_plots__numeric_aggregation_function' = 'month',
         'var_plots__numeric_aggregation' = 'week',
         'var_plots__multi_value_delimiter' = "; ",
-        'var_plots__label_variables'="Off",
+        'var_plots__filter_factor_lump_number'=20,
         'var_plots__label_variables' = c('this', 'has', 'multiple', 'values'),
         'var_plots__annotate_points' = FALSE,
         'var_plots__show_points' = FALSE,
@@ -1139,7 +1140,6 @@ test_that("build_parse_url_params", {
     expected_names <- str_replace(c('data', 'tab', names(mock_input)), 'var_plots__', '')
     # need unique(names) because var_plots__label_variables has multiple values which should be expanded
     expect_identical(unique(names(parameters)), expected_names)
-    
     # this list should have been converted to 4 list elements with the same names and different values
     label_variable_list <- parameters[which(names(parameters) == 'label_variables')]
     expect_equal(length(label_variable_list), length(mock_input$var_plots__label_variables))
@@ -1149,14 +1149,13 @@ test_that("build_parse_url_params", {
     expect_equal(label_variable_list[[4]], mock_input$var_plots__label_variables[4])
     
     for(variable in names(parameters) %>% rt_remove_val(c('data', 'tab', 'label_variables'))) {
-
         expect_equal(parameters[[variable]], mock_input[[paste0('var_plots__',variable)]])
     }
     
     custom_url <- build_custom_url(base_url = 'http://127.0.0.1:3158/', parameters_list = parameters)
-    expected_url <- "http://127.0.0.1:3158/?data=flights&tab=Graphs&variable=Test%20values%20with%20spaces%20and%20sh%2A%26%25t.%21&comparison=expected_value_comparison&sum_by_variable=expected_value_sum_by_variable&color_variable=expected_value_color_variable&facet_variable=expected_value_facet_variable&size_variable=expected_value_size_variable&numeric_group_comp_variable=TRUE&numeric_aggregation_function=month&numeric_aggregation=week&multi_value_delimiter=%3B%20&label_variables=this&label_variables=has&label_variables=multiple&label_variables=values&annotate_points=FALSE&show_points=FALSE&year_over_year=TRUE&include_zero_y_axis=FALSE&numeric_graph_type=Boxplot%20Whoot&categoric_view_type=Bar%20Whoot&order_by_variable=Default%20Whoot&show_variable_totals=FALSE&show_comparison_totals=FALSE&histogram_bins=1000&transparency=1999&jitter=TRUE&numeric_aggregation_count_minimum=3009&numeric_show_resampled_conf_int=TRUE&trend_line=None%20Whoot&trend_line_se=Yes%20Whoot&ts_date_floor=None%20Whoot&ts_date_break_format=Auto%20Whoot&ts_breaks_width=not%20null&scale_x_log_base_10=TRUE&x_zoom_min=not%20NA&x_zoom_max=40&scale_y_log_base_10=TRUE&y_zoom_min=not%20NA&y_zoom_max=not%20NA&custom_title=This%20is%20my%20title&custom_subtitle=This%20is%20my%20subtitle&custom_x_axis_label=This%20is%20my%20X%20Axis%20Label&custom_y_axis_label=This%20is%20my%20Y%20Axis%20Label&custom_caption=This%20is%20my%20caption&custom_tag=This%20is%20my%20Tag&pretty_text=TRUE&base_size=155&vertical_annotations=vertical%20annotations&horizontal_annotations=horizontal%20annotations"
+    expected_url <- "http://127.0.0.1:3158/?data=flights&tab=Graphs&variable=Test%20values%20with%20spaces%20and%20sh%2A%26%25t.%21&comparison=expected_value_comparison&sum_by_variable=expected_value_sum_by_variable&color_variable=expected_value_color_variable&facet_variable=expected_value_facet_variable&size_variable=expected_value_size_variable&numeric_group_comp_variable=TRUE&numeric_aggregation_function=month&numeric_aggregation=week&multi_value_delimiter=%3B%20&filter_factor_lump_number=20&label_variables=this&label_variables=has&label_variables=multiple&label_variables=values&annotate_points=FALSE&show_points=FALSE&year_over_year=TRUE&include_zero_y_axis=FALSE&numeric_graph_type=Boxplot%20Whoot&categoric_view_type=Bar%20Whoot&order_by_variable=Default%20Whoot&show_variable_totals=FALSE&show_comparison_totals=FALSE&histogram_bins=1000&transparency=1999&jitter=TRUE&numeric_aggregation_count_minimum=3009&numeric_show_resampled_conf_int=TRUE&trend_line=None%20Whoot&trend_line_se=Yes%20Whoot&ts_date_floor=None%20Whoot&ts_date_break_format=Auto%20Whoot&ts_breaks_width=not%20null&scale_x_log_base_10=TRUE&x_zoom_min=not%20NA&x_zoom_max=40&scale_y_log_base_10=TRUE&y_zoom_min=not%20NA&y_zoom_max=not%20NA&custom_title=This%20is%20my%20title&custom_subtitle=This%20is%20my%20subtitle&custom_x_axis_label=This%20is%20my%20X%20Axis%20Label&custom_y_axis_label=This%20is%20my%20Y%20Axis%20Label&custom_caption=This%20is%20my%20caption&custom_tag=This%20is%20my%20Tag&pretty_text=TRUE&base_size=155&vertical_annotations=vertical%20annotations&horizontal_annotations=horizontal%20annotations"
     expect_equal(custom_url, expected_url)
-    expect_equal(nchar(custom_url), 1550)
+    expect_equal(nchar(custom_url), 1579)
     
     # extract_url_parameters only expects the ?.... part of the url
     extracted_parameters <- extract_url_parameters(url_search=str_replace(custom_url, 'http://127.0.0.1:3158/', ''))
@@ -1166,6 +1165,379 @@ test_that("build_parse_url_params", {
     expect_identical(names(var_plots_extracted_parameters), names(mock_input))
     
     for(variable in names(mock_input)) {
+        
         expect_equal(var_plots_extracted_parameters[[variable]], mock_input[[variable]])
     }
 })
+
+test_that("setting dynamic variables - comparison", {
+    context("setting dynamic variables - comparison")
+
+    global__should_log_message <<- FALSE
+    results <- select_preloaded_dataset("Credit", defualt_path = '../')
+    expect_equal(nrow(results$dataset), 1000)
+    expect_equal(ncol(results$dataset), 17)
+    expect_true(nchar(results$description) > 0)
+    
+    dataset <- results$dataset
+    column_names <- colnames(dataset)
+    
+    ########
+    # NULL Primary Variable
+    ########
+    comparison_selection <- var_plots__comparison__logic(dataset=dataset,
+                                                         primary_variable=NULL,
+                                                         current_value=NULL)
+    expect_identical(comparison_selection$choices, c(global__select_variable_optional, column_names))
+    expect_equal(comparison_selection$selected, global__select_variable_optional)
+    
+    comparison_selection <- var_plots__comparison__logic(dataset=dataset,
+                                                         primary_variable=NULL,
+                                                         current_value=global__select_variable_optional)
+    expect_identical(comparison_selection$choices, c(global__select_variable_optional, column_names))
+    expect_equal(comparison_selection$selected, global__select_variable_optional)
+    
+    comparison_selection <- var_plots__comparison__logic(dataset=dataset,
+                                                         primary_variable=NULL,
+                                                         current_value="Doesn't Matter Column Name")
+    expect_identical(comparison_selection$choices, c(global__select_variable_optional, column_names))
+    expect_equal(comparison_selection$selected, global__select_variable_optional)
+    
+    ########
+    # Default Primary Variable
+    ########
+    primary_variable_default <- var_plots__input_list_default_values[['var_plots__variable']]
+    comparison_selection <- var_plots__comparison__logic(dataset=dataset,
+                                                         primary_variable=primary_variable_default,
+                                                         current_value=NULL)
+    expect_identical(comparison_selection$choices, c(global__select_variable_optional, column_names))
+    expect_equal(comparison_selection$selected, global__select_variable_optional)
+    
+    comparison_selection <- var_plots__comparison__logic(dataset=dataset,
+                                                         primary_variable=primary_variable_default,
+                                                         current_value=global__select_variable_optional)
+    expect_identical(comparison_selection$choices, c(global__select_variable_optional, column_names))
+    expect_equal(comparison_selection$selected, global__select_variable_optional)
+    
+    comparison_selection <- var_plots__comparison__logic(dataset=dataset,
+                                                         primary_variable=primary_variable_default,
+                                                         current_value="Doesn't Matter Column Name")
+    expect_identical(comparison_selection$choices, c(global__select_variable_optional, column_names))
+    expect_equal(comparison_selection$selected, global__select_variable_optional)
+    
+    ########
+    # Numeric Primary Variable
+    # All columns names should be available as possible choices for the comparison
+    ########
+    primary_selection <- 'amount'
+    comparison_selection <- var_plots__comparison__logic(dataset=dataset,
+                                                         primary_variable=primary_selection,
+                                                         current_value=NULL)
+    expect_identical(comparison_selection$choices, c(global__select_variable_optional, column_names))
+    expect_equal(comparison_selection$selected, global__select_variable_optional)
+    
+    comparison_selection <- var_plots__comparison__logic(dataset=dataset,
+                                                         primary_variable=primary_selection,
+                                                         current_value=global__select_variable_optional)
+    expect_identical(comparison_selection$choices, c(global__select_variable_optional, column_names))
+    expect_equal(comparison_selection$selected, global__select_variable_optional)
+    
+    comparison_selection <- var_plots__comparison__logic(dataset=dataset,
+                                                         primary_variable=primary_selection,
+                                                         current_value='phone')
+    expect_identical(comparison_selection$choices, c(global__select_variable_optional, column_names))
+    expect_equal(comparison_selection$selected, 'phone')
+    
+    ########
+    # Categoric Primary Variable
+    # All columns names should be available as possible choices for the comparison
+    ########
+    primary_selection <- 'purpose'
+    comparison_selection <- var_plots__comparison__logic(dataset=dataset,
+                                                         primary_variable=primary_selection,
+                                                         current_value=NULL)
+    expect_identical(comparison_selection$choices, c(global__select_variable_optional, column_names))
+    expect_equal(comparison_selection$selected, global__select_variable_optional)
+    
+    comparison_selection <- var_plots__comparison__logic(dataset=dataset,
+                                                         primary_variable=primary_selection,
+                                                         current_value=global__select_variable_optional)
+    expect_identical(comparison_selection$choices, c(global__select_variable_optional, column_names))
+    expect_equal(comparison_selection$selected, global__select_variable_optional)
+    
+    comparison_selection <- var_plots__comparison__logic(dataset=dataset,
+                                                         primary_variable=primary_selection,
+                                                         current_value='dependents')
+    expect_identical(comparison_selection$choices, c(global__select_variable_optional, column_names))
+    expect_equal(comparison_selection$selected, 'dependents')
+    
+    ########
+    # Date Primary Variable
+    # only numeric names should be available as possible choices for the comparison
+    ########
+    results <- select_preloaded_dataset("Flights", defualt_path = '../')
+    dataset <- results$dataset
+    numeric_column_names <- colnames(dataset %>% select_if(is.numeric))
+    
+    primary_selection <- 'date'
+    comparison_selection <- var_plots__comparison__logic(dataset=dataset,
+                                                         primary_variable=primary_selection,
+                                                         current_value=NULL)
+    expect_identical(comparison_selection$choices, c(global__select_variable_optional, numeric_column_names))
+    expect_equal(comparison_selection$selected, global__select_variable_optional)
+    
+    comparison_selection <- var_plots__comparison__logic(dataset=dataset,
+                                                         primary_variable=primary_selection,
+                                                         current_value=global__select_variable_optional)
+    expect_identical(comparison_selection$choices, c(global__select_variable_optional, numeric_column_names))
+    expect_equal(comparison_selection$selected, global__select_variable_optional)
+    
+    comparison_selection <- var_plots__comparison__logic(dataset=dataset,
+                                                         primary_variable=primary_selection,
+                                                         current_value='dep_delay')
+    expect_identical(comparison_selection$choices, c(global__select_variable_optional, numeric_column_names))
+    expect_equal(comparison_selection$selected, 'dep_delay')
+})
+
+test_that("setting dynamic variables - color", {
+    context("setting dynamic variables - color")
+    
+    global__should_log_message <<- FALSE
+    results <- select_preloaded_dataset("Credit", defualt_path = '../')
+    expect_equal(nrow(results$dataset), 1000)
+    expect_equal(ncol(results$dataset), 17)
+    expect_true(nchar(results$description) > 0)
+    
+    dataset <- results$dataset
+    column_names <- colnames(dataset)
+    categoric_column_names <- colnames(dataset %>% select_if(purrr::negate(is.numeric)))
+    numeric_column_names <- colnames(dataset %>% select_if(is.numeric))
+
+    ########
+    # NULL Primary Variable & Comparison Variable
+    ########
+    primary_variable_default <- NULL
+    comparison_variable_default <- NULL
+    selection <- var_plots__color__logic(dataset=dataset,
+                                         primary_variable=primary_variable_default,
+                                         comparison_variable=comparison_variable_default,
+                                         current_value=NULL)
+    expect_identical(selection$choices, c(global__select_variable_optional, column_names))
+    expect_equal(selection$selected, global__select_variable_optional)
+    
+    selection <- var_plots__color__logic(dataset=dataset,
+                                         primary_variable=primary_variable_default,
+                                         comparison_variable=comparison_variable_default,
+                                         current_value=global__select_variable_optional)
+    expect_identical(selection$choices, c(global__select_variable_optional, column_names))
+    expect_equal(selection$selected, global__select_variable_optional)
+    
+    selection <- var_plots__color__logic(dataset=dataset,
+                                         primary_variable=primary_variable_default,
+                                         comparison_variable=comparison_variable_default,
+                                         current_value="Doesn't Matter Column Name")
+    expect_identical(selection$choices, c(global__select_variable_optional, column_names))
+    expect_equal(selection$selected, global__select_variable_optional)
+
+    ########
+    # Default Primary Variable & Comparison Variable
+    ########
+    primary_variable_default <- var_plots__input_list_default_values[['var_plots__variable']]
+    comparison_variable_default <- var_plots__input_list_default_values[['var_plots__comparison']]
+    selection <- var_plots__color__logic(dataset=dataset,
+                                         primary_variable=primary_variable_default,
+                                         comparison_variable=comparison_variable_default,
+                                         current_value=NULL)
+    expect_identical(selection$choices, c(global__select_variable_optional, column_names))
+    expect_equal(selection$selected, global__select_variable_optional)
+    
+    selection <- var_plots__color__logic(dataset=dataset,
+                                         primary_variable=primary_variable_default,
+                                         comparison_variable=comparison_variable_default,
+                                         current_value=global__select_variable_optional)
+    expect_identical(selection$choices, c(global__select_variable_optional, column_names))
+    expect_equal(selection$selected, global__select_variable_optional)
+    
+    selection <- var_plots__color__logic(dataset=dataset,
+                                         primary_variable=primary_variable_default,
+                                         comparison_variable=comparison_variable_default,
+                                         current_value="Doesn't Matter Column Name")
+    expect_identical(selection$choices, c(global__select_variable_optional, column_names))
+    expect_equal(selection$selected, global__select_variable_optional)
+ 
+
+    ########
+    # Categoric Primary Variable, Default Comaprison variable
+    ########
+    primary_variable <- 'credit_history'
+    selection <- var_plots__color__logic(dataset=dataset,
+                                         primary_variable=primary_variable,
+                                         comparison_variable=comparison_variable_default,
+                                         current_value=NULL)
+    expect_identical(selection$choices, c(global__select_variable_optional, column_names))
+    expect_equal(selection$selected, global__select_variable_optional)
+
+    selection <- var_plots__color__logic(dataset=dataset,
+                                         primary_variable=primary_variable,
+                                         comparison_variable=comparison_variable_default,
+                                         current_value='purpose')
+    expect_identical(selection$choices, c(global__select_variable_optional, column_names))
+    expect_equal(selection$selected, 'purpose')
+    
+    ########
+    # Numeric Primary Variable, Default Comaprison variable
+    ########
+    primary_variable <- 'amount'
+    selection <- var_plots__color__logic(dataset=dataset,
+                                         primary_variable=primary_variable,
+                                         comparison_variable=comparison_variable_default,
+                                         current_value=NULL)
+    expect_identical(selection$choices, c(global__select_variable_optional, categoric_column_names))
+    expect_equal(selection$selected, global__select_variable_optional)
+
+    selection <- var_plots__color__logic(dataset=dataset,
+                                         primary_variable=primary_variable,
+                                         comparison_variable=comparison_variable_default,
+                                         current_value='purpose')
+    expect_identical(selection$choices, c(global__select_variable_optional, categoric_column_names))
+    expect_equal(selection$selected, 'purpose')
+
+    ########
+    # Categoric Primary Variable, Numeric Comaprison variable
+    ########
+    primary_variable <- 'credit_history'
+    comparison_variable <- 'amount'
+    selection <- var_plots__color__logic(dataset=dataset,
+                                         primary_variable=primary_variable,
+                                         comparison_variable=comparison_variable,
+                                         current_value=NULL)
+    expect_identical(selection$choices, c(global__select_variable_optional, categoric_column_names))
+    expect_equal(selection$selected, global__select_variable_optional)
+
+    selection <- var_plots__color__logic(dataset=dataset,
+                                         primary_variable=primary_variable,
+                                         comparison_variable=comparison_variable,
+                                         current_value='purpose')
+    expect_identical(selection$choices, c(global__select_variable_optional, categoric_column_names))
+    expect_equal(selection$selected, 'purpose')
+    
+    ########
+    # Numeric Primary Variable, Categoric Comaprison variable
+    ########
+    primary_variable <- 'amount'
+    comparison_variable <- 'credit_history'
+    selection <- var_plots__color__logic(dataset=dataset,
+                                         primary_variable=primary_variable,
+                                         comparison_variable=comparison_variable,
+                                         current_value=NULL)
+    expect_identical(selection$choices, c(global__select_variable_optional, categoric_column_names))
+    expect_equal(selection$selected, global__select_variable_optional)
+    
+    selection <- var_plots__color__logic(dataset=dataset,
+                                         primary_variable=primary_variable,
+                                         comparison_variable=comparison_variable,
+                                         current_value='purpose')
+    expect_identical(selection$choices, c(global__select_variable_optional, categoric_column_names))
+    expect_equal(selection$selected, 'purpose')
+    
+    ########
+    # Numeric Primary Variable, Categoric Comaprison variable
+    ########
+    primary_variable <- 'amount'
+    comparison_variable <- 'amount'
+    selection <- var_plots__color__logic(dataset=dataset,
+                                         primary_variable=primary_variable,
+                                         comparison_variable=comparison_variable,
+                                         current_value=NULL)
+    expect_identical(selection$choices, c(global__select_variable_optional, column_names))
+    expect_equal(selection$selected, global__select_variable_optional)
+    
+    selection <- var_plots__color__logic(dataset=dataset,
+                                         primary_variable=primary_variable,
+                                         comparison_variable=comparison_variable,
+                                         current_value='purpose')
+    expect_identical(selection$choices, c(global__select_variable_optional, column_names))
+    expect_equal(selection$selected, 'purpose')
+    
+    
+    ########
+    # Date Primary Variable
+    # only numeric columns should be available as possible choices for the comparison
+    # only categoric columns should be available as possible choices for the color
+    ########
+    results <- select_preloaded_dataset("Flights", defualt_path = '../')
+    dataset <- results$dataset
+    
+    column_names <- colnames(dataset)
+    categoric_column_names <- colnames(dataset %>% select_if(purrr::negate(is.numeric)))
+    numeric_column_names <- colnames(dataset %>% select_if(is.numeric))
+    
+    primary_selection <- 'date'
+    comparison_variable <- NULL
+    selection <- var_plots__color__logic(dataset=dataset,
+                                         primary_variable=primary_selection,
+                                         comparison_variable=comparison_variable,
+                                         current_value=NULL)
+    expect_identical(selection$choices, c(global__select_variable_optional, categoric_column_names))
+    expect_equal(selection$selected, global__select_variable_optional)
+    
+    selection <- var_plots__color__logic(dataset=dataset,
+                                         primary_variable=primary_selection,
+                                         comparison_variable=comparison_variable,
+                                         current_value=global__select_variable_optional)
+    expect_identical(selection$choices, c(global__select_variable_optional, categoric_column_names))
+    expect_equal(selection$selected, global__select_variable_optional)
+
+    primary_selection <- 'date'
+    comparison_variable <- 'dep_delay'
+    selection <- var_plots__color__logic(dataset=dataset,
+                                         primary_variable=primary_selection,
+                                         comparison_variable=comparison_variable,
+                                         current_value=NULL)
+    expect_identical(selection$choices, c(global__select_variable_optional, categoric_column_names))
+    expect_equal(selection$selected, global__select_variable_optional)
+    
+    selection <- var_plots__color__logic(dataset=dataset,
+                                         primary_variable=primary_selection,
+                                         comparison_variable=comparison_variable,
+                                         current_value=global__select_variable_optional)
+    expect_identical(selection$choices, c(global__select_variable_optional, categoric_column_names))
+    expect_equal(selection$selected, global__select_variable_optional)
+    
+    selection <- var_plots__color__logic(dataset=dataset,
+                                         primary_variable=primary_selection,
+                                         comparison_variable=comparison_variable,
+                                         current_value='origin')
+    expect_identical(selection$choices, c(global__select_variable_optional, categoric_column_names))
+    expect_equal(selection$selected, 'origin')
+})
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
