@@ -227,6 +227,33 @@ observeEvent__source_data__preloaded <- function(session, input, output, reactiv
     }, suspended=TRUE)
 }
 
+apply_r_code_to_dataset <- function(dataset, r_code_string) {
+
+    error_message <- NULL
+    if(!is.null(r_code_string) && r_code_string != "") {
+
+        # if successful, return NULL; otherwise an error/warning message will be returned
+        error_message <- tryCatch(
+            {
+                eval(parse(text=r_code_string))
+
+                # if successful, return NULL; otherwise an error/warning message will be returned
+                NULL
+            },
+            error=function(cond) { return(cond) },
+            warning=function(cond) { return(cond) })
+
+        
+        if(!is.null(error_message)) {
+
+            error_message <- str_trim(as.character(error_message))
+            error_message <- str_replace(error_message, fixed("Error in eval(parse(text = r_code_string)): "), "")
+        }
+    }
+
+    return (list(dataset=dataset, error_message=error_message))
+}
+
 observeEvent__load_data__r_code_apply <- function(reactive__source_data, input, output) {
     # update dataset based on R code
     # the string `load_data__r_code_text` should contain code which manipulates `dataset` which is then
@@ -241,27 +268,18 @@ observeEvent__load_data__r_code_apply <- function(reactive__source_data, input, 
 
                 log_message_variable("R Code", input$load_data__r_code_text)
 
-                #messages$value <- capture_messages_warnings(function() eval(parse(text=input$load_data__r_code_text)))
-                
-                returned_value <- tryCatch(
-                    {
-                        eval(parse(text=input$load_data__r_code_text))
+                results <- dataset %>% apply_r_code_to_dataset(r_code_string = input$load_data__r_code_text)
+                dataset <- results$dataset
+                r_code_error_message <- results$error_message
 
-                        # if successful, return NULL; otherwise an error/warning message will be returned
-                        NULL
-                    },
-                    error=function(cond) { return(cond) },
-                    warning=function(cond) { return(cond) })
-
-                # if successful, return NULL; otherwise an error/warning message will be returned
-                if(is.null(returned_value)) {
+                # if successful, function returns NULL error message;
+                # otherwise an error/warning message will be returned
+                if(is.null(r_code_error_message)) {
                     
                     shinyjs::hide('load_data__r_code_error')
 
                 } else {
 
-                    r_code_error_message <- str_trim(as.character(returned_value))
-                    r_code_error_message <- str_replace(r_code_error_message, fixed("Error in eval(parse(text = input$load_data__r_code_text)): "), "")
                     log_message_variable('R Code Error', r_code_error_message)
                     output$load_data__r_code_error <- renderText({ r_code_error_message })
                     shinyjs::show('load_data__r_code_error')

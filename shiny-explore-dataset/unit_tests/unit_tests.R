@@ -1170,6 +1170,29 @@ test_that("build_parse_url_params", {
     }
 })
 
+test_that("apply_r_code_to_dataset", {
+    
+    results <- select_preloaded_dataset("Credit", defualt_path = '../')
+    original_dataset <- results$dataset
+    
+    expected_dataset <- original_dataset %>% mutate(months_loan_duration = months_loan_duration / 10)
+
+    # success
+    code_string <- 'dataset <- dataset %>% mutate(months_loan_duration = months_loan_duration / 10)'    
+    results <- original_dataset %>% apply_r_code_to_dataset(r_code_string = code_string)
+    expect_null(results$error_message)
+    actual_dataset <- results$dataset
+    expect_true(rt_are_dataframes_equal(expected_dataset, actual_dataset))
+    
+    # error
+    code_string <- 'dataset <- dataset %>% mutateaaaa(months_loan_duration = months_loan_duration / 10)'
+    results <- original_dataset %>% apply_r_code_to_dataset(r_code_string = code_string)
+    expect_equal(results$error_message,
+                 "Error in mutateaaaa(., months_loan_duration = months_loan_duration/10): could not find function \"mutateaaaa\"")
+    actual_dataset <- results$dataset
+    expect_true(rt_are_dataframes_equal(original_dataset, actual_dataset))
+})
+
 test_that("setting dynamic variables - comparison", {
     context("setting dynamic variables - comparison")
 
