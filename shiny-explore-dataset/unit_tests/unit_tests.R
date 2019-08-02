@@ -8,6 +8,7 @@ source('../helper_scripts/definitions.R', chdir = TRUE)
 source('../helper_scripts/logging_functions.R', chdir = TRUE)
 source('../helper_scripts/variable_plots_helpers.R', chdir = TRUE)
 source('../helper_scripts/dataset_loading_helpers.R', chdir = TRUE)
+source('../helper_scripts/plot_helpers.R', chdir = TRUE)
 Sys.setenv(TZ='UTC')
 
 # to run from command line, use:
@@ -1533,4 +1534,105 @@ test_that("setting dynamic variables - color", {
                                          current_value='origin')
     expect_identical(selection$choices, c(global__select_variable_optional, categoric_column_names))
     expect_equal(selection$selected, 'origin')
+})
+
+test_that("create_ggplot_plot - numeric", {
+    context("create_ggplot_plot - numeric")
+    
+    global__should_log_message <<- FALSE
+    dataset <- select_preloaded_dataset("Credit", defualt_path = '../')$dataset
+    
+    # single numeric
+    plot_object <- create_ggplot_object(dataset = dataset,
+                                        primary_variable = 'months_loan_duration')
+    test_save_plot(file_name='graphs/plot__box_plot_defaults.png', plot=plot_object)
+
+    plot_object <- create_ggplot_object(dataset = dataset,
+                                        primary_variable = 'months_loan_duration',
+                                        y_zoom_min = 10,
+                                        y_zoom_max = 60,
+                                        custom_title = "Title",
+                                        custom_subtitle = "Subtitle",
+                                        custom_x_axis_label = "X",
+                                        custom_y_axis_label = "Y",
+                                        custom_caption = "Caption",
+                                        custom_tag = "Tag",
+                                        base_size = 17,
+                                        pretty_text = TRUE,
+                                        horizontal_annotations = "30;test")
+    test_save_plot(file_name='graphs/plot__box_plot_options.png', plot=plot_object)
+        
+    plot_object <- create_ggplot_object(dataset = dataset,
+                                        primary_variable = 'months_loan_duration',
+                                        numeric_graph_type = 'Histogram')
+    test_save_plot(file_name='graphs/plot__histogram_default.png', plot=plot_object)
+    
+    plot_object <- create_ggplot_object(dataset = dataset,
+                                        primary_variable = 'months_loan_duration',
+                                        numeric_graph_type = 'Histogram',
+                                        x_zoom_max = 60,
+                                        custom_title = "Title",
+                                        custom_subtitle = "Subtitle",
+                                        custom_x_axis_label = "X",
+                                        custom_y_axis_label = "Y",
+                                        custom_caption = "Caption",
+                                        custom_tag = "Tag",
+                                        base_size = 17,
+                                        pretty_text = TRUE)
+    test_save_plot(file_name='graphs/plot__histogram_options.png', plot=plot_object)
+    
+    # scatter
+    plot_object <- create_ggplot_object(dataset = dataset,
+                                        primary_variable = 'months_loan_duration',
+                                        comparison_variable = 'amount')
+    test_save_plot(file_name='graphs/plot__scatter_defaults.png', plot=plot_object)
+    
+    plot_object <- create_ggplot_object(dataset = dataset,
+                                        primary_variable = 'months_loan_duration',
+                                        comparison_variable = 'amount',
+                                        label_variables = c('age', 'purpose'),
+                                        transparency = 0.90,
+                                        jitter = TRUE,
+                                        trend_line = "Straight",
+                                        trend_line_se = "Yes",
+                                        x_zoom_min = 50,
+                                        x_zoom_max = 12000,
+                                        y_zoom_min = 10,
+                                        y_zoom_max = 50,
+                                        custom_title = "Title",
+                                        custom_subtitle = "Subtitle",
+                                        custom_x_axis_label = "X",
+                                        custom_y_axis_label = "Y",
+                                        custom_caption = "Caption",
+                                        custom_tag = "Tag",
+                                        base_size = 17,
+                                        pretty_text = TRUE,
+                                        horizontal_annotations = "30;test",
+                                        vertical_annotations = "6000;test2")
+    test_save_plot(file_name='graphs/plot__scatter_options.png', plot=plot_object)
+    
+    # aggregation
+    plot_object <- create_ggplot_object(dataset = dataset,
+                                        primary_variable = 'months_loan_duration',
+                                        comparison_variable = 'amount',
+                                        label_variables = c('age', 'purpose'),
+                                        transparency = 0.90,
+                                        jitter = TRUE,
+                                        trend_line = "Straight",
+                                        trend_line_se = "Yes",
+                                        x_zoom_min = 50,
+                                        x_zoom_max = 12000,
+                                        y_zoom_min = 10,
+                                        y_zoom_max = 50,
+                                        custom_title = "Title",
+                                        custom_subtitle = "Subtitle",
+                                        custom_x_axis_label = "X",
+                                        custom_y_axis_label = "Y",
+                                        custom_caption = "Caption",
+                                        custom_tag = "Tag",
+                                        base_size = 17,
+                                        pretty_text = TRUE,
+                                        horizontal_annotations = "30;test",
+                                        vertical_annotations = "6000;test2")
+    test_save_plot(file_name='graphs/plot__scatter_options.png', plot=plot_object)
 })

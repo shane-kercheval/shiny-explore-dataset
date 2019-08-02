@@ -266,7 +266,7 @@ shinyUI(fluidPage(theme="custom.css",
                             radioButtons(inputId='var_plots__trend_line_se',
                                          label='Trend Confidence Interval:',
                                          choices=c('No', 'Yes'),
-                                         selected='Yes',
+                                         selected='No',
                                          inline=TRUE,
                                          width='100%')
                         ),

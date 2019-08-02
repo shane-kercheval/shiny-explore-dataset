@@ -502,43 +502,32 @@ custom_max_min <- function(x_vector, y_value) {
 
 #' @param local_primary_variable numeric
 #' @param local_comparison_variable categoric
-helper__plot_numeric_categoric <- function(session,
-                                           local_dataset,
-                                           local_numeric_graph_type,
-                                           local_primary_variable,
-                                           local_comparison_variable,
-                                           local_color_variable,
-                                           local_order_by_variable,
-                                           local_var_plots__filter_factor_lump_number,
-                                           local_histogram_bins,
+helper__plot_numeric_categoric <- function(dataset,
+                                           numeric_graph_type,
+                                           primary_variable,
+                                           comparison_variable,
+                                           color_variable,
+                                           order_by_variable,
+                                           filter_factor_lump_number,
+                                           histogram_bins,
                                            horizontal_annotations,
-                                           local_scale_x_log_base_10,
-                                           local_x_zoom_min,
-                                           local_x_zoom_max,
-                                           local_scale_y_log_base_10,
-                                           local_y_zoom_min,
-                                           local_y_zoom_max,
-                                           local_base_size
+                                           scale_x_log_base_10,
+                                           x_zoom_min,
+                                           x_zoom_max,
+                                           scale_y_log_base_10,
+                                           y_zoom_min,
+                                           y_zoom_max,
+                                           base_size
                                            ) {
 
 
-    show_boxplot <- local_numeric_graph_type == 'Boxplot'
+    show_boxplot <- numeric_graph_type == 'Boxplot'
 
-    hide_show_numeric_categoric(session=session,
-                                showing_boxplot=show_boxplot,
-                                has_comparison_variable=!is.null(local_comparison_variable))
     if(show_boxplot) {
 
-        log_message('**numeric null/categoric - boxplot**')
-
-        log_message_variable('var_plots__order_by_variable', local_order_by_variable)
-        log_message_variable('var_plots__y_zoom_min', local_y_zoom_min)
-        log_message_variable('var_plots__y_zoom_max', local_y_zoom_max)
-        log_message_variable('var_plots__scale_y_log_base_10', local_scale_y_log_base_10)
-
-        if(local_order_by_variable %in% colnames(local_dataset)) {
+        if(order_by_variable %in% colnames(dataset)) {
             
-            temp_order_by_variable <- local_order_by_variable
+            temp_order_by_variable <- order_by_variable
 
         } else {
 
@@ -546,48 +535,41 @@ helper__plot_numeric_categoric <- function(session,
         }
 
         annotation_x_location <- 0.5
-        if(is.null(local_comparison_variable)) {
+        if(is.null(comparison_variable)) {
             # need this logic because the position changes depending on if it is a single boxplot or multiple
             annotation_x_location <- -0.9
         }
 
-        ggplot_object <- local_dataset %>%
-            select(local_primary_variable,
-                   local_comparison_variable,
-                   local_color_variable,
+        ggplot_object <- dataset %>%
+            select(primary_variable,
+                   comparison_variable,
+                   color_variable,
                    temp_order_by_variable) %>%
-            mutate_factor_lump(factor_lump_number=local_var_plots__filter_factor_lump_number) %>%
-            mutate_factor_reorder(variable_to_order_by=local_order_by_variable,
-                                  variable_to_order=local_comparison_variable) %>%
-            rt_explore_plot_boxplot(variable=local_primary_variable,
-                                    comparison_variable=local_comparison_variable,
-                                    color_variable=local_color_variable,
-                                    y_zoom_min=local_y_zoom_min,
-                                    y_zoom_max=local_y_zoom_max,
-                                    base_size=local_base_size) %>%
+            mutate_factor_lump(factor_lump_number=filter_factor_lump_number) %>%
+            mutate_factor_reorder(variable_to_order_by=order_by_variable,
+                                  variable_to_order=comparison_variable) %>%
+            rt_explore_plot_boxplot(variable=primary_variable,
+                                    comparison_variable=comparison_variable,
+                                    color_variable=color_variable,
+                                    y_zoom_min=y_zoom_min,
+                                    y_zoom_max=y_zoom_max,
+                                    base_size=base_size) %>%
             scale_axes_log10(scale_x=FALSE,
-                             scale_y=local_scale_y_log_base_10) %>%
+                             scale_y=scale_y_log_base_10) %>%
             add_horizontal_annotations(horizontal_annotations,
                                        x_location=annotation_x_location)
 
     } else {
 
-        log_message('**numeric null/categoric - histogram**')
-
-        log_message_variable('var_plots__histogram_bins', local_histogram_bins)
-        log_message_variable('var_plots__x_zoom_min', local_x_zoom_min)
-        log_message_variable('var_plots__x_zoom_max', local_x_zoom_max)
-        log_message_variable('var_plots__scale_x_log_base_10', local_scale_x_log_base_10)
-        
-        ggplot_object <- local_dataset %>% select(local_primary_variable, local_comparison_variable) %>%
-            mutate_factor_lump(factor_lump_number=local_var_plots__filter_factor_lump_number) %>%
-            rt_explore_plot_histogram(variable=local_primary_variable,
-                                      comparison_variable=local_comparison_variable,
-                                      num_bins=local_histogram_bins,
-                                      x_zoom_min=local_x_zoom_min,
-                                      x_zoom_max=local_x_zoom_max,
-                                      base_size=local_base_size) %>%
-            scale_axes_log10(scale_x=local_scale_x_log_base_10,
+        ggplot_object <- dataset %>% select(primary_variable, comparison_variable) %>%
+            mutate_factor_lump(factor_lump_number=filter_factor_lump_number) %>%
+            rt_explore_plot_histogram(variable=primary_variable,
+                                      comparison_variable=comparison_variable,
+                                      num_bins=histogram_bins,
+                                      x_zoom_min=x_zoom_min,
+                                      x_zoom_max=x_zoom_max,
+                                      base_size=base_size) %>%
+            scale_axes_log10(scale_x=scale_x_log_base_10,
                              scale_y=FALSE)
     }
 
@@ -611,42 +593,43 @@ reactive__var_plots__ggplot__creator <- function(input, session, dataset, url_pa
         input$var_plots__graph_options_apply  # trigger update if applying custom labels
         input$var_plots__custom_labels_apply  # trigger update if applying graph options
 
-        # reactive data
-        local_dataset <- dataset()
-        local_primary_variable <- input$var_plots__variable
-        local_numeric_aggregation <- input$var_plots__numeric_aggregation
+        ######################################################################################################
+        ######################################################################################################
+        dataset <- dataset()
+        primary_variable <- input$var_plots__variable
+        numeric_aggregation <- input$var_plots__numeric_aggregation
 
         # if there isn't a selection for these variables, then set them to NULL, because they will be
         # passed to rtools functions (and if they aren't null, rtools expects column names)
-        local_comparison_variable <- null_if_select_variable_optional(input$var_plots__comparison)
-        # these can actually be NULL (unlike local_comparison_variable which is req)
+        comparison_variable <- null_if_select_variable_optional(input$var_plots__comparison)
+        # these can actually be NULL (unlike comparison_variable which is req)
         # these can't be req because they aren't even shown initially
-        local_sum_by_variable <- null_if_select_variable_optional(input$var_plots__sum_by_variable)
-        local_size_variable <- null_if_select_variable_optional(input$var_plots__size_variable)
-        local_label_variables <- null_if_select_variable_optional(isolate(input$var_plots__label_variables))
-        local_color_variable <- null_if_select_variable_optional(input$var_plots__color_variable)
-        local_facet_variable <- null_if_select_variable_optional(input$var_plots__facet_variable)
-        local_year_over_year <- default_if_null_or_empty_string(isolate(input$var_plots__year_over_year),
-                                                             default=FALSE)
-        local_include_zero_y_axis <- default_if_null_or_empty_string(isolate(input$var_plots__include_zero_y_axis),
-                                                             default=TRUE)
+        sum_by_variable <- null_if_select_variable_optional(input$var_plots__sum_by_variable)
+        size_variable <- null_if_select_variable_optional(input$var_plots__size_variable)
+        label_variables <- null_if_select_variable_optional(isolate(input$var_plots__label_variables))
+        color_variable <- null_if_select_variable_optional(input$var_plots__color_variable)
+        facet_variable <- null_if_select_variable_optional(input$var_plots__facet_variable)
+        year_over_year <- default_if_null_or_empty_string(isolate(input$var_plots__year_over_year),
+                                                          default=FALSE)
+        include_zero_y_axis <- default_if_null_or_empty_string(isolate(input$var_plots__include_zero_y_axis),
+                                                               default=TRUE)
 
-        if(!is.null(local_comparison_variable) && is_date_type(local_dataset[[local_comparison_variable]])) {
+        if(!is.null(comparison_variable) && is_date_type(dataset[[comparison_variable]])) {
 
             showModal(modalDialog(title = "Only the primary 'Variable' selection can be used with date types."))
             updateSelectInput(session, 'var_plots__comparison', selected=global__select_variable_optional)
             return (NULL)
         }
 
-        if(is_date_type(local_dataset[[local_primary_variable]]) && !is.null(local_color_variable) && local_year_over_year) {
+        if(is_date_type(dataset[[primary_variable]]) && !is.null(color_variable) && year_over_year) {
             # we cannot use YOY and color (year will be the color)
             # So, if we aren't faceting, let's move color to the facet variable.
             # Otherwise, we will need to clear the color variable
 
-            if(is.null(local_facet_variable)) {
+            if(is.null(facet_variable)) {
 
                 showModal(modalDialog(title = "Cannot select Color Variable & Year-over-Year simultaneously (the year will be used as the color). The Facet Variable will be set and the Color Variable will be cleared."))
-                updateSelectInput(session, 'var_plots__facet_variable', selected=local_color_variable)
+                updateSelectInput(session, 'var_plots__facet_variable', selected=color_variable)
                 updateSelectInput(session, 'var_plots__color_variable', selected=global__select_variable_optional)
                 log_message_block_start("Clearing Color Variable For Year-over-Year and setting Facet Variable")
 
@@ -660,386 +643,107 @@ reactive__var_plots__ggplot__creator <- function(input, session, dataset, url_pa
             return (NULL)            
         }
 
-        top_n_is_hidden <- hide_show_top_n_categories(dataset(),
-                                                      local_primary_variable,
-                                                      local_comparison_variable,
-                                                      local_size_variable,
-                                                      local_color_variable,
-                                                      local_facet_variable)
+        numeric_group_comp_variable <- input$var_plots__numeric_group_comp_variable
+        numeric_aggregation_function <- input$var_plots__numeric_aggregation_function
+        numeric_aggregation_count_minimum <- isolate(input$var_plots__numeric_aggregation_count_minimum)
+        numeric_show_resampled_confidence_interval <- isolate(input$var_plots__numeric_show_resampled_conf_int)
 
-        local_numeric_group_comp_variable <- input$var_plots__numeric_group_comp_variable
-        local_numeric_aggregation_function <- input$var_plots__numeric_aggregation_function
-        local_numeric_aggregation_count_minimum <- isolate(input$var_plots__numeric_aggregation_count_minimum)
-        local_numeric_show_resampled_confidence_interval <- isolate(input$var_plots__numeric_show_resampled_conf_int)
+        vertical_annotations <- isolate(input$var_plots__vertical_annotations)
+        horizontal_annotations <- isolate(input$var_plots__horizontal_annotations)
 
-        local_vertical_annotations <- isolate(input$var_plots__vertical_annotations)
-        vertical_annotations <- str_split(local_vertical_annotations, "\n")[[1]]
-        vertical_annotations <- purrr::map(vertical_annotations, ~ str_split(., ';')[[1]])
-
-        local_horizontal_annotations <- isolate(input$var_plots__horizontal_annotations)
-        horizontal_annotations <- str_split(local_horizontal_annotations, "\n")[[1]]
-        horizontal_annotations <- purrr::map(horizontal_annotations, ~ str_split(., ';')[[1]])
-
-        local_transparency <- isolate(input$var_plots__transparency) / 100
-        local_annotate_points <- isolate(input$var_plots__annotate_points)
-        local_base_size <- isolate(input$var_plots__base_size)
-        local_histogram_bins <- isolate(input$var_plots__histogram_bins)
-        local_jitter <- isolate(input$var_plots__jitter)
-        local_order_by_variable <- isolate(input$var_plots__order_by_variable)
-        local_numeric_graph_type <- isolate(input$var_plots__numeric_graph_type)
-        local_pretty_text <- isolate(input$var_plots__pretty_text)
-        local_scale_x_log_base_10 <- isolate(input$var_plots__scale_x_log_base_10)
-        local_scale_y_log_base_10 <- isolate(input$var_plots__scale_y_log_base_10)
-        local_show_variable_totals <- isolate(input$var_plots__show_variable_totals)
-        local_show_comparison_totals <- isolate(input$var_plots__show_comparison_totals)
-        local_categoric_view_type <- default_if_null_or_empty_string(isolate(input$var_plots__categoric_view_type),
-                                                                     default="Bar")
-        local_multi_value_delimiter <- isolate(input$var_plots__multi_value_delimiter)
-        local_trend_line <- isolate(input$var_plots__trend_line)
-        local_trend_line_se <- isolate(input$var_plots__trend_line_se)
-        local_x_zoom_min <- isolate(input$var_plots__x_zoom_min)
-        local_x_zoom_max <- isolate(input$var_plots__x_zoom_max)
-        local_y_zoom_min <- isolate(input$var_plots__y_zoom_min)
-        local_y_zoom_max <- isolate(input$var_plots__y_zoom_max)
+        transparency <- isolate(input$var_plots__transparency) / 100
+        annotate_points <- isolate(input$var_plots__annotate_points)
+        base_size <- isolate(input$var_plots__base_size)
+        histogram_bins <- isolate(input$var_plots__histogram_bins)
+        jitter <- isolate(input$var_plots__jitter)
+        order_by_variable <- isolate(input$var_plots__order_by_variable)
+        numeric_graph_type <- isolate(input$var_plots__numeric_graph_type)
+        pretty_text <- isolate(input$var_plots__pretty_text)
+        scale_x_log_base_10 <- isolate(input$var_plots__scale_x_log_base_10)
+        scale_y_log_base_10 <- isolate(input$var_plots__scale_y_log_base_10)
+        show_variable_totals <- isolate(input$var_plots__show_variable_totals)
+        show_comparison_totals <- isolate(input$var_plots__show_comparison_totals)
+        categoric_view_type <- default_if_null_or_empty_string(isolate(input$var_plots__categoric_view_type),
+                                                               default="Bar")
+        multi_value_delimiter <- isolate(input$var_plots__multi_value_delimiter)
+        trend_line <- isolate(input$var_plots__trend_line)
+        trend_line_se <- isolate(input$var_plots__trend_line_se)
+        x_zoom_min <- isolate(input$var_plots__x_zoom_min)
+        x_zoom_max <- isolate(input$var_plots__x_zoom_max)
+        y_zoom_min <- isolate(input$var_plots__y_zoom_min)
+        y_zoom_max <- isolate(input$var_plots__y_zoom_max)
 
         # for time series plot
-        local_show_points <- default_if_null_or_empty_string(isolate(input$var_plots__show_points),
-                                                             default=FALSE)
-        local_ts_date_floor <- default_if_null_or_empty_string(isolate(input$var_plots__ts_date_floor),
-                                                             string_values_as_null='None')
-        local_ts_date_break_format <- default_if_null_or_empty_string(isolate(input$var_plots__ts_date_break_format),
-                                                             string_values_as_null='Auto')
-        local_ts_date_breaks_width <- default_if_null_or_empty_string(isolate(input$var_plots__ts_breaks_width))
+        show_points <- default_if_null_or_empty_string(isolate(input$var_plots__show_points),
+                                                       default=FALSE)
+        ts_date_floor <- default_if_null_or_empty_string(isolate(input$var_plots__ts_date_floor),
+                                                         string_values_as_null='None')
+        ts_date_break_format <- default_if_null_or_empty_string(isolate(input$var_plots__ts_date_break_format),
+                                                                string_values_as_null='Auto')
+        ts_date_breaks_width <- default_if_null_or_empty_string(isolate(input$var_plots__ts_breaks_width))
 
-        ggplot_object <- NULL
-        if(local_primary_variable != global__select_variable &&
-                local_primary_variable %in% colnames(local_dataset)) {
+        filter_factor_lump_number <- isolate(input$var_plots__filter_factor_lump_number)
 
-            log_message_block_start('Creating ggplot object')
+        top_n_is_hidden <- hide_show_top_n_categories(dataset(),
+                                                      primary_variable,
+                                                      comparison_variable,
+                                                      size_variable,
+                                                      color_variable,
+                                                      facet_variable)
 
-            local_var_plots__filter_factor_lump_number <- isolate(input$var_plots__filter_factor_lump_number)
-            if(top_n_is_hidden ||
-                   is.null(local_var_plots__filter_factor_lump_number) ||
-                   local_var_plots__filter_factor_lump_number == "Off") {
+        if(top_n_is_hidden ||
+               is.null(filter_factor_lump_number) ||
+               filter_factor_lump_number == "Off") {
 
-                local_var_plots__filter_factor_lump_number <- NULL
+            filter_factor_lump_number <- NULL
 
-            } else {
+        } else {
 
-                local_var_plots__filter_factor_lump_number <- as.numeric(local_var_plots__filter_factor_lump_number)
-            }
+            filter_factor_lump_number <- as.numeric(filter_factor_lump_number)
+        }
 
-            log_message_variable('primary_variable', local_primary_variable)
-            log_message_variable('comparison_variable', local_comparison_variable)
-            log_message_variable('var_plots__sum_by_variable', local_sum_by_variable)
-            log_message_variable('var_plots__size_variable', local_size_variable)
-            log_message_variable('var_plots__label_variables', paste0(local_label_variables, collapse=', '))
-            log_message_variable('var_plots__color_variable', local_color_variable)
-            log_message_variable('var_plots__facet_variable', local_facet_variable)
-            log_message_variable('var_plots__base_size', local_base_size)
-            log_message_variable('var_plots__pretty_text', local_pretty_text)
-            log_message_variable('var_plots__annotate_points', local_annotate_points)
-            log_message_variable('var_plots__year_over_year', local_year_over_year)
-            log_message_variable('var_plots__include_zero_y_axis', local_include_zero_y_axis)
-            log_message_variable('var_plots__filter_factor_lump_number',
-                                 local_var_plots__filter_factor_lump_number)
+        map_format <- isolate(input$var_plots__map_format)
+        map_borders_database <- isolate(input$var_plots___map_borders_database)
+        map_borders_regions <- isolate(input$var_plots___map_borders_regions)
 
-            log_message_variable('var_plots__horizontal_annotations',
-                             paste0(horizontal_annotations, collapse="..."))
+        custom_title <- isolate(input$var_plots__custom_title)
+        custom_subtitle <- isolate(input$var_plots__custom_subtitle)
+        custom_x_axis_label <- isolate(input$var_plots__custom_x_axis_label)
+        custom_y_axis_label <- isolate(input$var_plots__custom_y_axis_label)
+        custom_caption <- isolate(input$var_plots__custom_caption)
+        custom_tag <- isolate(input$var_plots__custom_tag)
 
-            log_message_variable('var_plots__vertical_annotations',
-                             paste0(vertical_annotations, collapse="..."))
-            
-            if(local_pretty_text) {
-                # if we change to pretty text, it will update the columns and all values to be "pretty",
-                # but that means we have to take the variables they selected and change them to be
-                # "pretty" as well so subsetting by them finds the correct column
-                local_dataset <- rt_pretty_dataset(dataset=local_dataset %>%
-                                                                select(c(default_if_null_or_empty_string(local_primary_variable),
-                                                                         default_if_null_or_empty_string(local_comparison_variable),
-                                                                         default_if_null_or_empty_string(local_sum_by_variable),
-                                                                         default_if_null_or_empty_string(local_size_variable),
-                                                                         default_if_null_or_empty_string(local_color_variable),
-                                                                         default_if_null_or_empty_string(local_facet_variable))))
+        if(primary_variable != global__select_variable &&
+                primary_variable %in% colnames(dataset)) {
 
-                # R uses the "`My Variable`" syntax for variables with spaces which dplyr's xxx_() relies on
-                local_primary_variable <- rt_pretty_text(local_primary_variable)
-                if(!is_null_or_empty_string(local_comparison_variable)) {
+            if(is_date_type(dataset[, primary_variable])) {
 
-                    local_comparison_variable <- rt_pretty_text(local_comparison_variable)
-                }
-                if(!is_null_or_empty_string(local_sum_by_variable)) {
-
-                    local_sum_by_variable <- rt_pretty_text(local_sum_by_variable)
-                }
-                if(!is_null_or_empty_string(local_size_variable)) {
-
-                    local_size_variable <- rt_pretty_text(local_size_variable)
-                }
-                if(!is_null_or_empty_string(local_color_variable)) {
-
-                    local_color_variable <- rt_pretty_text(local_color_variable)
-                }
-                if(!is_null_or_empty_string(local_facet_variable)) {
-
-                    local_facet_variable <- rt_pretty_text(local_facet_variable)
-                }
-
-                log_message_variable('updated primary_variable', local_primary_variable)
-                log_message_variable('updated comparison_variable', local_comparison_variable)
-                log_message_variable('updated sum_by_variable', local_sum_by_variable)
-                log_message_variable('updated var_plots__size_variable', local_size_variable)
-                log_message_variable('updated var_plots__color_variable', local_color_variable)
-                log_message_variable('updated var_plots__facet_variable', local_facet_variable)
-                log_message_generic('column names', paste0(colnames(local_dataset), collapse = '; '))
-            }
-
-            if(is_date_type(local_dataset[, local_primary_variable])) {
-
-                hide_show_date(session, has_comparison_variable=!is.null(local_comparison_variable))
-
-                log_message_variable('var_plots__numeric_aggregation', local_numeric_aggregation)
-
-                log_message_variable('var_plots__show_points', local_show_points)
-                log_message_variable('var_plots__ts_date_floor', local_ts_date_floor)
-                log_message_variable('var_plots__ts_date_break_format', local_ts_date_break_format)
-                log_message_variable('var_plots__ts_breaks_width', local_ts_date_breaks_width)
-
-                comparison_function <- NULL
-                comparison_function_name <- NULL
-                if(!is.null(local_comparison_variable)) {
-
-                    comparison_function_name <- local_numeric_aggregation
-
-                    if(local_numeric_aggregation == 'Mean') {
-
-                        comparison_function <- function(x) { return (mean(x, na.rm=TRUE)) }
-
-                    } else if (local_numeric_aggregation == 'Geometric Mean') {
-
-                        comparison_function <- rt_geometric_mean
-
-                    } else if (local_numeric_aggregation == 'Median') {
-
-                        comparison_function <- function(x) { return (median(x, na.rm=TRUE)) }
-
-                    } else if (local_numeric_aggregation == 'Sum') {
-
-                        comparison_function_name = 'Sum of'
-                        comparison_function <- function(x) { return (sum(x, na.rm=TRUE)) }
-
-                    } else {
-
-                        stopifnot(FALSE)
-                    }
-                }
-
-                add_confidence_interval <- !is.null(local_trend_line_se) && local_trend_line_se == 'Yes'
-                ggplot_object <- local_dataset %>%
-                    select(local_primary_variable, local_comparison_variable, local_color_variable,
-                           local_facet_variable) %>%
-                    mutate_factor_lump(factor_lump_number=local_var_plots__filter_factor_lump_number) %>%
-                    rt_explore_plot_time_series(variable=local_primary_variable,
-                                                comparison_variable=local_comparison_variable,
-                                                comparison_function=comparison_function,
-                                                comparison_function_name=comparison_function_name,
-                                                color_variable=local_color_variable,
-                                                facet_variable=local_facet_variable,
-                                                year_over_year=local_year_over_year,
-                                                y_zoom_min=local_y_zoom_min,
-                                                y_zoom_max=local_y_zoom_max,
-                                                include_zero_y_axis=local_include_zero_y_axis,
-                                                show_points=local_show_points,
-                                                show_labels=local_annotate_points,
-                                                date_floor=local_ts_date_floor,
-                                                date_break_format=local_ts_date_break_format,
-                                                date_breaks_width=local_ts_date_breaks_width,
-                                                base_size=local_base_size) %>%
-                    scale_axes_log10(scale_x=FALSE,
-                                     scale_y=local_scale_y_log_base_10) %>%
-                    add_trend_line(trend_line_type=local_trend_line,
-                                   confidence_interval=add_confidence_interval,
-                                   color_variable=local_color_variable) %>%
-                    add_vertical_annotations(vertical_annotations,
-                                             y_location=max(0, local_y_zoom_min, na.rm=TRUE),
-                                             is_date=TRUE) %>%
-                    add_horizontal_annotations(horizontal_annotations,
-                                               x_location=min(local_dataset[[local_primary_variable]], na.rm=TRUE),
-                                               x_location_is_date=TRUE)
+                hide_show_date(session, has_comparison_variable=!is.null(comparison_variable))
 
             ##############################################################################################
             # Numeric Primary Variable
             ##############################################################################################
-            } else if(is.numeric(local_dataset[, local_primary_variable])) {
+            } else if(is.numeric(dataset[, primary_variable])) {
 
                 ##########################################################################################
                 # Numeric Secondary Variable
                 ##########################################################################################
-                if(!is.null(local_comparison_variable) &&
-                        is.numeric(local_dataset[, local_comparison_variable])) {
+                if(!is.null(comparison_variable) &&
+                        is.numeric(dataset[, comparison_variable])) {
 
                     hide_show_numeric_numeric(session, 
-                                              local_numeric_group_comp_variable,
-                                              local_numeric_aggregation_function == "Boxplot")
-
-                    log_message('**numeric numeric**')
-
-                    log_message_variable('var_plots__transparency', local_transparency)
-                    log_message_variable('var_plots__jitter', local_jitter)
-                    log_message_variable('var_plots__trend_line', local_trend_line)
-                    log_message_variable('var_plots__trend_line_se', local_trend_line_se)
-
-                    log_message_variable('var_plots__x_zoom_min', local_x_zoom_min)
-                    log_message_variable('var_plots__x_zoom_max', local_x_zoom_max)
-                    log_message_variable('var_plots__y_zoom_min', local_y_zoom_min)
-                    log_message_variable('var_plots__y_zoom_max', local_y_zoom_max)
-                    log_message_variable('var_plots__annotate_points', local_annotate_points)
-                    log_message_variable('var_plots__show_points', local_show_points)
-                    log_message_variable('var_plots__scale_x_log_base_10', local_scale_x_log_base_10)
-                    log_message_variable('var_plots__scale_y_log_base_10', local_scale_y_log_base_10)
-
-                    local_map_format <- isolate(input$var_plots__map_format)
-                    local_map_borders_database <- isolate(input$var_plots___map_borders_database)
-                    local_map_borders_regions <- isolate(input$var_plots___map_borders_regions)
-
-                    log_message_variable('var_plots__map_format', local_map_format)
-                    log_message_variable('var_plots__map_borders_database', local_map_borders_database)
-                    log_message_variable('var_plots__map_borders_regions', local_map_borders_regions)
-
-                    log_message_variable('var_plots__numeric_group_comp_variable',
-                                         local_numeric_group_comp_variable)
-                    log_message_variable('var_plots__numeric_aggregation_function',
-                                         local_numeric_aggregation_function)
-                    log_message_variable('var_plots__numeric_aggregation_count_minimum',
-                                         local_numeric_aggregation_count_minimum)
-                    log_message_variable('var_plots__numeric_show_resampled_conf_int',
-                                         local_numeric_show_resampled_confidence_interval)
-
-                    if(local_numeric_group_comp_variable) {
-
-                        aggregation_function <- NULL
-                        aggregation_function_name <- NULL
-                        if(local_numeric_aggregation_function != 'Boxplot') {
-
-                            aggregation_function_name <- local_numeric_aggregation_function
-
-                            if(local_numeric_aggregation_function == 'Mean') {
-
-                                aggregation_function <- function(x) { return (mean(x, na.rm=TRUE)) }
-
-                            } else if (local_numeric_aggregation_function == 'Geometric Mean') {
-
-                                aggregation_function <- rt_geometric_mean
-
-                            } else if (local_numeric_aggregation_function == 'Median') {
-
-                                aggregation_function <- function(x) { return (median(x, na.rm=TRUE)) }
-
-                            } else if (local_numeric_aggregation_function == 'Sum') {
-
-                                aggregation_function_name = 'Sum of'
-                                aggregation_function <- function(x) { return (sum(x, na.rm=TRUE)) }
-
-                            } else {
-
-                                stopifnot(FALSE)
-                            }
-                        }
-
-                        ggplot_object <- local_dataset %>%
-                            rt_explore_plot_aggregate_2_numerics(variable=local_primary_variable,
-                                                                 comparison_variable=local_comparison_variable,
-                                                                 aggregation_function=aggregation_function,
-                                                                 aggregation_function_name=aggregation_function_name,
-                                                                 aggregation_count_minimum=local_numeric_aggregation_count_minimum,
-                                                                 show_resampled_confidence_interval=local_numeric_show_resampled_confidence_interval,
-                                                                 show_points=local_show_points,
-                                                                 show_labels=local_annotate_points,
-                                                                 x_zoom_min=local_x_zoom_min,
-                                                                 x_zoom_max=local_x_zoom_max,
-                                                                 y_zoom_min=local_y_zoom_min,
-                                                                 y_zoom_max=local_y_zoom_max,
-                                                                 base_size=local_base_size) %>%
-                            scale_axes_log10(scale_x=local_scale_x_log_base_10,
-                                             scale_y=local_scale_y_log_base_10)
-                    } else {
-
-                        add_confidence_interval <- !is.null(local_trend_line_se) && local_trend_line_se == 'Yes'
-
-                        ggplot_object <- local_dataset %>% select(local_primary_variable,
-                                                                  local_comparison_variable,
-                                                                  local_color_variable,
-                                                                  local_size_variable,
-                                                                  local_label_variables) %>%
-                            mutate_factor_lump(factor_lump_number=local_var_plots__filter_factor_lump_number,
-                                               ignore_columns=local_label_variables) %>%
-                            rt_explore_plot_scatter(variable=local_primary_variable,
-                                                    comparison_variable=local_comparison_variable,
-                                                    color_variable=local_color_variable,
-                                                    size_variable=local_size_variable,
-                                                    label_variables=local_label_variables,
-                                                    # alpha is a measure of opacity which is the opposite of transparency, but transparency is more user-friendly
-                                                    alpha= 1 - local_transparency,
-                                                    jitter=local_jitter,
-                                                    x_zoom_min=local_x_zoom_min,
-                                                    x_zoom_max=local_x_zoom_max,
-                                                    y_zoom_min=local_y_zoom_min,
-                                                    y_zoom_max=local_y_zoom_max,
-                                                    base_size=local_base_size) %>%
-                            scale_axes_log10(scale_x=local_scale_x_log_base_10,
-                                             scale_y=local_scale_y_log_base_10) %>%
-                            add_trend_line(trend_line_type=local_trend_line,
-                                           confidence_interval=add_confidence_interval,
-                                           color_variable=local_color_variable)
-
-                        if(local_map_format) {
-
-                            ggplot_object <- ggplot_object + coord_map()
-
-                            if(!is_null_or_empty_string(local_map_borders_database)) {
-
-                                regions <- str_split(local_map_borders_regions, pattern = ', ', simplify = TRUE)
-                                regions <- as.character(regions)
-
-                                ggplot_object <- ggplot_object +
-                                    borders(database=local_map_borders_database,
-                                            regions=regions)
-                            }
-                        }
-                    }
-
-                    ggplot_object <- ggplot_object %>%
-                            add_horizontal_annotations(horizontal_annotations,
-                                                       x_location=custom_max_min(local_dataset[[local_comparison_variable]],
-                                                                                 local_x_zoom_min)) %>%
-                            add_vertical_annotations(vertical_annotations,
-                                                       y_location=custom_max_min(local_dataset[[local_primary_variable]],
-                                                                                 local_y_zoom_min))
-
-                            
+                                              numeric_group_comp_variable,
+                                              numeric_aggregation_function == "Boxplot")
 
                 ##########################################################################################
                 # NULL Or Categoric Secondary Variable
                 ##########################################################################################
                 } else {
 
-                    ggplot_object <- helper__plot_numeric_categoric(session,
-                                                                    local_dataset,
-                                                                    local_numeric_graph_type,
-                                                                    local_primary_variable,
-                                                                    local_comparison_variable,
-                                                                    local_color_variable,
-                                                                    local_order_by_variable,
-                                                                    local_var_plots__filter_factor_lump_number,
-                                                                    local_histogram_bins,
-                                                                    horizontal_annotations,
-                                                                    local_scale_x_log_base_10,
-                                                                    local_x_zoom_min,
-                                                                    local_x_zoom_max,
-                                                                    local_scale_y_log_base_10,
-                                                                    local_y_zoom_min,
-                                                                    local_y_zoom_max,
-                                                                    local_base_size)
+                    show_boxplot <- numeric_graph_type == 'Boxplot'
+                    hide_show_numeric_categoric(session=session,
+                                showing_boxplot=show_boxplot,
+                                has_comparison_variable=!is.null(comparison_variable))
                 }
 
             ##############################################################################################
@@ -1050,110 +754,89 @@ reactive__var_plots__ggplot__creator <- function(input, session, dataset, url_pa
                 ##########################################################################################
                 # Numeric Secondary Variable
                 ##########################################################################################
-                if(!is.null(local_comparison_variable) &&
-                        is.numeric(local_dataset[, local_comparison_variable])) {
+                if(!is.null(comparison_variable) &&
+                        is.numeric(dataset[, comparison_variable])) {
 
-                    ggplot_object <- helper__plot_numeric_categoric(session=session,
-                                                                    local_dataset=local_dataset,
-                                                                    local_numeric_graph_type=local_numeric_graph_type,
-                                                                    # same as above, except we need to swap the numeric/categoric variables
-                                                                    local_primary_variable=local_comparison_variable,
-                                                                    local_comparison_variable=local_primary_variable,
-                                                                    local_color_variable=local_color_variable,
-                                                                    local_order_by_variable=local_order_by_variable,
-                                                                    local_var_plots__filter_factor_lump_number=local_var_plots__filter_factor_lump_number,
-                                                                    local_histogram_bins=local_histogram_bins,
-                                                                    horizontal_annotations=horizontal_annotations,
-                                                                    local_scale_x_log_base_10=local_scale_x_log_base_10,
-                                                                    local_x_zoom_min=local_x_zoom_min,
-                                                                    local_x_zoom_max=local_x_zoom_max,
-                                                                    local_scale_y_log_base_10=local_scale_y_log_base_10,
-                                                                    local_y_zoom_min=local_y_zoom_min,
-                                                                    local_y_zoom_max=local_y_zoom_max,
-                                                                    local_base_siz=local_base_size)
+                    show_boxplot <- numeric_graph_type == 'Boxplot'
+                    hide_show_numeric_categoric(session=session,
+                                showing_boxplot=show_boxplot,
+                                has_comparison_variable=!is.null(comparison_variable))
 
                 ##########################################################################################
                 # NULL Or Categoric Secondary Variable
                 ##########################################################################################
                 } else {
 
-                    if(local_multi_value_delimiter == '' || !is.null(local_comparison_variable)) {
-
-                        local_multi_value_delimiter <- NULL
-                    }
-
                     hide_show_categoric_categoric(session,
                                                   input,
-                                                  has_comparison_variable=!is.null(local_comparison_variable))
-
-                    log_message('**categoric null/categoric**')
-
-                    log_message_variable('var_plots__order_by_variable', local_order_by_variable)
-                    log_message_variable('var_plots__show_variable_totals', local_show_variable_totals)
-                    log_message_variable('var_plots__show_comparison_totals', local_show_comparison_totals)
-                    log_message_variable('var_plots__multi_value_delimiter', local_multi_value_delimiter)
-                    log_message_variable('var_plots__categoric_view_type', local_categoric_view_type)
-
-                    if(local_order_by_variable %in% colnames(local_dataset)) {
-                            
-                        temp_order_by_variable <- local_order_by_variable
-
-                    } else {
-
-                        temp_order_by_variable <- NULL
-                    }
-
-                    ggplot_object <- local_dataset %>%
-                        select(local_primary_variable,
-                               local_comparison_variable,
-                               local_sum_by_variable,
-                               temp_order_by_variable) %>%
-                        mutate_factor_lump(factor_lump_number=local_var_plots__filter_factor_lump_number) %>%
-                        mutate_factor_reorder(variable_to_order_by=local_order_by_variable,
-                                              variable_to_order=local_primary_variable) %>%
-                        rt_explore_plot_value_totals(variable=local_primary_variable,
-                                                     comparison_variable=local_comparison_variable,
-                                                     sum_by_variable=local_sum_by_variable,
-                                                     order_by_count=local_order_by_variable == "Frequency",
-                                                     show_variable_totals=local_show_variable_totals,
-                                                     show_comparison_totals=local_show_comparison_totals,
-                                                     view_type=local_categoric_view_type,
-                                                     multi_value_delimiter=local_multi_value_delimiter,
-                                                     show_dual_axes=FALSE,
-                                                     base_size=local_base_size)
+                                                  has_comparison_variable=!is.null(comparison_variable))
                 }
-            }
-
-            local_var_plots__custom_title <- isolate(input$var_plots__custom_title)
-            local_var_plots__custom_subtitle <- isolate(input$var_plots__custom_subtitle)
-            local_var_plots__custom_x_axis_label <- isolate(input$var_plots__custom_x_axis_label)
-            local_var_plots__custom_y_axis_label <- isolate(input$var_plots__custom_y_axis_label)
-            local_var_plots__custom_caption <- isolate(input$var_plots__custom_caption)
-            local_var_plots__custom_tag <- isolate(input$var_plots__custom_tag)
-
-            if(!is_null_or_empty_string(local_var_plots__custom_title)) {
-                ggplot_object <- ggplot_object + labs(title = local_var_plots__custom_title)
-            }
-            if(!is_null_or_empty_string(local_var_plots__custom_subtitle)) {
-                ggplot_object <- ggplot_object + labs(subtitle = local_var_plots__custom_subtitle)
-            }
-            if(!is_null_or_empty_string(local_var_plots__custom_x_axis_label)) {
-                ggplot_object <- ggplot_object + labs(x = local_var_plots__custom_x_axis_label)
-            }
-            if(!is_null_or_empty_string(local_var_plots__custom_y_axis_label)) {
-                ggplot_object <- ggplot_object + labs(y = local_var_plots__custom_y_axis_label)
-            }
-            if(!is_null_or_empty_string(local_var_plots__custom_caption)) {
-                ggplot_object <- ggplot_object + labs(caption = local_var_plots__custom_caption)
-            }
-            if(!is_null_or_empty_string(local_var_plots__custom_tag)) {
-                ggplot_object <- ggplot_object + labs(tag = local_var_plots__custom_tag)
             }
 
         } else {
 
             hide_graph_options(input)
         }
+
+        ggplot_object <- create_ggplot_object(dataset=dataset,
+                                              primary_variable=primary_variable,
+                                              comparison_variable=comparison_variable,
+                                              sum_by_variable=sum_by_variable,
+                                              size_variable=size_variable,
+                                              label_variables=label_variables,
+                                              color_variable=color_variable,
+                                              facet_variable=facet_variable,
+
+                                              numeric_aggregation=numeric_aggregation,
+                                              numeric_group_comp_variable=numeric_group_comp_variable,
+                                              numeric_aggregation_function=numeric_aggregation_function,
+                                              numeric_aggregation_count_minimum=numeric_aggregation_count_minimum,
+                                              numeric_show_resampled_confidence_interval=numeric_show_resampled_confidence_interval,
+
+                                              transparency=transparency,
+                                              annotate_points=annotate_points,
+                                              show_variable_totals=show_variable_totals,
+                                              show_comparison_totals=show_comparison_totals,
+                                              histogram_bins=histogram_bins,
+                                              jitter=jitter,
+                                              order_by_variable=order_by_variable,
+                                              filter_factor_lump_number=filter_factor_lump_number,
+                                              numeric_graph_type=numeric_graph_type,
+                                              categoric_view_type=categoric_view_type,
+                                              multi_value_delimiter=multi_value_delimiter,
+                                              trend_line=trend_line,
+                                              trend_line_se=trend_line_se,
+                                              x_zoom_min=x_zoom_min,
+                                              x_zoom_max=x_zoom_max,
+                                              y_zoom_min=y_zoom_min,
+                                              y_zoom_max=y_zoom_max,
+                                              scale_x_log_base_10=scale_x_log_base_10,
+                                              scale_y_log_base_10=scale_y_log_base_10,
+
+                                              # dates
+                                              show_points=show_points,
+                                              ts_date_floor=ts_date_floor,
+                                              ts_date_break_format=ts_date_break_format,
+                                              ts_date_breaks_width=ts_date_breaks_width,
+                                              include_zero_y_axis=include_zero_y_axis,
+                                              year_over_year=year_over_year,
+
+                                              # mapping options
+                                              map_format=map_format,
+                                              map_borders_database=map_borders_database,
+                                              map_borders_regions=map_borders_regions,
+
+                                              # set graph label/etc. options
+                                              pretty_text=pretty_text,
+                                              base_size=base_size,
+                                              custom_title=custom_title,
+                                              custom_subtitle=custom_subtitle,
+                                              custom_x_axis_label=custom_x_axis_label,
+                                              custom_y_axis_label=custom_y_axis_label,
+                                              custom_caption=custom_caption,
+                                              custom_tag=custom_tag,
+                                              vertical_annotations=vertical_annotations,
+                                              horizontal_annotations=horizontal_annotations)
 
         if(is.null(ggplot_object)) {
 
@@ -1172,6 +855,495 @@ reactive__var_plots__ggplot__creator <- function(input, session, dataset, url_pa
 
         return (ggplot_object)
     })
+}
+
+create_ggplot_object <- function(dataset,
+                                 primary_variable=NULL,
+                                 comparison_variable=NULL,
+                                 sum_by_variable=NULL,
+                                 size_variable=NULL,
+                                 label_variables=NULL,
+                                 color_variable=NULL,
+                                 facet_variable=NULL,
+                                 
+                                 numeric_aggregation='Boxplot',
+                                 numeric_group_comp_variable=FALSE,
+                                 numeric_aggregation_function=NULL,
+                                 numeric_aggregation_count_minimum=30,
+                                 numeric_show_resampled_confidence_interval=NULL,
+
+                                 transparency=0.60,
+                                 annotate_points=TRUE,
+                                 show_variable_totals=TRUE,
+                                 show_comparison_totals=TRUE,
+                                 histogram_bins=30,
+                                 jitter=FALSE,
+                                 order_by_variable='Default',
+                                 filter_factor_lump_number=10,
+                                 numeric_graph_type='Boxplot',
+                                 categoric_view_type='Bar',
+                                 multi_value_delimiter=NULL,
+                                 trend_line='None',
+                                 trend_line_se='No',
+                                 x_zoom_min=NULL,
+                                 x_zoom_max=NULL,
+                                 y_zoom_min=NULL,
+                                 y_zoom_max=NULL,
+                                 scale_x_log_base_10=FALSE,
+                                 scale_y_log_base_10=FALSE,
+
+                                 # dates
+                                 show_points=TRUE,
+                                 ts_date_floor='None',
+                                 ts_date_break_format='Auto',
+                                 ts_date_breaks_width=NULL,
+                                 year_over_year=FALSE,
+                                 include_zero_y_axis=TRUE,
+
+                                 # mapping options
+                                 map_format=FALSE,
+                                 map_borders_database=NULL,
+                                 map_borders_regions=NULL,
+
+                                 # set graph label/etc. options
+                                 pretty_text=FALSE,
+                                 base_size=15,
+                                 custom_title=NULL,
+                                 custom_subtitle=NULL,
+                                 custom_x_axis_label=NULL,
+                                 custom_y_axis_label=NULL,
+                                 custom_caption=NULL,
+                                 custom_tag=NULL,
+                                 vertical_annotations=NULL,
+                                 horizontal_annotations=NULL
+
+                                ) {
+
+    ggplot_object <- NULL
+
+    if(!is.null(primary_variable)  &&
+            primary_variable != global__select_variable &&
+            primary_variable %in% colnames(dataset)) {
+
+        log_message_block_start('Creating ggplot object')
+
+        log_message_variable('primary_variable', primary_variable)
+        log_message_variable('comparison_variable', comparison_variable)
+        log_message_variable('sum_by_variable', sum_by_variable)
+        log_message_variable('size_variable', size_variable)
+        log_message_variable('label_variables', label_variables)
+        log_message_variable('color_variable', color_variable)
+        log_message_variable('facet_variable', facet_variable)
+
+        log_message_variable('numeric_aggregation', numeric_aggregation)
+        log_message_variable('numeric_group_comp_variable', numeric_group_comp_variable)
+        log_message_variable('numeric_aggregation_function', numeric_aggregation_function)
+        log_message_variable('numeric_aggregation_count_minimum', numeric_aggregation_count_minimum)
+        log_message_variable('numeric_show_resampled_confidence_interval', numeric_show_resampled_confidence_interval)
+
+        log_message_variable('transparency', transparency)
+        log_message_variable('annotate_points', annotate_points)
+        log_message_variable('show_variable_totals', show_variable_totals)
+        log_message_variable('show_comparison_totals', show_comparison_totals)
+        log_message_variable('histogram_bins', histogram_bins)
+        log_message_variable('jitter', jitter)
+        log_message_variable('order_by_variable', order_by_variable)
+        log_message_variable('numeric_graph_type', numeric_graph_type)
+        log_message_variable('filter_factor_lump_number', filter_factor_lump_number)
+        log_message_variable('categoric_view_type', categoric_view_type)
+        log_message_variable('multi_value_delimiter', multi_value_delimiter)
+        log_message_variable('trend_line', trend_line)
+        log_message_variable('trend_line_se', trend_line_se)
+        log_message_variable('x_zoom_min', x_zoom_min)
+        log_message_variable('x_zoom_max', x_zoom_max)
+        log_message_variable('y_zoom_min', y_zoom_min)
+        log_message_variable('y_zoom_max', y_zoom_max)
+        log_message_variable('scale_x_log_base_10', scale_x_log_base_10)
+        log_message_variable('scale_y_log_base_10', scale_y_log_base_10)
+
+        # dates
+        log_message_variable('show_points', show_points)
+        log_message_variable('ts_date_floor', ts_date_floor)
+        log_message_variable('ts_date_break_format', ts_date_break_format)
+        log_message_variable('ts_date_breaks_width', ts_date_breaks_width)
+        log_message_variable('year_over_year', year_over_year)
+        log_message_variable('include_zero_y_axis', include_zero_y_axis)
+
+        log_message_variable('map_format', map_format)
+        log_message_variable('map_borders_database', map_borders_database)
+        log_message_variable('map_borders_regions', map_borders_regions)
+
+        # set graph label/etc. options
+        log_message_variable('pretty_text', pretty_text)
+        log_message_variable('base_size', base_size)
+        log_message_variable('custom_title', custom_title)
+        log_message_variable('custom_subtitle', custom_subtitle)
+        log_message_variable('custom_x_axis_label', custom_x_axis_label)
+        log_message_variable('custom_y_axis_label', custom_y_axis_label)
+        log_message_variable('custom_caption', custom_caption)
+        log_message_variable('custom_tag', custom_tag)
+        log_message_variable('vertical_annotations', vertical_annotations)
+        log_message_variable('horizontal_annotations', horizontal_annotations)
+
+        if(!is.null(vertical_annotations)) {
+
+            vertical_annotations <- str_split(vertical_annotations, "\n")[[1]]
+            vertical_annotations <- purrr::map(vertical_annotations, ~ str_split(., ';')[[1]])
+        }
+
+        if(!is.null(horizontal_annotations)) {
+
+            horizontal_annotations <- str_split(horizontal_annotations, "\n")[[1]]
+            horizontal_annotations <- purrr::map(horizontal_annotations, ~ str_split(., ';')[[1]])
+        }
+
+        log_message_variable('var_plots__horizontal_annotations',
+                             paste0(horizontal_annotations, collapse="..."))
+
+        log_message_variable('var_plots__vertical_annotations',
+                             paste0(vertical_annotations, collapse="..."))
+        
+        if(pretty_text) {
+            # if we change to pretty text, it will update the columns and all values to be "pretty",
+            # but that means we have to take the variables they selected and change them to be
+            # "pretty" as well so subsetting by them finds the correct column
+            required_variables <- c(default_if_null_or_empty_string(primary_variable),
+                                    default_if_null_or_empty_string(comparison_variable),
+                                    default_if_null_or_empty_string(sum_by_variable),
+                                    default_if_null_or_empty_string(size_variable),
+                                    default_if_null_or_empty_string(color_variable),
+                                    default_if_null_or_empty_string(facet_variable))
+            
+            if(!is.null(label_variables) && length(label_variables) > 0) {
+            
+                required_variables <- c(required_variables, label_variables)
+                
+                label_variables <- rt_pretty_text(label_variables)
+                log_message_variable('updated label_variables', paste0(label_variables, collapse = ', '))
+            }
+            
+            dataset <- rt_pretty_dataset(dataset=dataset %>% select(required_variables))
+
+            # R uses the "`My Variable`" syntax for variables with spaces which dplyr's xxx_() relies on
+            primary_variable <- rt_pretty_text(primary_variable)
+            if(!is_null_or_empty_string(comparison_variable)) {
+
+                comparison_variable <- rt_pretty_text(comparison_variable)
+            }
+            if(!is_null_or_empty_string(sum_by_variable)) {
+
+                sum_by_variable <- rt_pretty_text(sum_by_variable)
+            }
+            if(!is_null_or_empty_string(size_variable)) {
+
+                size_variable <- rt_pretty_text(size_variable)
+            }
+            if(!is_null_or_empty_string(color_variable)) {
+
+                color_variable <- rt_pretty_text(color_variable)
+            }
+            if(!is_null_or_empty_string(facet_variable)) {
+
+                facet_variable <- rt_pretty_text(facet_variable)
+            }
+
+            log_message_variable('updated primary_variable', primary_variable)
+            log_message_variable('updated comparison_variable', comparison_variable)
+            log_message_variable('updated sum_by_variable', sum_by_variable)
+            log_message_variable('updated var_plots__size_variable', size_variable)
+            log_message_variable('updated var_plots__color_variable', color_variable)
+            log_message_variable('updated var_plots__facet_variable', facet_variable)
+            log_message_generic('column names', paste0(colnames(dataset), collapse = '; '))
+        }
+
+        if(is_date_type(dataset[[primary_variable]])) {
+
+            comparison_function <- NULL
+            comparison_function_name <- NULL
+            if(!is.null(comparison_variable)) {
+
+                comparison_function_name <- numeric_aggregation
+
+                if(numeric_aggregation == 'Mean') {
+
+                    comparison_function <- function(x) { return (mean(x, na.rm=TRUE)) }
+
+                } else if (numeric_aggregation == 'Geometric Mean') {
+
+                    comparison_function <- rt_geometric_mean
+
+                } else if (numeric_aggregation == 'Median') {
+
+                    comparison_function <- function(x) { return (median(x, na.rm=TRUE)) }
+
+                } else if (numeric_aggregation == 'Sum') {
+
+                    comparison_function_name = 'Sum of'
+                    comparison_function <- function(x) { return (sum(x, na.rm=TRUE)) }
+
+                } else {
+
+                    stopifnot(FALSE)
+                }
+            }
+
+            add_confidence_interval <- !is.null(trend_line_se) && trend_line_se == 'Yes'
+            ggplot_object <- dataset %>%
+                select(primary_variable, comparison_variable, color_variable, facet_variable) %>%
+                mutate_factor_lump(factor_lump_number=filter_factor_lump_number) %>%
+                rt_explore_plot_time_series(variable=primary_variable,
+                                            comparison_variable=comparison_variable,
+                                            comparison_function=comparison_function,
+                                            comparison_function_name=comparison_function_name,
+                                            color_variable=color_variable,
+                                            facet_variable=facet_variable,
+                                            year_over_year=year_over_year,
+                                            y_zoom_min=y_zoom_min,
+                                            y_zoom_max=y_zoom_max,
+                                            include_zero_y_axis=include_zero_y_axis,
+                                            show_points=show_points,
+                                            show_labels=annotate_points,
+                                            date_floor=ts_date_floor,
+                                            date_break_format=ts_date_break_format,
+                                            date_breaks_width=ts_date_breaks_width,
+                                            base_size=base_size) %>%
+                scale_axes_log10(scale_x=FALSE,
+                                 scale_y=scale_y_log_base_10) %>%
+                add_trend_line(trend_line_type=trend_line,
+                               confidence_interval=add_confidence_interval,
+                               color_variable=color_variable) %>%
+                add_vertical_annotations(vertical_annotations,
+                                         y_location=max(0, y_zoom_min, na.rm=TRUE),
+                                         is_date=TRUE) %>%
+                add_horizontal_annotations(horizontal_annotations,
+                                           x_location=min(dataset[[primary_variable]], na.rm=TRUE),
+                                           x_location_is_date=TRUE)
+
+        ##############################################################################################
+        # Numeric Primary Variable
+        ##############################################################################################
+        } else if(is.numeric(dataset[[primary_variable]])) {
+
+            ##########################################################################################
+            # Numeric Secondary Variable
+            ##########################################################################################
+            if(!is.null(comparison_variable) && is.numeric(dataset[[comparison_variable]])) {
+
+                if(numeric_group_comp_variable) {
+
+                    aggregation_function <- NULL
+                    aggregation_function_name <- NULL
+
+                    if(numeric_aggregation_function != 'Boxplot') {
+
+                        aggregation_function_name <- numeric_aggregation_function
+
+                        if(numeric_aggregation_function == 'Mean') {
+
+                            aggregation_function <- function(x) { return (mean(x, na.rm=TRUE)) }
+
+                        } else if (numeric_aggregation_function == 'Geometric Mean') {
+
+                            aggregation_function <- rt_geometric_mean
+
+                        } else if (numeric_aggregation_function == 'Median') {
+
+                            aggregation_function <- function(x) { return (median(x, na.rm=TRUE)) }
+
+                        } else if (numeric_aggregation_function == 'Sum') {
+
+                            aggregation_function_name = 'Sum of'
+                            aggregation_function <- function(x) { return (sum(x, na.rm=TRUE)) }
+
+                        } else {
+
+                            stopifnot(FALSE)
+                        }
+                    }
+
+                    ggplot_object <- dataset %>%
+                        rt_explore_plot_aggregate_2_numerics(variable=primary_variable,
+                                                             comparison_variable=comparison_variable,
+                                                             aggregation_function=aggregation_function,
+                                                             aggregation_function_name=aggregation_function_name,
+                                                             aggregation_count_minimum=numeric_aggregation_count_minimum,
+                                                             show_resampled_confidence_interval=numeric_show_resampled_confidence_interval,
+                                                             show_points=show_points,
+                                                             show_labels=annotate_points,
+                                                             x_zoom_min=x_zoom_min,
+                                                             x_zoom_max=x_zoom_max,
+                                                             y_zoom_min=y_zoom_min,
+                                                             y_zoom_max=y_zoom_max,
+                                                             base_size=base_size) %>%
+                        scale_axes_log10(scale_x=scale_x_log_base_10,
+                                         scale_y=scale_y_log_base_10)
+                } else {
+
+                    add_confidence_interval <- !is.null(trend_line_se) && trend_line_se == 'Yes'
+
+                    ggplot_object <- dataset %>% select(primary_variable,
+                                                              comparison_variable,
+                                                              color_variable,
+                                                              size_variable,
+                                                              label_variables) %>%
+                        mutate_factor_lump(factor_lump_number=filter_factor_lump_number,
+                                           ignore_columns=label_variables) %>%
+                        rt_explore_plot_scatter(variable=primary_variable,
+                                                comparison_variable=comparison_variable,
+                                                color_variable=color_variable,
+                                                size_variable=size_variable,
+                                                label_variables=label_variables,
+                                                # alpha is a measure of opacity which is the opposite of transparency, but transparency is more user-friendly
+                                                alpha= 1 - transparency,
+                                                jitter=jitter,
+                                                x_zoom_min=x_zoom_min,
+                                                x_zoom_max=x_zoom_max,
+                                                y_zoom_min=y_zoom_min,
+                                                y_zoom_max=y_zoom_max,
+                                                base_size=base_size) %>%
+                        scale_axes_log10(scale_x=scale_x_log_base_10,
+                                         scale_y=scale_y_log_base_10) %>%
+                        add_trend_line(trend_line_type=trend_line,
+                                       confidence_interval=add_confidence_interval,
+                                       color_variable=color_variable)
+
+                    if(map_format) {
+
+                        ggplot_object <- ggplot_object + coord_map()
+
+                        if(!is_null_or_empty_string(map_borders_database)) {
+
+                            regions <- str_split(map_borders_regions, pattern = ', ', simplify = TRUE)
+                            regions <- as.character(regions)
+
+                            ggplot_object <- ggplot_object +
+                                borders(database=map_borders_database,
+                                        regions=regions)
+                        }
+                    }
+                }
+
+                ggplot_object <- ggplot_object %>%
+                        add_horizontal_annotations(horizontal_annotations,
+                                                   x_location=custom_max_min(dataset[[comparison_variable]],
+                                                                             x_zoom_min)) %>%
+                        add_vertical_annotations(vertical_annotations,
+                                                   y_location=custom_max_min(dataset[[primary_variable]],
+                                                                             y_zoom_min))
+            ##########################################################################################
+            # NULL Or Categoric Secondary Variable
+            ##########################################################################################
+            } else {
+
+                ggplot_object <- helper__plot_numeric_categoric(dataset=dataset,
+                                                                numeric_graph_type=numeric_graph_type,
+                                                                # same as above, except we need to swap the numeric/categoric variables
+                                                                primary_variable=primary_variable,
+                                                                comparison_variable=comparison_variable,
+                                                                color_variable=color_variable,
+                                                                order_by_variable=order_by_variable,
+                                                                filter_factor_lump_number=filter_factor_lump_number,
+                                                                histogram_bins=histogram_bins,
+                                                                horizontal_annotations=horizontal_annotations,
+                                                                scale_x_log_base_10=scale_x_log_base_10,
+                                                                x_zoom_min=x_zoom_min,
+                                                                x_zoom_max=x_zoom_max,
+                                                                scale_y_log_base_10=scale_y_log_base_10,
+                                                                y_zoom_min=y_zoom_min,
+                                                                y_zoom_max=y_zoom_max,
+                                                                base_siz=base_size)
+            }
+
+        ##############################################################################################
+        # Categoric Primary Variable
+        ##############################################################################################
+        } else {
+
+            ##########################################################################################
+            # Numeric Secondary Variable
+            ##########################################################################################
+            if(!is.null(comparison_variable) && is.numeric(dataset[[comparison_variable]])) {
+
+                ggplot_object <- helper__plot_numeric_categoric(dataset=dataset,
+                                                                numeric_graph_type=numeric_graph_type,
+                                                                # same as above, except we need to swap the numeric/categoric variables
+                                                                primary_variable=comparison_variable,
+                                                                comparison_variable=primary_variable,
+                                                                color_variable=color_variable,
+                                                                order_by_variable=order_by_variable,
+                                                                filter_factor_lump_number=filter_factor_lump_number,
+                                                                histogram_bins=histogram_bins,
+                                                                horizontal_annotations=horizontal_annotations,
+                                                                scale_x_log_base_10=scale_x_log_base_10,
+                                                                x_zoom_min=x_zoom_min,
+                                                                x_zoom_max=x_zoom_max,
+                                                                scale_y_log_base_10=scale_y_log_base_10,
+                                                                y_zoom_min=y_zoom_min,
+                                                                y_zoom_max=y_zoom_max,
+                                                                base_siz=base_size)
+
+            ##########################################################################################
+            # NULL Or Categoric Secondary Variable
+            ##########################################################################################
+            } else {
+
+                if(multi_value_delimiter == '' || !is.null(comparison_variable)) {
+
+                    multi_value_delimiter <- NULL
+                }
+
+                if(order_by_variable %in% colnames(dataset)) {
+                        
+                    temp_order_by_variable <- order_by_variable
+
+                } else {
+
+                    temp_order_by_variable <- NULL
+                }
+
+                ggplot_object <- dataset %>%
+                    select(primary_variable,
+                           comparison_variable,
+                           sum_by_variable,
+                           temp_order_by_variable) %>%
+                    mutate_factor_lump(factor_lump_number=filter_factor_lump_number) %>%
+                    mutate_factor_reorder(variable_to_order_by=order_by_variable,
+                                          variable_to_order=primary_variable) %>%
+                    rt_explore_plot_value_totals(variable=primary_variable,
+                                                 comparison_variable=comparison_variable,
+                                                 sum_by_variable=sum_by_variable,
+                                                 order_by_count=order_by_variable == "Frequency",
+                                                 show_variable_totals=show_variable_totals,
+                                                 show_comparison_totals=show_comparison_totals,
+                                                 view_type=categoric_view_type,
+                                                 multi_value_delimiter=multi_value_delimiter,
+                                                 show_dual_axes=FALSE,
+                                                 base_size=base_size)
+            }
+        }
+
+        if(!is_null_or_empty_string(custom_title)) {
+            ggplot_object <- ggplot_object + labs(title=custom_title)
+        }
+        if(!is_null_or_empty_string(custom_subtitle)) {
+            ggplot_object <- ggplot_object + labs(subtitle=custom_subtitle)
+        }
+        if(!is_null_or_empty_string(custom_x_axis_label)) {
+            ggplot_object <- ggplot_object + labs(x=custom_x_axis_label)
+        }
+        if(!is_null_or_empty_string(custom_y_axis_label)) {
+            ggplot_object <- ggplot_object + labs(y=custom_y_axis_label)
+        }
+        if(!is_null_or_empty_string(custom_caption)) {
+            ggplot_object <- ggplot_object + labs(caption=custom_caption)
+        }
+        if(!is_null_or_empty_string(custom_tag)) {
+            ggplot_object <- ggplot_object + labs(tag=custom_tag)
+        }
+
+    }
+
+    return (ggplot_object)
 }
 
 ##############################################################################################################
