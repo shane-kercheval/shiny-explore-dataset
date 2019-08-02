@@ -1534,33 +1534,3 @@ test_that("setting dynamic variables - color", {
     expect_identical(selection$choices, c(global__select_variable_optional, categoric_column_names))
     expect_equal(selection$selected, 'origin')
 })
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
