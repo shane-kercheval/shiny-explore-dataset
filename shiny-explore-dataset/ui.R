@@ -59,7 +59,9 @@ shinyUI(fluidPage(theme="custom.css",
                 ),
                 tabPanel(
                     'Update Dataset w/ R Code',
-                    textAreaInput(inputId='load_data__r_code_text', label="", value = "", width = 800, height = 300, cols = NULL, rows = NULL, placeholder = NULL, resize = NULL),
+                    tags$div(class='code_text',
+                        textAreaInput(inputId='load_data__r_code_text', label="", value = "# dataset = dataset %>% mutate(column = column / 10)\n", width = 800, height = 300, cols = NULL, rows = NULL, placeholder = NULL, resize = NULL)
+                    ),
                     tags$div(class='error_output',
                         shinyjs::hidden(
                             verbatimTextOutput(outputId='load_data__r_code_error')

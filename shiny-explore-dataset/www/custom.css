@@ -48,6 +48,11 @@
     display: block;
 }
 
+.code_text textarea {
+    font-weight: 600;
+    font-family: Courier New;
+}
+
 .error_output pre {
     color: red;
 }
