@@ -417,8 +417,11 @@ shinyServer(function(input, output, session) {
                 log_message("Clearing the URL from Browser")
                 shiny::updateQueryString(get_base_url(session), mode = "replace")
                 
-                log_message_block_start("Loaded Dataset from URL params")
-                reactive__source_data$data <- select_preloaded_dataset(dataset_name=params[['data']])$dataset
+                withProgress(value=1/2, message='Loading Dataset',{
+
+                    log_message_block_start("Loaded Dataset from URL params")
+                    reactive__source_data$data <- select_preloaded_dataset(dataset_name=params[['data']])$dataset
+                })
 
                 log_message_block_start("Continuing Processing Url Parameter")
                 log_message("Updating Navbar Tab")

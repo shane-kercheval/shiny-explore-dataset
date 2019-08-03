@@ -1306,13 +1306,20 @@ create_ggplot_object <- function(dataset,
 
                     add_confidence_interval <- !is.null(trend_line_se) && trend_line_se == 'Yes'
 
+                    # Here, I don't want to lump the label variables, EXCEPT if one of the label variables
+                    # happens to also be one of the color or size variables, which I do want to lump.
+                    ignore_columns <- label_variables %>% rt_remove_val(c(size_variable, color_variable))
+                    if(!is.null(ignore_columns) && 
+                            (identical(ignore_columns, character(0)) || ignore_columns == '')) {
+                        ignore_columns <- NULL
+                    }
                     ggplot_object <- dataset %>% select(primary_variable,
                                                               comparison_variable,
                                                               color_variable,
                                                               size_variable,
                                                               label_variables) %>%
                         mutate_factor_lump(factor_lump_number=filter_factor_lump_number,
-                                           ignore_columns=label_variables) %>%
+                                           ignore_columns=ignore_columns) %>%
                         rt_explore_plot_scatter(variable=primary_variable,
                                                 comparison_variable=comparison_variable,
                                                 color_variable=color_variable,
