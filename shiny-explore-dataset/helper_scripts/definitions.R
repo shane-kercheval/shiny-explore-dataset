@@ -45,7 +45,7 @@ var_plots__input_list_default_values <- list(
     'var_plots__numeric_aggregation_count_minimum' = 30,
     'var_plots__numeric_show_resampled_conf_int' = FALSE,
     'var_plots__trend_line' = 'None',
-    'var_plots__trend_line_se' = 'Yes',
+    'var_plots__trend_line_se' = 'No',
     'var_plots__ts_date_floor' = 'None',
     'var_plots__ts_date_break_format' = 'Auto',
     'var_plots__ts_breaks_width' = '',

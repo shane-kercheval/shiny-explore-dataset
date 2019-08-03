@@ -411,9 +411,29 @@ shinyServer(function(input, output, session) {
     })
 
     observeEvent(input$var_plots__generate_link, {
+        log_message_block_start("Generating URL Parameter Link")
 
-        custom_link <- build_custom_url(get_base_url(session), build_parameters_list(input, input$preloaded_dataset))
-        
+        filter_list <- NULL
+        if(!is.null(isolate(input$var_plots__filter_use)) && isolate(input$var_plots__filter_use)) {
+            log_message("Including filters in link")
+
+            column_names <- colnames(reactive__source_data$data)
+
+            # these are the columns we want to filter on; if the column is not in the selection, don't filter
+            filter_controls_selections <- isolate(input$var_plots__filter_controls_selections)
+            if('All Variables' %in% filter_controls_selections) {
+
+                filter_controls_selections <- colnames(local_dataset)
+            }
+
+            all_filter_values <- get_dynamic_filter_values(input, column_names)
+            filter_list <- all_filter_values[filter_controls_selections]
+        }
+
+        custom_link <- build_custom_url(get_base_url(session),
+                                        build_parameters_list(input=input,
+                                                              preloaded_dataset=input$preloaded_dataset,
+                                                              filter_list=filter_list))
         if(nchar(custom_link) > 2000) {
 
             log_message_variable('custom_link length', nchar(custom_link))
