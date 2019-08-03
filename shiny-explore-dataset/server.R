@@ -35,8 +35,16 @@ shinyServer(function(input, output, session) {
     log_message_block_start("##########################################################################################\nStarting Server\n##########################################################################################")
     
     url_parameter_info <- reactiveValues(params=NULL,
+                                         filter_params=NULL,
                                          currently_updating=FALSE,
                                          preloaded_dataset_var_updated=FALSE,
+                                         has_filter_params=FALSE,
+                                         has_created_filter_controls=FALSE,
+                                         has_displayed_filter_controls=FALSE,
+                                         has_set_filter_controls=FALSE,
+                                         has_filter_ran=FALSE,
+
+
                                          has_updated_variables=FALSE,
                                          can_plot=FALSE,
                                          has_plotted=FALSE)
@@ -106,9 +114,9 @@ shinyServer(function(input, output, session) {
     # this builds up the filters based on the dataset column types and dynamically adds the controls to var_plots__filter_bscollapse__UI
     reactive__filter_controls_list <- reactive__filter_controls_list__creator(input, reactive__source_data)
     # area in Filters area where all of the filters are stored and then shown/hidden based on selections
-    output$var_plots__filter_bscollapse__UI <- renderUI__var_plots__filter_bscollapse__UI(input, reactive__source_data, reactive__filter_controls_list)
+    output$var_plots__filter_bscollapse__UI <- renderUI__var_plots__filter_bscollapse__UI(input, reactive__source_data, reactive__filter_controls_list, url_parameter_info)
     # where the user selects the variables they want to filter
-    output$var_plots__filter_controls_selections__UI <- renderUI__var_plots__filter_controls_selections__UI(input, reactive__source_data)
+    output$var_plots__filter_controls_selections__UI <- renderUI__var_plots__filter_controls_selections__UI(input, reactive__source_data, url_parameter_info)
     # contains the logic to show/hide filters based on selections
     observeEvent__var_plots__show_hide_dynamic_filters(input, session, reactive__source_data)
 
@@ -352,6 +360,24 @@ shinyServer(function(input, output, session) {
                     log_message("Updating Preloaded Dataset Dropdown Selection")
                     updateSelectInput(session, 'preloaded_dataset', selected=params[['data']])
                 }
+
+                filter_params <- params[which(str_starts(names(params), global__url_params_filter_prefix))]
+                if(!is.null(filter_params) && length(filter_params) > 0) {
+                    log_message('Detected filter parameters')
+
+                    url_parameter_info$has_filter_params <- TRUE
+
+                    names(filter_params) <- str_replace(names(filter_params), global__url_params_filter_prefix, '')
+                    url_parameter_info$filter_params <- filter_params
+
+
+                    log_message_variable('Filtering variables', paste0(names(filter_params), collapse='; '))
+                    updateCollapse(session, 'var_plots__bscollapse', open="Filters")
+
+
+
+                    #var_plots__filter_controls_selections
+                }
             }
         }
     })
@@ -382,9 +408,194 @@ shinyServer(function(input, output, session) {
         }
     })
 
-    observeEvent(url_parameter_info$has_updated_variables, {
+    observeEvent(url_parameter_info$has_created_filter_controls, {
 
-        if(url_parameter_info$has_updated_variables) {
+        if(url_parameter_info$has_created_filter_controls) {
+            log_message_block_start('Detected has_created_filter_controls')
+            log_message_variable('Filter param names', paste0(names(url_parameter_info$filter_params), collapse="; "))
+
+            updateSelectInput(session, 'var_plots__filter_controls_selections', selected=names(url_parameter_info$filter_params))
+        }
+    })
+    ##### ABOVE IS WORKING
+    # now i need an event to know when this update has taken place AND the dynamic controls have been added
+    # so that i can go and update them based on the URL params
+    # then i need to check checkbox Use Filter and set FIlters to green
+    # then i can set can_plot to true
+
+
+# filter_params=NULL,
+# currently_updating=FALSE,
+# preloaded_dataset_var_updated=FALSE,
+# has_filter_params=FALSE,
+# has_created_filter_controls=FALSE,
+# has_displayed_filter_controls=FALSE,
+# has_set_filter_controls=FALSE,
+# has_filter_ran=FALSE,
+
+
+    #
+
+    observeEvent(input$var_plots__dynamic_filter__amount, {
+        log_message_block_start('input$var_plots__dynamic_filter__amount')
+
+        log_message_variable('input$var_plots__dynamic_filter__amount', input$var_plots__dynamic_filter__amount)
+    })
+
+
+    ##### HERE, this is a way to detect that we have actually shown the controls
+    observe({
+
+        req(isolate(url_parameter_info$filter_params))
+
+        # this is a hack to register all of the dynamic controls to the reactive event listener
+        # also use it to check values (i.e. only update colors if the filters are active i.e. any are not null)
+        selections <- list()
+        for(variable_name in names(url_parameter_info$filter_params)) {
+            value <- input[[paste0('var_plots__dynamic_filter__', variable_name)]]
+
+            log_message_variable(paste0('var_plots__dynamic_filter__', variable_name), value)
+            selections <- append(selections, value)
+        }
+
+        # only update if we are using the filter
+        # also, if any of the selections are not null, that means they have been initialized and we can begin
+        # to mark as being changed otherwise, the filter section hasn't even been opened
+        if(any(map_lgl(selections, ~ !is.null(.)))) {
+
+            log_message_block_start('!!!!!!!!!!HOLY FUCKING SHIT')
+            url_parameter_info$has_displayed_filter_controls <- TRUE
+
+            # This will get triggered again change to the input control values from our hacky registration above
+            # once this happens and once we have has_set_filter_controls then we know we can turn the filter controls on
+            if(isolate(url_parameter_info$has_set_filter_controls)) {
+
+                updateCheckboxInput(session, inputId='var_plots__filter_use', value = TRUE)
+            }
+        }
+    })
+
+    observeEvent(input$var_plots__filter_use, { 
+
+        if(url_parameter_info$currently_updating && url_parameter_info$has_filter_params && 
+            !is.null(input$var_plots__filter_use) && input$var_plots__filter_use) {
+
+            log_message_block_start("Setting has_filter_ran to TRUE")
+            url_parameter_info$has_filter_ran <- TRUE
+
+        }
+    })
+
+
+    observeEvent(url_parameter_info$has_displayed_filter_controls, {
+
+        if(url_parameter_info$has_displayed_filter_controls) {
+            log_message_block_start("Setting Filter Control Values from URL Parameters")
+
+            for(variable_name in names(url_parameter_info$filter_params)) {
+                
+                dynamic_filter_name <- paste0('var_plots__dynamic_filter__', variable_name)
+                filter_values <- url_parameter_info$filter_params[[variable_name]]
+
+                log_message_variable(paste0("updating `", variable_name, "`"),
+                                     paste0(filter_values, collapse='; '))
+
+                log_message_variable('class', class(reactive__source_data$data[[variable_name]]))    
+
+                if(is_date_type(reactive__source_data$data[[variable_name]])) {
+## DO I NEED TO DO YMD()??
+                    log_message('updating dateRangeInput (date)')
+                    stopifnot(length(filter_values) == 2)
+                    updateDateRangeInput(session, inputId=dynamic_filter_name,
+                                         start=filter_values[1], end=filter_values[2])
+                    
+                } else if(is.factor(reactive__source_data$data[[variable_name]])) {
+
+                    log_message('updating updateSelectInput (factor)')
+                    updateSelectInput(session, inputId=dynamic_filter_name, selected=filter_values)
+
+                } else if(is.character(reactive__source_data$data[[variable_name]])) {
+                    
+                    log_message('updating updateSelectInput (character)')
+                    updateSelectInput(session, inputId=dynamic_filter_name, selected=filter_values)
+
+                } else if(is.numeric(reactive__source_data$data[[variable_name]])) {
+
+                    log_message('updating sliderInput (numeric)')
+                    stopifnot(length(filter_values) == 2)
+                    updateSliderInput(session, inputId=dynamic_filter_name,
+                                      value=filter_values)
+
+                } else if(is.logical(reactive__source_data$data[[variable_name]])) {
+
+                    log_message('updating updateSelectInput (logical)')
+                    updateSelectInput(session, inputId=dynamic_filter_name, selected=filter_values)
+
+                } else if("hms" %in% class(reactive__source_data$data[[variable_name]])) {
+
+                    log_message('updating sliderTextInput (hms)')
+                    stopifnot(length(filter_values) == 2)
+                    updateSliderTextInput(session, inputId=dynamic_filter_name, selected=filter_values)
+
+                } else {
+                    #class(.)[1]
+                    stopifnot(FALSE)
+                }
+            }
+
+            url_parameter_info$has_set_filter_controls <- TRUE
+        }
+    })
+
+
+    # observeEvent(c(url_parameter_info$has_created_filter_controls,
+    #                 url_parameter_info$has_displayed_filter_controls), {
+
+    #     if(url_parameter_info$has_created_filter_controls && 
+    #             url_parameter_info$has_displayed_filter_controls) {
+
+    #         log_message_block_start('Detected has_displayed_filter_controls')
+            
+    #         for(variable_name in names(url_parameter_info$filter_params)) {
+
+    #             if(is.null(paste0('var_plots__dynamic_filter__', variable_name))) {
+    #                 log_message_variable(paste0('var_plots__dynamic_filter__', variable_name), 'is null')
+    #             } else {
+    #                 log_message_variable(paste0('var_plots__dynamic_filter__', variable_name), input[[paste0('var_plots__dynamic_filter__', variable_name)]])
+    #             }
+    #         }
+    #     }
+
+
+    #     # if(url_parameter_info$currently_updating &&
+    #     #         url_parameter_info$has_created_filter_controls) {
+
+    #     #     log_message_block_start('Detected has_displayed_filter_controls')
+
+    #     #     log_message_variable('names(input)', names(input))
+            
+    #     # }
+    # })
+
+
+    # open the filter options 
+    # create all of the filters and populate teh filters drop down
+    # add the selected filters to the Filters dropdown 
+    # update the filters drop down to select the controls we are filtering
+    # apply the filters
+    # check the box indicating we are using the filters
+    # set filter menu to green
+    # then indicate that we are done and ready to plot
+
+
+
+
+#TODO WILL NEED TO CHANGE has_created_filter_controls to something like done_updating_all_filter_controls
+    observeEvent(c(url_parameter_info$has_updated_variables,
+                   url_parameter_info$has_filter_ran), {
+
+        if(url_parameter_info$has_updated_variables &&
+                (!url_parameter_info$has_filter_params || url_parameter_info$has_filter_ran)) {
 
             log_message_block_start('Detected Has Updated Variables - Resuming Dynamic Variable Observers')
 

@@ -164,7 +164,9 @@ shinyUI(fluidPage(theme="custom.css",
                                           placement='bottom', trigger='hover')
                             )
                         ),
+                        # Selection that contains all of the variables
                         uiOutput('var_plots__filter_controls_selections__UI'),
+                        # dynamic list of all the actual controls
                         uiOutput('var_plots__filter_bscollapse__UI')
                     ),
                     bsCollapsePanel(

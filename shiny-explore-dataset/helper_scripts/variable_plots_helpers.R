@@ -22,10 +22,12 @@ reactive__filter_controls_list__creator <- function(input, dataset) {
         req(dataset$data)
         input$var_plots__filter_clear
 
-        withProgress(value=1/2, message='Generating Filters', {
+        withProgress(value=1/2, message="Generating Filters", {
+
+            log_message("Generating Filter Controls")
             
             ui_list <- imap(dataset$data, ~ {
-
+                log_message_variable('filter control for', .y)
                 input_id <- paste0('var_plots__dynamic_filter__', .y)
                 filter_object <- NULL
                 if(is_date_type(.x)) {
@@ -706,6 +708,8 @@ reactive__var_plots__ggplot__creator <- function(input, session, dataset, url_pa
             # if we are updating from url parameters, need to wait until we can_plot
             req(url_parameter_info$can_plot)
         }
+
+        log_message_block_start('Preparing to Create ggplot Object')
 
         req(input$var_plots__variable)
         req(input$var_plots__comparison)
@@ -1470,14 +1474,23 @@ create_ggplot_object <- function(dataset,
 ##############################################################################################################
 # INPUT
 ##############################################################################################################
-renderUI__var_plots__filter_controls_selections__UI <- function(input, dataset) {
+renderUI__var_plots__filter_controls_selections__UI <- function(input, dataset, url_parameter_info) {
     renderUI({
 	req(dataset$data)
         input$var_plots__filter_clear
+
+        log_message_block_start('Creating Filter Controls Selections')
+
         choices <- list(
             "All Variables" = c("All Variables"),
             "Individual Variables" = colnames(dataset$data)
         )
+
+        if(isolate(url_parameter_info$currently_updating)) {
+            log_message('setting `has_created_filter_controls` to TRUE')
+
+            url_parameter_info$has_created_filter_controls <- TRUE        
+        }
 
         selectInput(inputId='var_plots__filter_controls_selections',
                     label = 'Filters',
@@ -1490,9 +1503,21 @@ renderUI__var_plots__filter_controls_selections__UI <- function(input, dataset) 
     })
 }
 
-renderUI__var_plots__filter_bscollapse__UI <- function(input, dataset, filter_controls_list) {
+renderUI__var_plots__filter_bscollapse__UI <- function(input, dataset, filter_controls_list, url_parameter_info) {
  
-    renderUI({ tagList(list=filter_controls_list()) })
+    renderUI({ 
+
+        log_message_block_start("Creating Filter Controls")
+
+        filter_list <- tagList(list=filter_controls_list())
+
+        if(isolate(url_parameter_info$currently_updating)) {
+            log_message('setting `has_displayed_filter_controls` to TRUE')
+            url_parameter_info$has_displayed_filter_controls <- TRUE
+
+        }
+        return (filter_list)
+    })
 }
 
 clear_variables <- function(session, input, swap_primary_and_comparison=FALSE) {
