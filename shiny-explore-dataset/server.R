@@ -363,7 +363,15 @@ shinyServer(function(input, output, session) {
         
         url_search <- session$clientData$url_search
         
-        log_message_variable('base url', get_base_url(session))
+        log_message_variable('url_protocol', session$clientData$url_protocol)
+        log_message_variable('url_hostname', session$clientData$url_hostname)
+        log_message_variable('url_port', session$clientData$url_port)
+        log_message_variable('url_pathname', session$clientData$url_pathname)
+        log_message_variable('url_search', session$clientData$url_search)
+        log_message_variable('url_hash_initial', session$clientData$url_hash_initial)
+        log_message_variable('url_hash', session$clientData$url_hash)
+
+        log_message_variable('generated url', get_base_url(session))
 
         if(is.null(url_search) || url_search == '') {
 

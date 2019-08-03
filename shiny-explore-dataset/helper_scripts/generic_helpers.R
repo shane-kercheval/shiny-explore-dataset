@@ -360,11 +360,15 @@ add_horizontal_annotations <- function(ggplot_object, horizontal_annotations, x_
 #' 
 #' @param session the session provided by the shiny app
 get_base_url <- function(session) {
-    url_string <- paste0(session$clientData$url_protocol,
-                         "//",
-                         session$clientData$url_hostname,
-                         ":",
-                         session$clientData$url_port)
+    url_string <- paste0(session$clientData$url_protocol, "//", session$clientData$url_hostname)
+    
+    if(!is.null(session$clientData$url_port) && session$clientData$url_port != '') {
+    
+        url_string <- paste0(url_string, ":", session$clientData$url_port)
+    }
+    
+    url_string <- paste0(url_string, session$clientData$url_pathname)
+    
     url <- httr::parse_url(url_string)
     return (httr::build_url(url))
 }
