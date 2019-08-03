@@ -512,6 +512,7 @@ shinyServer(function(input, output, session) {
     ##### HERE, this is a way to detect that we have actually shown the controls
     observe({
 
+        req(isolate(url_parameter_info$currently_updating))
         req(isolate(url_parameter_info$filter_params))
 
         # this is a hack to register all of the dynamic controls to the reactive event listener

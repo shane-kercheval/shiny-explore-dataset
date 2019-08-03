@@ -125,6 +125,16 @@ update_var_plot_variables_from_url_params <- function(session, params, dataset, 
                       choices=column_names,
                       selected=selected_label_variables)
 
+    selected_order_by_variable <- "Default"
+    if (!is.null(params[['var_plots__order_by_variable']])) {
+
+        selected_order_by_variable <- params[['var_plots__order_by_variable']]
+        log_message_variable('updating order_by_variable', params[['var_plots__order_by_variable']])
+    }
+    updateSelectInput(session, 'var_plots__order_by_variable',
+                      choices=c("Default", "Frequency", numeric_column_names),
+                      selected=selected_order_by_variable)
+
     #######################################################################
     # Update Non-Dynamic
     # These should already have `choices` defined in UI
@@ -181,10 +191,6 @@ update_var_plot_variables_from_url_params <- function(session, params, dataset, 
     if (!is.null(params[['var_plots__numeric_graph_type']])) {
         log_message_variable('updating numeric_graph_type', params[['var_plots__numeric_graph_type']])
         updateSelectInput(session, 'var_plots__numeric_graph_type', selected=params[['var_plots__numeric_graph_type']])
-    }
-    if (!is.null(params[['var_plots__order_by_variable']])) {
-        log_message_variable('updating order_by_variable', params[['var_plots__order_by_variable']])
-        updateSelectInput(session, 'var_plots__order_by_variable', selected=params[['var_plots__order_by_variable']])
     }
     if (!is.null(params[['var_plots__show_variable_totals']])) {
         log_message_variable('updating show_variable_totals', params[['var_plots__show_variable_totals']])

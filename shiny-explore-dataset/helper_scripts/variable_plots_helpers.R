@@ -709,8 +709,6 @@ reactive__var_plots__ggplot__creator <- function(input, session, dataset, url_pa
             req(url_parameter_info$can_plot)
         }
 
-        log_message_block_start('Preparing to Create ggplot Object')
-
         req(input$var_plots__variable)
         req(input$var_plots__comparison)
         req(dataset())
@@ -721,6 +719,10 @@ reactive__var_plots__ggplot__creator <- function(input, session, dataset, url_pa
         ######################################################################################################
         ######################################################################################################
         dataset <- dataset()
+
+        log_message_block_start('Preparing to Create ggplot Object')
+
+        
         primary_variable <- input$var_plots__variable
         numeric_aggregation <- input$var_plots__numeric_aggregation
 
