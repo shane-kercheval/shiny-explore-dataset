@@ -415,8 +415,41 @@ private__variable_value_is_default <- function(variable_name, variable_value) {
 #' which will be used to build the url; only want non-defaults in order to limit the length of our url
 #' 
 #' @param input input object from the app
-#' @param preloaded_dataset the name of the preloaded-dataset to load
-build_parameters_list <- function(input, preloaded_dataset) {
+#' @param preloaded_dataset the name of the preloaded-dataset to load (urls only work with preloaded-datasets)
+#' @param filter_list same type of list that `filter_data()` expects, for example: 
+#' 
+#'         ```
+#'         $carat
+#'         [1] 0.20 5.01
+#'         $cut
+#'         [1] "Good"
+#'         $color
+#'         NULL
+#'         ```
+#' 
+#'         Might be created with a list like:
+#'
+#'         ```            
+#'         filter_list <- list(
+#'             carat = c(0.5, 2)
+#'             cut = c('Ideal', 'Premium', 'Good')
+#'             color = NULL
+#'             price = c(326, 18823
+#'         )
+#'         ```
+#'
+#'         OR
+#'
+#'         ```            
+#'         filter_list <- list(
+#'             date = c(ymd('2013-02-05'), ymd('2013-10-31')),
+#'             time_hour = c(ymd('2013-03-05'), ymd('2013-11-30')),
+#'             hms = c("09:01", "18:59")
+#'         )
+#'         ```
+#'
+#'
+build_parameters_list <- function(input, preloaded_dataset, filter_list=NULL) {
 
     # parameters_list <- reactiveValuesToList(input)
     # #my_list <- list("var_plots__asdf"=1, "dddd"=2, "var_plots__ffff"=3)
@@ -437,6 +470,14 @@ build_parameters_list <- function(input, preloaded_dataset) {
         }
     }
 
+    if(!is.null(filter_list) && length(filter_list) > 0) {
+
+        for(filter_name in names(filter_list)) {
+
+            parameters_list[[paste0(global__url_params_filter_prefix, filter_name)]] <- filter_list[[filter_name]]
+        }
+    }
+
     # change multi-value parameters to single-value but occuring multiple times e.g. list('a'=c('b', 'c')) -> list('a'='b', 'a'='c')
     return (expandUrlArgs(parameters_list))
 }
@@ -449,7 +490,15 @@ extract_url_parameters <- function(url_search) {
 
     parameters_list <- mergeUrlArgs(shiny::parseQueryString(url_search))
     default_params <- c('data', 'tab')
-    names(parameters_list) <- c(default_params, paste0('var_plots__', names(parameters_list) %>% rt_remove_val(default_params)))
+    
+    param_names <- names(parameters_list)
+    # we need to reappend 'var_plots__' to corresponding variables; these will be the variables that aren't
+    # data/tab and aren't the filter variables that start with !!_
+    param_names <- ifelse(!param_names %in% c('data', 'tab') & !str_starts(param_names, global__url_params_filter_prefix),
+                          paste0('var_plots__', param_names),
+                          param_names)
+    
+    names(parameters_list) <- param_names
     parameters_list <- type.convert(parameters_list, as.is=TRUE)
 
     return (parameters_list)

@@ -1171,6 +1171,164 @@ test_that("build_parse_url_params", {
     }
 })
 
+test_that("build_parse_url_params - filtering", {
+    context("build_parse_url_params - filtering")
+    input <- var_plots__input_list_default_values
+    
+    filter_list <- list(
+        carat = c(0.5, 2),
+        cut = c('Ideal', 'Premium', 'Good'),
+        color = NULL,
+        price = c(326, 18823),
+        date = c(ymd('2013-02-05'), ymd('2013-10-31')),
+        time_hour = c(ymd('2013-03-05'), ymd('2013-11-30')),
+        hms = c("09:01", "18:59")
+    )
+    
+    parameters <- build_parameters_list(input=input, preloaded_dataset='flights', filter_list = filter_list)
+    
+    # removes NULL, which we want (don't send empty filters, even if they are selected, uses up url characters)
+    expect_equal(length(parameters), length(flatten(filter_list)) + 2)
+    expect_true(!is.null(parameters$data))
+    expect_equal(parameters$data, 'flights')
+    expect_true(!is.null(parameters$tab))
+    expect_equal(parameters$tab, 'Graphs')
+    
+    expected_names <- c(rep('carat', 2), rep('cut', 3), rep('price', 2), rep('date', 2), rep('time_hour', 2), rep('hms', 2))
+    expected_names <- paste0(global__url_params_filter_prefix, expected_names)
+    expect_identical(names(parameters) %>% rt_remove_val(c('data', 'tab')), expected_names)
+
+    # TO URL
+    custom_url <- build_custom_url(base_url = 'http://127.0.0.1:3158/', parameters_list = parameters)
+    expected_url <- "http://127.0.0.1:3158/?data=flights&tab=Graphs&%21%21_carat=0.5&%21%21_carat=2&%21%21_cut=Ideal&%21%21_cut=Premium&%21%21_cut=Good&%21%21_price=326&%21%21_price=18823&%21%21_date=2013-02-05&%21%21_date=2013-10-31&%21%21_time_hour=2013-03-05&%21%21_time_hour=2013-11-30&%21%21_hms=09%3A01&%21%21_hms=18%3A59"
+    expect_equal(custom_url, expected_url)
+    expect_equal(nchar(custom_url), 306)
+    
+    # BACK TO PARAMETERS
+    url_search <- str_replace(expected_url, 'http://127.0.0.1:3158/', '')
+    extracted_parameters <- extract_url_parameters(url_search = url_search)
+    
+    expected_parameters <- filter_list
+    # remove `color` which has NULL value
+    expected_parameters <- expected_parameters[which(names(expected_parameters) != 'color')]
+    # add expected prefix
+    names(expected_parameters) <- paste0(global__url_params_filter_prefix, names(expected_parameters))
+    # add other values
+    expected_parameters <- c(list('data'='flights', 'tab'='Graphs'), expected_parameters)
+    expect_equal(length(expected_parameters), length(extracted_parameters))
+    expect_identical(names(expected_parameters), names(extracted_parameters))
+    for(param_name in names(expected_parameters)) {
+        expect_true(all(expected_parameters[[param_name]] == extracted_parameters[[param_name]]))
+    }
+
+    # Now Test with var_plots__
+    mock_input <- list(
+        'var_plots__variable' = 'Test values with spaces and sh*&%t.!',
+        'var_plots__comparison' = 'expected_value_comparison',
+        'var_plots__sum_by_variable' = 'expected_value_sum_by_variable',
+        'var_plots__color_variable' = 'expected_value_color_variable',
+        'var_plots__facet_variable' = 'expected_value_facet_variable',
+        'var_plots__size_variable' = 'expected_value_size_variable',
+        'var_plots__numeric_group_comp_variable' = TRUE,
+        'var_plots__numeric_aggregation_function' = 'month',
+        'var_plots__numeric_aggregation' = 'week',
+        'var_plots__multi_value_delimiter' = "; ",
+        'var_plots__filter_factor_lump_number'=20,
+        'var_plots__label_variables' = c('this', 'has', 'multiple', 'values'),
+        'var_plots__annotate_points' = FALSE,
+        'var_plots__show_points' = FALSE,
+        'var_plots__year_over_year' = TRUE,
+        'var_plots__include_zero_y_axis' = FALSE,
+        'var_plots__numeric_graph_type' = "Boxplot Whoot",
+        'var_plots__categoric_view_type' = "Bar Whoot",
+        'var_plots__order_by_variable' = "Default Whoot",
+        'var_plots__show_variable_totals' = FALSE,
+        'var_plots__show_comparison_totals' = FALSE,
+        'var_plots__histogram_bins' = 1000,
+        'var_plots__transparency' = 1999,
+        'var_plots__jitter' = TRUE,
+        'var_plots__numeric_aggregation_count_minimum' = 3009,
+        'var_plots__numeric_show_resampled_conf_int' = TRUE,
+        'var_plots__trend_line' = 'None Whoot',
+        'var_plots__trend_line_se' = 'Yes Whoot',
+        'var_plots__ts_date_floor' = 'None Whoot',
+        'var_plots__ts_date_break_format' = 'Auto Whoot',
+        'var_plots__ts_breaks_width' = 'not null',
+        'var_plots__scale_x_log_base_10' = TRUE,
+        'var_plots__x_zoom_min' = 'not NA',
+        'var_plots__x_zoom_max' = 40,
+        'var_plots__scale_y_log_base_10' = TRUE,
+        'var_plots__y_zoom_min' = 'not NA',
+        'var_plots__y_zoom_max' = 'not NA',
+        'var_plots__custom_title' = "This is my title",
+        'var_plots__custom_subtitle' = "This is my subtitle",
+        'var_plots__custom_x_axis_label' = "This is my X Axis Label",
+        'var_plots__custom_y_axis_label' = "This is my Y Axis Label",
+        'var_plots__custom_caption' = "This is my caption",
+        'var_plots__custom_tag' = "This is my Tag",
+        'var_plots__pretty_text' = TRUE,
+        'var_plots__base_size' = 155,
+        'var_plots__vertical_annotations' = "vertical annotations",
+        'var_plots__horizontal_annotations' = "horizontal annotations"
+    )
+    parameters <- build_parameters_list(input=mock_input, preloaded_dataset='flights', filter_list = filter_list)
+    
+    filter_variable_names <- c('!!_carat', '!!_cut', '!!_price', '!!_date', '!!_time_hour', '!!_hms')
+    expected_names <- str_replace(c('data', 'tab', names(mock_input), filter_variable_names), 'var_plots__', '')
+    # need unique(names) because var_plots__label_variables has multiple values which should be expanded
+    expect_identical(unique(names(parameters)), expected_names)
+    # this list should have been converted to 4 list elements with the same names and different values
+    label_variable_list <- parameters[which(names(parameters) == 'label_variables')]
+    expect_equal(length(label_variable_list), length(mock_input$var_plots__label_variables))
+    expect_equal(label_variable_list[[1]], mock_input$var_plots__label_variables[1])
+    expect_equal(label_variable_list[[2]], mock_input$var_plots__label_variables[2])
+    expect_equal(label_variable_list[[3]], mock_input$var_plots__label_variables[3])
+    expect_equal(label_variable_list[[4]], mock_input$var_plots__label_variables[4])
+    
+    for(variable in names(parameters) %>% rt_remove_val(c('data', 'tab', 'label_variables', filter_variable_names))) {
+        expect_equal(parameters[[variable]], mock_input[[paste0('var_plots__',variable)]])
+    }
+
+    custom_url <- build_custom_url(base_url = 'http://127.0.0.1:3158/', parameters_list = parameters)
+    expected_url <- "http://127.0.0.1:3158/?data=flights&tab=Graphs&variable=Test%20values%20with%20spaces%20and%20sh%2A%26%25t.%21&comparison=expected_value_comparison&sum_by_variable=expected_value_sum_by_variable&color_variable=expected_value_color_variable&facet_variable=expected_value_facet_variable&size_variable=expected_value_size_variable&numeric_group_comp_variable=TRUE&numeric_aggregation_function=month&numeric_aggregation=week&multi_value_delimiter=%3B%20&filter_factor_lump_number=20&label_variables=this&label_variables=has&label_variables=multiple&label_variables=values&annotate_points=FALSE&show_points=FALSE&year_over_year=TRUE&include_zero_y_axis=FALSE&numeric_graph_type=Boxplot%20Whoot&categoric_view_type=Bar%20Whoot&order_by_variable=Default%20Whoot&show_variable_totals=FALSE&show_comparison_totals=FALSE&histogram_bins=1000&transparency=1999&jitter=TRUE&numeric_aggregation_count_minimum=3009&numeric_show_resampled_conf_int=TRUE&trend_line=None%20Whoot&trend_line_se=Yes%20Whoot&ts_date_floor=None%20Whoot&ts_date_break_format=Auto%20Whoot&ts_breaks_width=not%20null&scale_x_log_base_10=TRUE&x_zoom_min=not%20NA&x_zoom_max=40&scale_y_log_base_10=TRUE&y_zoom_min=not%20NA&y_zoom_max=not%20NA&custom_title=This%20is%20my%20title&custom_subtitle=This%20is%20my%20subtitle&custom_x_axis_label=This%20is%20my%20X%20Axis%20Label&custom_y_axis_label=This%20is%20my%20Y%20Axis%20Label&custom_caption=This%20is%20my%20caption&custom_tag=This%20is%20my%20Tag&pretty_text=TRUE&base_size=155&vertical_annotations=vertical%20annotations&horizontal_annotations=horizontal%20annotations&%21%21_carat=0.5&%21%21_carat=2&%21%21_cut=Ideal&%21%21_cut=Premium&%21%21_cut=Good&%21%21_price=326&%21%21_price=18823&%21%21_date=2013-02-05&%21%21_date=2013-10-31&%21%21_time_hour=2013-03-05&%21%21_time_hour=2013-11-30&%21%21_hms=09%3A01&%21%21_hms=18%3A59"
+    expect_equal(custom_url, expected_url)
+    expect_equal(nchar(custom_url), 1839)
+    
+    
+    # extract_url_parameters only expects the ?.... part of the url
+    extracted_parameters <- extract_url_parameters(url_search=str_replace(custom_url, 'http://127.0.0.1:3158/', ''))
+    expect_identical(names(extracted_parameters), c('data', 'tab', names(mock_input), filter_variable_names))
+    
+    var_plots_extracted_parameters <- extracted_parameters[which(!names(extracted_parameters) %in% c('data', 'tab') & 
+                                                                     !str_starts(names(extracted_parameters),
+                                                                                 global__url_params_filter_prefix))]
+    expect_identical(names(var_plots_extracted_parameters), names(mock_input))
+    
+    # test var_plots__
+    for(variable in names(mock_input)) {
+        expect_true(all(var_plots_extracted_parameters[[variable]] == mock_input[[variable]]))
+    }
+    
+    # test_filters & data/tab
+    expected_parameters <- filter_list
+    # remove color since it was null
+    expected_parameters <- expected_parameters[which(names(expected_parameters) != 'color')]
+    # append expected prefix
+    names(expected_parameters) <- paste0(global__url_params_filter_prefix, names(expected_parameters))
+    # add default parameters
+    expected_parameters <- c(list('data'='flights', 'tab'='Graphs'), expected_parameters)
+    
+    other_extracted_parameters <- extracted_parameters[which(names(extracted_parameters) %in% c('data', 'tab') | 
+                                                                     str_starts(names(extracted_parameters),
+                                                                                global__url_params_filter_prefix))]
+    
+    expect_equal(length(expected_parameters), length(other_extracted_parameters))
+    expect_identical(names(expected_parameters), names(other_extracted_parameters))
+    for(param_name in names(expected_parameters)) {
+        expect_true(all(expected_parameters[[param_name]] == other_extracted_parameters[[param_name]]))
+    }
+})
+
 test_that("apply_r_code_to_dataset", {
     
     results <- select_preloaded_dataset("Credit", defualt_path = '../')

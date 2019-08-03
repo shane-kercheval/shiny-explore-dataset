@@ -14,6 +14,8 @@ names(global__date_part_vector) <- c('None', 'Day', 'Week', 'Month', 'Quarter', 
 global__date_break_format_vector <- c('Auto', '%Y-%m-%d', '%Y-%W', '%Y-%m', '%Y')
 names(global__date_break_format_vector) <- c('Auto', 'Day', 'Week', 'Month', 'Year')
 
+global__url_params_filter_prefix <- '!!_'
+
 var_plots__input_list_default_values <- list(
 
     'var_plots__variable' = global__select_variable,
