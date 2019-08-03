@@ -494,22 +494,13 @@ shinyServer(function(input, output, session) {
         }
     })
 
-# filter_params=NULL,
-# currently_updating=FALSE,
-# preloaded_dataset_var_updated=FALSE,
-# has_filter_params=FALSE,
-# has_created_filter_controls=FALSE,
-# has_displayed_filter_controls=FALSE,
-# has_set_filter_controls=FALSE,
-# has_filter_ran=FALSE,
-
     observeEvent(input$var_plots__dynamic_filter__amount, {
         log_message_block_start('input$var_plots__dynamic_filter__amount')
 
         log_message_variable('input$var_plots__dynamic_filter__amount', input$var_plots__dynamic_filter__amount)
     })
 
-    ##### HERE, this is a way to detect that we have actually shown the controls
+    ##### this is a way to detect that we have actually shown the controls
     observe({
 
         req(isolate(url_parameter_info$currently_updating))
