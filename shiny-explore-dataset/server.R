@@ -289,6 +289,75 @@ shinyServer(function(input, output, session) {
 
     ##########################################################################################################
     # UPDATE FROM URL
+    # 
+    # How it works:
+    # ============
+    # There are various observeEvents for e.g. loading the dataset and updating the selectInput choices for 
+    # the variables based on the dataset; these are initially suspended when the app starts. 
+
+    # There is an observeEvent for the url_search which parses the url-parameters into a list of
+    # parameter/values; if no parameters are found, then all of the observeEvents (e.g. loading dataset and
+    # updating selectInputs) are resumed and the application proceeds as usual. If parameters are found, then
+    # 
+    # The dataset is loaded, the variable selections and graph options are updated, and the data is filtered
+    # if applible. This is done by a somewhat complex event-chain, which is explained below.
+    # 
+    # 
+    # Dataset & Variables
+    # ----------
+    # The dataset is loaded directly rather than from the selectInput. We then set the preloaded_dataset
+    # selectInput to the appropriate value.
+    # 
+    # We have to wait for the preloaded_dataset selectInput to get set via the reactive system (and of course
+    # after we manully set the values) before resuming all the observeEvents, otherwise our variables (which
+    # have been manually set) will be overwritten. To do that I use `preloaded_dataset_var_updated`. If we are
+    # loading the default dataset, then the preloaded_dataset selectInput already has the correct value and 
+    # `preloaded_dataset_var_updated` is set to TRUE and we immediately update all of the variables & graph 
+    # options based on the url parameters; otherwise, we have to rely on our observeEvent for 
+    # preloaded_dataset, which will set `preloaded_dataset_var_updated` to TRUE and update all of the
+    # variables/options only when input$preloaded_dataset matches our parameter value (again, so nothing is
+    # overwritten, which will happen when input$preloaded_dataset is udpated because many reactive events will
+    # be triggered)
+    # 
+    # 
+    # Once the variables & graph options have been set, the `has_updated_variables` is set to TRUE. 
+    # Before we can create the graph, `has_updated_variables` has to be TRUE and IF the url parameters
+    # include variables to filter, we have to be done filtering (i.e. `has_filter_ran` has to be TRUE).
+    # Once both of these things are done, we resume all of the observeEvents if we haven't already, and set
+    # `can_plot` to TRUE.
+    #
+    # `can_plot` is referenced in the code that creates the ggplot so it will triggered once this value is set
+    # to TRUE (if the app is generating the graph from url parmaeters; via 
+    # isolate(url_parameter_info$currently_updating))
+    # 
+    # Once the graph is finished being created, `has_plotted` gets set to TRUE, which triggers an event to 
+    # set `url_parameter_infocurrently_updating` to FALSE. This is important because we only do a lot of the
+    # previously mentioned logic once, while we are processing/updating from the url-parameters. Once the
+    # graph has been created, the process is finished and we should shut that off to avoid unnecessary code
+    # execution and side-effects. 
+    # 
+    # Filtering
+    # ----------
+    # 
+    # The basic steps to filtering are:
+    #     expand "Filters" collapsable menu, which will trigger generating the filter controls and building
+    #         "Filters" selectInput control
+    #     once the controls have been created `has_created_filter_controls` is set to TRUE from within the
+    #         logic that creates the control
+    #     once `has_created_filter_controls` is set to TRUE, we can update the "Filters" selectInput control
+    #         to all of the dataset columns that we need to filter by. This will automatically trigger the
+    #         underlying dynamic filter controls to be added to the menu. 
+    #     we have to wait for the controls to be added to the menu, which is done in a somewhat hacky way
+    #         since these controls are dynamic (see code that sets `has_displayed_filter_controls` to TRUE)
+    #     once the dynamic filter controls are added, we can set the values according to the url-parameters
+    #     again, we have to wait until the reactive events have processed and the controls have actually been
+    #         set; refer to the logic around the `has_set_filter_controls` variables
+    #     once `has_set_filter_controls` is TRUE, then we can update the "Use Filters" checkbox, which will
+    #         automatically filter the dataset. Again, we have to wait for this to happen, so this is
+    #         accomplished by an observeEvent on this checkbox.
+    #     once the "Use Filters" checkbox is successfully updated, we can set `has_filter_ran` to TRUE which
+    #         will trigger `can_plot` to be set to TRUE, which will trigger the graph to be completed.
+    # 
     ##########################################################################################################
     url_search__observeEvent <- observeEvent(session$clientData$url_search, {
         
@@ -331,8 +400,8 @@ shinyServer(function(input, output, session) {
 
                 log_message_variable("param_names", paste0(names(params), collapse="; "))
 
-                url_parameter_info$params <- params
                 url_parameter_info$currently_updating <- TRUE
+                url_parameter_info$params <- params
 
                 rt_stopif(is.null(params[['data']]))
                 rt_stopif(is.null(params[['tab']]))
@@ -349,6 +418,7 @@ shinyServer(function(input, output, session) {
 
                 if(input$preloaded_dataset == params[['data']]) {
 
+                    observeEvent_preloaded_dataset$resume()
                     url_parameter_info$preloaded_dataset_var_updated <- TRUE
                     # don't need to wait for the observe
                     helper__update_var_plot_variables_from_url_params(session, url_parameter_info, reactive__source_data, input)
@@ -370,13 +440,8 @@ shinyServer(function(input, output, session) {
                     names(filter_params) <- str_replace(names(filter_params), global__url_params_filter_prefix, '')
                     url_parameter_info$filter_params <- filter_params
 
-
                     log_message_variable('Filtering variables', paste0(names(filter_params), collapse='; '))
                     updateCollapse(session, 'var_plots__bscollapse', open="Filters")
-
-
-
-                    #var_plots__filter_controls_selections
                 }
             }
         }
@@ -417,12 +482,6 @@ shinyServer(function(input, output, session) {
             updateSelectInput(session, 'var_plots__filter_controls_selections', selected=names(url_parameter_info$filter_params))
         }
     })
-    ##### ABOVE IS WORKING
-    # now i need an event to know when this update has taken place AND the dynamic controls have been added
-    # so that i can go and update them based on the URL params
-    # then i need to check checkbox Use Filter and set FIlters to green
-    # then i can set can_plot to true
-
 
 # filter_params=NULL,
 # currently_updating=FALSE,
@@ -433,15 +492,11 @@ shinyServer(function(input, output, session) {
 # has_set_filter_controls=FALSE,
 # has_filter_ran=FALSE,
 
-
-    #
-
     observeEvent(input$var_plots__dynamic_filter__amount, {
         log_message_block_start('input$var_plots__dynamic_filter__amount')
 
         log_message_variable('input$var_plots__dynamic_filter__amount', input$var_plots__dynamic_filter__amount)
     })
-
 
     ##### HERE, this is a way to detect that we have actually shown the controls
     observe({
@@ -463,7 +518,7 @@ shinyServer(function(input, output, session) {
         # to mark as being changed otherwise, the filter section hasn't even been opened
         if(any(map_lgl(selections, ~ !is.null(.)))) {
 
-            log_message_block_start('!!!!!!!!!!HOLY FUCKING SHIT')
+            log_message_block_start('Detected that the filter controls have rendered i.e. have values.')
             url_parameter_info$has_displayed_filter_controls <- TRUE
 
             # This will get triggered again change to the input control values from our hacky registration above
@@ -486,7 +541,6 @@ shinyServer(function(input, output, session) {
         }
     })
 
-
     observeEvent(url_parameter_info$has_displayed_filter_controls, {
 
         if(url_parameter_info$has_displayed_filter_controls) {
@@ -503,7 +557,7 @@ shinyServer(function(input, output, session) {
                 log_message_variable('class', class(reactive__source_data$data[[variable_name]]))    
 
                 if(is_date_type(reactive__source_data$data[[variable_name]])) {
-## DO I NEED TO DO YMD()??
+
                     log_message('updating dateRangeInput (date)')
                     stopifnot(length(filter_values) == 2)
                     updateDateRangeInput(session, inputId=dynamic_filter_name,
