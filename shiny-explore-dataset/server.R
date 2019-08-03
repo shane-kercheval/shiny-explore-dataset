@@ -604,50 +604,6 @@ shinyServer(function(input, output, session) {
         }
     })
 
-
-    # observeEvent(c(url_parameter_info$has_created_filter_controls,
-    #                 url_parameter_info$has_displayed_filter_controls), {
-
-    #     if(url_parameter_info$has_created_filter_controls && 
-    #             url_parameter_info$has_displayed_filter_controls) {
-
-    #         log_message_block_start('Detected has_displayed_filter_controls')
-            
-    #         for(variable_name in names(url_parameter_info$filter_params)) {
-
-    #             if(is.null(paste0('var_plots__dynamic_filter__', variable_name))) {
-    #                 log_message_variable(paste0('var_plots__dynamic_filter__', variable_name), 'is null')
-    #             } else {
-    #                 log_message_variable(paste0('var_plots__dynamic_filter__', variable_name), input[[paste0('var_plots__dynamic_filter__', variable_name)]])
-    #             }
-    #         }
-    #     }
-
-
-    #     # if(url_parameter_info$currently_updating &&
-    #     #         url_parameter_info$has_created_filter_controls) {
-
-    #     #     log_message_block_start('Detected has_displayed_filter_controls')
-
-    #     #     log_message_variable('names(input)', names(input))
-            
-    #     # }
-    # })
-
-
-    # open the filter options 
-    # create all of the filters and populate teh filters drop down
-    # add the selected filters to the Filters dropdown 
-    # update the filters drop down to select the controls we are filtering
-    # apply the filters
-    # check the box indicating we are using the filters
-    # set filter menu to green
-    # then indicate that we are done and ready to plot
-
-
-
-
-#TODO WILL NEED TO CHANGE has_created_filter_controls to something like done_updating_all_filter_controls
     observeEvent(c(url_parameter_info$has_updated_variables,
                    url_parameter_info$has_filter_ran), {
 
