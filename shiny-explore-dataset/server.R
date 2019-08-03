@@ -484,6 +484,7 @@ shinyServer(function(input, output, session) {
         }
     })
 
+    #' detects when the filter controls have been created and updates the filter selectInput selections
     observeEvent(url_parameter_info$has_created_filter_controls, {
 
         if(url_parameter_info$has_created_filter_controls) {
@@ -494,13 +495,9 @@ shinyServer(function(input, output, session) {
         }
     })
 
-    observeEvent(input$var_plots__dynamic_filter__amount, {
-        log_message_block_start('input$var_plots__dynamic_filter__amount')
-
-        log_message_variable('input$var_plots__dynamic_filter__amount', input$var_plots__dynamic_filter__amount)
-    })
-
-    ##### this is a way to detect that we have actually shown the controls
+    #' this is a way to detect that we have actually shown the controls
+    #' It is also used to update the "Use Filter" checkbox after we have displayed and done setting the values
+    #' of all the filters
     observe({
 
         req(isolate(url_parameter_info$currently_updating))
@@ -535,15 +532,17 @@ shinyServer(function(input, output, session) {
 
     observeEvent(input$var_plots__filter_use, { 
 
-        if(url_parameter_info$currently_updating && url_parameter_info$has_filter_params && 
-            !is.null(input$var_plots__filter_use) && input$var_plots__filter_use) {
+        if(url_parameter_info$currently_updating &&
+                url_parameter_info$has_filter_params && 
+                !is.null(input$var_plots__filter_use) && input$var_plots__filter_use) {
 
             log_message_block_start("Setting has_filter_ran to TRUE")
             url_parameter_info$has_filter_ran <- TRUE
-
         }
     })
 
+    #' this triggers after we have displayed all of the controls
+    #' it is the main logic that goes through each url parmaeter and updates the filter control values
     observeEvent(url_parameter_info$has_displayed_filter_controls, {
 
         if(url_parameter_info$has_displayed_filter_controls) {
@@ -604,6 +603,8 @@ shinyServer(function(input, output, session) {
         }
     })
 
+    #' this tracks whether we have updated the variable selectInput controls and done filtering;
+    #' only then can we plot
     observeEvent(c(url_parameter_info$has_updated_variables,
                    url_parameter_info$has_filter_ran), {
 
@@ -625,6 +626,9 @@ shinyServer(function(input, output, session) {
         }
     })
 
+    #' once we are finished plotting, we can set `currently_updating` to FALSE which other parts of the app
+    #' use to know if they should execute logic related to URL params. This makes it so we stop executing
+    #' various pieces of code and avoid random side-effects in the app
     observeEvent(url_parameter_info$has_plotted, {
 
         if(url_parameter_info$has_plotted) {
@@ -634,6 +638,7 @@ shinyServer(function(input, output, session) {
         }
     })
 
+    # this is the code that generates the link for a particular graph based on the selections and filtering
     observeEvent(input$var_plots__generate_link, {
         log_message_block_start("Generating URL Parameter Link")
 
