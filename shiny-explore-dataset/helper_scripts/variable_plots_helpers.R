@@ -832,6 +832,12 @@ reactive__var_plots__ggplot__creator <- function(input, session, dataset, url_pa
             return (NULL)
         }
 
+        if(isolate(input$var_plots__trend_line) == "Projection" && year_over_year) {
+            showModal(modalDialog(title = "Cannot project year-over-year trend-line. Unselecting Year-over-Year. Click 'Apply Options' in 'Graph Options' section."))
+            updateCheckboxInput(session, 'var_plots__year_over_year', value=FALSE)
+            return (NULL)   
+        }
+
         if(is_date_type(dataset[[primary_variable]]) && !is.null(color_variable) && year_over_year) {
             # we cannot use YOY and color (year will be the color)
             # So, if we aren't faceting, let's move color to the facet variable.
