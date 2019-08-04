@@ -127,9 +127,11 @@ shinyUI(fluidPage(theme="custom.css",
                                   placement='top', trigger='hover'),
                         fluidRow(
                             div(style="display:inline-block; float:left; margin-bottom:0px; margin-top:10px; margin-left: 15px",
-                                actionButton(inputId='var_plots__variables_buttons_clear', label='Clear')),
+                                actionButton(inputId='var_plots__variables_buttons_clear', label='Clear')
+                            ),
                             div(style="display:inline-block; float:left; margin-bottom:0px; margin-top:10px; margin-left: 10px",
-                                actionButton(inputId='var_plots__variables_buttons_swap', label='Swap')),
+                                actionButton(inputId='var_plots__variables_buttons_swap', label='Swap')
+                            ),
                             bsTooltip(id='var_plots__variables_buttons_clear',
                                       title="Clear all of the variables selected.",
                                       placement='bottom', trigger='hover'),
@@ -426,7 +428,10 @@ shinyUI(fluidPage(theme="custom.css",
                 plotOutput(outputId='var_plots'),
                 verbatimTextOutput(outputId='var_plots__filtering_messages'),
                 verbatimTextOutput(outputId='var_plots__ggplot_messages'),
-                shinyjs::hidden(actionButton(inputId='var_plots__generate_link', "Generate Link (Beta)"))
+                shinyjs::hidden(div(id='var_plots__div__buttons_below_graphs',
+                    actionButton(inputId='var_plots__generate_link', "Generate Link (Beta)"),
+                    actionButton(inputId='var_plots__clear_all_settings', label='Clear All Settings')
+                ))
             )
         ),
         tabPanel(

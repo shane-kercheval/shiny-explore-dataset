@@ -142,27 +142,36 @@ observeEvent__var_plots__custom_labels_clear <- function(input, session) {
     observeEvent(input$var_plots__custom_labels_clear, ({
 
         log_message_block_start('Clearing Custom Graph Labels')
-
         updateCollapse(session, "var_plots__bscollapse", style = list("Other Options" = "danger"))
-
-        updateTextInput(session, 'var_plots__custom_title', value='')
-        updateTextInput(session, 'var_plots__custom_subtitle', value='')
-        updateTextInput(session, 'var_plots__custom_x_axis_label', value='')
-        updateTextInput(session, 'var_plots__custom_y_axis_label', value='')
-        updateTextInput(session, 'var_plots__custom_caption', value='')
-        updateTextInput(session, 'var_plots__custom_tag', value='')
-        updateCheckboxInput(session, 'var_plots__pretty_text', value=FALSE)
-        # perhaps its a bug, but it seems like for all the updateSliderTextInput controls I have to 
-        # pass choices as well
-        updateSliderTextInput(session,
-                              'var_plots__base_size',
-                              choices=seq(6, 20, 1),
-                              selected=15)
-        updateTextAreaInput(session, 'var_plots__vertical_annotations', value="")
-        updateTextAreaInput(session, 'var_plots__horizontal_annotations', value="")
-        # even though I call updateTextInput before click, the values haven't been reset yet
-        # click('var_plots__custom_labels_apply')
+        helper__restore_defaults_other_options(session)
     }))
+}
+
+helper__restore_defaults_other_options <- function(session) {
+    updateTextInput(session, 'var_plots__custom_title', value='')
+    updateTextInput(session, 'var_plots__custom_subtitle', value='')
+    updateTextInput(session, 'var_plots__custom_x_axis_label', value='')
+    updateTextInput(session, 'var_plots__custom_y_axis_label', value='')
+    updateTextInput(session, 'var_plots__custom_caption', value='')
+    updateTextInput(session, 'var_plots__custom_tag', value='')
+    updateCheckboxInput(session, 'var_plots__pretty_text', value=FALSE)
+    # perhaps its a bug, but it seems like for all the updateSliderTextInput controls I have to 
+    # pass choices as well
+    updateSliderTextInput(session,
+                          'var_plots__base_size',
+                          choices=seq(6, 20, 1),
+                          selected=15)
+    updateTextAreaInput(session, 'var_plots__vertical_annotations', value="")
+    updateTextAreaInput(session, 'var_plots__horizontal_annotations', value="")
+    # even though I call updateTextInput before click, the values haven't been reset yet
+    # click('var_plots__custom_labels_apply')
+}
+
+helper__restore_defaults_map_options <- function(session) {
+
+    updateCheckboxInput(session, 'var_plots__map_format', value=FALSE)
+    updateTextInput(session, 'var_plots___map_borders_database', value='')
+    updateTextInput(session, 'var_plots___map_borders_regions', value='')
 }
 
 observeEvent__var_plots__graph_options_apply <- function(input, session) {
@@ -178,46 +187,48 @@ observeEvent__var_plots__graph_options_clear <- function(input, session) {
     observeEvent(input$var_plots__graph_options_clear, {
 
         log_message_block_start("Graph Options Dirty (Cleared Controls)")
-
         updateCollapse(session, "var_plots__bscollapse", style = list("Graph Options" = "danger"))
-
-        # perhaps its a bug, but it seems like for all the updateSliderTextInput controls I have to 
-        # pass choices as well
-        updateSliderTextInput(session,
-                              'var_plots__filter_factor_lump_number',
-                              choices=as.character(c("Off", seq(1, 10), seq(15, 50, 5))),
-                              selected="10")
-        updateSliderTextInput(session,
-                              'var_plots__transparency',
-                              choices=c(seq(0, 90, 10), 99),
-                              selected=60)
-        updateSliderTextInput(session, 'var_plots__transparency', selected=60)
-        updateSelectInput(session, 'var_plots__label_variables', selected=character(0))
-        updateCheckboxInput(session, 'var_plots__annotate_points', value=FALSE)
-        updateCheckboxInput(session, 'var_plots__show_points', value=FALSE)
-        updateCheckboxInput(session, 'var_plots__year_over_year', value=FALSE)
-        updateCheckboxInput(session, 'var_plots__include_zero_y_axis', value=TRUE)
-        updateSelectInput(session, 'var_plots__numeric_graph_type', selected="Boxplot")
-        updateSelectInput(session, 'var_plots__categoric_view_type', selected="Bar")
-        updateSelectInput(session, 'var_plots__order_by_variable', selected="Default")
-        updateCheckboxInput(session, 'var_plots__show_variable_totals', value=TRUE)
-        updateCheckboxInput(session, 'var_plots__show_comparison_totals', value=TRUE)
-        updateNumericInput(session, 'var_plots__histogram_bins', value=30)
-        updateCheckboxInput(session, 'var_plots__jitter', value=FALSE)
-        updateNumericInput(session, 'var_plots__numeric_aggregation_count_minimum', value=30)
-        updateCheckboxInput(session, 'var_plots__numeric_show_resampled_conf_int', value=FALSE)
-        updateRadioButtons(session, 'var_plots__trend_line', selected='None')
-        updateRadioButtons(session, 'var_plots__trend_line_se', selected='Yes')
-        updateSelectInput(session, 'var_plots__ts_date_floor', selected=names(global__date_part_vector)[1])
-        updateSelectInput(session, 'var_plots__ts_date_break_format', selected=names(global__date_break_format_vector)[1])
-        updateTextInput(session, 'var_plots__ts_breaks_width', value=integer(0))
-        updateCheckboxInput(session, 'var_plots__scale_x_log_base_10', value=FALSE)
-        updateNumericInput(session, 'var_plots__x_zoom_min', value=integer(0))
-        updateNumericInput(session, 'var_plots__x_zoom_max', value=integer(0))
-        updateCheckboxInput(session, 'var_plots__scale_y_log_base_10', value=FALSE)
-        updateNumericInput(session, 'var_plots__y_zoom_min', value=integer(0))
-        updateNumericInput(session, 'var_plots__y_zoom_max', value=integer(0))
+        helper__restore_defaults_graph_options(session)
     })
+}
+
+helper__restore_defaults_graph_options <- function(session) {
+    # perhaps its a bug, but it seems like for all the updateSliderTextInput controls I have to 
+    # pass choices as well
+    updateSliderTextInput(session,
+                          'var_plots__filter_factor_lump_number',
+                          choices=as.character(c("Off", seq(1, 10), seq(15, 50, 5))),
+                          selected="10")
+    updateSliderTextInput(session,
+                          'var_plots__transparency',
+                          choices=c(seq(0, 90, 10), 99),
+                          selected=60)
+    updateSliderTextInput(session, 'var_plots__transparency', selected=60)
+    updateSelectInput(session, 'var_plots__label_variables', selected=character(0))
+    updateCheckboxInput(session, 'var_plots__annotate_points', value=FALSE)
+    updateCheckboxInput(session, 'var_plots__show_points', value=FALSE)
+    updateCheckboxInput(session, 'var_plots__year_over_year', value=FALSE)
+    updateCheckboxInput(session, 'var_plots__include_zero_y_axis', value=TRUE)
+    updateSelectInput(session, 'var_plots__numeric_graph_type', selected="Boxplot")
+    updateSelectInput(session, 'var_plots__categoric_view_type', selected="Bar")
+    updateSelectInput(session, 'var_plots__order_by_variable', selected="Default")
+    updateCheckboxInput(session, 'var_plots__show_variable_totals', value=TRUE)
+    updateCheckboxInput(session, 'var_plots__show_comparison_totals', value=TRUE)
+    updateNumericInput(session, 'var_plots__histogram_bins', value=30)
+    updateCheckboxInput(session, 'var_plots__jitter', value=FALSE)
+    updateNumericInput(session, 'var_plots__numeric_aggregation_count_minimum', value=30)
+    updateCheckboxInput(session, 'var_plots__numeric_show_resampled_conf_int', value=FALSE)
+    updateRadioButtons(session, 'var_plots__trend_line', selected='None')
+    updateRadioButtons(session, 'var_plots__trend_line_se', selected='Yes')
+    updateSelectInput(session, 'var_plots__ts_date_floor', selected=names(global__date_part_vector)[1])
+    updateSelectInput(session, 'var_plots__ts_date_break_format', selected=names(global__date_break_format_vector)[1])
+    updateTextInput(session, 'var_plots__ts_breaks_width', value=integer(0))
+    updateCheckboxInput(session, 'var_plots__scale_x_log_base_10', value=FALSE)
+    updateNumericInput(session, 'var_plots__x_zoom_min', value=integer(0))
+    updateNumericInput(session, 'var_plots__x_zoom_max', value=integer(0))
+    updateCheckboxInput(session, 'var_plots__scale_y_log_base_10', value=FALSE)
+    updateNumericInput(session, 'var_plots__y_zoom_min', value=integer(0))
+    updateNumericInput(session, 'var_plots__y_zoom_max', value=integer(0))
 }
 
 hide_graph_options <- function(input) {
@@ -829,9 +840,10 @@ reactive__var_plots__ggplot__creator <- function(input, session, dataset, url_pa
             filter_factor_lump_number <- as.numeric(filter_factor_lump_number)
         }
 
-        map_format <- isolate(input$var_plots__map_format)
-        map_borders_database <- isolate(input$var_plots___map_borders_database)
-        map_borders_regions <- isolate(input$var_plots___map_borders_regions)
+        # NOTE MAP options don't have an apply button
+        map_format <- input$var_plots__map_format
+        map_borders_database <- input$var_plots___map_borders_database
+        map_borders_regions <- input$var_plots___map_borders_regions
 
         custom_title <- isolate(input$var_plots__custom_title)
         custom_subtitle <- isolate(input$var_plots__custom_subtitle)
@@ -967,11 +979,11 @@ reactive__var_plots__ggplot__creator <- function(input, session, dataset, url_pa
 
         if(is.null(ggplot_object)) {
 
-            shinyjs::hide('var_plots__generate_link')
+            shinyjs::hide('var_plots__div__buttons_below_graphs')
 
         } else {
 
-            shinyjs::show('var_plots__generate_link')
+            shinyjs::show('var_plots__div__buttons_below_graphs')
 
             if(isolate(url_parameter_info$currently_updating)) {
 

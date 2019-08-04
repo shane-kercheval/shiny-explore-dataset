@@ -43,16 +43,47 @@ shinyServer(function(input, output, session) {
                                          has_displayed_filter_controls=FALSE,
                                          has_set_filter_controls=FALSE,
                                          has_filter_ran=FALSE,
-
-
                                          has_updated_variables=FALSE,
                                          can_plot=FALSE,
                                          has_plotted=FALSE)
-    
+
     ##########################################################################################################
     # LOAD DATA
     ##########################################################################################################
     reactive__source_data <- reactiveValues(data=NULL)
+
+
+    observeEvent(reactive__source_data$data, {
+
+        req(!isolate(url_parameter_info$currently_updating))  # should never update if we have params (until set to false)
+
+        log_message_block_start('Clearing Filter triggered by new dataset')
+
+        updateCheckboxInput(session, inputId='var_plots__filter_use', value=FALSE)
+        updateCollapse(session, 'var_plots__bscollapse', close="Filter")
+        updateCollapse(session, "var_plots__bscollapse", style = list('Filter' = 'default'))
+    })
+
+    observe({
+
+        reactive__source_data$data  # clear with new dataset
+        input$var_plots__clear_all_settings
+
+        req(!isolate(url_parameter_info$currently_updating))  # should never update if we have params (until set to false)
+
+        log_message_block_start('Clearing All Settings')
+
+        clear_variables(session, input, swap_primary_and_comparison=FALSE)
+        helper__restore_defaults_graph_options(session)
+        helper__restore_defaults_other_options(session)
+        helper__restore_defaults_map_options(session)
+        updateCollapse(session, 'var_plots__bscollapse', close="Graph Options")
+        updateCollapse(session, 'var_plots__bscollapse', close="Other Options")
+        updateCollapse(session, 'var_plots__bscollapse', close="Map Options")
+        updateCollapse(session, "var_plots__bscollapse", style = list('Graph Options' = 'default',
+                                                                      'Other Options' = 'default',
+                                                                      'Map Options' = 'default'))
+    })
 
     observeEvent_preloaded_dataset <-  observeEvent__source_data__preloaded(session,
                                                                             input,
