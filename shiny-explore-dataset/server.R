@@ -722,8 +722,8 @@ shinyServer(function(input, output, session) {
 
         } else {
 
-            showModal(urlModal(custom_link, title = "Link to Regenerate Settings & Graph",
-                               subtitle = "Links only work with pre-loaded & non-filtered datasets."))
+            showModal(urlModal(custom_link, title = "Link to Regenerate Settings, Filters, & Graph",
+                               subtitle = "Links only work with pre-loaded datasets. Additional R code that has been ran will not be re-applied."))
         }
         
     })
