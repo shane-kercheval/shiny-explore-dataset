@@ -1727,6 +1727,119 @@ test_that("setting dynamic variables - color", {
     expect_equal(selection$selected, 'origin')
 })
 
+test_that("setting dynamic variables - trend_extend_date", {
+    context("setting dynamic variables - trend_extend_date")
+
+    global__should_log_message <<- FALSE
+    dataset <- select_preloaded_dataset("Flights", defualt_path = '../')$dataset
+    trend_extend_date_default <- var_plots__input_list_default_values[['var_plots__trend_extend_date']]
+    
+    ########
+    # NULL Primary Variable
+    ########
+    date_selection <- var_plots__trend_extend_date__logic(dataset=dataset,
+                                                          primary_variable=NULL,
+                                                          current_value=NULL)
+    expect_equal(date_selection, trend_extend_date_default)
+    
+    date_selection <- var_plots__trend_extend_date__logic(dataset=dataset,
+                                                         primary_variable=NULL,
+                                                         current_value="Doesn't Matter Column Name")
+    expect_equal(date_selection, trend_extend_date_default)
+    
+    ########
+    # Default Primary Variable
+    ########
+    primary_variable_default <- var_plots__input_list_default_values[['var_plots__variable']]
+    date_selection <- var_plots__trend_extend_date__logic(dataset=dataset,
+                                                         primary_variable=primary_variable_default,
+                                                         current_value=NULL)
+    expect_equal(date_selection, trend_extend_date_default)
+    
+    date_selection <- var_plots__trend_extend_date__logic(dataset=dataset,
+                                                         primary_variable=primary_variable_default,
+                                                         current_value="Doesn't Matter Column Name")
+    expect_equal(date_selection, trend_extend_date_default)
+    
+    ########
+    # Date Primary Variable
+    ########
+    primary_selection <- 'date'
+    date_selection <- var_plots__trend_extend_date__logic(dataset=dataset,
+                                                          primary_variable=primary_selection,
+                                                          current_value=NULL)
+    # should be max date plus 6 months (floor of)
+    expect_equal(date_selection, '2014-06-01')
+    
+    date_selection <- var_plots__trend_extend_date__logic(dataset=dataset,
+                                                          primary_variable=primary_selection,
+                                                          current_value='0000-01-01')
+    expect_equal(date_selection, '2014-06-01')
+    
+    date_selection <- var_plots__trend_extend_date__logic(dataset=dataset,
+                                                          primary_variable=primary_selection,
+                                                          current_value=as.Date('0000-01-01'))
+    expect_equal(date_selection, '2014-06-01')
+    
+    
+    # if the currently selected value is less than the max value of the dataset, still default to max+6 months
+    date_selection <- var_plots__trend_extend_date__logic(dataset=dataset,
+                                                          primary_variable=primary_selection,
+                                                          current_value='2013-12-01')
+    expect_equal(date_selection, '2014-06-01')
+    
+    # but if the current value is beyond the max value of the dataset, keep it
+    date_selection <- var_plots__trend_extend_date__logic(dataset=dataset,
+                                                          primary_variable=primary_selection,
+                                                          current_value='2014-12-23')
+    # should be max date plus 6 months (floor of)
+    expect_equal(date_selection, '2014-12-23')
+    
+    ########
+    # should return default for NUMERIC OR CATEGORIC Primary Variable
+    # All columns names should be available as possible choices for the date
+    ########
+    primary_selection <- 'dep_delay'
+    date_selection <- var_plots__trend_extend_date__logic(dataset=dataset,
+                                                         primary_variable=primary_selection,
+                                                         current_value=NULL)
+    expect_equal(date_selection, trend_extend_date_default)
+    
+    date_selection <- var_plots__trend_extend_date__logic(dataset=dataset,
+                                                         primary_variable=primary_selection,
+                                                         current_value="Doesn't Matter")
+    expect_equal(date_selection, trend_extend_date_default)
+    
+    primary_selection <- 'origin'
+    date_selection <- var_plots__trend_extend_date__logic(dataset=dataset,
+                                                         primary_variable=primary_selection,
+                                                         current_value=NULL)
+    expect_equal(date_selection, trend_extend_date_default)
+    
+    date_selection <- var_plots__trend_extend_date__logic(dataset=dataset,
+                                                         primary_variable=primary_selection,
+                                                         current_value="Doesn't Matter")
+    expect_equal(date_selection, trend_extend_date_default)
+
+})
+
+test_that("get_default_value_for_updating", {
+    context("get_default_value_for_updating")
+
+    global__should_log_message <<- FALSE
+    expect_error(get_default_value_for_updating('asdf'))
+    expect_equal(get_default_value_for_updating('var_plots__variable'), global__select_variable)
+
+    # NULL value should return empty character    
+    expect_empty_char <- get_default_value_for_updating('var_plots__label_variables')
+    expect_true(identical(expect_empty_char, character(0)))
+
+    # NA value should return empty integer
+    expect_empty_int <- get_default_value_for_updating('var_plots__x_zoom_min')
+    expect_true(identical(expect_empty_int, integer(0)))
+    
+})
+
 test_that("create_ggplot_plot - numeric", {
     context("create_ggplot_plot - numeric")
     
@@ -1826,4 +1939,89 @@ test_that("create_ggplot_plot - numeric", {
                                         horizontal_annotations = "30;test",
                                         vertical_annotations = "6000;test2")
     test_save_plot(file_name='graphs/plot__scatter_options.png', plot=plot_object)
+})
+
+test_that("create_ggplot_plot - date projection", {
+    context("create_ggplot_plot - date projection")
+    
+    global__should_log_message <<- FALSE
+    dataset <- select_preloaded_dataset("Flights", defualt_path = '../')$dataset
+    
+    plot_object <- create_ggplot_object(dataset = dataset,
+                                        primary_variable = 'date')
+    test_save_plot(file_name='graphs/plot__time_series__default.png', plot=plot_object)
+    
+    plot_object <- create_ggplot_object(dataset = dataset,
+                                        primary_variable = 'date',
+                                        trend_line = 'Straight')
+    test_save_plot(file_name='graphs/plot__time_series__straight.png', plot=plot_object)
+
+    plot_object <- create_ggplot_object(dataset = dataset,
+                                        primary_variable = 'date',
+                                        trend_line = 'Straight', trend_line_se = 'Yes')
+    test_save_plot(file_name='graphs/plot__time_series__straight__ci.png', plot=plot_object)
+        
+    plot_object <- create_ggplot_object(dataset = dataset,
+                                        primary_variable = 'date',
+                                        trend_line = 'Smooth')
+    test_save_plot(file_name='graphs/plot__time_series__smooth.png', plot=plot_object)
+    
+    plot_object <- create_ggplot_object(dataset = dataset,
+                                        primary_variable = 'date',
+                                        trend_line = 'Smooth', trend_line_se = 'Yes')
+    test_save_plot(file_name='graphs/plot__time_series__smooth__ci.png', plot=plot_object)
+    
+    plot_object <- create_ggplot_object(dataset = dataset,
+                                        primary_variable = 'date',
+                                        trend_line = 'Projection',
+                                        trend_extend_date = as.Date('2015-01-01'))
+    test_save_plot(file_name='graphs/plot__time_series__projection.png', plot=plot_object)
+    
+    plot_object <- create_ggplot_object(dataset = dataset,
+                                        primary_variable = 'date',
+                                        trend_line = 'Projection',
+                                        trend_extend_date = as.Date('2015-01-01'),
+                                        trend_line_se = 'Yes')
+    test_save_plot(file_name='graphs/plot__time_series__projection__ci.png', plot=plot_object)
+    
+    # test when min date is e.g. at the end of a given period
+    dataset <- dataset %>% filter(date > ymd('2013-02-15'))
+    #min(dataset$date)
+    plot_object <- create_ggplot_object(dataset = dataset,
+                                        primary_variable = 'date',
+                                        trend_line = 'Projection',
+                                        trend_extend_date = as.Date('2015-01-01'),
+                                        trend_line_se = 'Yes')
+    test_save_plot(file_name='graphs/plot__time_series__projection__ci__half_period.png', plot=plot_object)
+    
+    
+    # test week, 2/15 was a friday
+    plot_object <- create_ggplot_object(dataset = dataset,
+                                        primary_variable = 'date',
+                                        trend_line = 'Projection',
+                                        ts_date_floor='week',
+                                        ts_date_breaks_width='4 weeks',
+                                        trend_extend_date = as.Date('2015-01-01'),
+                                        trend_line_se = 'Yes')
+    test_save_plot(file_name='graphs/plot__time_series__projection__ci__half_period_week.png', plot=plot_object)
+    
+    # test week, 2/15 was a friday
+    plot_object <- create_ggplot_object(dataset = dataset,
+                                        primary_variable = 'date',
+                                        trend_line = 'Projection',
+                                        ts_date_floor='quarter',
+                                        #ts_date_breaks_width='4 weeks',
+                                        trend_extend_date = as.Date('2015-01-01'),
+                                        trend_line_se = 'Yes')
+    test_save_plot(file_name='graphs/plot__time_series__projection__ci__half_period_quarter.png', plot=plot_object)
+    
+    # test week, 2/15 was a friday
+    plot_object <- create_ggplot_object(dataset = dataset,
+                                        primary_variable = 'date',
+                                        trend_line = 'Projection',
+                                        ts_date_floor='day',
+                                        ts_date_breaks_width='4 weeks',
+                                        trend_extend_date = as.Date('2015-01-01'),
+                                        trend_line_se = 'Yes')
+    test_save_plot(file_name='graphs/plot__time_series__projection__ci__half_period_day.png', plot=plot_object)
 })

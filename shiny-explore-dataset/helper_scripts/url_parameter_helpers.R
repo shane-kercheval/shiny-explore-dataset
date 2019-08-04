@@ -228,6 +228,10 @@ update_var_plot_variables_from_url_params <- function(session, params, dataset, 
         log_message_variable('updating trend_line', params[['var_plots__trend_line']])
         updateRadioButtons(session, 'var_plots__trend_line', selected=params[['var_plots__trend_line']])
     }
+    if (!is.null(params[['var_plots__trend_extend_date']])) {
+        log_message_variable('updating trend_extend_date', params[['var_plots__trend_extend_date']])
+        updateDateInput(session, inputId='var_plots__trend_extend_date', value = params[['var_plots__trend_extend_date']])
+    }
     if (!is.null(params[['var_plots__trend_line_se']])) {
         log_message_variable('updating trend_line_se', params[['var_plots__trend_line_se']])
         updateRadioButtons(session, 'var_plots__trend_line_se', selected=params[['var_plots__trend_line_se']])

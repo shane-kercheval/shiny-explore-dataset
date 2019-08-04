@@ -147,33 +147,6 @@ observeEvent__var_plots__custom_labels_clear <- function(input, session) {
     }))
 }
 
-helper__restore_defaults_other_options <- function(session) {
-    updateTextInput(session, 'var_plots__custom_title', value='')
-    updateTextInput(session, 'var_plots__custom_subtitle', value='')
-    updateTextInput(session, 'var_plots__custom_x_axis_label', value='')
-    updateTextInput(session, 'var_plots__custom_y_axis_label', value='')
-    updateTextInput(session, 'var_plots__custom_caption', value='')
-    updateTextInput(session, 'var_plots__custom_tag', value='')
-    updateCheckboxInput(session, 'var_plots__pretty_text', value=FALSE)
-    # perhaps its a bug, but it seems like for all the updateSliderTextInput controls I have to 
-    # pass choices as well
-    updateSliderTextInput(session,
-                          'var_plots__base_size',
-                          choices=seq(6, 20, 1),
-                          selected=15)
-    updateTextAreaInput(session, 'var_plots__vertical_annotations', value="")
-    updateTextAreaInput(session, 'var_plots__horizontal_annotations', value="")
-    # even though I call updateTextInput before click, the values haven't been reset yet
-    # click('var_plots__custom_labels_apply')
-}
-
-helper__restore_defaults_map_options <- function(session) {
-
-    updateCheckboxInput(session, 'var_plots__map_format', value=FALSE)
-    updateTextInput(session, 'var_plots___map_borders_database', value='')
-    updateTextInput(session, 'var_plots___map_borders_regions', value='')
-}
-
 observeEvent__var_plots__graph_options_apply <- function(input, session) {
 
     observeEvent(input$var_plots__graph_options_apply, {
@@ -192,43 +165,97 @@ observeEvent__var_plots__graph_options_clear <- function(input, session) {
     })
 }
 
+#' This gets the default value from var_plots__input_list_default_values
+#' But if the default value is NULL it returns character(0) and if the default is NA it returns integer(0)
+#' which the updateXXXInput controls rely on to reset
+get_default_value_for_updating <- function(variable_name) {
+
+    log_message_variable('getting default value', variable_name)
+
+    stopifnot(variable_name %in% names(var_plots__input_list_default_values))
+
+    value <- var_plots__input_list_default_values[[variable_name]]
+
+    if(is.null(value)) {
+        
+        return (character(0))
+
+    } else if (is.na(value)) {
+        
+        return (integer(0))
+
+    } else {
+        
+        return (value)
+    }
+}
+
 helper__restore_defaults_graph_options <- function(session) {
     # perhaps its a bug, but it seems like for all the updateSliderTextInput controls I have to 
     # pass choices as well
+
     updateSliderTextInput(session,
                           'var_plots__filter_factor_lump_number',
                           choices=as.character(c("Off", seq(1, 10), seq(15, 50, 5))),
-                          selected="10")
+                          selected=get_default_value_for_updating('var_plots__filter_factor_lump_number'))
     updateSliderTextInput(session,
                           'var_plots__transparency',
                           choices=c(seq(0, 90, 10), 99),
-                          selected=60)
-    updateSliderTextInput(session, 'var_plots__transparency', selected=60)
-    updateSelectInput(session, 'var_plots__label_variables', selected=character(0))
-    updateCheckboxInput(session, 'var_plots__annotate_points', value=FALSE)
-    updateCheckboxInput(session, 'var_plots__show_points', value=FALSE)
-    updateCheckboxInput(session, 'var_plots__year_over_year', value=FALSE)
-    updateCheckboxInput(session, 'var_plots__include_zero_y_axis', value=TRUE)
-    updateSelectInput(session, 'var_plots__numeric_graph_type', selected="Boxplot")
-    updateSelectInput(session, 'var_plots__categoric_view_type', selected="Bar")
-    updateSelectInput(session, 'var_plots__order_by_variable', selected="Default")
-    updateCheckboxInput(session, 'var_plots__show_variable_totals', value=TRUE)
-    updateCheckboxInput(session, 'var_plots__show_comparison_totals', value=TRUE)
-    updateNumericInput(session, 'var_plots__histogram_bins', value=30)
-    updateCheckboxInput(session, 'var_plots__jitter', value=FALSE)
-    updateNumericInput(session, 'var_plots__numeric_aggregation_count_minimum', value=30)
-    updateCheckboxInput(session, 'var_plots__numeric_show_resampled_conf_int', value=FALSE)
-    updateRadioButtons(session, 'var_plots__trend_line', selected='None')
-    updateRadioButtons(session, 'var_plots__trend_line_se', selected='Yes')
-    updateSelectInput(session, 'var_plots__ts_date_floor', selected=names(global__date_part_vector)[1])
-    updateSelectInput(session, 'var_plots__ts_date_break_format', selected=names(global__date_break_format_vector)[1])
-    updateTextInput(session, 'var_plots__ts_breaks_width', value=integer(0))
-    updateCheckboxInput(session, 'var_plots__scale_x_log_base_10', value=FALSE)
-    updateNumericInput(session, 'var_plots__x_zoom_min', value=integer(0))
-    updateNumericInput(session, 'var_plots__x_zoom_max', value=integer(0))
-    updateCheckboxInput(session, 'var_plots__scale_y_log_base_10', value=FALSE)
-    updateNumericInput(session, 'var_plots__y_zoom_min', value=integer(0))
-    updateNumericInput(session, 'var_plots__y_zoom_max', value=integer(0))
+                          selected=get_default_value_for_updating('var_plots__transparency'))
+
+    updateSelectInput(session, 'var_plots__label_variables', selected=get_default_value_for_updating('var_plots__label_variables'))
+    updateCheckboxInput(session, 'var_plots__annotate_points', value=get_default_value_for_updating('var_plots__annotate_points'))
+    updateCheckboxInput(session, 'var_plots__show_points', value=get_default_value_for_updating('var_plots__show_points'))
+    updateCheckboxInput(session, 'var_plots__year_over_year', value=get_default_value_for_updating('var_plots__year_over_year'))
+    updateCheckboxInput(session, 'var_plots__include_zero_y_axis', value=get_default_value_for_updating('var_plots__include_zero_y_axis'))
+    updateSelectInput(session, 'var_plots__numeric_graph_type', selected=get_default_value_for_updating('var_plots__numeric_graph_type'))
+    updateSelectInput(session, 'var_plots__categoric_view_type', selected=get_default_value_for_updating('var_plots__categoric_view_type'))
+    updateSelectInput(session, 'var_plots__order_by_variable', selected=get_default_value_for_updating('var_plots__order_by_variable'))
+    updateCheckboxInput(session, 'var_plots__show_variable_totals', value=get_default_value_for_updating('var_plots__show_variable_totals'))
+    updateCheckboxInput(session, 'var_plots__show_comparison_totals', value=get_default_value_for_updating('var_plots__show_comparison_totals'))
+    updateNumericInput(session, 'var_plots__histogram_bins', value=get_default_value_for_updating('var_plots__histogram_bins'))
+    updateCheckboxInput(session, 'var_plots__jitter', value=get_default_value_for_updating('var_plots__jitter'))
+    updateNumericInput(session, 'var_plots__numeric_aggregation_count_minimum', value=get_default_value_for_updating('var_plots__numeric_aggregation_count_minimum'))
+    updateCheckboxInput(session, 'var_plots__numeric_show_resampled_conf_int', value=get_default_value_for_updating('var_plots__numeric_show_resampled_conf_int'))
+    updateRadioButtons(session, 'var_plots__trend_line', selected=get_default_value_for_updating('var_plots__trend_line'))
+    updateRadioButtons(session, 'var_plots__trend_extend_date', selected=get_default_value_for_updating('var_plots__trend_extend_date'))
+    updateRadioButtons(session, 'var_plots__trend_line_se', selected=get_default_value_for_updating('var_plots__trend_line_se'))
+    updateSelectInput(session, 'var_plots__ts_date_floor', selected=get_default_value_for_updating('var_plots__ts_date_floor'))
+    updateSelectInput(session, 'var_plots__ts_date_break_format', selected=get_default_value_for_updating('var_plots__ts_date_break_format'))
+    updateTextInput(session, 'var_plots__ts_breaks_width', value=get_default_value_for_updating('var_plots__ts_breaks_width'))
+    updateCheckboxInput(session, 'var_plots__scale_x_log_base_10', value=get_default_value_for_updating('var_plots__scale_x_log_base_10'))
+    updateNumericInput(session, 'var_plots__x_zoom_min', value=get_default_value_for_updating('var_plots__x_zoom_min'))
+    updateNumericInput(session, 'var_plots__x_zoom_max', value=get_default_value_for_updating('var_plots__x_zoom_max'))
+    updateCheckboxInput(session, 'var_plots__scale_y_log_base_10', value=get_default_value_for_updating('var_plots__scale_y_log_base_10'))
+    updateNumericInput(session, 'var_plots__y_zoom_min', value=get_default_value_for_updating('var_plots__y_zoom_min'))
+    updateNumericInput(session, 'var_plots__y_zoom_max', value=get_default_value_for_updating('var_plots__y_zoom_max'))
+}
+
+helper__restore_defaults_other_options <- function(session) {
+    updateTextInput(session, 'var_plots__custom_title', value=get_default_value_for_updating('var_plots__custom_title'))
+    updateTextInput(session, 'var_plots__custom_subtitle', value=get_default_value_for_updating('var_plots__custom_subtitle'))
+    updateTextInput(session, 'var_plots__custom_x_axis_label', value=get_default_value_for_updating('var_plots__custom_x_axis_label'))
+    updateTextInput(session, 'var_plots__custom_y_axis_label', value=get_default_value_for_updating('var_plots__custom_y_axis_label'))
+    updateTextInput(session, 'var_plots__custom_caption', value=get_default_value_for_updating('var_plots__custom_caption'))
+    updateTextInput(session, 'var_plots__custom_tag', value=get_default_value_for_updating('var_plots__custom_tag'))
+    updateCheckboxInput(session, 'var_plots__pretty_text', value=get_default_value_for_updating('var_plots__pretty_text'))
+    # perhaps its a bug, but it seems like for all the updateSliderTextInput controls I have to 
+    # pass choices as well
+    updateSliderTextInput(session,
+                          'var_plots__base_size',
+                          choices=seq(6, 20, 1),
+                          selected=get_default_value_for_updating('var_plots__base_size'))
+    updateTextAreaInput(session, 'var_plots__vertical_annotations', value=get_default_value_for_updating('var_plots__vertical_annotations'))
+    updateTextAreaInput(session, 'var_plots__horizontal_annotations', value=get_default_value_for_updating('var_plots__horizontal_annotations'))
+    # even though I call updateTextInput before click, the values haven't been reset yet
+    # click('var_plots__custom_labels_apply')
+}
+
+helper__restore_defaults_map_options <- function(session) {
+
+    updateCheckboxInput(session, 'var_plots__map_format', value=get_default_value_for_updating('var_plots__map_format'))
+    updateTextInput(session, 'var_plots___map_borders_database', value=get_default_value_for_updating('var_plots___map_borders_database'))
+    updateTextInput(session, 'var_plots___map_borders_regions', value=get_default_value_for_updating('var_plots___map_borders_regions'))
 }
 
 hide_graph_options <- function(input) {
@@ -273,6 +300,7 @@ observeEvent__var_plots__graph_options__any_used__function <- function(input, se
                    input$var_plots__numeric_aggregation_count_minimum,
                    input$var_plots__numeric_show_resampled_conf_int,
                    input$var_plots__trend_line,
+                   input$var_plots__trend_extend_date,
                    input$var_plots__trend_line_se,
                    input$var_plots__ts_date_floor,
                    input$var_plots__ts_date_break_format,
@@ -627,6 +655,51 @@ var_plots__categoric_view_type__logic <- function(dataset, comparison_variable, 
                 selected=selected_variable))
 }
 
+var_plots__trend_extend_date__logic <- function(dataset, primary_variable, current_value) {
+
+    log_message_block_start("Executing Logic for Trend Extend To")
+    log_message_variable('var_plots__variable', primary_variable)
+    log_message_variable('var_plots__trend_extend_date', current_value)
+    log_message_variable('class var_plots__trend_extend_date', class(current_value))
+
+    column_names <- colnames(dataset)
+
+    if(!is.null(primary_variable) &&
+            primary_variable %in% column_names &&
+            is_date_type(dataset[[primary_variable]])) {
+        
+        if(!is.null(current_value) && is.character(current_value)) {
+            
+            if(current_value == '') {
+            
+                current_value <- NULL    
+
+            } else {
+                
+                current_value <- as.Date(current_value)
+            }
+        }
+
+        selected <- current_value
+
+        #if current value is beyond the max value of the primary variable, if yes, keep it, if not, get max of primary val
+        max_date <- as.Date(as.POSIXct(max(dataset[[primary_variable]], na.rm=TRUE)))
+        if(is.null(current_value) || current_value < max_date) {
+
+            selected <- floor_date(max_date %m+% months(6), unit='month')
+        }
+        selected <- as.character(selected)
+        # default it to the max date of the primary_variable, extended 6 months
+        log_message_variable('selected', selected)
+        return (selected)
+
+    } else {
+
+        log_message_variable('returned default', '0000-01-01')
+        return ('0000-01-01')  # value doesn't matter
+    }
+}
+
 ##############################################################################################################
 # CREATE GGPLOT OBJECT
 ##############################################################################################################
@@ -805,6 +878,7 @@ reactive__var_plots__ggplot__creator <- function(input, session, dataset, url_pa
                                                                default="Bar")
         multi_value_delimiter <- isolate(input$var_plots__multi_value_delimiter)
         trend_line <- isolate(input$var_plots__trend_line)
+        trend_extend_date <- isolate(input$var_plots__trend_extend_date)
         trend_line_se <- isolate(input$var_plots__trend_line_se)
         x_zoom_min <- isolate(input$var_plots__x_zoom_min)
         x_zoom_max <- isolate(input$var_plots__x_zoom_max)
@@ -944,6 +1018,7 @@ reactive__var_plots__ggplot__creator <- function(input, session, dataset, url_pa
                                               categoric_view_type=categoric_view_type,
                                               multi_value_delimiter=multi_value_delimiter,
                                               trend_line=trend_line,
+                                              trend_extend_date=trend_extend_date,
                                               trend_line_se=trend_line_se,
                                               x_zoom_min=x_zoom_min,
                                               x_zoom_max=x_zoom_max,
@@ -1005,11 +1080,11 @@ create_ggplot_object <- function(dataset,
                                  color_variable=NULL,
                                  facet_variable=NULL,
                                  
-                                 numeric_aggregation='Boxplot',
+                                 numeric_aggregation='Mean',
                                  numeric_group_comp_variable=FALSE,
-                                 numeric_aggregation_function=NULL,
+                                 numeric_aggregation_function='Boxplot',
                                  numeric_aggregation_count_minimum=30,
-                                 numeric_show_resampled_confidence_interval=NULL,
+                                 numeric_show_resampled_confidence_interval=FALSE,
 
                                  transparency=0.60,
                                  annotate_points=TRUE,
@@ -1023,18 +1098,19 @@ create_ggplot_object <- function(dataset,
                                  categoric_view_type='Bar',
                                  multi_value_delimiter=NULL,
                                  trend_line='None',
+                                 trend_extend_date=NULL,
                                  trend_line_se='No',
-                                 x_zoom_min=NULL,
-                                 x_zoom_max=NULL,
-                                 y_zoom_min=NULL,
-                                 y_zoom_max=NULL,
+                                 x_zoom_min=NA,
+                                 x_zoom_max=NA,
+                                 y_zoom_min=NA,
+                                 y_zoom_max=NA,
                                  scale_x_log_base_10=FALSE,
                                  scale_y_log_base_10=FALSE,
 
                                  # dates
                                  show_points=TRUE,
-                                 ts_date_floor='None',
-                                 ts_date_break_format='Auto',
+                                 ts_date_floor='month',
+                                 ts_date_break_format=NULL,
                                  ts_date_breaks_width=NULL,
                                  year_over_year=FALSE,
                                  include_zero_y_axis=TRUE,
@@ -1092,6 +1168,7 @@ create_ggplot_object <- function(dataset,
         log_message_variable('categoric_view_type', categoric_view_type)
         log_message_variable('multi_value_delimiter', multi_value_delimiter)
         log_message_variable('trend_line', trend_line)
+        log_message_variable('trend_extend_date', trend_extend_date)
         log_message_variable('trend_line_se', trend_line_se)
         log_message_variable('x_zoom_min', x_zoom_min)
         log_message_variable('x_zoom_max', x_zoom_max)
@@ -1226,6 +1303,12 @@ create_ggplot_object <- function(dataset,
                 }
             }
 
+            date_limits <- NULL
+            if(!is.null(trend_line) && trend_line == "Projection") {
+
+                date_limits <- c(min(dataset[[primary_variable]], na.rm=TRUE), trend_extend_date)
+            }
+
             add_confidence_interval <- !is.null(trend_line_se) && trend_line_se == 'Yes'
             ggplot_object <- dataset %>%
                 select(primary_variable, comparison_variable, color_variable, facet_variable) %>%
@@ -1245,6 +1328,7 @@ create_ggplot_object <- function(dataset,
                                             date_floor=ts_date_floor,
                                             date_break_format=ts_date_break_format,
                                             date_breaks_width=ts_date_breaks_width,
+                                            date_limits=date_limits,
                                             base_size=base_size) %>%
                 scale_axes_log10(scale_x=FALSE,
                                  scale_y=scale_y_log_base_10) %>%

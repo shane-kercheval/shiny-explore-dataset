@@ -8,8 +8,9 @@ global__var_plots__numeric_aggregation_default <- 'Mean'
 
 global__golden_ratio <- 0.618
 
-global__date_part_vector <- c('None', 'day', 'week', 'month', 'quarter', 'year')
-names(global__date_part_vector) <- c('None', 'Day', 'Week', 'Month', 'Quarter', 'Year')
+
+global__date_part_vector <- c('day', 'week', 'month', 'quarter', 'year')
+names(global__date_part_vector) <- c('Day', 'Week', 'Month', 'Quarter', 'Year')
 
 global__date_break_format_vector <- c('Auto', '%Y-%m-%d', '%Y-%W', '%Y-%m', '%Y')
 names(global__date_break_format_vector) <- c('Auto', 'Day', 'Week', 'Month', 'Year')
@@ -45,9 +46,10 @@ var_plots__input_list_default_values <- list(
     'var_plots__numeric_aggregation_count_minimum' = 30,
     'var_plots__numeric_show_resampled_conf_int' = FALSE,
     'var_plots__trend_line' = 'None',
+    'var_plots__trend_extend_date' = '0000-01-01',
     'var_plots__trend_line_se' = 'No',
-    'var_plots__ts_date_floor' = 'None',
-    'var_plots__ts_date_break_format' = 'Auto',
+    'var_plots__ts_date_floor' = global__date_part_vector[3],
+    'var_plots__ts_date_break_format' = global__date_break_format_vector[1],
     'var_plots__ts_breaks_width' = '',
     'var_plots__scale_x_log_base_10' = FALSE,
     'var_plots__x_zoom_min' = NA,
@@ -64,5 +66,8 @@ var_plots__input_list_default_values <- list(
     'var_plots__pretty_text' = FALSE,
     'var_plots__base_size' = 15,
     'var_plots__vertical_annotations' = "",
-    'var_plots__horizontal_annotations' = ""
+    'var_plots__horizontal_annotations' = "",
+    'var_plots__map_format' = FALSE,
+    'var_plots___map_borders_database' = "",
+    'var_plots___map_borders_regions' = ""
 )

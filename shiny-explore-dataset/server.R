@@ -299,6 +299,25 @@ shinyServer(function(input, output, session) {
 
     }, suspended=TRUE)
 
+    # hide/show trend_extend_date
+    observeEvent(input$var_plots__trend_line, {
+
+
+        if(!is.null(input$var_plots__trend_line) && input$var_plots__trend_line == "Projection") {
+
+            results <- var_plots__trend_extend_date__logic(dataset=reactive__source_data$data,
+                                                           primary_variable=input$var_plots__variable,
+                                                           current_value=input$var_plots__trend_extend_date)
+
+            updateDateInput(session, inputId='var_plots__trend_extend_date', value = results)
+            shinyjs::show('var_plots__trend_extend_date')
+
+        } else {
+
+            shinyjs::hide('var_plots__trend_extend_date')
+        }
+    })
+
     resume_dynamic_observers_load_dataset <- function(session,
                                                       input,
                                                       observeEvent_preloaded_dataset,

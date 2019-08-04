@@ -33,6 +33,14 @@ add_trend_line <- function(plot, trend_line_type, confidence_interval=TRUE, colo
             return (plot + geom_smooth(method='loess',
                                        se=confidence_interval,
                                        mapping=aes_string(color=dplyr_friendly_variable(color_variable))))
+
+        } else if(trend_line_type == 'Projection') {
+
+            return (plot + geom_smooth(method='lm',
+                                       se=confidence_interval,
+                                       fullrange=TRUE,
+                                       mapping=aes_string(color=dplyr_friendly_variable(color_variable))))
+
         } else {
             # this function isn't aware of the value which is an error   
             stopifnot(FALSE)   
