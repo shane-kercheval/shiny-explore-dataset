@@ -824,6 +824,7 @@ reactive__var_plots__ggplot__creator <- function(input, session, dataset, url_pa
                                                           default=FALSE)
         include_zero_y_axis <- default_if_null_or_empty_string(isolate(input$var_plots__include_zero_y_axis),
                                                                default=TRUE)
+        multi_value_delimiter <- input$var_plots__multi_value_delimiter
 
         if(!is.null(comparison_variable) && is_date_type(dataset[[comparison_variable]])) {
 
@@ -882,7 +883,7 @@ reactive__var_plots__ggplot__creator <- function(input, session, dataset, url_pa
         show_comparison_totals <- isolate(input$var_plots__show_comparison_totals)
         categoric_view_type <- default_if_null_or_empty_string(isolate(input$var_plots__categoric_view_type),
                                                                default="Bar")
-        multi_value_delimiter <- isolate(input$var_plots__multi_value_delimiter)
+        
         trend_line <- isolate(input$var_plots__trend_line)
         trend_extend_date <- isolate(input$var_plots__trend_extend_date)
         trend_line_se <- isolate(input$var_plots__trend_line_se)
