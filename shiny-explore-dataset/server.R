@@ -50,7 +50,8 @@ shinyServer(function(input, output, session) {
     ##########################################################################################################
     # LOAD DATA
     ##########################################################################################################
-    reactive__source_data <- reactiveValues(data=NULL)
+    reactive__source_data <- reactiveValues(data=NULL,
+                                            source=NULL)
 
 
     observeEvent(reactive__source_data$data, {
@@ -471,6 +472,7 @@ shinyServer(function(input, output, session) {
 
                     log_message_block_start("Loaded Dataset from URL params")
                     reactive__source_data$data <- select_preloaded_dataset(dataset_name=params[['data']])$dataset
+                    reactive__source_data$source <- 'preloaded'
                 })
 
                 log_message_block_start("Continuing Processing Url Parameter")
@@ -715,10 +717,18 @@ shinyServer(function(input, output, session) {
                                                               filter_list=filter_list))
         if(nchar(custom_link) > 2000) {
 
-            log_message_variable('custom_link length', nchar(custom_link))
-            log_message_variable('custom_link', custom_link)
+            log_message_variable("custom_link length", nchar(custom_link))
+            log_message_variable("custom_link", custom_link)
 
-            showModal(modalDialog(title='Error, link too long from too many options.'))
+            showModal(modalDialog(title=paste0("Error: The link is too long (",
+                                               nchar(custom_link),
+                                               ") from too many options. Max link size is 2000.")))
+
+        } else if(is.null(reactive__source_data$source) || reactive__source_data$source != 'preloaded') {
+
+            showModal(modalDialog(title=paste0("Error: Links can only be generated from Pre-loaded datasets. The current dataset's source is `",
+                                               reactive__source_data$source,
+                                               "`.")))
 
         } else {
 

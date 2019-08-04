@@ -34,6 +34,7 @@ observeEvent__source_data__upload <- function(session, input, output, reactive__
             shinyjs::hide('load_data__description')
         })
         reactive__source_data$data <- loaded_dataset
+        reactive__source_data$source <- "File Upload"
     })
 }
 
@@ -55,6 +56,7 @@ observeEvent__source_data__csv_url <- function(session, input, output, reactive_
         })
         updateTextInput(session, inputId='load_data__url_csv', value = '')
         reactive__source_data$data <- loaded_dataset
+        reactive__source_data$source <- "URL (csv)"
     })
 }
 
@@ -211,6 +213,7 @@ observeEvent__source_data__preloaded <- function(session, input, output, reactiv
 
             results <- select_preloaded_dataset(dataset_name=input$preloaded_dataset)
             reactive__source_data$data <- results$dataset
+            reactive__source_data$source <- "preloaded"
 
             if(is.null(results$description)) {
 
@@ -287,6 +290,7 @@ observeEvent__load_data__r_code_apply <- function(reactive__source_data, input, 
             })
         }
         reactive__source_data$data <- dataset
+        reactive__source_data$source <- "Custom R Code"
     })
 }
 
