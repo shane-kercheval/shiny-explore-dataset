@@ -2025,3 +2025,18 @@ test_that("create_ggplot_plot - date projection", {
                                         trend_line_se = 'Yes')
     test_save_plot(file_name='graphs/plot__time_series__projection__ci__half_period_day.png', plot=plot_object)
 })
+
+test_that("create_ggplot_plot - date projection - POSIXct", { 
+    context("create_ggplot_plot - date projection - POSIXct")
+    
+    global__should_log_message <<- FALSE
+    dataset <- select_preloaded_dataset("Flights", defualt_path = '../')$dataset
+    dataset$date <- as.POSIXct(dataset$date)
+    
+    plot_object <- create_ggplot_object(dataset = dataset,
+                                        primary_variable = 'date',
+                                        trend_line = 'Projection',
+                                        trend_extend_date = as.Date('2015-01-01'),
+                                        trend_line_se = 'Yes')
+    test_save_plot(file_name='graphs/plot__time_series__projection__ci__POSIXct.png', plot=plot_object)
+})

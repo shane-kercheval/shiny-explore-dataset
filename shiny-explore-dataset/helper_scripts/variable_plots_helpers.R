@@ -539,7 +539,7 @@ hide_show_top_n_categories <- function(dataset, variable, comparison_variable, s
 ##############################################################################################################
 var_plots__comparison__logic <- function(dataset, primary_variable, current_value) {
 
-    log_message_block_start("Executing Logic for Comparison Variable")
+    log_message("Executing Logic for Comparison Variable")
     log_message_variable('var_plots__variable', primary_variable)
     log_message_variable('var_plots__comparison', current_value)
 
@@ -568,7 +568,7 @@ var_plots__comparison__logic <- function(dataset, primary_variable, current_valu
 
 var_plots__color__logic <- function(dataset, primary_variable, comparison_variable, current_value) {
 
-    log_message_block_start("Executing Logic for Color Variable")
+    log_message("Executing Logic for Color Variable")
     log_message_variable('var_plots__variable', primary_variable)
     log_message_variable('var_plots__comparison', comparison_variable)
     log_message_variable('var_plots__color_variable', current_value)
@@ -611,7 +611,7 @@ var_plots__color__logic <- function(dataset, primary_variable, comparison_variab
 
 var_plots__categoric_view_type__logic <- function(dataset, comparison_variable, sum_by_variable, current_value) {
 
-    log_message_block_start("Executing Logic for Categoric View Type")
+    log_message("Executing Logic for Categoric View Type")
     log_message_variable('var_plots__comparison', comparison_variable)
     log_message_variable('var_plots__sum_by_variable', sum_by_variable)
     log_message_variable('var_plots__categoric_view_type', current_value)
@@ -657,7 +657,7 @@ var_plots__categoric_view_type__logic <- function(dataset, comparison_variable, 
 
 var_plots__trend_extend_date__logic <- function(dataset, primary_variable, current_value) {
 
-    log_message_block_start("Executing Logic for Trend Extend To")
+    log_message("Executing Logic for Trend Extend To")
     log_message_variable('var_plots__variable', primary_variable)
     log_message_variable('var_plots__trend_extend_date', current_value)
     log_message_variable('class var_plots__trend_extend_date', class(current_value))
@@ -1312,8 +1312,9 @@ create_ggplot_object <- function(dataset,
 
             date_limits <- NULL
             if(!is.null(trend_line) && trend_line == "Projection") {
-
-                date_limits <- c(min(dataset[[primary_variable]], na.rm=TRUE), trend_extend_date)
+                # need to convert to Date in case it is POSIXct/etc.; in which case trend_extend_date gets
+                # converted to something like 1970-01-01
+                date_limits <- c(as.Date(min(dataset[[primary_variable]], na.rm=TRUE)), trend_extend_date)
             }
 
             add_confidence_interval <- !is.null(trend_line_se) && trend_line_se == 'Yes'
