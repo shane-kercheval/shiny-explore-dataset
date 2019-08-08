@@ -83,11 +83,13 @@ shinyUI(fluidPage(theme="custom.css",
                     bsCollapsePanel(
                         'Variables',
                         selectInput(inputId='var_plots__variable', label='Variable', choices=global__select_variable, selected=global__select_variable, width='100%'),
-                        selectInput(inputId='var_plots__comparison', label='Comparison Variable', choices=global__select_variable_optional, selected=global__select_variable_optional, width='100%'),
+                        shinyjs::hidden(
+                            selectInput(inputId='var_plots__comparison', label='Secondary Variable', choices=global__select_variable_optional, selected=global__select_variable_optional, width='100%')
+                        ),
                         checkboxInput(inputId='var_plots__numeric_group_comp_variable',
-                                      label='Group Comparison Variable', value=FALSE, width='100%'),
+                                      label='Group Secondary Variable', value=FALSE, width='100%'),
                         bsTooltip(id='var_plots__numeric_group_comp_variable',
-                                  title="Treats the `Comparison Variable` as discrete values, and aggregates the `Variable` based on the discrete groups of the `Comparision Variable`.",
+                                  title="Treats the `Secondary Variable` as discrete values, and aggregates the `Variable` based on the discrete groups of the `Secondary Variable`.",
                                   placement='top', trigger='hover'),
                         selectInput(inputId='var_plots__numeric_aggregation_function',
                                     label='Aggregation',
@@ -97,7 +99,7 @@ shinyUI(fluidPage(theme="custom.css",
                                     selectize=TRUE,
                                     width=500),
                         bsTooltip(id='var_plots__numeric_aggregation_function',
-                                  title="Determines how the `Variable` is aggregated, after grouping the `Comparison Variable`.",
+                                  title="Determines how the `Variable` is aggregated, after grouping the `Secondary Variable`.",
                                   placement='top',
                                   trigger='hover'),
                         # NOTE: the variables below can't be hidden initially (but rather are dynamically hidden)
@@ -127,16 +129,22 @@ shinyUI(fluidPage(theme="custom.css",
                                   placement='top', trigger='hover'),
                         fluidRow(
                             div(style="display:inline-block; float:left; margin-bottom:0px; margin-top:10px; margin-left: 15px",
-                                actionButton(inputId='var_plots__variables_buttons_clear', label='Clear')
+                                 shinyjs::hidden(actionButton(inputId='var_plots__variables_buttons_clear', label='Clear'))
                             ),
                             div(style="display:inline-block; float:left; margin-bottom:0px; margin-top:10px; margin-left: 10px",
-                                actionButton(inputId='var_plots__variables_buttons_swap', label='Swap')
+                                 shinyjs::hidden(actionButton(inputId='var_plots__variables_buttons_swap', label='Swap Variables'))
+                            ),
+                            div(style="display:inline-block; float:left; margin-bottom:0px; margin-top:10px; margin-left: 10px",
+                                shinyjs::hidden(actionButton(inputId='var_plots__color_facet_buttons_swap', label='Swap Color/Facet'))
                             ),
                             bsTooltip(id='var_plots__variables_buttons_clear',
                                       title="Clear all of the variables selected.",
                                       placement='bottom', trigger='hover'),
                             bsTooltip(id='var_plots__variables_buttons_swap',
-                                      title="Swap the Primary and Comparison Variables.",
+                                      title="Swap the Primary and Secondary Variables.",
+                                      placement='bottom', trigger='hover'),
+                            bsTooltip(id='var_plots__color_facet_buttons_swap',
+                                      title="Swap the Color and Facet Variables.",
                                       placement='bottom', trigger='hover')
                         ),
                         style='default'
@@ -244,7 +252,7 @@ shinyUI(fluidPage(theme="custom.css",
                             checkboxInput(inputId='var_plots__show_variable_totals',
                                           label='Show Variable Values', value=TRUE, width='100%'),
                             checkboxInput(inputId='var_plots__show_comparison_totals',
-                                          label='Show Comparison Values', value=TRUE, width='100%')
+                                          label='Show Secondary Values', value=TRUE, width='100%')
                         ),
                         tags$div(id='div_var_plots__group_scatter_controls',
                             sliderTextInput(inputId='var_plots__transparency',

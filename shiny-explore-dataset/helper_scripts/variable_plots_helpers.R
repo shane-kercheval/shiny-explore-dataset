@@ -1675,6 +1675,15 @@ observeEvent__var_plots__variables_buttons_clear_swap <- function(session, input
 
         clear_variables(session, input, swap_primary_and_comparison=TRUE)
     })
+
+    observeEvent(input$var_plots__color_facet_buttons_swap, {
+
+        current_color_selected <- input$var_plots__color_variable
+        current_facet_selected <- input$var_plots__facet_variable
+
+        updateSelectInput(session, 'var_plots__color_variable', selected=current_facet_selected)
+        updateSelectInput(session, 'var_plots__facet_variable', selected=current_color_selected)
+    })
 }
 
 ##############################################################################################################
@@ -1685,6 +1694,10 @@ hide_show_date <- function(session, has_comparison_variable) {
     log_message('hide_show_date')
 
     updateSelectInput(session, 'var_plots__comparison', label="Numeric Aggregation")
+    shinyjs::show('var_plots__comparison')
+    shinyjs::show('var_plots__variables_buttons_clear')
+    shinyjs::hide('var_plots__variables_buttons_swap')  # hide because we can't have date as comparison
+    shinyjs::show('var_plots__color_facet_buttons_swap')
     
     shinyjs::show('div_var_plots__group_y_zoom_controls')
     shinyjs::show('var_plots__base_size')
@@ -1736,7 +1749,11 @@ hide_show_numeric_numeric <- function(session,
 
     log_message('hide_show_numeric_numeric')
 
-    updateSelectInput(session, 'var_plots__comparison', label="Comparison Variable")
+    updateSelectInput(session, 'var_plots__comparison', label="Secondary Variable")
+    shinyjs::show('var_plots__comparison')
+    shinyjs::show('var_plots__variables_buttons_clear')
+    shinyjs::show('var_plots__variables_buttons_swap')
+    shinyjs::hide('var_plots__color_facet_buttons_swap')
     
     # scatterplot; or if grouping the main variable, then boxplot or custom aggregation_function
 
@@ -1816,7 +1833,11 @@ hide_show_numeric_categoric <- function(session, showing_boxplot, has_comparison
     
     log_message('hide_show_numeric_categoric')
 
-    updateSelectInput(session, 'var_plots__comparison', label="Comparison Variable")
+    updateSelectInput(session, 'var_plots__comparison', label="Secondary Variable")
+    shinyjs::show('var_plots__comparison')
+    shinyjs::show('var_plots__variables_buttons_clear')
+    shinyjs::show('var_plots__variables_buttons_swap')
+    shinyjs::hide('var_plots__color_facet_buttons_swap')
     
     # could be a boxplot or a histogram; if it is a boxplot, we want to show y-axis-controls, otherwise x-axis
     if(showing_boxplot) {
@@ -1884,7 +1905,11 @@ hide_show_categoric_categoric <- function(session, input, has_comparison_variabl
 
     log_message('hide_show_categoric_categoric')
 
-    updateSelectInput(session, 'var_plots__comparison', label="Comparison Variable")
+    updateSelectInput(session, 'var_plots__comparison', label="Secondary Variable")
+    shinyjs::show('var_plots__comparison')
+    shinyjs::show('var_plots__variables_buttons_clear')
+    shinyjs::show('var_plots__variables_buttons_swap')
+    shinyjs::hide('var_plots__color_facet_buttons_swap')
     
     # grouped barchart
     shinyjs::show('var_plots__sum_by_variable') # categoric with categoric (or NULL) can select numeric sum_by_variable
@@ -1947,6 +1972,11 @@ observe__var_plots__hide_show_uncollapse_on_primary_vars <- function(session, in
 
         if(local_primary_variable == global__select_variable || local_comparison_variable == global__select_variable_optional) {
 
+            shinyjs::hide('var_plots__variables_buttons_clear')
+            shinyjs::hide('var_plots__variables_buttons_swap') 
+            shinyjs::hide('var_plots__color_facet_buttons_swap')
+
+            shinyjs::hide('var_plots__comparison')
             shinyjs::hide('var_plots__numeric_aggregation')
             shinyjs::hide('var_plots__sum_by_variable')
             shinyjs::hide('var_plots__multi_value_delimiter')
