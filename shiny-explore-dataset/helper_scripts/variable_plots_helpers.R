@@ -1683,6 +1683,8 @@ observeEvent__var_plots__variables_buttons_clear_swap <- function(session, input
 hide_show_date <- function(session, has_comparison_variable) {
 
     log_message('hide_show_date')
+
+    updateSelectInput(session, 'var_plots__comparison', label="Numeric Aggregation")
     
     shinyjs::show('div_var_plots__group_y_zoom_controls')
     shinyjs::show('var_plots__base_size')
@@ -1733,6 +1735,8 @@ hide_show_numeric_numeric <- function(session,
                                       has_comparison_variable) {
 
     log_message('hide_show_numeric_numeric')
+
+    updateSelectInput(session, 'var_plots__comparison', label="Comparison Variable")
     
     # scatterplot; or if grouping the main variable, then boxplot or custom aggregation_function
 
@@ -1811,6 +1815,8 @@ hide_show_numeric_numeric <- function(session,
 hide_show_numeric_categoric <- function(session, showing_boxplot, has_comparison_variable) {
     
     log_message('hide_show_numeric_categoric')
+
+    updateSelectInput(session, 'var_plots__comparison', label="Comparison Variable")
     
     # could be a boxplot or a histogram; if it is a boxplot, we want to show y-axis-controls, otherwise x-axis
     if(showing_boxplot) {
@@ -1877,6 +1883,8 @@ hide_show_numeric_categoric <- function(session, showing_boxplot, has_comparison
 hide_show_categoric_categoric <- function(session, input, has_comparison_variable) {
 
     log_message('hide_show_categoric_categoric')
+
+    updateSelectInput(session, 'var_plots__comparison', label="Comparison Variable")
     
     # grouped barchart
     shinyjs::show('var_plots__sum_by_variable') # categoric with categoric (or NULL) can select numeric sum_by_variable
