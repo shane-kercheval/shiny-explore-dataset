@@ -1962,15 +1962,13 @@ hide_show_categoric_categoric <- function(session, input, has_comparison_variabl
 }
 
 observe__var_plots__hide_show_uncollapse_on_primary_vars <- function(session, input) {
-    observe({
+    observeEvent(input$var_plots__variable, {
 
         req(input$var_plots__variable)
-        req(input$var_plots__comparison)
 
         local_primary_variable <- input$var_plots__variable
-        local_comparison_variable <- input$var_plots__comparison
 
-        if(local_primary_variable == global__select_variable || local_comparison_variable == global__select_variable_optional) {
+        if(local_primary_variable == global__select_variable) {
 
             shinyjs::hide('var_plots__variables_buttons_clear')
             shinyjs::hide('var_plots__variables_buttons_swap') 
@@ -1989,9 +1987,8 @@ observe__var_plots__hide_show_uncollapse_on_primary_vars <- function(session, in
             shinyjs::hide('var_plots__facet_variable')
             shinyjs::hide('var_plots__year_over_year')
             shinyjs::hide('var_plots__include_zero_y_axis')
-        }
 
-        if(local_primary_variable != global__select_variable || local_comparison_variable != global__select_variable_optional) {
+        } else {
 
             updateCollapse(session, 'var_plots__bscollapse', open='Graph Options')
         }
