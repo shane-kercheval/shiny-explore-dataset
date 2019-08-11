@@ -8,10 +8,10 @@ library(dplyr)
 ##########################################################################################################
 observeEvent__source_data__upload <- function(session, input, output, reactive__source_data) {
     observeEvent(input$uploadFile, {
+
         withProgress(value=1/2, message='Loading Data',{
 
             upload_file_path <- input$uploadFile$datapath
-
             log_message_variable('input$uploadFile$datapath', upload_file_path)
 
             if(!is.null(upload_file_path)) {
@@ -45,7 +45,6 @@ observeEvent__source_data__csv_url <- function(session, input, output, reactive_
         withProgress(value=1/2, message='Loading Data',{
 
             local_csv_url <- isolate(input$load_data__url_csv)
-
             log_message_variable('input$load_data__url_csv', local_csv_url)
 
             if(!is.null(local_csv_url) && local_csv_url != "") {
@@ -103,7 +102,7 @@ select_preloaded_dataset <- function(dataset_name, defualt_path='') {
                 select(-year, -month, -day) %>%
                 select(date, everything()))
 
-        loaded_dataset$hms <- as.hms(loaded_dataset$time_hour)
+        loaded_dataset$hms <- as_hms(with_tz(loaded_dataset$time_hour, tzone='UTC'))
         data_description <- "This is where a description of the Flights dataset should be given."
 
     } else if(dataset_name == 'Wine Ratings') {

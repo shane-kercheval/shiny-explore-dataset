@@ -496,7 +496,7 @@ test_that("generic_helpers::filter_data - flights/date", {
     # test Date, POSIXct, hms
     expect_true(is.Date(dataset$date))
     expect_true(is.POSIXct(dataset$time_hour))
-    dataset$hms <- as.hms(dataset$time_hour)
+    dataset$hms <- as_hms(with_tz(dataset$time_hour, tzone='UTC'))
     expect_true("hms" %in% class(dataset$hms))
     
     dataset[1:500, 'date'] <- NA
@@ -1111,7 +1111,7 @@ test_that("get_base_url", {
 
 test_that("build_parse_url_params", {
     context("build_parse_url_params")
-    input <- var_plots__input_list_default_values
+    input <- var_plots__default_values
     parameters <- build_parameters_list(input=input, preloaded_dataset='flights')
     
     expect_equal(length(parameters), 2)
@@ -1206,7 +1206,7 @@ test_that("build_parse_url_params", {
 
 test_that("build_parse_url_params - filtering", {
     context("build_parse_url_params - filtering")
-    input <- var_plots__input_list_default_values
+    input <- var_plots__default_values
     
     filter_list <- list(
         carat = c(0.5, 2),
@@ -1421,7 +1421,7 @@ test_that("setting dynamic variables - comparison", {
     ########
     # Default Primary Variable
     ########
-    primary_variable_default <- var_plots__input_list_default_values[['var_plots__variable']]
+    primary_variable_default <- var_plots__default_values[['var_plots__variable']]
     comparison_selection <- var_plots__comparison__logic(dataset=dataset,
                                                          primary_variable=primary_variable_default,
                                                          current_value=NULL)
@@ -1557,8 +1557,8 @@ test_that("setting dynamic variables - color", {
     ########
     # Default Primary Variable & Comparison Variable
     ########
-    primary_variable_default <- var_plots__input_list_default_values[['var_plots__variable']]
-    comparison_variable_default <- var_plots__input_list_default_values[['var_plots__comparison']]
+    primary_variable_default <- var_plots__default_values[['var_plots__variable']]
+    comparison_variable_default <- var_plots__default_values[['var_plots__comparison']]
     selection <- var_plots__color__logic(dataset=dataset,
                                          primary_variable=primary_variable_default,
                                          comparison_variable=comparison_variable_default,
@@ -1732,7 +1732,7 @@ test_that("setting dynamic variables - trend_extend_date", {
 
     global__should_log_message <<- FALSE
     dataset <- select_preloaded_dataset("Flights", defualt_path = '../')$dataset
-    trend_extend_date_default <- var_plots__input_list_default_values[['var_plots__trend_extend_date']]
+    trend_extend_date_default <- var_plots__default_values[['var_plots__trend_extend_date']]
     
     ########
     # NULL Primary Variable
@@ -1750,7 +1750,7 @@ test_that("setting dynamic variables - trend_extend_date", {
     ########
     # Default Primary Variable
     ########
-    primary_variable_default <- var_plots__input_list_default_values[['var_plots__variable']]
+    primary_variable_default <- var_plots__default_values[['var_plots__variable']]
     date_selection <- var_plots__trend_extend_date__logic(dataset=dataset,
                                                          primary_variable=primary_variable_default,
                                                          current_value=NULL)
@@ -2031,6 +2031,7 @@ test_that("create_ggplot_plot - date projection - POSIXct", {
     
     global__should_log_message <<- FALSE
     dataset <- select_preloaded_dataset("Flights", defualt_path = '../')$dataset
+    
     dataset$date <- as.POSIXct(dataset$date)
     
     plot_object <- create_ggplot_object(dataset = dataset,

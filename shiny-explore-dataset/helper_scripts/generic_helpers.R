@@ -1,4 +1,5 @@
 library(lubridate)
+library(stringr)
 
 # defualt placement is 'bottom', but I want the default to be 'top'
 add_tooltip <- function(element, tooltip_text, placement='top', trigger='hover') {
@@ -399,7 +400,7 @@ expandUrlArgs <- function(x) structure(do.call(c, lapply(x, function(z) as.list(
 #' helper function to determine if the variable/value is the defualt value
 private__variable_value_is_default <- function(variable_name, variable_value) {
 
-    default_value <- var_plots__input_list_default_values[[variable_name]]
+    default_value <- var_plots__default_values[[variable_name]]
 
     if(is.null(default_value)) {
 
@@ -462,7 +463,7 @@ build_parameters_list <- function(input, preloaded_dataset, filter_list=NULL) {
                             "tab"="Graphs")
 
     # lets loop through list of default values (real input$ will contain main irrevant variables)
-    for(variable_name in names(var_plots__input_list_default_values)) {
+    for(variable_name in names(var_plots__default_values)) {
         #print(variable_name)
         variable_value <- input[[variable_name]]
         #print(variable_value)

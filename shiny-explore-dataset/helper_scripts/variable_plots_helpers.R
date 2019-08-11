@@ -151,7 +151,7 @@ observeEvent__var_plots__graph_options_apply <- function(input, session) {
 
     observeEvent(input$var_plots__graph_options_apply, {
 
-            updateCollapse(session, "var_plots__bscollapse", style = list("Graph Options" = "default"))
+        updateCollapse(session, "var_plots__bscollapse", style = list("Graph Options" = "default"))
     })
 }
 
@@ -165,16 +165,16 @@ observeEvent__var_plots__graph_options_clear <- function(input, session) {
     })
 }
 
-#' This gets the default value from var_plots__input_list_default_values
+#' This gets the default value from var_plots__default_values
 #' But if the default value is NULL it returns character(0) and if the default is NA it returns integer(0)
 #' which the updateXXXInput controls rely on to reset
 get_default_value_for_updating <- function(variable_name) {
 
     log_message_variable('getting default value', variable_name)
 
-    stopifnot(variable_name %in% names(var_plots__input_list_default_values))
+    stopifnot(variable_name %in% names(var_plots__default_values))
 
-    value <- var_plots__input_list_default_values[[variable_name]]
+    value <- var_plots__default_values[[variable_name]]
 
     if(is.null(value)) {
         
@@ -190,99 +190,176 @@ get_default_value_for_updating <- function(variable_name) {
     }
 }
 
+reset_hide_var_plot_option <- function(session, option_name, hide_option=TRUE) {
+
+    log_message_variable('reseting', option_name)
+
+    stopifnot(option_name %in% names(var_plots__default_values) && 
+              option_name %in% names(var_plots__variable_types))
+
+    if(hide_option) {
+
+        shinyjs::hide(option_name)
+
+        log_message_variable('hidding', option_name)
+    }
+    
+    if(var_plots__variable_types[[option_name]] == 'updateSelectInput') {
+
+        updateSelectInput(session, option_name, selected=get_default_value_for_updating(option_name))
+
+    }
+    else if(var_plots__variable_types[[option_name]] == 'updateCheckboxInput') {
+
+        updateCheckboxInput(session, option_name, value=get_default_value_for_updating(option_name))
+
+    }
+    else if(var_plots__variable_types[[option_name]] == 'updateTextInput') {
+
+        updateTextInput(session, option_name, value=get_default_value_for_updating(option_name))
+
+    }
+    else if(var_plots__variable_types[[option_name]] == 'updateSliderTextInput') {
+
+        # perhaps its a bug, but it seems like for all the updateSliderTextInput controls I have to 
+        # pass choices as well
+        # I guess i have to hard-code?
+
+        if(option_name == 'var_plots__filter_factor_lump_number') {
+
+            variable_choices <- as.character(c("Off", seq(1, 10), seq(15, 50, 5)))
+
+        } else if (option_name == 'var_plots__transparency') {
+
+            variable_choices <- c(seq(0, 90, 10), 99)
+
+        } else if (option_name == 'var_plots__base_size') {
+
+            variable_choices <- seq(6, 20, 1)
+
+        } else {
+            stopifnot(FALSE)
+        }
+
+        updateSliderTextInput(session,
+                              option_name,
+                              choices=variable_choices,
+                              selected=get_default_value_for_updating(option_name))
+    }
+    else if(var_plots__variable_types[[option_name]] == 'updateNumericInput') {
+
+        updateNumericInput(session, option_name, value=get_default_value_for_updating(option_name))
+    }
+    else if(var_plots__variable_types[[option_name]] == 'updateRadioButtons') {
+
+        updateRadioButtons(session, option_name, selected=get_default_value_for_updating(option_name))
+    }
+    else if(var_plots__variable_types[[option_name]] == 'updateTextAreaInput') {
+
+        updateTextAreaInput(session, option_name, value=get_default_value_for_updating(option_name))
+
+    } else {
+        stopifnot(FALSE)
+    }
+}
+
 helper__restore_defaults_graph_options <- function(session) {
     # perhaps its a bug, but it seems like for all the updateSliderTextInput controls I have to 
     # pass choices as well
 
-    updateSliderTextInput(session,
-                          'var_plots__filter_factor_lump_number',
-                          choices=as.character(c("Off", seq(1, 10), seq(15, 50, 5))),
-                          selected=get_default_value_for_updating('var_plots__filter_factor_lump_number'))
-    updateSliderTextInput(session,
-                          'var_plots__transparency',
-                          choices=c(seq(0, 90, 10), 99),
-                          selected=get_default_value_for_updating('var_plots__transparency'))
-
-    updateSelectInput(session, 'var_plots__label_variables', selected=get_default_value_for_updating('var_plots__label_variables'))
-    updateCheckboxInput(session, 'var_plots__annotate_points', value=get_default_value_for_updating('var_plots__annotate_points'))
-    updateCheckboxInput(session, 'var_plots__show_points', value=get_default_value_for_updating('var_plots__show_points'))
-    updateCheckboxInput(session, 'var_plots__year_over_year', value=get_default_value_for_updating('var_plots__year_over_year'))
-    updateCheckboxInput(session, 'var_plots__include_zero_y_axis', value=get_default_value_for_updating('var_plots__include_zero_y_axis'))
-    updateSelectInput(session, 'var_plots__numeric_graph_type', selected=get_default_value_for_updating('var_plots__numeric_graph_type'))
-    updateSelectInput(session, 'var_plots__categoric_view_type', selected=get_default_value_for_updating('var_plots__categoric_view_type'))
-    updateSelectInput(session, 'var_plots__order_by_variable', selected=get_default_value_for_updating('var_plots__order_by_variable'))
-    updateCheckboxInput(session, 'var_plots__show_variable_totals', value=get_default_value_for_updating('var_plots__show_variable_totals'))
-    updateCheckboxInput(session, 'var_plots__show_comparison_totals', value=get_default_value_for_updating('var_plots__show_comparison_totals'))
-    updateNumericInput(session, 'var_plots__histogram_bins', value=get_default_value_for_updating('var_plots__histogram_bins'))
-    updateCheckboxInput(session, 'var_plots__jitter', value=get_default_value_for_updating('var_plots__jitter'))
-    updateNumericInput(session, 'var_plots__numeric_aggregation_count_minimum', value=get_default_value_for_updating('var_plots__numeric_aggregation_count_minimum'))
-    updateCheckboxInput(session, 'var_plots__numeric_show_resampled_conf_int', value=get_default_value_for_updating('var_plots__numeric_show_resampled_conf_int'))
-    updateRadioButtons(session, 'var_plots__trend_line', selected=get_default_value_for_updating('var_plots__trend_line'))
-    updateRadioButtons(session, 'var_plots__trend_extend_date', selected=get_default_value_for_updating('var_plots__trend_extend_date'))
-    updateRadioButtons(session, 'var_plots__trend_line_se', selected=get_default_value_for_updating('var_plots__trend_line_se'))
-    updateSelectInput(session, 'var_plots__ts_date_floor', selected=get_default_value_for_updating('var_plots__ts_date_floor'))
-    updateSelectInput(session, 'var_plots__ts_date_break_format', selected=get_default_value_for_updating('var_plots__ts_date_break_format'))
-    updateTextInput(session, 'var_plots__ts_breaks_width', value=get_default_value_for_updating('var_plots__ts_breaks_width'))
-    updateCheckboxInput(session, 'var_plots__scale_x_log_base_10', value=get_default_value_for_updating('var_plots__scale_x_log_base_10'))
-    updateNumericInput(session, 'var_plots__x_zoom_min', value=get_default_value_for_updating('var_plots__x_zoom_min'))
-    updateNumericInput(session, 'var_plots__x_zoom_max', value=get_default_value_for_updating('var_plots__x_zoom_max'))
-    updateCheckboxInput(session, 'var_plots__scale_y_log_base_10', value=get_default_value_for_updating('var_plots__scale_y_log_base_10'))
-    updateNumericInput(session, 'var_plots__y_zoom_min', value=get_default_value_for_updating('var_plots__y_zoom_min'))
-    updateNumericInput(session, 'var_plots__y_zoom_max', value=get_default_value_for_updating('var_plots__y_zoom_max'))
+    reset_hide_var_plot_option(session, option_name='var_plots__filter_factor_lump_number', hide_option=FALSE)
+    reset_hide_var_plot_option(session, option_name='var_plots__label_variables', hide_option=FALSE)
+    reset_hide_var_plot_option(session, option_name='var_plots__annotate_points', hide_option=FALSE)
+    reset_hide_var_plot_option(session, option_name='var_plots__show_points', hide_option=FALSE)
+    reset_hide_var_plot_option(session, option_name='var_plots__year_over_year', hide_option=FALSE)
+    reset_hide_var_plot_option(session, option_name='var_plots__include_zero_y_axis', hide_option=FALSE)
+    reset_hide_var_plot_option(session, option_name='var_plots__numeric_graph_type', hide_option=FALSE)
+    reset_hide_var_plot_option(session, option_name='var_plots__categoric_view_type', hide_option=FALSE)
+    reset_hide_var_plot_option(session, option_name='var_plots__order_by_variable', hide_option=FALSE)
+    reset_hide_var_plot_option(session, option_name='var_plots__show_variable_totals', hide_option=FALSE)
+    reset_hide_var_plot_option(session, option_name='var_plots__show_comparison_totals', hide_option=FALSE)
+    reset_hide_var_plot_option(session, option_name='var_plots__histogram_bins', hide_option=FALSE)
+    reset_hide_var_plot_option(session, option_name='var_plots__transparency', hide_option=FALSE)
+    reset_hide_var_plot_option(session, option_name='var_plots__jitter', hide_option=FALSE)
+    reset_hide_var_plot_option(session, option_name='var_plots__numeric_aggregation_count_minimum', hide_option=FALSE)
+    reset_hide_var_plot_option(session, option_name='var_plots__numeric_show_resampled_conf_int', hide_option=FALSE)
+    reset_hide_var_plot_option(session, option_name='var_plots__trend_line', hide_option=FALSE)
+    reset_hide_var_plot_option(session, option_name='var_plots__trend_extend_date', hide_option=FALSE)
+    reset_hide_var_plot_option(session, option_name='var_plots__trend_line_se', hide_option=FALSE)
+    reset_hide_var_plot_option(session, option_name='var_plots__ts_date_floor', hide_option=FALSE)
+    reset_hide_var_plot_option(session, option_name='var_plots__ts_date_break_format', hide_option=FALSE)
+    reset_hide_var_plot_option(session, option_name='var_plots__ts_breaks_width', hide_option=FALSE)
+    reset_hide_var_plot_option(session, option_name='var_plots__scale_x_log_base_10', hide_option=FALSE)
+    reset_hide_var_plot_option(session, option_name='var_plots__x_zoom_min', hide_option=FALSE)
+    reset_hide_var_plot_option(session, option_name='var_plots__x_zoom_max', hide_option=FALSE)
+    reset_hide_var_plot_option(session, option_name='var_plots__scale_y_log_base_10', hide_option=FALSE)
+    reset_hide_var_plot_option(session, option_name='var_plots__y_zoom_min', hide_option=FALSE)
+    reset_hide_var_plot_option(session, option_name='var_plots__y_zoom_max', hide_option=FALSE)
 }
 
 helper__restore_defaults_other_options <- function(session) {
-    updateTextInput(session, 'var_plots__custom_title', value=get_default_value_for_updating('var_plots__custom_title'))
-    updateTextInput(session, 'var_plots__custom_subtitle', value=get_default_value_for_updating('var_plots__custom_subtitle'))
-    updateTextInput(session, 'var_plots__custom_x_axis_label', value=get_default_value_for_updating('var_plots__custom_x_axis_label'))
-    updateTextInput(session, 'var_plots__custom_y_axis_label', value=get_default_value_for_updating('var_plots__custom_y_axis_label'))
-    updateTextInput(session, 'var_plots__custom_caption', value=get_default_value_for_updating('var_plots__custom_caption'))
-    updateTextInput(session, 'var_plots__custom_tag', value=get_default_value_for_updating('var_plots__custom_tag'))
-    updateCheckboxInput(session, 'var_plots__pretty_text', value=get_default_value_for_updating('var_plots__pretty_text'))
+    reset_hide_var_plot_option(session, option_name='var_plots__custom_title', hide_option=FALSE)
+    reset_hide_var_plot_option(session, option_name='var_plots__custom_subtitle', hide_option=FALSE)
+    reset_hide_var_plot_option(session, option_name='var_plots__custom_x_axis_label', hide_option=FALSE)
+    reset_hide_var_plot_option(session, option_name='var_plots__custom_y_axis_label', hide_option=FALSE)
+    reset_hide_var_plot_option(session, option_name='var_plots__custom_caption', hide_option=FALSE)
+    reset_hide_var_plot_option(session, option_name='var_plots__custom_tag', hide_option=FALSE)
+    reset_hide_var_plot_option(session, option_name='var_plots__pretty_text', hide_option=FALSE)
     # perhaps its a bug, but it seems like for all the updateSliderTextInput controls I have to 
     # pass choices as well
-    updateSliderTextInput(session,
-                          'var_plots__base_size',
-                          choices=seq(6, 20, 1),
-                          selected=get_default_value_for_updating('var_plots__base_size'))
-    updateTextAreaInput(session, 'var_plots__vertical_annotations', value=get_default_value_for_updating('var_plots__vertical_annotations'))
-    updateTextAreaInput(session, 'var_plots__horizontal_annotations', value=get_default_value_for_updating('var_plots__horizontal_annotations'))
+    reset_hide_var_plot_option(session, option_name='var_plots__base_size', hide_option=FALSE)
+    reset_hide_var_plot_option(session, option_name='var_plots__vertical_annotations', hide_option=FALSE)
+    reset_hide_var_plot_option(session, option_name='var_plots__horizontal_annotations', hide_option=FALSE)
     # even though I call updateTextInput before click, the values haven't been reset yet
     # click('var_plots__custom_labels_apply')
 }
 
 helper__restore_defaults_map_options <- function(session) {
 
-    updateCheckboxInput(session, 'var_plots__map_format', value=get_default_value_for_updating('var_plots__map_format'))
-    updateTextInput(session, 'var_plots___map_borders_database', value=get_default_value_for_updating('var_plots___map_borders_database'))
-    updateTextInput(session, 'var_plots___map_borders_regions', value=get_default_value_for_updating('var_plots___map_borders_regions'))
+    reset_hide_var_plot_option(session, option_name='var_plots__map_format', hide_option=FALSE)
+    reset_hide_var_plot_option(session, option_name='var_plots__map_borders_database', hide_option=FALSE)
+    reset_hide_var_plot_option(session, option_name='var_plots__map_borders_regions', hide_option=FALSE)
 }
 
-hide_graph_options <- function(input) {
+hide_graph_options <- function(session) {
 
-    shinyjs::hide('var_plots__filter_factor_lump_number')
-    shinyjs::hide('var_plots__label_variables')
-    shinyjs::hide('var_plots__annotate_points')
-    shinyjs::hide('var_plots__show_points')
-    shinyjs::hide('var_plots__year_over_year')
-    shinyjs::hide('var_plots__include_zero_y_axis')
-    shinyjs::hide('var_plots__numeric_graph_type')
-    shinyjs::hide('var_plots__categoric_view_type')
-    shinyjs::hide('div_var_plots__group_barchar_controls')
-    shinyjs::hide('var_plots__order_by_variable')
-    shinyjs::hide('var_plots__histogram_bins')
-    shinyjs::hide('div_var_plots__group_scatter_controls')
-    shinyjs::hide('var_plots__numeric_aggregation_count_minimum')
-    shinyjs::hide('var_plots__numeric_show_resampled_conf_int')
-    shinyjs::hide('div_var_plots__group_trend_controls')
-    shinyjs::hide('div_var_plots__group_time_series_controls')
-    shinyjs::hide('div_var_plots__group_x_zoom_controls')
-    shinyjs::hide('div_var_plots__group_y_zoom_controls')
+    reset_hide_var_plot_option(session, 'var_plots__filter_factor_lump_number')
+    reset_hide_var_plot_option(session, 'var_plots__label_variables')
+    reset_hide_var_plot_option(session, 'var_plots__annotate_points')
+    reset_hide_var_plot_option(session, 'var_plots__show_points')
+    reset_hide_var_plot_option(session, 'var_plots__year_over_year')
+    reset_hide_var_plot_option(session, 'var_plots__include_zero_y_axis')
+    reset_hide_var_plot_option(session, 'var_plots__numeric_graph_type')
+    reset_hide_var_plot_option(session, 'var_plots__categoric_view_type')
+    reset_hide_var_plot_option(session, 'var_plots__show_variable_totals')
+    reset_hide_var_plot_option(session, 'var_plots__show_comparison_totals')
+    reset_hide_var_plot_option(session, 'var_plots__order_by_variable')
+    reset_hide_var_plot_option(session, 'var_plots__histogram_bins')
+    reset_hide_var_plot_option(session, 'var_plots__transparency')
+    reset_hide_var_plot_option(session, 'var_plots__jitter')
+    reset_hide_var_plot_option(session, 'var_plots__numeric_aggregation_count_minimum')
+    reset_hide_var_plot_option(session, 'var_plots__numeric_show_resampled_conf_int')
+    reset_hide_var_plot_option(session, 'var_plots__trend_line')
+    reset_hide_var_plot_option(session, 'var_plots__trend_extend_date')
+    reset_hide_var_plot_option(session, 'var_plots__trend_line_se')
+    reset_hide_var_plot_option(session, 'var_plots__ts_date_floor')
+    reset_hide_var_plot_option(session, 'var_plots__ts_date_break_format')
+    reset_hide_var_plot_option(session, 'var_plots__ts_breaks_width')
+    reset_hide_var_plot_option(session, 'var_plots__scale_x_log_base_10')
+    reset_hide_var_plot_option(session, 'var_plots__x_zoom_min')
+    reset_hide_var_plot_option(session, 'var_plots__x_zoom_max')
+    reset_hide_var_plot_option(session, 'var_plots__scale_y_log_base_10')
+    reset_hide_var_plot_option(session, 'var_plots__y_zoom_min')
+    reset_hide_var_plot_option(session, 'var_plots__y_zoom_max')
 }
 
-observeEvent__var_plots__graph_options__any_used__function <- function(input, session, url_parameter_info) {
+observeEvent__var_plots__graph_options__any_used__function <- function(input, session, url_parameter_info, var_plots_graph_options_can_dirty) {
 
     observeEvent(c(# any of these will trigger the graph options color change
+
+                   # var_plots__mock_input is so that we can force this to run (and reset
+                   # var_plots_graph_options_can_dirty) when the graph is created
+                   input$var_plots__mock_input,  
                    input$var_plots__filter_factor_lump_number,
                    input$var_plots__label_variables,
                    input$var_plots__annotate_points,
@@ -315,13 +392,18 @@ observeEvent__var_plots__graph_options__any_used__function <- function(input, se
 
         req(!isolate(url_parameter_info$currently_updating))  # should never update if we have params (until set to false)
 
-        if(isolate(input$var_plots__variable) != global__select_variable) {
+        if(var_plots_graph_options_can_dirty()) {
 
-            log_message_block_start('Graph Options Dirty (Control Used)')
-            updateCollapse(session, "var_plots__bscollapse", style = list("Graph Options" = "danger"))
+            if(isolate(input$var_plots__variable) != global__select_variable) {
+
+                log_message_block_start('Graph Options Dirty (Control Used)')
+                updateCollapse(session, "var_plots__bscollapse", style = list("Graph Options" = "danger"))
+            }
+        } else {
+            var_plots_graph_options_can_dirty(TRUE)
         }
 
-    }, ignoreNULL = TRUE, ignoreInit = TRUE)
+    }, ignoreNULL=TRUE, ignoreInit=TRUE)
 }
 
 observeEvent__var_plots__other_options__any_used__function <- function(input, session, url_parameter_info) {
@@ -347,7 +429,7 @@ observeEvent__var_plots__other_options__any_used__function <- function(input, se
             updateCollapse(session, "var_plots__bscollapse", style = list("Other Options" = "danger"))
         }
 
-    }, ignoreNULL = TRUE, ignoreInit = TRUE)
+    }, ignoreNULL=TRUE, ignoreInit=TRUE)
 }
 
 ##############################################################################################################
@@ -426,7 +508,7 @@ observeEvent__var_plots__show_hide_dynamic_filters <- function(input, session, d
             shinyjs::hide(paste0('var_plots__dynamic_filter__', variable))
         }
     
-    }, ignoreNULL = FALSE)  # ignoreNULL so that the observeEvent is triggered when the user removes all
+    }, ignoreNULL = FALSE, ignoreInit=TRUE)  # ignoreNULL so that the observeEvent is triggered when the user removes all
                             # of the selections from the `var_plots__filter_controls_selections` inputSelect
 }
 
@@ -435,6 +517,8 @@ observe__var_plots__bscollapse__dynamic_inputs <- function(input, session, datas
     observe({
 
         req(dataset$data)
+
+        log_message_block_start("Registering Dynamic Filters")
 
         # this is a hack to register all of the dynamic controls to the reactive event listener
         # also use it to check values (i.e. only update colors if the filters are active i.e. any are not null)
@@ -510,11 +594,11 @@ reactive__var_plots__filtered_data__creator <- function(input, dataset, reactive
     })
 }
 
-hide_show_top_n_categories <- function(dataset, variable, comparison_variable, size_variable, color_variable, facet_variable) {
+hide_show_top_n_categories <- function(session, dataset, variable, comparison_variable, size_variable, color_variable, facet_variable) {
 
     if(variable == global__select_variable || !(variable %in% colnames(dataset))) {
 
-        shinyjs::hide('var_plots__filter_factor_lump_number')
+        reset_hide_var_plot_option(session, 'var_plots__filter_factor_lump_number')
         return (TRUE)
     }
 
@@ -529,7 +613,7 @@ hide_show_top_n_categories <- function(dataset, variable, comparison_variable, s
 
     } else {
 
-        shinyjs::hide('var_plots__filter_factor_lump_number')
+        reset_hide_var_plot_option(session, 'var_plots__filter_factor_lump_number')
         return (TRUE)
     }
 }
@@ -783,26 +867,45 @@ helper__plot_numeric_categoric <- function(dataset,
     return (ggplot_object)
 }
 
-reactive__var_plots__ggplot__creator <- function(input, session, dataset, url_parameter_info) {
+reactive__var_plots__ggplot__creator <- function(input, session, dataset, url_parameter_info, var_plots_graph_options_can_dirty) {
     
-    reactive({
+    eventReactive(c(input$var_plots__graph_options_apply,
+                    input$var_plots__custom_labels_apply,
+                    url_parameter_info$can_plot,
+                    dataset(),
+                    input$var_plots__variable,
+                    input$var_plots__comparison,
+                    input$var_plots__numeric_aggregation,
+                    input$var_plots__sum_by_variable,
+                    input$var_plots__size_variable,
+                    input$var_plots__color_variable,
+                    input$var_plots__facet_variable,
+                    input$var_plots__multi_value_delimiter,
+                    input$var_plots__numeric_group_comp_variable,
+                    input$var_plots__numeric_aggregation_function,
+                    input$var_plots__map_format,
+                    input$var_plots__map_borders_database,
+                    input$var_plots__map_borders_regions), {
         
         if(isolate(url_parameter_info$currently_updating)) {
 
             # if we are updating from url parameters, need to wait until we can_plot
             req(url_parameter_info$can_plot)
+            req(input$var_plots__variable != global__select_variable)
         }
 
         req(input$var_plots__variable)
-        req(input$var_plots__comparison)
         req(dataset())
-
-        input$var_plots__graph_options_apply  # trigger update if applying custom labels
-        input$var_plots__custom_labels_apply  # trigger update if applying graph options
 
         ######################################################################################################
         ######################################################################################################
         dataset <- dataset()
+
+        # set var_plots_graph_options_can_dirty to FALSE; then set var_plots__mock_input to a random value so
+        # that it forces the observeEvent__var_plots__graph_options__any_used__function to run (which it might
+        # not if no values get udpated.
+        var_plots_graph_options_can_dirty(FALSE)
+        updateTextInput(session, 'var_plots__mock_input', value=runif(1, 0, 1000))
 
         log_message_block_start('Preparing to Create ggplot Object')
 
@@ -903,7 +1006,8 @@ reactive__var_plots__ggplot__creator <- function(input, session, dataset, url_pa
 
         filter_factor_lump_number <- isolate(input$var_plots__filter_factor_lump_number)
 
-        top_n_is_hidden <- hide_show_top_n_categories(dataset(),
+        top_n_is_hidden <- hide_show_top_n_categories(session,
+                                                      dataset(),
                                                       primary_variable,
                                                       comparison_variable,
                                                       size_variable,
@@ -923,8 +1027,8 @@ reactive__var_plots__ggplot__creator <- function(input, session, dataset, url_pa
 
         # NOTE MAP options don't have an apply button
         map_format <- input$var_plots__map_format
-        map_borders_database <- input$var_plots___map_borders_database
-        map_borders_regions <- input$var_plots___map_borders_regions
+        map_borders_database <- input$var_plots__map_borders_database
+        map_borders_regions <- input$var_plots__map_borders_regions
 
         custom_title <- isolate(input$var_plots__custom_title)
         custom_subtitle <- isolate(input$var_plots__custom_subtitle)
@@ -938,7 +1042,7 @@ reactive__var_plots__ggplot__creator <- function(input, session, dataset, url_pa
 
             if(is_date_type(dataset[, primary_variable])) {
 
-                hide_show_date(session, has_comparison_variable=!is.null(comparison_variable))
+                hide_show_date(session, input, has_comparison_variable=!is.null(comparison_variable))
 
             ##############################################################################################
             # Numeric Primary Variable
@@ -995,7 +1099,7 @@ reactive__var_plots__ggplot__creator <- function(input, session, dataset, url_pa
 
         } else {
 
-            hide_graph_options(input)
+            hide_graph_options(session)
         }
 
         ggplot_object <- create_ggplot_object(dataset=dataset,
@@ -1074,7 +1178,15 @@ reactive__var_plots__ggplot__creator <- function(input, session, dataset, url_pa
             }
         }
 
+        # A) if these are dirty but we trigger the graph to update by selecting a variable or hitting Apply 
+        # in an unrelated menu, the options get updated, so they are no longer dirty.
+        # B) when we switch variable types and hide/show variables we also reset the values, which makes
+        # the options "dirty" even though they are not being used
+        updateCollapse(session, "var_plots__bscollapse", style = list("Graph Options" = "default"))
+        updateCollapse(session, "var_plots__bscollapse", style = list("Other Options" = "default"))
+
         return (ggplot_object)
+    
     })
 }
 
@@ -1657,10 +1769,10 @@ clear_variables <- function(session, input, swap_primary_and_comparison=FALSE) {
     updateCheckboxInput(session, 'var_plots__numeric_group_comp_variable', value=FALSE)
     updateSelectInput(session,
                       'var_plots__numeric_aggregation_function',
-                      selected=global__num_num_aggregation_function_default)
+                      selected=var_plots__default_values[['var_plots__numeric_aggregation_function']])
     updateSelectInput(session,
                       'var_plots__numeric_aggregation',
-                      selected=global__var_plots__numeric_aggregation_default)
+                      selected=var_plots__default_values[['var_plots__numeric_aggregation']])
     updateTextInput(session, 'var_plots__multi_value_delimiter', value="")
 }
 
@@ -1668,16 +1780,19 @@ observeEvent__var_plots__variables_buttons_clear_swap <- function(session, input
 
     observeEvent(input$var_plots__variables_buttons_clear, {
 
+        log_message_block_start('Clearing Variables via Button')
         clear_variables(session, input, swap_primary_and_comparison=FALSE)
     })
 
     observeEvent(input$var_plots__variables_buttons_swap, {
 
+        log_message_block_start('Swapping Variables via Button')
         clear_variables(session, input, swap_primary_and_comparison=TRUE)
     })
 
     observeEvent(input$var_plots__color_facet_buttons_swap, {
 
+        log_message_block_start('Swapping Color & Facet via Button')
         current_color_selected <- input$var_plots__color_variable
         current_facet_selected <- input$var_plots__facet_variable
 
@@ -1689,17 +1804,19 @@ observeEvent__var_plots__variables_buttons_clear_swap <- function(session, input
 ##############################################################################################################
 # DYNAMICALLY SHOW/HIDE INPUT
 ##############################################################################################################
-hide_show_date <- function(session, has_comparison_variable) {
+hide_show_date <- function(session, input, has_comparison_variable) {
 
     log_message('hide_show_date')
-
+    
     updateSelectInput(session, 'var_plots__comparison', label="Numeric Aggregation")
     shinyjs::show('var_plots__comparison')
     shinyjs::show('var_plots__variables_buttons_clear')
     shinyjs::hide('var_plots__variables_buttons_swap')  # hide because we can't have date as comparison
     shinyjs::show('var_plots__color_facet_buttons_swap')
-    
-    shinyjs::show('div_var_plots__group_y_zoom_controls')
+
+    shinyjs::show('var_plots__scale_y_log_base_10')
+    shinyjs::show('var_plots__y_zoom_min')
+    shinyjs::show('var_plots__y_zoom_max')
     shinyjs::show('var_plots__base_size')
     shinyjs::show('var_plots__vertical_annotations')
     shinyjs::show('var_plots__horizontal_annotations')
@@ -1709,8 +1826,19 @@ hide_show_date <- function(session, has_comparison_variable) {
     shinyjs::show('var_plots__include_zero_y_axis')
     shinyjs::show('var_plots__color_variable')
     shinyjs::show('var_plots__facet_variable')
-    shinyjs::show('div_var_plots__group_trend_controls')
-    shinyjs::show('div_var_plots__group_time_series_controls')
+    shinyjs::show('var_plots__trend_line')
+    if(input$var_plots__trend_line == "Projection") {
+
+        shinyjs::show('var_plots__trend_extend_date')
+
+    } else {
+
+        reset_hide_var_plot_option(session, 'var_plots__trend_extend_date')
+    }
+    shinyjs::show('var_plots__trend_line_se')
+    shinyjs::show('var_plots__ts_date_floor')
+    shinyjs::show('var_plots__ts_date_break_format')
+    shinyjs::show('var_plots__ts_breaks_width')
 
     if(has_comparison_variable) {
 
@@ -1718,28 +1846,32 @@ hide_show_date <- function(session, has_comparison_variable) {
 
     } else {
 
-        shinyjs::hide('var_plots__numeric_aggregation')
+        reset_hide_var_plot_option(session, 'var_plots__numeric_aggregation')
     }
 
-    shinyjs::hide('var_plots__size_variable')
-    shinyjs::hide('var_plots__label_variables')
-    shinyjs::hide('var_plots__numeric_group_comp_variable')
-    shinyjs::hide('var_plots__numeric_aggregation_function')
-    shinyjs::hide('var_plots__numeric_aggregation_count_minimum')
-    shinyjs::hide('var_plots__numeric_show_resampled_conf_int')
-    shinyjs::hide('div_var_plots__group_scatter_controls')
-    shinyjs::hide('div_var_plots__group_x_zoom_controls')
-    shinyjs::hide('var_plots__histogram_bins')
-    shinyjs::hide('div_var_plots__group_barchar_controls')
-    shinyjs::hide('var_plots__order_by_variable')
-    shinyjs::hide('var_plots__categoric_view_type')
-    shinyjs::hide('var_plots__numeric_graph_type')
-    shinyjs::hide('var_plots__sum_by_variable')
-    shinyjs::hide('var_plots__multi_value_delimiter')
+    reset_hide_var_plot_option(session, 'var_plots__size_variable')
+    reset_hide_var_plot_option(session, 'var_plots__label_variables')
+    reset_hide_var_plot_option(session, 'var_plots__numeric_group_comp_variable')
+    reset_hide_var_plot_option(session, 'var_plots__numeric_aggregation_function')
+    reset_hide_var_plot_option(session, 'var_plots__numeric_aggregation_count_minimum')
+    reset_hide_var_plot_option(session, 'var_plots__numeric_show_resampled_conf_int')
+    reset_hide_var_plot_option(session, 'var_plots__transparency')
+    reset_hide_var_plot_option(session, 'var_plots__jitter')
+    reset_hide_var_plot_option(session, 'var_plots__scale_x_log_base_10')
+    reset_hide_var_plot_option(session, 'var_plots__x_zoom_min')
+    reset_hide_var_plot_option(session, 'var_plots__x_zoom_max')
+    reset_hide_var_plot_option(session, 'var_plots__histogram_bins')
+    reset_hide_var_plot_option(session, 'var_plots__show_variable_totals')
+    reset_hide_var_plot_option(session, 'var_plots__show_comparison_totals')
+    reset_hide_var_plot_option(session, 'var_plots__order_by_variable')
+    reset_hide_var_plot_option(session, 'var_plots__categoric_view_type')
+    reset_hide_var_plot_option(session, 'var_plots__numeric_graph_type')
+    reset_hide_var_plot_option(session, 'var_plots__sum_by_variable')
+    reset_hide_var_plot_option(session, 'var_plots__multi_value_delimiter')
     updateCollapse(session, 'var_plots__bscollapse', close="Map Options")
-    shinyjs::hide('var_plots__map_format')
-    shinyjs::hide('var_plots___map_borders_database')
-    shinyjs::hide('var_plots___map_borders_regions')
+    reset_hide_var_plot_option(session, 'var_plots__map_format')
+    reset_hide_var_plot_option(session, 'var_plots__map_borders_database')
+    reset_hide_var_plot_option(session, 'var_plots__map_borders_regions')
 }
 
 hide_show_numeric_numeric <- function(session,
@@ -1757,7 +1889,7 @@ hide_show_numeric_numeric <- function(session,
     
     # scatterplot; or if grouping the main variable, then boxplot or custom aggregation_function
 
-    shinyjs::hide('var_plots__numeric_aggregation')
+    reset_hide_var_plot_option(session, 'var_plots__numeric_aggregation')
     shinyjs::show('var_plots__numeric_group_comp_variable')
 
     if(is_grouping_main_variable) {
@@ -1767,9 +1899,9 @@ hide_show_numeric_numeric <- function(session,
 
         if(grouping_is_boxplot) {
             
-            shinyjs::hide('var_plots__show_points')
-            shinyjs::hide('var_plots__annotate_points')
-            shinyjs::hide('var_plots__numeric_show_resampled_conf_int')
+            reset_hide_var_plot_option(session, 'var_plots__show_points')
+            reset_hide_var_plot_option(session, 'var_plots__annotate_points')
+            reset_hide_var_plot_option(session, 'var_plots__numeric_show_resampled_conf_int')
 
         } else {
 
@@ -1778,55 +1910,71 @@ hide_show_numeric_numeric <- function(session,
             shinyjs::show('var_plots__numeric_show_resampled_conf_int')
         }
     
-        shinyjs::hide('var_plots__size_variable')
-        shinyjs::hide('var_plots__label_variables')
-        shinyjs::hide('var_plots__color_variable')
+        reset_hide_var_plot_option(session, 'var_plots__size_variable')
+        reset_hide_var_plot_option(session, 'var_plots__label_variables')
+        reset_hide_var_plot_option(session, 'var_plots__color_variable')
 
-        shinyjs::hide('var_plots__map_format')
-        shinyjs::hide('var_plots___map_borders_database')
-        shinyjs::hide('var_plots___map_borders_regions')
+        reset_hide_var_plot_option(session, 'var_plots__map_format')
+        reset_hide_var_plot_option(session, 'var_plots__map_borders_database')
+        reset_hide_var_plot_option(session, 'var_plots__map_borders_regions')
+
+        reset_hide_var_plot_option(session, 'var_plots__transparency')
+        reset_hide_var_plot_option(session, 'var_plots__jitter')
+
+        reset_hide_var_plot_option(session, 'var_plots__trend_line')
+        reset_hide_var_plot_option(session, 'var_plots__trend_extend_date')
+        reset_hide_var_plot_option(session, 'var_plots__trend_line_se')
+
         updateCollapse(session, 'var_plots__bscollapse', close="Map Options")
-
-        shinyjs::hide('div_var_plots__group_scatter_controls')
-        shinyjs::hide('div_var_plots__group_trend_controls')
 
     } else {
 
-        shinyjs::hide('var_plots__numeric_aggregation_function')
-        shinyjs::hide('var_plots__numeric_aggregation_count_minimum')
-        shinyjs::hide('var_plots__numeric_show_resampled_conf_int')
+        reset_hide_var_plot_option(session, 'var_plots__numeric_aggregation_function')
+        reset_hide_var_plot_option(session, 'var_plots__numeric_aggregation_count_minimum')
+        reset_hide_var_plot_option(session, 'var_plots__numeric_show_resampled_conf_int')
+        reset_hide_var_plot_option(session, 'var_plots__annotate_points')
 
         shinyjs::show('var_plots__size_variable')
         shinyjs::show('var_plots__label_variables')
-        shinyjs::hide('var_plots__annotate_points')
         shinyjs::show('var_plots__color_variable')
         shinyjs::show('var_plots__map_format')
-        shinyjs::show('var_plots___map_borders_database')
-        shinyjs::show('var_plots___map_borders_regions')
+        shinyjs::show('var_plots__map_borders_database')
+        shinyjs::show('var_plots__map_borders_regions')
         updateCollapse(session, 'var_plots__bscollapse', open="Map Options")
 
-        shinyjs::show('div_var_plots__group_scatter_controls')
-        shinyjs::show('div_var_plots__group_trend_controls')
-        shinyjs::hide('var_plots__show_points')
+        shinyjs::show('var_plots__transparency')
+        shinyjs::show('var_plots__jitter')
+
+        shinyjs::show('var_plots__trend_line')
+        reset_hide_var_plot_option(session, 'var_plots__trend_extend_date')
+        shinyjs::show('var_plots__trend_line_se')
+        reset_hide_var_plot_option(session, 'var_plots__show_points')
     }
 
-    shinyjs::show('div_var_plots__group_x_zoom_controls')
-    shinyjs::show('div_var_plots__group_y_zoom_controls')
+    shinyjs::show('var_plots__scale_x_log_base_10')
+    shinyjs::show('var_plots__x_zoom_min')
+    shinyjs::show('var_plots__x_zoom_max')
+    shinyjs::show('var_plots__scale_y_log_base_10')
+    shinyjs::show('var_plots__y_zoom_min')
+    shinyjs::show('var_plots__y_zoom_max')
     shinyjs::show('var_plots__base_size')
     shinyjs::show('var_plots__vertical_annotations')
     shinyjs::show('var_plots__horizontal_annotations')
     
-    shinyjs::hide('var_plots__facet_variable')
-    shinyjs::hide('var_plots__year_over_year')
-    shinyjs::hide('var_plots__include_zero_y_axis')
-    shinyjs::hide('div_var_plots__group_time_series_controls')
-    shinyjs::hide('var_plots__histogram_bins')
-    shinyjs::hide('div_var_plots__group_barchar_controls')
-    shinyjs::hide('var_plots__order_by_variable')
-    shinyjs::hide('var_plots__categoric_view_type')
-    shinyjs::hide('var_plots__numeric_graph_type')
-    shinyjs::hide('var_plots__sum_by_variable')
-    shinyjs::hide('var_plots__multi_value_delimiter')
+    reset_hide_var_plot_option(session, 'var_plots__facet_variable')
+    reset_hide_var_plot_option(session, 'var_plots__year_over_year')
+    reset_hide_var_plot_option(session, 'var_plots__include_zero_y_axis')
+    reset_hide_var_plot_option(session, 'var_plots__ts_date_floor')
+    reset_hide_var_plot_option(session, 'var_plots__ts_date_break_format')
+    reset_hide_var_plot_option(session, 'var_plots__ts_breaks_width')
+    reset_hide_var_plot_option(session, 'var_plots__histogram_bins')
+    reset_hide_var_plot_option(session, 'var_plots__show_variable_totals')
+    reset_hide_var_plot_option(session, 'var_plots__show_comparison_totals')
+    reset_hide_var_plot_option(session, 'var_plots__order_by_variable')
+    reset_hide_var_plot_option(session, 'var_plots__categoric_view_type')
+    reset_hide_var_plot_option(session, 'var_plots__numeric_graph_type')
+    reset_hide_var_plot_option(session, 'var_plots__sum_by_variable')
+    reset_hide_var_plot_option(session, 'var_plots__multi_value_delimiter')
 }
 
 hide_show_numeric_categoric <- function(session, showing_boxplot, has_comparison_variable) {
@@ -1834,6 +1982,7 @@ hide_show_numeric_categoric <- function(session, showing_boxplot, has_comparison
     log_message('hide_show_numeric_categoric')
 
     updateSelectInput(session, 'var_plots__comparison', label="Secondary Variable")
+
     shinyjs::show('var_plots__comparison')
     shinyjs::show('var_plots__variables_buttons_clear')
     shinyjs::show('var_plots__variables_buttons_swap')
@@ -1842,9 +1991,13 @@ hide_show_numeric_categoric <- function(session, showing_boxplot, has_comparison
     # could be a boxplot or a histogram; if it is a boxplot, we want to show y-axis-controls, otherwise x-axis
     if(showing_boxplot) {
 
-        shinyjs::hide('var_plots__histogram_bins')
-        shinyjs::show('div_var_plots__group_y_zoom_controls')
-        shinyjs::hide('div_var_plots__group_x_zoom_controls')
+        shinyjs::show('var_plots__scale_y_log_base_10')
+        shinyjs::show('var_plots__y_zoom_min')
+        shinyjs::show('var_plots__y_zoom_max')
+        reset_hide_var_plot_option(session, 'var_plots__histogram_bins')
+        reset_hide_var_plot_option(session, 'var_plots__scale_x_log_base_10')
+        reset_hide_var_plot_option(session, 'var_plots__x_zoom_min')
+        reset_hide_var_plot_option(session, 'var_plots__x_zoom_max')
 
         if(has_comparison_variable) {
 
@@ -1853,52 +2006,57 @@ hide_show_numeric_categoric <- function(session, showing_boxplot, has_comparison
 
         } else {
 
-            shinyjs::hide('var_plots__color_variable')
-            shinyjs::hide('var_plots__order_by_variable')
+            reset_hide_var_plot_option(session, 'var_plots__color_variable')
+            reset_hide_var_plot_option(session, 'var_plots__order_by_variable')
         }
-
-        # if we are hiding the x-controls, uncheck the scale_x_log10 option so it isn't carried over
-        updateCheckboxInput(session, 'var_plots__scale_x_log_base_10', value=FALSE)
 
     } else {
 
         shinyjs::show('var_plots__histogram_bins')
-        shinyjs::hide('div_var_plots__group_y_zoom_controls')
-        shinyjs::show('div_var_plots__group_x_zoom_controls')
-        shinyjs::hide('var_plots__color_variable')
-        # if we are hiding the y-controls, uncheck the scale_y_log10 option so it isn't carried over
-        updateCheckboxInput(session, 'var_plots__scale_y_log_base_10', value=FALSE)
+        shinyjs::show('var_plots__scale_x_log_base_10')
+        shinyjs::show('var_plots__x_zoom_min')
+        shinyjs::show('var_plots__x_zoom_max')
+        reset_hide_var_plot_option(session, 'var_plots__scale_y_log_base_10')
+        reset_hide_var_plot_option(session, 'var_plots__y_zoom_min')
+        reset_hide_var_plot_option(session, 'var_plots__y_zoom_max')
+        reset_hide_var_plot_option(session, 'var_plots__color_variable')
     }
 
-    shinyjs::hide('var_plots__facet_variable')
-    shinyjs::hide('var_plots__year_over_year')
-    shinyjs::hide('var_plots__include_zero_y_axis')
-    shinyjs::hide('var_plots__numeric_aggregation')
-    shinyjs::hide('var_plots__size_variable')
-    shinyjs::hide('var_plots__label_variables')
-    shinyjs::hide('var_plots__numeric_group_comp_variable')
-    shinyjs::hide('var_plots__numeric_aggregation_function')
-    shinyjs::hide('var_plots__numeric_aggregation_count_minimum')
-    shinyjs::hide('var_plots__numeric_show_resampled_conf_int')
+    reset_hide_var_plot_option(session, 'var_plots__facet_variable')
+    reset_hide_var_plot_option(session, 'var_plots__year_over_year')
+    reset_hide_var_plot_option(session, 'var_plots__include_zero_y_axis')
+    reset_hide_var_plot_option(session, 'var_plots__numeric_aggregation')
+    reset_hide_var_plot_option(session, 'var_plots__size_variable')
+    reset_hide_var_plot_option(session, 'var_plots__label_variables')
+    reset_hide_var_plot_option(session, 'var_plots__numeric_group_comp_variable')
+    reset_hide_var_plot_option(session, 'var_plots__numeric_aggregation_function')
+    reset_hide_var_plot_option(session, 'var_plots__numeric_aggregation_count_minimum')
+    reset_hide_var_plot_option(session, 'var_plots__numeric_show_resampled_conf_int')
 
     shinyjs::show('var_plots__base_size')
-    shinyjs::hide('var_plots__vertical_annotations')
+    reset_hide_var_plot_option(session, 'var_plots__vertical_annotations')
     shinyjs::show('var_plots__horizontal_annotations')
     shinyjs::show('var_plots__numeric_graph_type')
 
-    shinyjs::hide('div_var_plots__group_scatter_controls')
-    shinyjs::hide('div_var_plots__group_trend_controls')
-    shinyjs::hide('div_var_plots__group_time_series_controls')
-    shinyjs::hide('div_var_plots__group_barchar_controls')
-    shinyjs::hide('var_plots__categoric_view_type')
-    shinyjs::hide('var_plots__annotate_points')
-    shinyjs::hide('var_plots__show_points')
-    shinyjs::hide('var_plots__sum_by_variable')
-    shinyjs::hide('var_plots__multi_value_delimiter')
+    reset_hide_var_plot_option(session, 'var_plots__transparency')
+    reset_hide_var_plot_option(session, 'var_plots__jitter')
+    reset_hide_var_plot_option(session, 'var_plots__trend_line')
+    reset_hide_var_plot_option(session, 'var_plots__trend_extend_date')
+    reset_hide_var_plot_option(session, 'var_plots__trend_line_se')
+    reset_hide_var_plot_option(session, 'var_plots__ts_date_floor')
+    reset_hide_var_plot_option(session, 'var_plots__ts_date_break_format')
+    reset_hide_var_plot_option(session, 'var_plots__ts_breaks_width')
+    reset_hide_var_plot_option(session, 'var_plots__show_variable_totals')
+    reset_hide_var_plot_option(session, 'var_plots__show_comparison_totals')
+    reset_hide_var_plot_option(session, 'var_plots__categoric_view_type')
+    reset_hide_var_plot_option(session, 'var_plots__annotate_points')
+    reset_hide_var_plot_option(session, 'var_plots__show_points')
+    reset_hide_var_plot_option(session, 'var_plots__sum_by_variable')
+    reset_hide_var_plot_option(session, 'var_plots__multi_value_delimiter')
     updateCollapse(session, 'var_plots__bscollapse', close="Map Options")
-    shinyjs::hide('var_plots__map_format')
-    shinyjs::hide('var_plots___map_borders_database')
-    shinyjs::hide('var_plots___map_borders_regions')
+    reset_hide_var_plot_option(session, 'var_plots__map_format')
+    reset_hide_var_plot_option(session, 'var_plots__map_borders_database')
+    reset_hide_var_plot_option(session, 'var_plots__map_borders_regions')
 }
 
 hide_show_categoric_categoric <- function(session, input, has_comparison_variable) {
@@ -1920,45 +2078,55 @@ hide_show_categoric_categoric <- function(session, input, has_comparison_variabl
 
     } else {
 
-        shinyjs::hide('var_plots__multi_value_delimiter')
+        reset_hide_var_plot_option(session, 'var_plots__multi_value_delimiter')
     }
 
-    shinyjs::hide('var_plots__facet_variable')
-    shinyjs::hide('var_plots__year_over_year')
-    shinyjs::hide('var_plots__include_zero_y_axis')
-    shinyjs::hide('var_plots__size_variable')
-    shinyjs::hide('var_plots__label_variables')
-    shinyjs::hide('var_plots__numeric_group_comp_variable')
-    shinyjs::hide('var_plots__numeric_aggregation_function')
-    shinyjs::hide('var_plots__numeric_aggregation_count_minimum')
-    shinyjs::hide('var_plots__numeric_show_resampled_conf_int')
-    shinyjs::hide('var_plots__color_variable')
+    reset_hide_var_plot_option(session, 'var_plots__facet_variable')
+    reset_hide_var_plot_option(session, 'var_plots__year_over_year')
+    reset_hide_var_plot_option(session, 'var_plots__include_zero_y_axis')
+    reset_hide_var_plot_option(session, 'var_plots__size_variable')
+    reset_hide_var_plot_option(session, 'var_plots__label_variables')
+    reset_hide_var_plot_option(session, 'var_plots__numeric_group_comp_variable')
+    reset_hide_var_plot_option(session, 'var_plots__numeric_aggregation_function')
+    reset_hide_var_plot_option(session, 'var_plots__numeric_aggregation_count_minimum')
+    reset_hide_var_plot_option(session, 'var_plots__numeric_show_resampled_conf_int')
+    reset_hide_var_plot_option(session, 'var_plots__color_variable')
 
     shinyjs::show('var_plots__categoric_view_type')
-    shinyjs::show('div_var_plots__group_barchar_controls')
+    shinyjs::show('var_plots__show_variable_totals')
+    shinyjs::show('var_plots__show_comparison_totals')
     shinyjs::show('var_plots__order_by_variable')
     shinyjs::show('var_plots__base_size')
-    shinyjs::hide('var_plots__vertical_annotations')
-    shinyjs::hide('var_plots__horizontal_annotations')
+    reset_hide_var_plot_option(session, 'var_plots__vertical_annotations')
+    reset_hide_var_plot_option(session, 'var_plots__horizontal_annotations')
 
-    shinyjs::hide('var_plots__numeric_aggregation')
-    shinyjs::hide('div_var_plots__group_x_zoom_controls')
-    shinyjs::hide('div_var_plots__group_y_zoom_controls')
+    reset_hide_var_plot_option(session, 'var_plots__numeric_aggregation')
+    reset_hide_var_plot_option(session, 'var_plots__scale_x_log_base_10')
+    reset_hide_var_plot_option(session, 'var_plots__x_zoom_min')
+    reset_hide_var_plot_option(session, 'var_plots__x_zoom_max')
+    reset_hide_var_plot_option(session, 'var_plots__scale_y_log_base_10')
+    reset_hide_var_plot_option(session, 'var_plots__y_zoom_min')
+    reset_hide_var_plot_option(session, 'var_plots__y_zoom_max')
     # if we are hiding the x/y-controls, uncheck the scale_x/y_log10 option so it isn't carried over
     updateCheckboxInput(session, 'var_plots__scale_x_log_base_10', value=FALSE)
     updateCheckboxInput(session, 'var_plots__scale_y_log_base_10', value=FALSE)
 
-    shinyjs::hide('div_var_plots__group_scatter_controls')
-    shinyjs::hide('div_var_plots__group_trend_controls')
-    shinyjs::hide('div_var_plots__group_time_series_controls')
-    shinyjs::hide('var_plots__histogram_bins')
-    shinyjs::hide('var_plots__numeric_graph_type')
-    shinyjs::hide('var_plots__annotate_points')
-    shinyjs::hide('var_plots__show_points')
+    reset_hide_var_plot_option(session, 'var_plots__transparency')
+    reset_hide_var_plot_option(session, 'var_plots__jitter')
+    reset_hide_var_plot_option(session, 'var_plots__trend_line')
+    reset_hide_var_plot_option(session, 'var_plots__trend_extend_date')
+    reset_hide_var_plot_option(session, 'var_plots__trend_line_se')
+    reset_hide_var_plot_option(session, 'var_plots__ts_date_floor')
+    reset_hide_var_plot_option(session, 'var_plots__ts_date_break_format')
+    reset_hide_var_plot_option(session, 'var_plots__ts_breaks_width')
+    reset_hide_var_plot_option(session, 'var_plots__histogram_bins')
+    reset_hide_var_plot_option(session, 'var_plots__numeric_graph_type')
+    reset_hide_var_plot_option(session, 'var_plots__annotate_points')
+    reset_hide_var_plot_option(session, 'var_plots__show_points')
     updateCollapse(session, 'var_plots__bscollapse', close="Map Options")
-    shinyjs::hide('var_plots__map_format')
-    shinyjs::hide('var_plots___map_borders_database')
-    shinyjs::hide('var_plots___map_borders_regions')
+    reset_hide_var_plot_option(session, 'var_plots__map_format')
+    reset_hide_var_plot_option(session, 'var_plots__map_borders_database')
+    reset_hide_var_plot_option(session, 'var_plots__map_borders_regions')
 }
 
 observe__var_plots__hide_show_uncollapse_on_primary_vars <- function(session, input) {
@@ -1970,29 +2138,31 @@ observe__var_plots__hide_show_uncollapse_on_primary_vars <- function(session, in
 
         if(local_primary_variable == global__select_variable) {
 
+            log_message_block_start("Hiding Variables from default var_plots__variable")
+
             shinyjs::hide('var_plots__variables_buttons_clear')
             shinyjs::hide('var_plots__variables_buttons_swap') 
             shinyjs::hide('var_plots__color_facet_buttons_swap')
 
-            shinyjs::hide('var_plots__comparison')
-            shinyjs::hide('var_plots__numeric_aggregation')
-            shinyjs::hide('var_plots__sum_by_variable')
-            shinyjs::hide('var_plots__multi_value_delimiter')
-            shinyjs::hide('var_plots__size_variable')
-            shinyjs::hide('var_plots__numeric_group_comp_variable')
-            shinyjs::hide('var_plots__numeric_aggregation_function')
-            shinyjs::hide('var_plots__numeric_aggregation_count_minimum')
-            shinyjs::hide('var_plots__numeric_show_resampled_conf_int')
-            shinyjs::hide('var_plots__color_variable')
-            shinyjs::hide('var_plots__facet_variable')
-            shinyjs::hide('var_plots__year_over_year')
-            shinyjs::hide('var_plots__include_zero_y_axis')
+            reset_hide_var_plot_option(session, 'var_plots__comparison')
+            reset_hide_var_plot_option(session, 'var_plots__numeric_aggregation')
+            reset_hide_var_plot_option(session, 'var_plots__sum_by_variable')
+            reset_hide_var_plot_option(session, 'var_plots__multi_value_delimiter')
+            reset_hide_var_plot_option(session, 'var_plots__size_variable')
+            reset_hide_var_plot_option(session, 'var_plots__numeric_group_comp_variable')
+            reset_hide_var_plot_option(session, 'var_plots__numeric_aggregation_function')
+            reset_hide_var_plot_option(session, 'var_plots__numeric_aggregation_count_minimum')
+            reset_hide_var_plot_option(session, 'var_plots__numeric_show_resampled_conf_int')
+            reset_hide_var_plot_option(session, 'var_plots__color_variable')
+            reset_hide_var_plot_option(session, 'var_plots__facet_variable')
+            reset_hide_var_plot_option(session, 'var_plots__year_over_year')
+            reset_hide_var_plot_option(session, 'var_plots__include_zero_y_axis')
 
         } else {
 
             updateCollapse(session, 'var_plots__bscollapse', open='Graph Options')
         }
-    })
+    }, ignoreInit=TRUE)
 }
 
 ##############################################################################################################
@@ -2044,4 +2214,327 @@ format_filtering_message <- function(filter_message_list, dataset) {
     }
 
     return (message)
+}
+
+
+##############################################################################################################
+# Functions for Updating from URL Parameters
+##############################################################################################################
+#' @param session session from the app server
+#' @param params named list of url params with corresponding values; should only be var_plot__ params
+update_var_plot_variables_from_url_params <- function(session, params, dataset, input) {
+
+    # the variables that are dynamic based on the dataset will not have been loaded
+    # and will need to be initialized with the list of choices
+    # for some variables, the choices are based on other variables
+    # so we need to manually build them up. 
+
+    column_names <- colnames(dataset)
+    numeric_column_names <- colnames(dataset %>% select_if(is.numeric))
+    categoric_column_names <- colnames(dataset %>% select_if(purrr::negate(is.numeric)))
+
+    #######################################################################
+    # Update Primary Variable - cache selected for comparison/color logic
+    #######################################################################
+    selected_variable <- global__select_variable
+    if (!is.null(params[['var_plots__variable']])) {
+
+        selected_variable <- params[['var_plots__variable']]
+        log_message_variable('updating variable', params[['var_plots__variable']])
+    }
+    updateSelectInput(session, 'var_plots__variable',
+                      choices=c(global__select_variable, column_names),
+                      selected=selected_variable)   
+    
+    #######################################################################
+    # Update Comparison Variable - cache selected for color logic
+    #######################################################################
+    selected_comparison <- global__select_variable_optional
+    if (!is.null(params[['var_plots__comparison']])) {
+
+        selected_comparison <- params[['var_plots__comparison']]
+        log_message_variable('updating comparison', params[['var_plots__comparison']])
+    }
+    results <- var_plots__comparison__logic(dataset=dataset,
+                                            primary_variable=selected_variable,
+                                            current_value=selected_comparison)
+    updateSelectInput(session, 'var_plots__comparison',
+                      choices=results$choices,
+                      selected=results$selected)
+    
+    #######################################################################
+    # Update Color Variable
+    #######################################################################
+    selected_color <- global__select_variable_optional
+    if (!is.null(params[['var_plots__color_variable']])) {
+
+        selected_color <- params[['var_plots__color_variable']]
+        log_message_variable('updating color_variable', params[['var_plots__color_variable']])
+    }
+    results <- var_plots__color__logic(dataset=dataset,
+                                            primary_variable=selected_variable,
+                                            comparison_variable=selected_comparison,
+                                            current_value=selected_color)
+    updateSelectInput(session, 'var_plots__color_variable',
+                      choices=results$choices,
+                      selected=results$selected)
+
+
+    #######################################################################
+    # Update Sum-By-Variable
+    #######################################################################
+    selected_sum_by_variable <- global__select_variable_optional
+    if (!is.null(params[['var_plots__sum_by_variable']])) {
+
+        selected_sum_by_variable <- params[['var_plots__sum_by_variable']]
+        log_message_variable('updating sum_by_variable', params[['var_plots__sum_by_variable']])
+    }
+    updateSelectInput(session, 'var_plots__sum_by_variable',
+                      choices=c(global__select_variable_optional, numeric_column_names),
+                      selected=selected_sum_by_variable)
+
+    #######################################################################
+    # Update Categoric View
+    #######################################################################
+    if (!is.null(params[['var_plots__categoric_view_type']])) {
+        log_message_variable('updating categoric_view_type', params[['var_plots__categoric_view_type']])
+        updateSelectInput(session, 'var_plots__categoric_view_type', selected=params[['var_plots__categoric_view_type']])
+    }
+    selected_value <- "Bar"
+    if (!is.null(params[['var_plots__categoric_view_type']])) {
+
+        selected_value <- params[['var_plots__categoric_view_type']]
+        log_message_variable('updating categoric_view_type', params[['var_plots__categoric_view_type']])
+    }
+    results <- var_plots__categoric_view_type__logic(dataset=dataset,
+                                                     comparison_variable=selected_comparison,
+                                                     sum_by_variable=selected_sum_by_variable,
+                                                     current_value=selected_value)
+    updateSelectInput(session, 'var_plots__categoric_view_type',
+                      choices=results$choices,
+                      selected=results$selected)
+
+    #######################################################################
+    # Update Other Dynamic values that don't depend on other variables
+    #######################################################################
+    selected_facet_variable <- global__select_variable_optional
+    if (!is.null(params[['var_plots__facet_variable']])) {
+
+        selected_facet_variable <- params[['var_plots__facet_variable']]
+        log_message_variable('updating facet_variable', params[['var_plots__facet_variable']])
+    }
+    updateSelectInput(session, 'var_plots__facet_variable',
+                      choices=c(global__select_variable_optional, categoric_column_names),
+                      selected=selected_facet_variable)
+
+    selected_size_variable <- global__select_variable_optional
+    if (!is.null(params[['var_plots__size_variable']])) {
+
+        selected_size_variable <- params[['var_plots__size_variable']]
+        log_message_variable('updating size_variable', params[['var_plots__size_variable']])
+    }
+    updateSelectInput(session, 'var_plots__size_variable',
+                      choices=c(global__select_variable_optional, column_names),
+                      selected=selected_size_variable)
+
+    selected_label_variables <- NULL
+    if (!is.null(params[['var_plots__label_variables']])) {
+
+        selected_label_variables <- params[['var_plots__label_variables']]
+        log_message_variable('updating label_variables', paste0(params[['var_plots__label_variables']], collapse="; "))
+    }
+    updateSelectInput(session, 'var_plots__label_variables',
+                      choices=column_names,
+                      selected=selected_label_variables)
+
+    selected_order_by_variable <- "Default"
+    if (!is.null(params[['var_plots__order_by_variable']])) {
+
+        selected_order_by_variable <- params[['var_plots__order_by_variable']]
+        log_message_variable('updating order_by_variable', params[['var_plots__order_by_variable']])
+    }
+    updateSelectInput(session, 'var_plots__order_by_variable',
+                      choices=c("Default", "Frequency", numeric_column_names),
+                      selected=selected_order_by_variable)
+
+    #######################################################################
+    # Update Non-Dynamic
+    # These should already have `choices` defined in UI
+    #######################################################################
+    if (!is.null(params[['var_plots__numeric_group_comp_variable']])) {
+
+        log_message_variable('updating numeric_group_comp_variable', params[['var_plots__numeric_group_comp_variable']])
+        updateCheckboxInput(session, 'var_plots__numeric_group_comp_variable', value=params[['var_plots__numeric_group_comp_variable']])
+    }
+    if (!is.null(params[['var_plots__numeric_aggregation_function']])) {
+
+        log_message_variable('updating numeric_aggregation_function', params[['var_plots__numeric_aggregation_function']])
+        updateSelectInput(session, 'var_plots__numeric_aggregation_function', selected=params[['var_plots__numeric_aggregation_function']])
+    }
+    if (!is.null(params[['var_plots__numeric_aggregation']])) {
+
+        log_message_variable('updating numeric_aggregation', params[['var_plots__numeric_aggregation']])
+        updateSelectInput(session, 'var_plots__numeric_aggregation', selected=params[['var_plots__numeric_aggregation']])
+    }
+    if (!is.null(params[['var_plots__multi_value_delimiter']])) {
+
+        log_message_variable('updating multi_value_delimiter', params[['var_plots__multi_value_delimiter']])
+        updateTextInput(session, 'var_plots__multi_value_delimiter', value=params[['var_plots__multi_value_delimiter']])
+    }
+    if (!is.null(params[['var_plots__filter_factor_lump_number']])) {
+
+        # this object is actually a string, not a number, because "Off" can be chosen, and setting the
+        # control as a number doesn't work.
+        lump_number_string <- as.character(params[['var_plots__filter_factor_lump_number']])
+        log_message_variable('updating filter_factor_lump_number', lump_number_string)
+        # perhaps its a bug, but it seems like for all the updateSliderTextInput controls I have to 
+        # pass choices as well
+        updateSliderTextInput(session,
+                              'var_plots__filter_factor_lump_number',
+                              choices=as.character(c("Off", seq(1, 10), seq(15, 50, 5))),
+                              selected=lump_number_string)
+    }
+    if (!is.null(params[['var_plots__annotate_points']])) {
+        log_message_variable('updating annotate_points', params[['var_plots__annotate_points']])
+        updateCheckboxInput(session, 'var_plots__annotate_points', value=params[['var_plots__annotate_points']])
+    }
+    if (!is.null(params[['var_plots__show_points']])) {
+        log_message_variable('updating show_points', params[['var_plots__show_points']])
+        updateCheckboxInput(session, 'var_plots__show_points', value=params[['var_plots__show_points']])
+    }
+    if (!is.null(params[['var_plots__year_over_year']])) {
+        log_message_variable('updating year_over_year', params[['var_plots__year_over_year']])
+        updateCheckboxInput(session, 'var_plots__year_over_year', value=params[['var_plots__year_over_year']])
+    }
+    if (!is.null(params[['var_plots__include_zero_y_axis']])) {
+        log_message_variable('updating include_zero_y_axis', params[['var_plots__include_zero_y_axis']])
+        updateCheckboxInput(session, 'var_plots__include_zero_y_axis', value=params[['var_plots__include_zero_y_axis']])
+    }
+    if (!is.null(params[['var_plots__numeric_graph_type']])) {
+        log_message_variable('updating numeric_graph_type', params[['var_plots__numeric_graph_type']])
+        updateSelectInput(session, 'var_plots__numeric_graph_type', selected=params[['var_plots__numeric_graph_type']])
+    }
+    if (!is.null(params[['var_plots__show_variable_totals']])) {
+        log_message_variable('updating show_variable_totals', params[['var_plots__show_variable_totals']])
+        updateCheckboxInput(session, 'var_plots__show_variable_totals', value=params[['var_plots__show_variable_totals']])
+    }
+    if (!is.null(params[['var_plots__show_comparison_totals']])) {
+        log_message_variable('updating show_comparison_totals', params[['var_plots__show_comparison_totals']])
+        updateCheckboxInput(session, 'var_plots__show_comparison_totals', value=params[['var_plots__show_comparison_totals']])
+    }
+    if (!is.null(params[['var_plots__histogram_bins']])) {
+        log_message_variable('updating histogram_bins', params[['var_plots__histogram_bins']])
+        updateNumericInput(session, 'var_plots__histogram_bins', value=params[['var_plots__histogram_bins']])
+    }
+    if (!is.null(params[['var_plots__transparency']])) {
+        log_message_variable('updating transparency', params[['var_plots__transparency']])
+        #updateSliderTextInput(session, 'var_plots__transparency', selected=params[['var_plots__transparency']])
+
+        updateSliderTextInput(session, 'var_plots__transparency',
+                                            choices=c(seq(0, 90, 10), 99),
+                                            selected=params[['var_plots__transparency']])
+    }
+    if (!is.null(params[['var_plots__jitter']])) {
+        log_message_variable('updating jitter', params[['var_plots__jitter']])
+        updateCheckboxInput(session, 'var_plots__jitter', value=params[['var_plots__jitter']])
+    }
+    if (!is.null(params[['var_plots__numeric_aggregation_count_minimum']])) {
+        log_message_variable('updating numeric_aggregation_count_minimum', params[['var_plots__numeric_aggregation_count_minimum']])
+        updateNumericInput(session, 'var_plots__numeric_aggregation_count_minimum', value=params[['var_plots__numeric_aggregation_count_minimum']])
+    }
+    if (!is.null(params[['var_plots__numeric_show_resampled_conf_int']])) {
+        log_message_variable('updating numeric_show_resampled_conf_int', params[['var_plots__numeric_show_resampled_conf_int']])
+        updateCheckboxInput(session, 'var_plots__numeric_show_resampled_conf_int', value=params[['var_plots__numeric_show_resampled_conf_int']])
+    }
+    if (!is.null(params[['var_plots__trend_line']])) {
+        log_message_variable('updating trend_line', params[['var_plots__trend_line']])
+        updateRadioButtons(session, 'var_plots__trend_line', selected=params[['var_plots__trend_line']])
+    }
+    if (!is.null(params[['var_plots__trend_extend_date']])) {
+        log_message_variable('updating trend_extend_date', params[['var_plots__trend_extend_date']])
+        updateDateInput(session, inputId='var_plots__trend_extend_date', value = params[['var_plots__trend_extend_date']])
+    }
+    if (!is.null(params[['var_plots__trend_line_se']])) {
+        log_message_variable('updating trend_line_se', params[['var_plots__trend_line_se']])
+        updateRadioButtons(session, 'var_plots__trend_line_se', selected=params[['var_plots__trend_line_se']])
+    }
+    if (!is.null(params[['var_plots__ts_date_floor']])) {
+        log_message_variable('updating ts_date_floor', params[['var_plots__ts_date_floor']])
+        updateSelectInput(session, 'var_plots__ts_date_floor', selected=params[['var_plots__ts_date_floor']])
+    }
+    if (!is.null(params[['var_plots__ts_date_break_format']])) {
+        log_message_variable('updating ts_date_break_format', params[['var_plots__ts_date_break_format']])
+        updateSelectInput(session, 'var_plots__ts_date_break_format', selected=params[['var_plots__ts_date_break_format']])
+    }
+    if (!is.null(params[['var_plots__ts_breaks_width']])) {
+        log_message_variable('updating ts_breaks_width', params[['var_plots__ts_breaks_width']])
+        updateTextInput(session, 'var_plots__ts_breaks_width', value=params[['var_plots__ts_breaks_width']])
+    }
+    if (!is.null(params[['var_plots__scale_x_log_base_10']])) {
+        log_message_variable('updating scale_x_log_base_10', params[['var_plots__scale_x_log_base_10']])
+        updateCheckboxInput(session, 'var_plots__scale_x_log_base_10', value=params[['var_plots__scale_x_log_base_10']])
+    }
+    if (!is.null(params[['var_plots__x_zoom_min']])) {
+        log_message_variable('updating x_zoom_min', params[['var_plots__x_zoom_min']])
+        updateNumericInput(session, 'var_plots__x_zoom_min', value=params[['var_plots__x_zoom_min']])
+    }
+    if (!is.null(params[['var_plots__x_zoom_max']])) {
+        log_message_variable('updating x_zoom_max', params[['var_plots__x_zoom_max']])
+        updateNumericInput(session, 'var_plots__x_zoom_max', value=params[['var_plots__x_zoom_max']])
+    }
+    if (!is.null(params[['var_plots__scale_y_log_base_10']])) {
+        log_message_variable('updating scale_y_log_base_10', params[['var_plots__scale_y_log_base_10']])
+        updateCheckboxInput(session, 'var_plots__scale_y_log_base_10', value=params[['var_plots__scale_y_log_base_10']])
+    }
+    if (!is.null(params[['var_plots__y_zoom_min']])) {
+        log_message_variable('updating y_zoom_min', params[['var_plots__y_zoom_min']])
+        updateNumericInput(session, 'var_plots__y_zoom_min', value=params[['var_plots__y_zoom_min']])
+    }
+    if (!is.null(params[['var_plots__y_zoom_max']])) {
+        log_message_variable('updating y_zoom_max', params[['var_plots__y_zoom_max']])
+        updateNumericInput(session, 'var_plots__y_zoom_max', value=params[['var_plots__y_zoom_max']])
+    }
+    if (!is.null(params[['var_plots__custom_title']])) {
+        log_message_variable('updating custom_title', params[['var_plots__custom_title']])
+        updateTextInput(session, 'var_plots__custom_title', value=params[['var_plots__custom_title']])
+    }
+    if (!is.null(params[['var_plots__custom_subtitle']])) {
+        log_message_variable('updating custom_subtitle', params[['var_plots__custom_subtitle']])
+        updateTextInput(session, 'var_plots__custom_subtitle', value=params[['var_plots__custom_subtitle']])
+    }
+    if (!is.null(params[['var_plots__custom_x_axis_label']])) {
+        log_message_variable('updating custom_x_axis_label', params[['var_plots__custom_x_axis_label']])
+        updateTextInput(session, 'var_plots__custom_x_axis_label', value=params[['var_plots__custom_x_axis_label']])
+    }
+    if (!is.null(params[['var_plots__custom_y_axis_label']])) {
+        log_message_variable('updating custom_y_axis_label', params[['var_plots__custom_y_axis_label']])
+        updateTextInput(session, 'var_plots__custom_y_axis_label', value=params[['var_plots__custom_y_axis_label']])
+    }
+    if (!is.null(params[['var_plots__custom_caption']])) {
+        log_message_variable('updating custom_caption', params[['var_plots__custom_caption']])
+        updateTextInput(session, 'var_plots__custom_caption', value=params[['var_plots__custom_caption']])
+    }
+    if (!is.null(params[['var_plots__custom_tag']])) {
+        log_message_variable('updating custom_tag', params[['var_plots__custom_tag']])
+        updateTextInput(session, 'var_plots__custom_tag', value=params[['var_plots__custom_tag']])
+    }
+    if (!is.null(params[['var_plots__pretty_text']])) {
+        log_message_variable('updating pretty_text', params[['var_plots__pretty_text']])
+        updateCheckboxInput(session, 'var_plots__pretty_text', value=params[['var_plots__pretty_text']])
+    }
+    if (!is.null(params[['var_plots__base_size']])) {
+        log_message_variable('updating base_size', params[['var_plots__base_size']])
+        updateSliderTextInput(session,
+                      'var_plots__base_size',
+                      choices=seq(6, 20, 1),
+                      selected=params[['var_plots__base_size']])
+    }
+    if (!is.null(params[['var_plots__vertical_annotations']])) {
+        log_message_variable('updating vertical_annotations', params[['var_plots__vertical_annotations']])
+        updateTextAreaInput(session, 'var_plots__vertical_annotations', value=params[['var_plots__vertical_annotations']])
+    }
+    if (!is.null(params[['var_plots__horizontal_annotations']])) {
+        log_message_variable('updating horizontal_annotations', params[['var_plots__horizontal_annotations']])
+        updateTextAreaInput(session, 'var_plots__horizontal_annotations', value=params[['var_plots__horizontal_annotations']])
+    }
 }

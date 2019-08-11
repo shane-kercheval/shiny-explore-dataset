@@ -24,16 +24,15 @@ source('helper_scripts/numeric_summary_helpers.R')
 source('helper_scripts/categoric_summary_helpers.R')
 source('helper_scripts/correlation_helpers.R')
 source('helper_scripts/variable_plots_helpers.R')
-source('helper_scripts/url_parameter_helpers.R')
 source('helper_scripts/regression_helpers.R')
 
 options(shiny.maxRequestSize=200*1024^2)
-
+# options(shiny.reactlog=TRUE) 
 
 # Define server logic required to draw a histogram
 shinyServer(function(input, output, session) {
     log_message_block_start("##########################################################################################\nStarting Server\n##########################################################################################")
-    
+
     url_parameter_info <- reactiveValues(params=NULL,
                                          filter_params=NULL,
                                          currently_updating=FALSE,
@@ -48,6 +47,7 @@ shinyServer(function(input, output, session) {
                                          has_plotted=FALSE,
                                          progress=NULL)
 
+    var_plots_graph_options_can_dirty <- reactiveVal(TRUE)
     ##########################################################################################################
     # LOAD DATA
     ##########################################################################################################
@@ -63,7 +63,8 @@ shinyServer(function(input, output, session) {
         updateCheckboxInput(session, inputId='var_plots__filter_use', value=FALSE)
         updateCollapse(session, 'var_plots__bscollapse', close="Filter")
         updateCollapse(session, "var_plots__bscollapse", style = list('Filter' = 'default'))
-    })
+
+    }, ignoreInit=TRUE)
 
     observeEvent(c(reactive__source_data$data, # clear with new dataset
                    input$var_plots__clear_all_settings), {
@@ -85,7 +86,7 @@ shinyServer(function(input, output, session) {
                                                                           'Other Options' = 'default',
                                                                           'Map Options' = 'default'))
         }
-    })
+    }, ignoreInit=TRUE)
 
     observeEvent_preloaded_dataset <-  observeEvent__source_data__preloaded(session,
                                                                             input,
@@ -138,7 +139,8 @@ shinyServer(function(input, output, session) {
     reactive__var_plots__ggplot <- reactive__var_plots__ggplot__creator(input,
                                                                         session,
                                                                         reactive__var_plots__filtered_data,
-                                                                        url_parameter_info)
+                                                                        url_parameter_info,
+                                                                        var_plots_graph_options_can_dirty)
     # stores any messages/warnings that ggplot produces when rendering the plot (outputs below the graph
     #(var_plots__ggplot_messages))
     reactiveValues__vp__ggplot_message <- reactiveValues(value=NULL)
@@ -161,9 +163,9 @@ shinyServer(function(input, output, session) {
     observeEvent__var_plots__custom_labels_clear(input, session)
     observeEvent__var_plots__graph_options_clear(input, session)
     observeEvent__var_plots__graph_options_apply(input, session)
-    observeEvent__var_plots__graph_options__any_used <- observeEvent__var_plots__graph_options__any_used__function(input, session, url_parameter_info)
+    observeEvent__var_plots__graph_options__any_used__function(input, session, url_parameter_info, var_plots_graph_options_can_dirty)
     observeEvent__var_plots__custom_labels_apply(input, session)
-    observeEvent__var_plots__other_options__any_used <- observeEvent__var_plots__other_options__any_used__function(input, session, url_parameter_info)
+    observeEvent__var_plots__other_options__any_used__function(input, session, url_parameter_info)
 
     # main plot
     output$var_plots <- renderPlot__variable_plot(session,
@@ -209,7 +211,6 @@ shinyServer(function(input, output, session) {
     observeEvent_dynamic_variables <- observeEvent(reactive__source_data$data, {
 
         req(!isolate(url_parameter_info$currently_updating))  # should never update if we have params (until set to false)
-        req(reactive__source_data$data)
 
         log_message_block_start("Updating Dynamic Variables (Triggered from new Dataset)")
 
@@ -297,7 +298,6 @@ shinyServer(function(input, output, session) {
         req(reactive__source_data$data)
 
         log_message_block_start("Updating Categoric View Logic")
-
         results <- var_plots__categoric_view_type__logic(dataset=reactive__source_data$data,
                                                          comparison_variable=input$var_plots__comparison,
                                                          sum_by_variable=input$var_plots__sum_by_variable,
@@ -312,7 +312,6 @@ shinyServer(function(input, output, session) {
     # hide/show trend_extend_date
     observeEvent(input$var_plots__trend_line, {
 
-
         if(!is.null(input$var_plots__trend_line) && input$var_plots__trend_line == "Projection") {
 
             log_message_block_start("Updating Trend Extend Date Logic")
@@ -326,9 +325,9 @@ shinyServer(function(input, output, session) {
 
         } else {
 
-            shinyjs::hide('var_plots__trend_extend_date')
+            reset_hide_var_plot_option(session, 'var_plots__trend_extend_date')
         }
-    })
+    }, ignoreInit=TRUE)
 
     resume_dynamic_observers <- function(session,
                                          input,
@@ -423,14 +422,17 @@ shinyServer(function(input, output, session) {
     ##########################################################################################################
     url_search__observeEvent <- observeEvent(session$clientData$url_search, {
 
+        shinyjs::hide('div__loading_page')
+        shinyjs::show('div__main_content')
+ 
         url_parameter_info$progress <- Progress$new(session, min=0, max=2)
-        url_parameter_info$progress$set(message = 'Loading Application')
+        url_parameter_info$progress$set(message = 'Initializing...')
         url_parameter_info$progress$set(value = 1)
         
         url_search <- session$clientData$url_search
         
         log_message_block_start("Executing URL Search Observer")
-
+        
         log_message_variable('url_protocol', session$clientData$url_protocol)
         log_message_variable('url_hostname', session$clientData$url_hostname)
         log_message_variable('url_port', session$clientData$url_port)
@@ -456,7 +458,7 @@ shinyServer(function(input, output, session) {
             url_parameter_info$progress$close()
 
         } else {
-
+            
             log_message_block_start("Detected URL Parameters")
             log_message_variable("URL Search", url_search)
 
@@ -495,8 +497,10 @@ shinyServer(function(input, output, session) {
                 withProgress(value=1/2, message='Loading Dataset',{
 
                     log_message_block_start("Loaded Dataset from URL params")
+                    log_message_variable("params[['data']]", params[['data']])
+
                     reactive__source_data$data <- select_preloaded_dataset(dataset_name=params[['data']])$dataset
-                    reactive__source_data$source <- 'preloaded'
+                    reactive__source_data$source <- "preloaded"
                 })
 
                 log_message_block_start("Continuing Processing Url Parameter")
