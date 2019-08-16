@@ -1,5 +1,6 @@
 library(scales)
 library(purrr)
+library(stringr)
 ##############################################################################################################
 # FILTERS
 ##############################################################################################################
@@ -276,6 +277,7 @@ helper__restore_defaults_graph_options <- function(session) {
     reset_hide_var_plot_option(session, option_name='var_plots__numeric_graph_type', hide_option=FALSE)
     reset_hide_var_plot_option(session, option_name='var_plots__categoric_view_type', hide_option=FALSE)
     reset_hide_var_plot_option(session, option_name='var_plots__order_by_variable', hide_option=FALSE)
+    reset_hide_var_plot_option(session, option_name='var_plots__reverse_stack_order', hide_option=FALSE)
     reset_hide_var_plot_option(session, option_name='var_plots__show_variable_totals', hide_option=FALSE)
     reset_hide_var_plot_option(session, option_name='var_plots__show_comparison_totals', hide_option=FALSE)
     reset_hide_var_plot_option(session, option_name='var_plots__histogram_bins', hide_option=FALSE)
@@ -331,6 +333,7 @@ hide_graph_options <- function(session) {
     reset_hide_var_plot_option(session, 'var_plots__include_zero_y_axis')
     reset_hide_var_plot_option(session, 'var_plots__numeric_graph_type')
     reset_hide_var_plot_option(session, 'var_plots__categoric_view_type')
+    reset_hide_var_plot_option(session, 'var_plots__reverse_stack_order')
     reset_hide_var_plot_option(session, 'var_plots__show_variable_totals')
     reset_hide_var_plot_option(session, 'var_plots__show_comparison_totals')
     reset_hide_var_plot_option(session, 'var_plots__order_by_variable')
@@ -369,6 +372,7 @@ observeEvent__var_plots__graph_options__any_used__function <- function(input, se
                    input$var_plots__numeric_graph_type,
                    input$var_plots__categoric_view_type,
                    input$var_plots__order_by_variable,
+                   input$var_plots__reverse_stack_order,
                    input$var_plots__show_variable_totals,
                    input$var_plots__show_comparison_totals,
                    input$var_plots__histogram_bins,
@@ -716,13 +720,14 @@ var_plots__categoric_view_type__logic <- function(dataset, comparison_variable, 
 
         view_type_options <- c("Bar",
                                "Confidence Interval",
+                               "Stack",
+                               "Stack Percent",
                                "Facet by Comparison",
-                               "Confidence Interval - within Variable",
-                               "Stack")
+                               "Confidence Interval - within Variable")
 
     } else { # both are not null
         
-        view_type_options <- c("Bar", "Facet by Comparison", "Stack")
+        view_type_options <- c("Bar", "Stack", "Stack Percent", "Facet by Comparison")
     }
 
     if(!is.null(current_value) && current_value %in% view_type_options) {
@@ -982,6 +987,7 @@ reactive__var_plots__ggplot__creator <- function(input, session, dataset, url_pa
         pretty_text <- isolate(input$var_plots__pretty_text)
         scale_x_log_base_10 <- isolate(input$var_plots__scale_x_log_base_10)
         scale_y_log_base_10 <- isolate(input$var_plots__scale_y_log_base_10)
+        reverse_stack_order <- isolate(input$var_plots__reverse_stack_order)
         show_variable_totals <- isolate(input$var_plots__show_variable_totals)
         show_comparison_totals <- isolate(input$var_plots__show_comparison_totals)
         categoric_view_type <- default_if_null_or_empty_string(isolate(input$var_plots__categoric_view_type),
@@ -1119,6 +1125,7 @@ reactive__var_plots__ggplot__creator <- function(input, session, dataset, url_pa
 
                                               transparency=transparency,
                                               annotate_points=annotate_points,
+                                              reverse_stack_order=reverse_stack_order,
                                               show_variable_totals=show_variable_totals,
                                               show_comparison_totals=show_comparison_totals,
                                               histogram_bins=histogram_bins,
@@ -1207,6 +1214,7 @@ create_ggplot_object <- function(dataset,
 
                                  transparency=0.60,
                                  annotate_points=TRUE,
+                                 reverse_stack_order=FALSE,
                                  show_variable_totals=TRUE,
                                  show_comparison_totals=TRUE,
                                  histogram_bins=30,
@@ -1411,9 +1419,9 @@ create_ggplot_object <- function(dataset,
 
                     comparison_function <- function(x) { return (median(x, na.rm=TRUE)) }
 
-                } else if (numeric_aggregation == 'Sum') {
+                } else if (numeric_aggregation == 'Total') {
 
-                    comparison_function_name = 'Sum of'
+                    comparison_function_name = "Total"
                     comparison_function <- function(x) { return (sum(x, na.rm=TRUE)) }
 
                 } else {
@@ -1493,9 +1501,9 @@ create_ggplot_object <- function(dataset,
 
                             aggregation_function <- function(x) { return (median(x, na.rm=TRUE)) }
 
-                        } else if (numeric_aggregation_function == 'Sum') {
+                        } else if (numeric_aggregation_function == 'Total') {
 
-                            aggregation_function_name = 'Sum of'
+                            aggregation_function_name = 'Total'
                             aggregation_function <- function(x) { return (sum(x, na.rm=TRUE)) }
 
                         } else {
@@ -1668,6 +1676,7 @@ create_ggplot_object <- function(dataset,
                                                  view_type=categoric_view_type,
                                                  multi_value_delimiter=multi_value_delimiter,
                                                  show_dual_axes=FALSE,
+                                                 reverse_stack=reverse_stack_order,
                                                  base_size=base_size)
             }
         }
@@ -1861,6 +1870,7 @@ hide_show_date <- function(session, input, has_comparison_variable) {
     reset_hide_var_plot_option(session, 'var_plots__x_zoom_min')
     reset_hide_var_plot_option(session, 'var_plots__x_zoom_max')
     reset_hide_var_plot_option(session, 'var_plots__histogram_bins')
+    reset_hide_var_plot_option(session, 'var_plots__reverse_stack_order')
     reset_hide_var_plot_option(session, 'var_plots__show_variable_totals')
     reset_hide_var_plot_option(session, 'var_plots__show_comparison_totals')
     reset_hide_var_plot_option(session, 'var_plots__order_by_variable')
@@ -1968,6 +1978,7 @@ hide_show_numeric_numeric <- function(session,
     reset_hide_var_plot_option(session, 'var_plots__ts_date_break_format')
     reset_hide_var_plot_option(session, 'var_plots__ts_breaks_width')
     reset_hide_var_plot_option(session, 'var_plots__histogram_bins')
+    reset_hide_var_plot_option(session, 'var_plots__reverse_stack_order')
     reset_hide_var_plot_option(session, 'var_plots__show_variable_totals')
     reset_hide_var_plot_option(session, 'var_plots__show_comparison_totals')
     reset_hide_var_plot_option(session, 'var_plots__order_by_variable')
@@ -2046,6 +2057,7 @@ hide_show_numeric_categoric <- function(session, showing_boxplot, has_comparison
     reset_hide_var_plot_option(session, 'var_plots__ts_date_floor')
     reset_hide_var_plot_option(session, 'var_plots__ts_date_break_format')
     reset_hide_var_plot_option(session, 'var_plots__ts_breaks_width')
+    reset_hide_var_plot_option(session, 'var_plots__reverse_stack_order')
     reset_hide_var_plot_option(session, 'var_plots__show_variable_totals')
     reset_hide_var_plot_option(session, 'var_plots__show_comparison_totals')
     reset_hide_var_plot_option(session, 'var_plots__categoric_view_type')
@@ -2075,9 +2087,18 @@ hide_show_categoric_categoric <- function(session, input, has_comparison_variabl
     if(is.null(input$var_plots__comparison) || input$var_plots__comparison == global__select_variable_optional) {
 
         shinyjs::show('var_plots__multi_value_delimiter')
+        reset_hide_var_plot_option(session, 'var_plots__reverse_stack_order')
 
     } else {
 
+        if(str_detect(string=input$var_plots__categoric_view_type, pattern='Stack')) {
+            
+            shinyjs::show('var_plots__reverse_stack_order')
+
+        } else {
+
+            reset_hide_var_plot_option(session, 'var_plots__reverse_stack_order')
+        }
         reset_hide_var_plot_option(session, 'var_plots__multi_value_delimiter')
     }
 
@@ -2413,6 +2434,10 @@ update_var_plot_variables_from_url_params <- function(session, params, dataset, 
     if (!is.null(params[['var_plots__numeric_graph_type']])) {
         log_message_variable('updating numeric_graph_type', params[['var_plots__numeric_graph_type']])
         updateSelectInput(session, 'var_plots__numeric_graph_type', selected=params[['var_plots__numeric_graph_type']])
+    }
+    if (!is.null(params[['var_plots__reverse_stack_order']])) {
+        log_message_variable('updating show_variable_totals', params[['var_plots__reverse_stack_order']])
+        updateCheckboxInput(session, 'var_plots__reverse_stack_order', value=params[['var_plots__reverse_stack_order']])
     }
     if (!is.null(params[['var_plots__show_variable_totals']])) {
         log_message_variable('updating show_variable_totals', params[['var_plots__show_variable_totals']])
