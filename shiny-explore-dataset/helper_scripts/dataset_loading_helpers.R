@@ -100,7 +100,7 @@ select_preloaded_dataset <- function(dataset_name, defualt_path='') {
             data.frame(nycflights13::flights %>%
                 #mutate(date = make_date(year, month, day)) %>%
                 rename(takeoff_datetime = time_hour) %>%
-                mutate(land_datetime = takeoff_datetime + minutes(arr_time)) %>%
+                mutate(land_datetime = takeoff_datetime + minutes(air_time)) %>%
                 select(-year, -month, -day) %>%
                 select(takeoff_datetime, land_datetime, everything()))
 
