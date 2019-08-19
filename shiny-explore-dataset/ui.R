@@ -4,6 +4,7 @@ library(shinyjs)
 library(shinyBS)
 
 source('helper_scripts/definitions.R')
+source('helper_scripts/generic_helpers.R')
 
 shinyUI(fluidPage(theme="custom.css",
 
@@ -174,10 +175,6 @@ shinyUI(fluidPage(theme="custom.css",
                                         selected=var_plots__default_values[['var_plots__size_variable']],
                                         width='100%')
                         ),
-                        # uiOutput('var_plots__sum_by_variable__UI'),
-                        # uiOutput('var_plots__color_variable__UI'),
-                        # uiOutput('var_plots__facet_variable__UI'),
-                        # uiOutput('var_plots__size_variable__UI'),
                         shinyjs::hidden(
                             textInput(inputId='var_plots__multi_value_delimiter',
                                       width=150,
@@ -187,6 +184,29 @@ shinyUI(fluidPage(theme="custom.css",
                         bsTooltip(id='var_plots__multi_value_delimiter',
                                   title="For variables that have multi-value instances seperated by a delimiter (e.g. value_x;value_y), this feature seperates the multi-value instance into multiple instances and counts them individually.",
                                   placement='top', trigger='hover'),
+                        ################
+                        # CONVERSION RATE FIELDS
+                        ################
+                        shinyjs::hidden(
+                            selectInput(inputId='var_plots__date_conversion_variable',
+                                        label='Conversion Variable',
+                                        choices=var_plots__default_values[['var_plots__date_conversion_variable']],
+                                        selected=var_plots__default_values[['var_plots__date_conversion_variable']],
+                                        width='100%')
+                        ),
+                        bsTooltipResistant(id='var_plots__date_conversion_variable',
+                                           title="Select a second date column to graph conversion rates. The primary variable is treated as the initial date and this variable is treated as the date of conversion.",
+                                           placement='top', trigger='hover'),
+                        shinyjs::hidden(
+                            selectInput(inputId='var_plots__date_cr__snapshots__group_variable',
+                                        label='Segment By Variable',
+                                        choices=var_plots__default_values[['var_plots__date_cr__snapshots__group_variable']],
+                                        selected=var_plots__default_values[['var_plots__date_cr__snapshots__group_variable']],
+                                        width='100%')
+                        ),
+                        bsTooltipResistant(id='var_plots__date_cr__snapshots__group_variable',
+                                           title="Segment the conversion rates by a categoric variable.",
+                                           placement='top', trigger='hover'),
                         fluidRow(
                             div(style="display:inline-block; float:left; margin-bottom:0px; margin-top:10px; margin-left: 15px",
                                 shinyjs::hidden(actionButton(inputId='var_plots__variables_buttons_clear',
@@ -252,6 +272,67 @@ shinyUI(fluidPage(theme="custom.css",
                                 actionButton(inputId='var_plots__graph_options_clear',
                                              label='Clear'))
                         ),
+                        ######################################################################################
+                        # Date Conversion Rate Options
+                        ######################################################################################
+                        selectInput(inputId='var_plots__date_cr__plot_type',
+                                    label="Graph Type",
+                                    choices=global__date_cr_options,
+                                    selected=var_plots__default_values[['var_plots__date_cr__plot_type']],
+                                    width=500),
+                        bsTooltip(id='var_plots__date_cr__plot_type',
+                                  title="View \\'snapshots\\' of the conversion rate for each cohort over time, or view an Adoption Curve over time.",
+                                  placement='top', trigger='hover'),
+                        div(id='var_plots__date_cr__snapshots__values', style="display:inline-block; vertical-align:top",
+                            textInput(inputId='var_plots__date_cr__snapshots__values',
+                                      label="Snaphots",
+                                      value=var_plots__default_values[['var_plots__date_cr__snapshots__values']],
+                                      width=100)
+                        ),
+                        bsTooltip(id='var_plots__date_cr__snapshots__values',
+                                  title="Comma seperated numbers. If \\'Units\\', right, is set to \\'Days\\', for example, then this defines the days the snapshots will be on. For example, \\'1, 7, 14\\' will generate snapshots of the conversion rates 1, 7, and 14 days after the initial date.",
+                                  placement='top', trigger='hover'),
+                        div(id='var_plots__date_cr__n_units_after_first_date', style="display:inline-block; vertical-align:top",
+                            sliderInput(inputId='var_plots__date_cr__n_units_after_first_date',
+                                        label='N Units',
+                                        min=1,
+                                        max=100,
+                                        step=1,
+                                        value=var_plots__default_values[['var_plots__date_cr__n_units_after_first_date']],
+                                        width=150)
+                        ),
+                        bsTooltip(id='var_plots__date_cr__n_units_after_first_date',
+                                  title="Number of days/week/etc. after the first event.",
+                                  placement='top', trigger='hover'),
+                        div(id='var_plots__date_cr__snapshots__units', style="display:inline-block; margin-left: 10px",
+                            selectInput(inputId='var_plots__date_cr__snapshots__units',
+                                        label="Units",
+                                        choices=global__date_cr__unit_options,
+                                        selected=var_plots__default_values[['var_plots__date_cr__snapshots__units']],
+                                        width=100)
+                        ),
+                        radioButtons(inputId='var_plots__date_cr__snapshots__color_or_facet',
+                                     label="Group Snapshots By:",
+                                     choices=global__date_cr_color_or_facet,
+                                     selected=var_plots__default_values[['var_plots__date_cr__snapshots__color_or_facet']],
+                                     inline=TRUE,
+                                     width='100%'),
+                        bsTooltip(id='var_plots__date_cr__snapshots__color_or_facet',
+                                  title="Differentiate each snapshot with colored lines, or faceted. Ignored if \\'Year-Over-Year\\' is selected.",
+                                  placement='top', trigger='hover'),
+                        sliderInput(inputId='var_plots__date_cr__last_n_cohorts',
+                                    label='Last N Cohorts',
+                                    min=1,
+                                    max=20,
+                                    step=1,
+                                    value=var_plots__default_values[['var_plots__date_cr__last_n_cohorts']],
+                                    width='100%'),
+                        bsTooltip(id='var_plots__date_cr__last_n_cohorts',
+                                  title="Only include the last N number of Cohorts",
+                                  placement='top', trigger='hover'),
+                        ######################################################################################
+                        # 
+                        ######################################################################################
                         selectInput(inputId='var_plots__numeric_graph_type',
                                     label='Type',
                                     choices=c('Boxplot', 'Histogram'),
@@ -291,14 +372,30 @@ shinyUI(fluidPage(theme="custom.css",
                         bsTooltip(id='var_plots__numeric_aggregation_count_minimum',
                                   title="The minimum number of samples/instances required in order to include the group in the graph.",
                                   placement='top', trigger='hover'),
-                        checkboxInput(inputId='var_plots__annotate_points',
+                        div(id='var_plots__show_points',
+                            style="display:inline-block; vertical-align:top; height:40px",
+
+                            checkboxInput(inputId='var_plots__show_points',
+                                          label='Show Points',
+                                          value=var_plots__default_values[['var_plots__show_points']],
+                                          width=110)
+                        ),
+                        div(id='var_plots__annotate_points',
+                            style="display:inline-block; margin-left: 10px; height:40px",
+
+                            checkboxInput(inputId='var_plots__annotate_points',
                                       label='Show Values',
                                       value=var_plots__default_values[['var_plots__annotate_points']],
+                                      width=110)
+                        ),
+                        checkboxInput(inputId='var_plots__date_cr__separate_colors',
+                                      label="Use dynamic color scheme.",
+                                      value=var_plots__default_values[['var_plots__date_cr__separate_colors']],
                                       width='100%'),
-                        checkboxInput(inputId='var_plots__show_points',
-                                      label='Show Points',
-                                      value=var_plots__default_values[['var_plots__show_points']],
-                                      width='100%'),
+                        bsTooltip(id='var_plots__date_cr__separate_colors',
+                                  title="Changes the color scheme of the cohorted lines.",
+                                  placement='top', trigger='hover'),
+                        
                         checkboxInput(inputId='var_plots__year_over_year',
                                       label='Year-Over-Year',
                                       value=var_plots__default_values[['var_plots__year_over_year']],
@@ -387,7 +484,7 @@ shinyUI(fluidPage(theme="custom.css",
                         bsTooltip(id='var_plots__scale_x_log_base_10',
                                   title="Adds a Log transformation to the values associated with the x-axis.",
                                   placement='top', trigger='hover'),
-                        div(id='var_plots__x_zoom_min', style="display:inline-block",     
+                        div(id='var_plots__x_zoom_min', style="display:inline-block",
                             numericInput(inputId='var_plots__x_zoom_min',
                                          label='X-Axis Min',
                                          value=var_plots__default_values[['var_plots__x_zoom_min']],

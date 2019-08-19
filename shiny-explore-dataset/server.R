@@ -32,6 +32,7 @@ options(shiny.maxRequestSize=200*1024^2)
 # Define server logic required to draw a histogram
 shinyServer(function(input, output, session) {
     log_message_block_start("##########################################################################################\nStarting Server\n##########################################################################################")
+    log_message_variable('Last Sync Date', global__reference_date)
 
     url_parameter_info <- reactiveValues(params=NULL,
                                          filter_params=NULL,
@@ -51,8 +52,7 @@ shinyServer(function(input, output, session) {
     ##########################################################################################################
     # LOAD DATA
     ##########################################################################################################
-    reactive__source_data <- reactiveValues(data=NULL,
-                                            source=NULL)
+    reactive__source_data <- reactiveValues(data=NULL, source=NULL)
 
     observeEvent(reactive__source_data$data, {
 
@@ -166,6 +166,16 @@ shinyServer(function(input, output, session) {
     observeEvent__var_plots__graph_options__any_used__function(input, session, url_parameter_info, var_plots_graph_options_can_dirty)
     observeEvent__var_plots__custom_labels_apply(input, session)
     observeEvent__var_plots__other_options__any_used__function(input, session, url_parameter_info)
+    
+    observeEvent(input$var_plots__date_cr__plot_type, {
+
+        req(!is.null(input$var_plots__date_cr__plot_type) &&
+            !is.null(input$var_plots__date_conversion_variable) &&
+            input$var_plots__date_conversion_variable != global__select_variable_optional)
+
+        log_message_block_start("Updating var_plots__date_cr__plot_type")
+        hide_show_date_cr_options(session, input)
+    })
 
     # main plot
     output$var_plots <- renderPlot__variable_plot(session,
@@ -216,7 +226,8 @@ shinyServer(function(input, output, session) {
 
         column_names <- colnames(reactive__source_data$data)
         numeric_column_names <- colnames(reactive__source_data$data %>% select_if(is.numeric))
-        categoric_column_names <- colnames(reactive__source_data$data %>% select_if(purrr::negate(is.numeric)))
+        categoric_column_names <- colnames(reactive__source_data$data %>% select_if(is_categoric))
+        date_column_names <- colnames(reactive__source_data$data %>% select_if(is_date_type))
 
         updateSelectInput(session, 'var_plots__variable',
                           choices=c(global__select_variable, column_names),
@@ -232,6 +243,12 @@ shinyServer(function(input, output, session) {
                           selected=global__select_variable_optional)
         updateSelectInput(session, 'var_plots__size_variable',
                           choices=c(global__select_variable_optional, column_names),
+                          selected=global__select_variable_optional)
+        updateSelectInput(session, 'var_plots__date_conversion_variable',
+                          choices=c(global__select_variable_optional, date_column_names),
+                          selected=global__select_variable_optional)
+        updateSelectInput(session, 'var_plots__date_cr__snapshots__group_variable',
+                          choices=c(global__select_variable_optional, categoric_column_names),
                           selected=global__select_variable_optional)
         updateSelectInput(session, 'var_plots__color_variable',
                           choices=c(global__select_variable_optional, categoric_column_names),
@@ -266,6 +283,30 @@ shinyServer(function(input, output, session) {
                               selected=results$selected)
         }
     }, suspended=TRUE)
+
+     observeEvent_date_conversion_variable <- observeEvent(input$var_plots__variable, {
+
+        req(!isolate(url_parameter_info$currently_updating))  # should never update if we have params (until set to false)
+        req(reactive__source_data$data)
+
+        column_names <- colnames(reactive__source_data$data)
+
+        if(!is.null(input$var_plots__variable) &&
+                input$var_plots__variable %in% column_names &&
+                is_date_type(reactive__source_data$data[[input$var_plots__variable]])) {
+
+            log_message_block_start("Updating Conversion Variable Logic")
+
+            results <- var_plots__date_conversion_variable__logic(dataset=reactive__source_data$data,
+                                                                  primary_variable=input$var_plots__variable,
+                                                                  current_value=input$var_plots__date_conversion_variable)
+
+            updateSelectInput(session, 'var_plots__date_conversion_variable',
+                              choices=results$choices,
+                              selected=results$selected)
+        }
+    }, suspended=TRUE)
+
 
     observeEvent_color <- observeEvent(c(input$var_plots__variable, input$var_plots__comparison), {
 
@@ -334,12 +375,14 @@ shinyServer(function(input, output, session) {
                                          observeEvent_preloaded_dataset,
                                          observeEvent_dynamic_variables,
                                          observeEvent_comparison,
+                                         observeEvent_date_conversion_variable,
                                          observeEvent_color,
                                          observeEvent_categoric) {
         # resume data loading and dynamic variables, then trigger loading with updateSelectInput
         observeEvent_preloaded_dataset$resume()
         observeEvent_dynamic_variables$resume()
         observeEvent_comparison$resume()
+        observeEvent_date_conversion_variable$resume()
         observeEvent_color$resume()
         observeEvent_categoric$resume()
 
@@ -452,6 +495,7 @@ shinyServer(function(input, output, session) {
                                      observeEvent_preloaded_dataset,
                                      observeEvent_dynamic_variables,
                                      observeEvent_comparison,
+                                     observeEvent_date_conversion_variable,
                                      observeEvent_color,
                                      observeEvent_categoric)
 
@@ -475,6 +519,7 @@ shinyServer(function(input, output, session) {
                                          observeEvent_preloaded_dataset,
                                          observeEvent_dynamic_variables,
                                          observeEvent_comparison,
+                                         observeEvent_date_conversion_variable,
                                          observeEvent_color,
                                          observeEvent_categoric)
 
@@ -698,6 +743,7 @@ shinyServer(function(input, output, session) {
             # nothing new at this point should trigger them, until after the plot has been created
             observeEvent_dynamic_variables$resume()
             observeEvent_comparison$resume()
+            observeEvent_date_conversion_variable$resume()
             observeEvent_color$resume()
             observeEvent_categoric$resume()
 

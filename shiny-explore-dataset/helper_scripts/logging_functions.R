@@ -12,7 +12,6 @@ log_message <- function(message) {
         if('browser_console' %in% global__log_message_to) {
 
             shinyjs::logjs(paste0('\n', message))
-
         }
     }
 }

@@ -98,11 +98,13 @@ select_preloaded_dataset <- function(dataset_name, defualt_path='') {
 
         loaded_dataset <-
             data.frame(nycflights13::flights %>%
-                mutate(date = make_date(year, month, day)) %>%
+                #mutate(date = make_date(year, month, day)) %>%
+                rename(takeoff_datetime = time_hour) %>%
+                mutate(land_datetime = takeoff_datetime + minutes(arr_time)) %>%
                 select(-year, -month, -day) %>%
-                select(date, everything()))
+                select(takeoff_datetime, land_datetime, everything()))
 
-        loaded_dataset$hms <- as_hms(with_tz(loaded_dataset$time_hour, tzone='UTC'))
+        loaded_dataset$hms <- as_hms(with_tz(loaded_dataset$takeoff_datetime, tzone='UTC'))
         data_description <- "This is where a description of the Flights dataset should be given."
 
     } else if(dataset_name == 'Wine Ratings') {

@@ -11,6 +11,8 @@ source('../helper_scripts/dataset_loading_helpers.R', chdir = TRUE)
 source('../helper_scripts/plot_helpers.R', chdir = TRUE)
 Sys.setenv(TZ='UTC')
 
+global__should_log_message <<- FALSE
+
 # to run from command line, use:
 # test_file("unit_tests.R")
 
@@ -1525,7 +1527,7 @@ test_that("setting dynamic variables - color", {
     
     dataset <- results$dataset
     column_names <- colnames(dataset)
-    categoric_column_names <- colnames(dataset %>% select_if(purrr::negate(is.numeric)))
+    categoric_column_names <- colnames(dataset %>% select_if(is_categoric))
     numeric_column_names <- colnames(dataset %>% select_if(is.numeric))
 
     ########
@@ -1684,7 +1686,7 @@ test_that("setting dynamic variables - color", {
     dataset <- results$dataset
     
     column_names <- colnames(dataset)
-    categoric_column_names <- colnames(dataset %>% select_if(purrr::negate(is.numeric)))
+    categoric_column_names <- colnames(dataset %>% select_if(is_categoric))
     numeric_column_names <- colnames(dataset %>% select_if(is.numeric))
     
     primary_selection <- 'date'
@@ -2027,7 +2029,7 @@ test_that("create_ggplot_plot - date projection", {
 })
 
 test_that("create_ggplot_plot - date projection - POSIXct", { 
-    context("create_ggplot_plot - date projection - POSIXct")
+    context("create_ggplot_plot - date projection")
     
     global__should_log_message <<- FALSE
     dataset <- select_preloaded_dataset("Flights", defualt_path = '../')$dataset

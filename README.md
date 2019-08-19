@@ -60,3 +60,16 @@ devtools::install_github('shane-kercheval/rtools')
 ### Regression
 
 ![loading](./docs/regression.png)
+
+
+# Version History (Major Changes)
+
+* `1.0`: Stable 
+* `1.1`: 
+    * Added "Loading Application" screen 
+    * refactored hide/show controls code to reset the variables back to the default value when hiding
+    * updated logging
+* `vCurrent`:
+    * added conversion rate & adoption graphs
+    * fixed/workaround for shinybs bug where toolstips don't work when controls are updated (e.g. via updateSelectInput)
+    * cleaned up controls (converted some to inline/side-by-side)

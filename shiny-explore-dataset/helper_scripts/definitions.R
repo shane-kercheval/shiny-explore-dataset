@@ -1,3 +1,8 @@
+# this is used for rt_explore_plot_conversion_rates to keep track how old each entity is within each cohort
+# if integrated into a company's DWH, it would probably be the timestamp of when the data was last synced/refreshed.
+# it could also be updated to default to the newest record for the particular date column of interest (e.g. for a dataset of website traffic, latest visit to the website)
+global__reference_date <- Sys.Date()
+
 global__should_log_message <- TRUE
 global__log_message_to <- c('browser_console', 'local_console')
 
@@ -7,10 +12,17 @@ global__select_variable_optional <- "<Select (optional)>"
 global__golden_ratio <- 0.618
 
 global__date_part_vector <- c('day', 'week', 'month', 'quarter', 'year')
-names(global__date_part_vector) <- c('Day', 'Week', 'Month', 'Quarter', 'Year')
+names(global__date_part_vector) <- c("Day", "Week", "Month", "Quarter", "Year")
 
 global__date_break_format_vector <- c('Auto', '%Y-%m-%d', '%Y-%W', '%Y-%m', '%Y')
-names(global__date_break_format_vector) <- c('Auto', 'Day', 'Week', 'Month', 'Year')
+names(global__date_break_format_vector) <- c("Auto", "Day", "Week", "Month", "Year")
+
+global__date_cr_options <- c("Snapshots", "Adoption")
+global__date_cr_color_or_facet <- c("color", "facet")
+names(global__date_cr_color_or_facet) <- c("Color", "Facet")
+global__date_cr__unit_options <- c('hours', 'days', 'weeks', 'months', 'quarters', 'years')
+names(global__date_cr__unit_options) <- c("Hours", "Days", "Weeks", "Months", "Quarters", "Years")
+
 
 global__url_params_filter_prefix <- '!!_'
 
@@ -22,6 +34,8 @@ var_plots__default_values <- list(
     'var_plots__color_variable' = global__select_variable_optional,
     'var_plots__facet_variable' = global__select_variable_optional,
     'var_plots__size_variable' = global__select_variable_optional,
+    'var_plots__date_conversion_variable' = global__select_variable_optional,
+    'var_plots__date_cr__snapshots__group_variable' = global__select_variable_optional,
     'var_plots__numeric_group_comp_variable' = FALSE,
     'var_plots__numeric_aggregation_function' = "Boxplot",
     'var_plots__numeric_aggregation' = "Total",
@@ -32,6 +46,13 @@ var_plots__default_values <- list(
     'var_plots__show_points' = TRUE,
     'var_plots__year_over_year' = FALSE,
     'var_plots__include_zero_y_axis' = TRUE,
+    'var_plots__date_cr__plot_type' = global__date_cr_options[1],
+    'var_plots__date_cr__snapshots__values' = "1, 7, 14",
+    'var_plots__date_cr__snapshots__units' = global__date_cr__unit_options[2],
+    'var_plots__date_cr__snapshots__color_or_facet' = global__date_cr_color_or_facet[1],
+    'var_plots__date_cr__last_n_cohorts' = 10,
+    'var_plots__date_cr__n_units_after_first_date' = 30,
+    'var_plots__date_cr__separate_colors' = TRUE,
     'var_plots__numeric_graph_type' = "Boxplot",
     'var_plots__categoric_view_type' = "Bar",
     'var_plots__order_by_variable' = "Default",
@@ -78,6 +99,8 @@ var_plots__variable_types <- list(
     'var_plots__color_variable' = 'updateSelectInput',
     'var_plots__facet_variable' = 'updateSelectInput',
     'var_plots__size_variable' = 'updateSelectInput',
+    'var_plots__date_conversion_variable' = 'updateSelectInput',
+    'var_plots__date_cr__snapshots__group_variable' = 'updateSelectInput',
     'var_plots__numeric_group_comp_variable' = 'updateCheckboxInput',
     'var_plots__numeric_aggregation_function' = 'updateSelectInput',
     'var_plots__numeric_aggregation' = 'updateSelectInput',
@@ -88,6 +111,13 @@ var_plots__variable_types <- list(
     'var_plots__show_points' = 'updateCheckboxInput',
     'var_plots__year_over_year' = 'updateCheckboxInput',
     'var_plots__include_zero_y_axis' = 'updateCheckboxInput',
+    'var_plots__date_cr__plot_type' = 'updateSelectInput',
+    'var_plots__date_cr__snapshots__values' = 'updateTextInput',
+    'var_plots__date_cr__snapshots__units' = 'updateSelectInput',
+    'var_plots__date_cr__snapshots__color_or_facet' = 'updateRadioButtons',
+    'var_plots__date_cr__last_n_cohorts' = 'updateSliderInput',
+    'var_plots__date_cr__n_units_after_first_date' = 'updateSliderInput',
+    'var_plots__date_cr__separate_colors' = 'updateCheckboxInput',
     'var_plots__numeric_graph_type' = 'updateSelectInput',
     'var_plots__categoric_view_type' = 'updateSelectInput',
     'var_plots__order_by_variable' = 'updateSelectInput',

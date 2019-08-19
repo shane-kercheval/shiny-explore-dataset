@@ -508,3 +508,27 @@ extract_url_parameters <- function(url_search) {
 
     return (parameters_list)
 }
+
+
+#' there seems to be a bug when adding a tooltip to an input that gets changed from updateInputXXX; the tooltip doesn't appear
+#' this solution is modified from https://stackoverflow.com/questions/36965954/shinybs-bspopover-and-updateselectinput
+#' this seems to retain the original tooltip the first time the variable is updated; but seems to loose the tool tip when the user 
+#' uses the control (e.g. makes selection in selectInput); but the tooltip reappears when the contorl is hidden and shown again, e.g.
+#' user clicks `Clear` button.
+#' Doesn't seem like a big deal IMO, perhaps it's even preferable
+bsTooltipResistant <- function(id, title, content, placement = "bottom", trigger = "hover", options = NULL){
+    options = shinyBS:::buildTooltipOrPopoverOptionsList(title, placement, trigger, options, content)
+    options = paste0("{'", paste(names(options), options, sep = "': '", collapse = "', '"), "'}") 
+    bsTag <- shiny::tags$script(shiny::HTML(paste0("
+        $(document).ready(function() {
+          var target = document.querySelector('#", id, "');
+          var observer = new MutationObserver(function(mutations) {
+            setTimeout(function() {
+              shinyBS.addTooltip('", id, "', 'tooltip', ", options, ");
+            }, 200);
+          });
+          observer.observe(target, { childList: true });
+        });
+        ")))
+    htmltools::attachDependencies(bsTag, shinyBS:::shinyBSDep)
+}

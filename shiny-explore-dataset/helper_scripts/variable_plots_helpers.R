@@ -209,18 +209,15 @@ reset_hide_var_plot_option <- function(session, option_name, hide_option=TRUE) {
 
         updateSelectInput(session, option_name, selected=get_default_value_for_updating(option_name))
 
-    }
-    else if(var_plots__variable_types[[option_name]] == 'updateCheckboxInput') {
+    } else if(var_plots__variable_types[[option_name]] == 'updateCheckboxInput') {
 
         updateCheckboxInput(session, option_name, value=get_default_value_for_updating(option_name))
 
-    }
-    else if(var_plots__variable_types[[option_name]] == 'updateTextInput') {
+    } else if(var_plots__variable_types[[option_name]] == 'updateTextInput') {
 
         updateTextInput(session, option_name, value=get_default_value_for_updating(option_name))
 
-    }
-    else if(var_plots__variable_types[[option_name]] == 'updateSliderTextInput') {
+    } else if(var_plots__variable_types[[option_name]] == 'updateSliderTextInput') {
 
         # perhaps its a bug, but it seems like for all the updateSliderTextInput controls I have to 
         # pass choices as well
@@ -246,16 +243,20 @@ reset_hide_var_plot_option <- function(session, option_name, hide_option=TRUE) {
                               option_name,
                               choices=variable_choices,
                               selected=get_default_value_for_updating(option_name))
-    }
-    else if(var_plots__variable_types[[option_name]] == 'updateNumericInput') {
+
+    } else if(var_plots__variable_types[[option_name]] == 'updateSliderInput') {
+
+        updateSliderInput(session, option_name, value=get_default_value_for_updating(option_name))
+
+    } else if(var_plots__variable_types[[option_name]] == 'updateNumericInput') {
 
         updateNumericInput(session, option_name, value=get_default_value_for_updating(option_name))
-    }
-    else if(var_plots__variable_types[[option_name]] == 'updateRadioButtons') {
+
+    } else if(var_plots__variable_types[[option_name]] == 'updateRadioButtons') {
 
         updateRadioButtons(session, option_name, selected=get_default_value_for_updating(option_name))
-    }
-    else if(var_plots__variable_types[[option_name]] == 'updateTextAreaInput') {
+
+    } else if(var_plots__variable_types[[option_name]] == 'updateTextAreaInput') {
 
         updateTextAreaInput(session, option_name, value=get_default_value_for_updating(option_name))
 
@@ -275,6 +276,13 @@ helper__restore_defaults_graph_options <- function(session) {
     reset_hide_var_plot_option(session, option_name='var_plots__year_over_year', hide_option=FALSE)
     reset_hide_var_plot_option(session, option_name='var_plots__include_zero_y_axis', hide_option=FALSE)
     reset_hide_var_plot_option(session, option_name='var_plots__numeric_graph_type', hide_option=FALSE)
+    reset_hide_var_plot_option(session, option_name='var_plots__date_cr__plot_type', hide_option=FALSE)
+    reset_hide_var_plot_option(session, option_name='var_plots__date_cr__snapshots__values', hide_option=FALSE)
+    reset_hide_var_plot_option(session, option_name='var_plots__date_cr__snapshots__units', hide_option=FALSE)
+    reset_hide_var_plot_option(session, option_name='var_plots__date_cr__snapshots__color_or_facet', hide_option=FALSE)
+    reset_hide_var_plot_option(session, option_name='var_plots__date_cr__last_n_cohorts', hide_option=FALSE)
+    reset_hide_var_plot_option(session, option_name='var_plots__date_cr__n_units_after_first_date', hide_option=FALSE)
+    reset_hide_var_plot_option(session, option_name='var_plots__date_cr__separate_colors', hide_option=FALSE)
     reset_hide_var_plot_option(session, option_name='var_plots__categoric_view_type', hide_option=FALSE)
     reset_hide_var_plot_option(session, option_name='var_plots__order_by_variable', hide_option=FALSE)
     reset_hide_var_plot_option(session, option_name='var_plots__reverse_stack_order', hide_option=FALSE)
@@ -332,6 +340,13 @@ hide_graph_options <- function(session) {
     reset_hide_var_plot_option(session, 'var_plots__year_over_year')
     reset_hide_var_plot_option(session, 'var_plots__include_zero_y_axis')
     reset_hide_var_plot_option(session, 'var_plots__numeric_graph_type')
+    reset_hide_var_plot_option(session, 'var_plots__date_cr__plot_type')
+    reset_hide_var_plot_option(session, 'var_plots__date_cr__snapshots__values')
+    reset_hide_var_plot_option(session, 'var_plots__date_cr__snapshots__units')
+    reset_hide_var_plot_option(session, 'var_plots__date_cr__snapshots__color_or_facet')
+    reset_hide_var_plot_option(session, 'var_plots__date_cr__last_n_cohorts')
+    reset_hide_var_plot_option(session, 'var_plots__date_cr__n_units_after_first_date')
+    reset_hide_var_plot_option(session, 'var_plots__date_cr__separate_colors')
     reset_hide_var_plot_option(session, 'var_plots__categoric_view_type')
     reset_hide_var_plot_option(session, 'var_plots__reverse_stack_order')
     reset_hide_var_plot_option(session, 'var_plots__show_variable_totals')
@@ -370,6 +385,13 @@ observeEvent__var_plots__graph_options__any_used__function <- function(input, se
                    input$var_plots__year_over_year,
                    input$var_plots__include_zero_y_axis,
                    input$var_plots__numeric_graph_type,
+                   input$var_plots__date_cr__plot_type,
+                   input$var_plots__date_cr__snapshots__values,
+                   input$var_plots__date_cr__snapshots__units,
+                   input$var_plots__date_cr__snapshots__color_or_facet,
+                   input$var_plots__date_cr__last_n_cohorts,
+                   input$var_plots__date_cr__n_units_after_first_date,
+                   input$var_plots__date_cr__separate_colors,
                    input$var_plots__categoric_view_type,
                    input$var_plots__order_by_variable,
                    input$var_plots__reverse_stack_order,
@@ -598,7 +620,8 @@ reactive__var_plots__filtered_data__creator <- function(input, dataset, reactive
     })
 }
 
-hide_show_top_n_categories <- function(session, dataset, variable, comparison_variable, size_variable, color_variable, facet_variable) {
+hide_show_top_n_categories <- function(session, dataset, variable, comparison_variable, size_variable,
+                                       color_variable, facet_variable, conversion_group_variable) {
 
     if(variable == global__select_variable || !(variable %in% colnames(dataset))) {
 
@@ -607,7 +630,8 @@ hide_show_top_n_categories <- function(session, dataset, variable, comparison_va
     }
 
     dataset <- dataset %>% 
-        select(c(variable, comparison_variable, size_variable, color_variable, facet_variable)) %>%
+        select(c(variable, comparison_variable, size_variable, color_variable, facet_variable, 
+                 conversion_group_variable)) %>%
         select_if(is_categoric)
 
     if(ncol(dataset) > 0) {
@@ -654,6 +678,34 @@ var_plots__comparison__logic <- function(dataset, primary_variable, current_valu
                 selected=selected_variable))
 }
 
+var_plots__date_conversion_variable__logic <- function(dataset, primary_variable, current_value) {
+
+    log_message("Executing Logic for Date Conversion Variable")
+    log_message_variable('var_plots__variable', primary_variable)
+    log_message_variable('var_plots__date_conversion_variable', current_value)
+
+    column_names <- colnames(dataset)
+
+    if(!is.null(primary_variable) &&
+            primary_variable %in% column_names &&
+            is_date_type(dataset[[primary_variable]])) {
+
+        date_column_names <- colnames(dataset %>% select_if(is_date_type)) %>% rt_remove_val(primary_variable)
+        selected_variable <- default_if_null_or_empty_string(value=current_value,
+                                                             # treat global__select_variable_optional as null
+                                                             string_values_as_null=global__select_variable_optional,
+                                                             default=global__select_variable_optional)
+
+        return (list(choices=c(global__select_variable_optional, date_column_names),
+                     selected=selected_variable))
+
+    } else {
+
+        return (list(choices=NULL,
+                     selected=NULL))
+    }
+}
+
 var_plots__color__logic <- function(dataset, primary_variable, comparison_variable, current_value) {
 
     log_message("Executing Logic for Color Variable")
@@ -667,7 +719,7 @@ var_plots__color__logic <- function(dataset, primary_variable, comparison_variab
             primary_variable %in% column_names &&
             is_date_type(dataset[[primary_variable]])) {
 
-        column_names <- colnames(dataset %>% select_if(purrr::negate(is.numeric)))
+        column_names <- colnames(dataset %>% select_if(is_categoric))
 
     } else if(xor(!is.null(primary_variable) &&
                       primary_variable %in% column_names &&
@@ -676,7 +728,7 @@ var_plots__color__logic <- function(dataset, primary_variable, comparison_variab
                   comparison_variable %in% column_names &&
                   is.numeric(dataset[[comparison_variable]]))) {
 
-        column_names <- colnames(dataset %>% select_if(purrr::negate(is.numeric)))
+        column_names <- colnames(dataset %>% select_if(is_categoric))
 
     } else {
 
@@ -885,6 +937,8 @@ reactive__var_plots__ggplot__creator <- function(input, session, dataset, url_pa
                     input$var_plots__size_variable,
                     input$var_plots__color_variable,
                     input$var_plots__facet_variable,
+                    input$var_plots__date_conversion_variable,
+                    input$var_plots__date_cr__snapshots__group_variable,
                     input$var_plots__multi_value_delimiter,
                     input$var_plots__numeric_group_comp_variable,
                     input$var_plots__numeric_aggregation_function,
@@ -928,6 +982,8 @@ reactive__var_plots__ggplot__creator <- function(input, session, dataset, url_pa
         label_variables <- null_if_select_variable_optional(isolate(input$var_plots__label_variables))
         color_variable <- null_if_select_variable_optional(input$var_plots__color_variable)
         facet_variable <- null_if_select_variable_optional(input$var_plots__facet_variable)
+        date_conversion_variable <- null_if_select_variable_optional(input$var_plots__date_conversion_variable)
+        date_cr__snapshots__group_variable <- null_if_select_variable_optional(input$var_plots__date_cr__snapshots__group_variable)
         year_over_year <- default_if_null_or_empty_string(isolate(input$var_plots__year_over_year),
                                                           default=FALSE)
         include_zero_y_axis <- default_if_null_or_empty_string(isolate(input$var_plots__include_zero_y_axis),
@@ -984,6 +1040,13 @@ reactive__var_plots__ggplot__creator <- function(input, session, dataset, url_pa
         jitter <- isolate(input$var_plots__jitter)
         order_by_variable <- isolate(input$var_plots__order_by_variable)
         numeric_graph_type <- isolate(input$var_plots__numeric_graph_type)
+        date_cr__plot_type <- isolate(input$var_plots__date_cr__plot_type)
+        date_cr__snapshots__values <- isolate(input$var_plots__date_cr__snapshots__values)
+        date_cr__snapshots__units <- isolate(input$var_plots__date_cr__snapshots__units)
+        date_cr__snapshots__color_or_facet <- isolate(input$var_plots__date_cr__snapshots__color_or_facet)
+        date_cr__last_n_cohorts <- isolate(input$var_plots__date_cr__last_n_cohorts)
+        date_cr__n_units_after_first_date <- isolate(input$var_plots__date_cr__n_units_after_first_date)
+        date_cr__separate_colors <- isolate(input$var_plots__date_cr__separate_colors)
         pretty_text <- isolate(input$var_plots__pretty_text)
         scale_x_log_base_10 <- isolate(input$var_plots__scale_x_log_base_10)
         scale_y_log_base_10 <- isolate(input$var_plots__scale_y_log_base_10)
@@ -1018,7 +1081,8 @@ reactive__var_plots__ggplot__creator <- function(input, session, dataset, url_pa
                                                       comparison_variable,
                                                       size_variable,
                                                       color_variable,
-                                                      facet_variable)
+                                                      facet_variable,
+                                                      date_cr__snapshots__group_variable)
 
         if(top_n_is_hidden ||
                is.null(filter_factor_lump_number) ||
@@ -1046,20 +1110,20 @@ reactive__var_plots__ggplot__creator <- function(input, session, dataset, url_pa
         if(primary_variable != global__select_variable &&
                 primary_variable %in% colnames(dataset)) {
 
-            if(is_date_type(dataset[, primary_variable])) {
+            if(is_date_type(dataset[[primary_variable]])) {
 
-                hide_show_date(session, input, has_comparison_variable=!is.null(comparison_variable))
+                hide_show_date(session, input)
 
             ##############################################################################################
             # Numeric Primary Variable
             ##############################################################################################
-            } else if(is.numeric(dataset[, primary_variable])) {
+            } else if(is.numeric(dataset[[primary_variable]])) {
 
                 ##########################################################################################
                 # Numeric Secondary Variable
                 ##########################################################################################
                 if(!is.null(comparison_variable) &&
-                        is.numeric(dataset[, comparison_variable])) {
+                        is.numeric(dataset[[comparison_variable]])) {
 
                     hide_show_numeric_numeric(session, 
                                               numeric_group_comp_variable,
@@ -1085,7 +1149,7 @@ reactive__var_plots__ggplot__creator <- function(input, session, dataset, url_pa
                 # Numeric Secondary Variable
                 ##########################################################################################
                 if(!is.null(comparison_variable) &&
-                        is.numeric(dataset[, comparison_variable])) {
+                        is.numeric(dataset[[comparison_variable]])) {
 
                     show_boxplot <- numeric_graph_type == 'Boxplot'
                     hide_show_numeric_categoric(session=session,
@@ -1116,6 +1180,8 @@ reactive__var_plots__ggplot__creator <- function(input, session, dataset, url_pa
                                               label_variables=label_variables,
                                               color_variable=color_variable,
                                               facet_variable=facet_variable,
+                                              date_conversion_variable=date_conversion_variable,
+                                              date_cr__snapshots__group_variable=date_cr__snapshots__group_variable,
 
                                               numeric_aggregation=numeric_aggregation,
                                               numeric_group_comp_variable=numeric_group_comp_variable,
@@ -1133,6 +1199,13 @@ reactive__var_plots__ggplot__creator <- function(input, session, dataset, url_pa
                                               order_by_variable=order_by_variable,
                                               filter_factor_lump_number=filter_factor_lump_number,
                                               numeric_graph_type=numeric_graph_type,
+                                              date_cr__plot_type=date_cr__plot_type,
+                                              date_cr__snapshots__values=date_cr__snapshots__values,
+                                              date_cr__snapshots__units=date_cr__snapshots__units,
+                                              date_cr__snapshots__color_or_facet=date_cr__snapshots__color_or_facet,
+                                              date_cr__last_n_cohorts=date_cr__last_n_cohorts,
+                                              date_cr__n_units_after_first_date=date_cr__n_units_after_first_date,
+                                              date_cr__separate_colors=date_cr__separate_colors,
                                               categoric_view_type=categoric_view_type,
                                               multi_value_delimiter=multi_value_delimiter,
                                               trend_line=trend_line,
@@ -1205,6 +1278,8 @@ create_ggplot_object <- function(dataset,
                                  label_variables=NULL,
                                  color_variable=NULL,
                                  facet_variable=NULL,
+                                 date_conversion_variable=NULL,
+                                 date_cr__snapshots__group_variable=NULL,
                                  
                                  numeric_aggregation='Mean',
                                  numeric_group_comp_variable=FALSE,
@@ -1222,6 +1297,13 @@ create_ggplot_object <- function(dataset,
                                  order_by_variable='Default',
                                  filter_factor_lump_number=10,
                                  numeric_graph_type='Boxplot',
+                                 date_cr__plot_type="Snapshots",
+                                 date_cr__snapshots__values="1, 7, 14",
+                                 date_cr__snapshots__units="Days",
+                                 date_cr__snapshots__color_or_facet="Color",
+                                 date_cr__last_n_cohorts=10,
+                                 date_cr__n_units_after_first_date=30,
+                                 date_cr__separate_colors=TRUE,
                                  categoric_view_type='Bar',
                                  multi_value_delimiter=NULL,
                                  trend_line='None',
@@ -1276,6 +1358,8 @@ create_ggplot_object <- function(dataset,
         log_message_variable('label_variables', label_variables)
         log_message_variable('color_variable', color_variable)
         log_message_variable('facet_variable', facet_variable)
+        log_message_variable('date_conversion_variable', date_conversion_variable)
+        log_message_variable('date_cr__snapshots__group_variable', date_cr__snapshots__group_variable)
 
         log_message_variable('numeric_aggregation', numeric_aggregation)
         log_message_variable('numeric_group_comp_variable', numeric_group_comp_variable)
@@ -1291,6 +1375,15 @@ create_ggplot_object <- function(dataset,
         log_message_variable('jitter', jitter)
         log_message_variable('order_by_variable', order_by_variable)
         log_message_variable('numeric_graph_type', numeric_graph_type)
+
+        log_message_variable('date_cr__plot_type', date_cr__plot_type)
+        log_message_variable('date_cr__snapshots__values', date_cr__snapshots__values)
+        log_message_variable('date_cr__snapshots__units', date_cr__snapshots__units)
+        log_message_variable('date_cr__snapshots__color_or_facet', date_cr__snapshots__color_or_facet)
+        log_message_variable('date_cr__last_n_cohorts', date_cr__last_n_cohorts)
+        log_message_variable('date_cr__n_units_after_first_date', date_cr__n_units_after_first_date)
+        log_message_variable('date_cr__separate_colors', date_cr__separate_colors)
+
         log_message_variable('filter_factor_lump_number', filter_factor_lump_number)
         log_message_variable('categoric_view_type', categoric_view_type)
         log_message_variable('multi_value_delimiter', multi_value_delimiter)
@@ -1355,7 +1448,9 @@ create_ggplot_object <- function(dataset,
                                     default_if_null_or_empty_string(sum_by_variable),
                                     default_if_null_or_empty_string(size_variable),
                                     default_if_null_or_empty_string(color_variable),
-                                    default_if_null_or_empty_string(facet_variable))
+                                    default_if_null_or_empty_string(facet_variable),
+                                    default_if_null_or_empty_string(date_conversion_variable),
+                                    default_if_null_or_empty_string(date_cr__snapshots__group_variable))
             
             if(!is.null(label_variables) && length(label_variables) > 0) {
             
@@ -1389,6 +1484,14 @@ create_ggplot_object <- function(dataset,
 
                 facet_variable <- rt_pretty_text(facet_variable)
             }
+            if(!is_null_or_empty_string(date_conversion_variable)) {
+
+                date_conversion_variable <- rt_pretty_text(date_conversion_variable)
+            }
+            if(!is_null_or_empty_string(date_cr__snapshots__group_variable)) {
+
+                date_cr__snapshots__group_variable <- rt_pretty_text(date_cr__snapshots__group_variable)
+            }
 
             log_message_variable('updated primary_variable', primary_variable)
             log_message_variable('updated comparison_variable', comparison_variable)
@@ -1396,39 +1499,12 @@ create_ggplot_object <- function(dataset,
             log_message_variable('updated var_plots__size_variable', size_variable)
             log_message_variable('updated var_plots__color_variable', color_variable)
             log_message_variable('updated var_plots__facet_variable', facet_variable)
+            log_message_variable('updated var_plots__date_conversion_variable', date_conversion_variable)
+            log_message_variable('updated var_plots__date_cr__snapshots__group_variable', date_cr__snapshots__group_variable)
             log_message_generic('column names', paste0(colnames(dataset), collapse = '; '))
         }
 
         if(is_date_type(dataset[[primary_variable]])) {
-
-            comparison_function <- NULL
-            comparison_function_name <- NULL
-            if(!is.null(comparison_variable)) {
-
-                comparison_function_name <- numeric_aggregation
-
-                if(numeric_aggregation == 'Mean') {
-
-                    comparison_function <- function(x) { return (mean(x, na.rm=TRUE)) }
-
-                } else if (numeric_aggregation == 'Geometric Mean') {
-
-                    comparison_function <- rt_geometric_mean
-
-                } else if (numeric_aggregation == 'Median') {
-
-                    comparison_function <- function(x) { return (median(x, na.rm=TRUE)) }
-
-                } else if (numeric_aggregation == 'Total') {
-
-                    comparison_function_name = "Total"
-                    comparison_function <- function(x) { return (sum(x, na.rm=TRUE)) }
-
-                } else {
-
-                    stopifnot(FALSE)
-                }
-            }
 
             date_limits <- NULL
             if(!is.null(trend_line) && trend_line == "Projection") {
@@ -1438,37 +1514,136 @@ create_ggplot_object <- function(dataset,
             }
 
             add_confidence_interval <- !is.null(trend_line_se) && trend_line_se == 'Yes'
-            ggplot_object <- dataset %>%
-                select(primary_variable, comparison_variable, color_variable, facet_variable) %>%
-                mutate_factor_lump(factor_lump_number=filter_factor_lump_number) %>%
-                rt_explore_plot_time_series(variable=primary_variable,
-                                            comparison_variable=comparison_variable,
-                                            comparison_function=comparison_function,
-                                            comparison_function_name=comparison_function_name,
-                                            color_variable=color_variable,
-                                            facet_variable=facet_variable,
-                                            year_over_year=year_over_year,
-                                            y_zoom_min=y_zoom_min,
-                                            y_zoom_max=y_zoom_max,
-                                            include_zero_y_axis=include_zero_y_axis,
-                                            show_points=show_points,
-                                            show_labels=annotate_points,
-                                            date_floor=ts_date_floor,
-                                            date_break_format=ts_date_break_format,
-                                            date_breaks_width=ts_date_breaks_width,
-                                            date_limits=date_limits,
-                                            base_size=base_size) %>%
-                scale_axes_log10(scale_x=FALSE,
-                                 scale_y=scale_y_log_base_10) %>%
-                add_trend_line(trend_line_type=trend_line,
-                               confidence_interval=add_confidence_interval,
-                               color_variable=color_variable) %>%
-                add_vertical_annotations(vertical_annotations,
-                                         y_location=max(0, y_zoom_min, na.rm=TRUE),
-                                         is_date=TRUE) %>%
-                add_horizontal_annotations(horizontal_annotations,
-                                           x_location=min(dataset[[primary_variable]], na.rm=TRUE),
-                                           x_location_is_date=TRUE)
+
+            ##########################################################################################
+            # No Secondary Date, Plot Time-Series
+            ##########################################################################################
+            if(is.null(date_conversion_variable) || date_conversion_variable == global__select_variable_optional) {
+
+                comparison_function <- NULL
+                comparison_function_name <- NULL
+                if(!is.null(comparison_variable)) {
+
+                    comparison_function_name <- numeric_aggregation
+
+                    if(numeric_aggregation == 'Mean') {
+
+                        comparison_function <- function(x) { return (mean(x, na.rm=TRUE)) }
+
+                    } else if (numeric_aggregation == 'Geometric Mean') {
+
+                        comparison_function <- rt_geometric_mean
+
+                    } else if (numeric_aggregation == 'Median') {
+
+                        comparison_function <- function(x) { return (median(x, na.rm=TRUE)) }
+
+                    } else if (numeric_aggregation == 'Total') {
+
+                        comparison_function_name = "Total"
+                        comparison_function <- function(x) { return (sum(x, na.rm=TRUE)) }
+
+                    } else {
+
+                        stopifnot(FALSE)
+                    }
+                }
+
+                ggplot_object <- dataset %>%
+                    select(primary_variable, comparison_variable, color_variable, facet_variable) %>%
+                    mutate_factor_lump(factor_lump_number=filter_factor_lump_number) %>%
+                    rt_explore_plot_time_series(variable=primary_variable,
+                                                comparison_variable=comparison_variable,
+                                                comparison_function=comparison_function,
+                                                comparison_function_name=comparison_function_name,
+                                                color_variable=color_variable,
+                                                facet_variable=facet_variable,
+                                                year_over_year=year_over_year,
+                                                y_zoom_min=y_zoom_min,
+                                                y_zoom_max=y_zoom_max,
+                                                include_zero_y_axis=include_zero_y_axis,
+                                                show_points=show_points,
+                                                show_labels=annotate_points,
+                                                date_floor=ts_date_floor,
+                                                date_break_format=ts_date_break_format,
+                                                date_breaks_width=ts_date_breaks_width,
+                                                date_limits=date_limits,
+                                                base_size=base_size) %>%
+                    scale_axes_log10(scale_x=FALSE,
+                                     scale_y=scale_y_log_base_10) %>%
+                    add_trend_line(trend_line_type=trend_line,
+                                   confidence_interval=add_confidence_interval,
+                                   color_variable=color_variable) %>%
+                    add_vertical_annotations(vertical_annotations,
+                                             y_location=max(0, y_zoom_min, na.rm=TRUE),
+                                             is_date=TRUE) %>%
+                    add_horizontal_annotations(horizontal_annotations,
+                                               x_location=min(dataset[[primary_variable]], na.rm=TRUE),
+                                               x_location_is_date=TRUE)
+
+            ##########################################################################################
+            # Secondary Date, Plot Conversion Rates Or Adoption
+            ##########################################################################################
+            } else {
+
+                if(date_cr__plot_type == global__date_cr_options[1]) {
+
+                    ggplot_object <- dataset %>%
+                        select(primary_variable, date_conversion_variable, date_cr__snapshots__group_variable) %>%
+                        mutate_factor_lump(factor_lump_number=filter_factor_lump_number) %>%
+                        rt_explore_plot_conversion_rates(first_date=primary_variable,
+                                                         second_date=date_conversion_variable,
+                                                         group_variable=date_cr__snapshots__group_variable,
+                                                         reference_date=global__reference_date,
+                                                         snapshots=as.numeric(str_split(string=date_cr__snapshots__values, pattern=', ', simplify = FALSE)[[1]]),
+                                                         snapshot_units=date_cr__snapshots__units,
+                                                         color_or_facet=date_cr__snapshots__color_or_facet,
+                                                         year_over_year=year_over_year,
+                                                         y_zoom_min=y_zoom_min,
+                                                         y_zoom_max=y_zoom_max,
+                                                         include_zero_y_axis=include_zero_y_axis,
+                                                         show_points=show_points,
+                                                         show_labels=annotate_points,
+                                                         date_floor=ts_date_floor,
+                                                         date_break_format=ts_date_break_format,
+                                                         date_breaks_width=ts_date_breaks_width,
+                                                         date_limits=date_limits,
+                                                         base_size=base_size) %>%
+                        add_trend_line(trend_line_type=trend_line,
+                                       confidence_interval=add_confidence_interval,
+                                       color_variable='Snapshot') %>%
+                        add_vertical_annotations(vertical_annotations,
+                                                 y_location=max(0, y_zoom_min, na.rm=TRUE),
+                                                 is_date=TRUE) %>%
+                        add_horizontal_annotations(horizontal_annotations,
+                                                   x_location=min(dataset[[primary_variable]], na.rm=TRUE),
+                                                   x_location_is_date=TRUE)
+                } else {
+
+                    ggplot_object <- dataset %>%
+                        rt_explore_plot_cohorted_adoption(first_date=primary_variable,
+                                                          second_date=date_conversion_variable,
+                                                          reference_date=global__reference_date,
+                                                          last_n_cohorts=date_cr__last_n_cohorts,
+                                                          n_units_after_first_date=date_cr__n_units_after_first_date,
+                                                          units=date_cr__snapshots__units,
+                                                          separated_colors=date_cr__separate_colors,
+                                                          date_floor=ts_date_floor,
+                                                          y_zoom_min=y_zoom_min,
+                                                          y_zoom_max=y_zoom_max,
+                                                          include_zero_y_axis=include_zero_y_axis,
+                                                          show_points=show_points,
+                                                          show_labels=annotate_points,
+                                                          date_break_format=ts_date_break_format,
+                                                          base_size=base_size) %>%
+                        add_vertical_annotations(vertical_annotations,
+                                                 y_location=max(0, y_zoom_min, na.rm=TRUE),
+                                                 is_date=TRUE) %>%
+                        add_horizontal_annotations(horizontal_annotations,
+                                                   x_location=min(dataset[[primary_variable]], na.rm=TRUE),
+                                                   x_location_is_date=TRUE)
+                }
+            }
 
         ##############################################################################################
         # Numeric Primary Variable
@@ -1774,6 +1949,8 @@ clear_variables <- function(session, input, swap_primary_and_comparison=FALSE) {
     updateSelectInput(session, 'var_plots__color_variable', selected=global__select_variable_optional)
     updateSelectInput(session, 'var_plots__facet_variable', selected=global__select_variable_optional)
     updateSelectInput(session, 'var_plots__size_variable', selected=global__select_variable_optional)
+    updateSelectInput(session, 'var_plots__date_conversion_variable', selected=global__select_variable_optional)
+    updateSelectInput(session, 'var_plots__date_cr__snapshots__group_variable', selected=global__select_variable_optional)
 
     updateCheckboxInput(session, 'var_plots__numeric_group_comp_variable', value=FALSE)
     updateSelectInput(session,
@@ -1813,7 +1990,86 @@ observeEvent__var_plots__variables_buttons_clear_swap <- function(session, input
 ##############################################################################################################
 # DYNAMICALLY SHOW/HIDE INPUT
 ##############################################################################################################
-hide_show_date <- function(session, input, has_comparison_variable) {
+hide_show_date_cr_options <- function(session, input) {
+
+    # NOTE other sections use reset_hide_var_plot_option rather than simply hiding, but I want to retain
+    # values as I switch back and forth from Snapshots/Adoption
+
+    if(!is.null(input$var_plots__date_conversion_variable) &&
+            input$var_plots__date_conversion_variable != global__select_variable_optional) 
+    {
+        if(input$var_plots__date_cr__plot_type == global__date_cr_options[1]) {
+
+            ###########
+            # SNAPSHOTS
+            ###########
+            shinyjs::show('var_plots__date_cr__snapshots__group_variable')
+            shinyjs::show('var_plots__date_cr__snapshots__values')
+            shinyjs::show('var_plots__date_cr__snapshots__color_or_facet')
+
+            shinyjs::hide('var_plots__date_cr__last_n_cohorts')
+            shinyjs::hide('var_plots__date_cr__n_units_after_first_date')
+            shinyjs::hide('var_plots__date_cr__separate_colors')
+
+            shinyjs::show('var_plots__ts_date_break_format')
+            shinyjs::show('var_plots__ts_breaks_width')
+
+            # we cannot do YoY when grouping/segmenting, because the group is faceted, and snapshots use color,
+            # whereas the YoY relies on color
+            if(is.null(input$var_plots__date_cr__snapshots__group_variable) ||
+                    input$var_plots__date_cr__snapshots__group_variable == global__select_variable_optional) {
+
+                shinyjs::show('var_plots__year_over_year')
+
+            } else {
+
+                shinyjs::hide('var_plots__year_over_year')            
+            }
+
+        } else {
+
+            ###########
+            # ADOPTION
+            ###########
+            shinyjs::show('var_plots__date_cr__last_n_cohorts')
+            shinyjs::show('var_plots__date_cr__n_units_after_first_date')
+            shinyjs::show('var_plots__date_cr__separate_colors')
+
+            shinyjs::hide('var_plots__date_cr__snapshots__group_variable')
+            shinyjs::hide('var_plots__date_cr__snapshots__values')
+            shinyjs::hide('var_plots__date_cr__snapshots__color_or_facet')
+            helper__show_hide_trend_line(session, input, show=FALSE)
+            shinyjs::hide('var_plots__year_over_year')
+            shinyjs::hide('var_plots__ts_date_break_format')
+            shinyjs::hide('var_plots__ts_breaks_width')
+        }
+    }
+}
+
+helper__show_hide_trend_line <- function(session, input, show=TRUE) {
+
+    if(show) {
+
+        shinyjs::show('var_plots__trend_line')
+        if(input$var_plots__trend_line == "Projection") {
+
+            shinyjs::show('var_plots__trend_extend_date')
+
+        } else {
+
+            reset_hide_var_plot_option(session, 'var_plots__trend_extend_date')
+        }
+        shinyjs::show('var_plots__trend_line_se')
+
+    } else {
+
+        reset_hide_var_plot_option(session, 'var_plots__trend_line')
+        reset_hide_var_plot_option(session, 'var_plots__trend_extend_date')
+        reset_hide_var_plot_option(session, 'var_plots__trend_line_se')
+    }
+}
+
+hide_show_date <- function(session, input) {
 
     log_message('hide_show_date')
     
@@ -1833,21 +2089,68 @@ hide_show_date <- function(session, input, has_comparison_variable) {
     shinyjs::show('var_plots__show_points')
     shinyjs::show('var_plots__year_over_year')
     shinyjs::show('var_plots__include_zero_y_axis')
-    shinyjs::show('var_plots__color_variable')
-    shinyjs::show('var_plots__facet_variable')
-    shinyjs::show('var_plots__trend_line')
-    if(input$var_plots__trend_line == "Projection") {
-
-        shinyjs::show('var_plots__trend_extend_date')
-
-    } else {
-
-        reset_hide_var_plot_option(session, 'var_plots__trend_extend_date')
-    }
-    shinyjs::show('var_plots__trend_line_se')
+    helper__show_hide_trend_line(session, input)
     shinyjs::show('var_plots__ts_date_floor')
     shinyjs::show('var_plots__ts_date_break_format')
     shinyjs::show('var_plots__ts_breaks_width')
+
+    has_date_conversion_variable <- !is.null(input$var_plots__date_conversion_variable) &&
+            input$var_plots__date_conversion_variable != global__select_variable_optional
+
+    has_comparison_variable <- !is.null(input$var_plots__comparison) &&
+            input$var_plots__comparison != global__select_variable_optional
+
+    has_color_variable <- !is.null(input$var_plots__color_variable) &&
+            input$var_plots__color_variable != global__select_variable_optional
+
+    has_facet_variable <- !is.null(input$var_plots__facet_variable) &&
+            input$var_plots__facet_variable != global__select_variable_optional
+
+    
+    # if either comparison/color/facet is selected, date_conversion_variable isn't applicable
+    if(has_comparison_variable || has_color_variable || has_facet_variable) {
+
+        reset_hide_var_plot_option(session, 'var_plots__date_conversion_variable')
+        reset_hide_var_plot_option(session, 'var_plots__date_cr__snapshots__group_variable')
+
+    } else {
+
+        shinyjs::show('var_plots__date_conversion_variable')
+        if(is.null(input$var_plots__date_conversion_variable) ||
+                input$var_plots__date_conversion_variable == global__select_variable_optional) {
+
+            reset_hide_var_plot_option(session, 'var_plots__date_cr__snapshots__group_variable')
+        } else {
+
+            shinyjs::show('var_plots__date_cr__snapshots__group_variable')
+        }
+    }
+
+    # if secondary date, don't show color/facet
+    if(has_date_conversion_variable) {
+
+        reset_hide_var_plot_option(session, 'var_plots__comparison')
+        reset_hide_var_plot_option(session, 'var_plots__color_variable')
+        reset_hide_var_plot_option(session, 'var_plots__facet_variable')
+
+        shinyjs::show('var_plots__date_cr__plot_type')
+        shinyjs::show('var_plots__date_cr__snapshots__units')
+
+        hide_show_date_cr_options(session, input)
+
+    } else {
+
+        shinyjs::show('var_plots__color_variable')
+        shinyjs::show('var_plots__facet_variable')
+
+        reset_hide_var_plot_option(session, 'var_plots__date_cr__plot_type')
+        reset_hide_var_plot_option(session, 'var_plots__date_cr__snapshots__values')
+        reset_hide_var_plot_option(session, 'var_plots__date_cr__snapshots__units')
+        reset_hide_var_plot_option(session, 'var_plots__date_cr__snapshots__color_or_facet')
+        reset_hide_var_plot_option(session, 'var_plots__date_cr__last_n_cohorts')
+        reset_hide_var_plot_option(session, 'var_plots__date_cr__n_units_after_first_date')
+        reset_hide_var_plot_option(session, 'var_plots__date_cr__separate_colors')
+    }
 
     if(has_comparison_variable) {
 
@@ -1972,6 +2275,15 @@ hide_show_numeric_numeric <- function(session,
     shinyjs::show('var_plots__horizontal_annotations')
     
     reset_hide_var_plot_option(session, 'var_plots__facet_variable')
+    reset_hide_var_plot_option(session, 'var_plots__date_conversion_variable')
+    reset_hide_var_plot_option(session, 'var_plots__date_cr__snapshots__group_variable')
+    reset_hide_var_plot_option(session, 'var_plots__date_cr__plot_type')
+    reset_hide_var_plot_option(session, 'var_plots__date_cr__snapshots__values')
+    reset_hide_var_plot_option(session, 'var_plots__date_cr__snapshots__units')
+    reset_hide_var_plot_option(session, 'var_plots__date_cr__snapshots__color_or_facet')
+    reset_hide_var_plot_option(session, 'var_plots__date_cr__last_n_cohorts')
+    reset_hide_var_plot_option(session, 'var_plots__date_cr__n_units_after_first_date')
+    reset_hide_var_plot_option(session, 'var_plots__date_cr__separate_colors')
     reset_hide_var_plot_option(session, 'var_plots__year_over_year')
     reset_hide_var_plot_option(session, 'var_plots__include_zero_y_axis')
     reset_hide_var_plot_option(session, 'var_plots__ts_date_floor')
@@ -2034,6 +2346,15 @@ hide_show_numeric_categoric <- function(session, showing_boxplot, has_comparison
     }
 
     reset_hide_var_plot_option(session, 'var_plots__facet_variable')
+    reset_hide_var_plot_option(session, 'var_plots__date_conversion_variable')
+    reset_hide_var_plot_option(session, 'var_plots__date_cr__snapshots__group_variable')
+    reset_hide_var_plot_option(session, 'var_plots__date_cr__plot_type')
+    reset_hide_var_plot_option(session, 'var_plots__date_cr__snapshots__values')
+    reset_hide_var_plot_option(session, 'var_plots__date_cr__snapshots__units')
+    reset_hide_var_plot_option(session, 'var_plots__date_cr__snapshots__color_or_facet')
+    reset_hide_var_plot_option(session, 'var_plots__date_cr__last_n_cohorts')
+    reset_hide_var_plot_option(session, 'var_plots__date_cr__n_units_after_first_date')
+    reset_hide_var_plot_option(session, 'var_plots__date_cr__separate_colors')
     reset_hide_var_plot_option(session, 'var_plots__year_over_year')
     reset_hide_var_plot_option(session, 'var_plots__include_zero_y_axis')
     reset_hide_var_plot_option(session, 'var_plots__numeric_aggregation')
@@ -2103,6 +2424,15 @@ hide_show_categoric_categoric <- function(session, input, has_comparison_variabl
     }
 
     reset_hide_var_plot_option(session, 'var_plots__facet_variable')
+    reset_hide_var_plot_option(session, 'var_plots__date_conversion_variable')
+    reset_hide_var_plot_option(session, 'var_plots__date_cr__snapshots__group_variable')
+    reset_hide_var_plot_option(session, 'var_plots__date_cr__plot_type')
+    reset_hide_var_plot_option(session, 'var_plots__date_cr__snapshots__values')
+    reset_hide_var_plot_option(session, 'var_plots__date_cr__snapshots__units')
+    reset_hide_var_plot_option(session, 'var_plots__date_cr__snapshots__color_or_facet')
+    reset_hide_var_plot_option(session, 'var_plots__date_cr__last_n_cohorts')
+    reset_hide_var_plot_option(session, 'var_plots__date_cr__n_units_after_first_date')
+    reset_hide_var_plot_option(session, 'var_plots__date_cr__separate_colors')
     reset_hide_var_plot_option(session, 'var_plots__year_over_year')
     reset_hide_var_plot_option(session, 'var_plots__include_zero_y_axis')
     reset_hide_var_plot_option(session, 'var_plots__size_variable')
@@ -2176,6 +2506,15 @@ observe__var_plots__hide_show_uncollapse_on_primary_vars <- function(session, in
             reset_hide_var_plot_option(session, 'var_plots__numeric_show_resampled_conf_int')
             reset_hide_var_plot_option(session, 'var_plots__color_variable')
             reset_hide_var_plot_option(session, 'var_plots__facet_variable')
+            reset_hide_var_plot_option(session, 'var_plots__date_conversion_variable')
+            reset_hide_var_plot_option(session, 'var_plots__date_cr__snapshots__group_variable')
+            reset_hide_var_plot_option(session, 'var_plots__date_cr__plot_type')
+            reset_hide_var_plot_option(session, 'var_plots__date_cr__snapshots__values')
+            reset_hide_var_plot_option(session, 'var_plots__date_cr__snapshots__units')
+            reset_hide_var_plot_option(session, 'var_plots__date_cr__snapshots__color_or_facet')
+            reset_hide_var_plot_option(session, 'var_plots__date_cr__last_n_cohorts')
+            reset_hide_var_plot_option(session, 'var_plots__date_cr__n_units_after_first_date')
+            reset_hide_var_plot_option(session, 'var_plots__date_cr__separate_colors')
             reset_hide_var_plot_option(session, 'var_plots__year_over_year')
             reset_hide_var_plot_option(session, 'var_plots__include_zero_y_axis')
 
@@ -2252,7 +2591,7 @@ update_var_plot_variables_from_url_params <- function(session, params, dataset, 
 
     column_names <- colnames(dataset)
     numeric_column_names <- colnames(dataset %>% select_if(is.numeric))
-    categoric_column_names <- colnames(dataset %>% select_if(purrr::negate(is.numeric)))
+    categoric_column_names <- colnames(dataset %>% select_if(is_categoric))
 
     #######################################################################
     # Update Primary Variable - cache selected for comparison/color logic
@@ -2300,6 +2639,22 @@ update_var_plot_variables_from_url_params <- function(session, params, dataset, 
                       choices=results$choices,
                       selected=results$selected)
 
+
+    #######################################################################
+    # Update Date Conversion Variable
+    #######################################################################
+    selected_date_conversion_variable <- global__select_variable_optional
+    if (!is.null(params[['var_plots__date_conversion_variable']])) {
+
+        selected_date_conversion_variable <- params[['var_plots__date_conversion_variable']]
+        log_message_variable('updating date_conversion_variable', params[['var_plots__date_conversion_variable']])
+    }
+    results <- var_plots__date_conversion_variable__logic(dataset=dataset,
+                                                          primary_variable=selected_variable,
+                                                          current_value=selected_date_conversion_variable)
+    updateSelectInput(session, 'var_plots__date_conversion_variable',
+                      choices=results$choices,
+                      selected=results$selected)
 
     #######################################################################
     # Update Sum-By-Variable
@@ -2357,6 +2712,16 @@ update_var_plot_variables_from_url_params <- function(session, params, dataset, 
     updateSelectInput(session, 'var_plots__size_variable',
                       choices=c(global__select_variable_optional, column_names),
                       selected=selected_size_variable)
+
+    selected_cr_group_variable <- global__select_variable_optional
+    if (!is.null(params[['var_plots__date_cr__snapshots__group_variable']])) {
+
+        selected_cr_group_variable <- params[['var_plots__date_cr__snapshots__group_variable']]
+        log_message_variable('updating cr_group_variable', params[['var_plots__date_cr__snapshots__group_variable']])
+    }
+    updateSelectInput(session, 'var_plots__date_cr__snapshots__group_variable',
+                      choices=c(global__select_variable_optional, categoric_column_names),
+                      selected=selected_cr_group_variable)
 
     selected_label_variables <- NULL
     if (!is.null(params[['var_plots__label_variables']])) {
@@ -2423,6 +2788,34 @@ update_var_plot_variables_from_url_params <- function(session, params, dataset, 
         log_message_variable('updating show_points', params[['var_plots__show_points']])
         updateCheckboxInput(session, 'var_plots__show_points', value=params[['var_plots__show_points']])
     }
+    if (!is.null(params[['var_plots__date_cr__plot_type']])) {
+        log_message_variable('updating date_cr__plot_type', params[['var_plots__date_cr__plot_type']])
+        updateSelectInput(session, 'var_plots__date_cr__plot_type', selected=params[['var_plots__date_cr__plot_type']])
+    }
+    if (!is.null(params[['var_plots__date_cr__snapshots__values']])) {
+        log_message_variable('updating date_cr__snapshots__values', params[['var_plots__date_cr__snapshots__values']])
+        updateTextInput(session, 'var_plots__date_cr__snapshots__values', value=params[['var_plots__date_cr__snapshots__values']])
+    }
+    if (!is.null(params[['var_plots__date_cr__snapshots__units']])) {
+        log_message_variable('updating date_cr__snapshots__units', params[['var_plots__date_cr__snapshots__units']])
+        updateSelectInput(session, 'var_plots__date_cr__snapshots__units', selected=params[['var_plots__date_cr__snapshots__units']])
+    }
+    if (!is.null(params[['var_plots__date_cr__snapshots__color_or_facet']])) {
+        log_message_variable('updating date_cr__snapshots__color_or_facet', params[['var_plots__date_cr__snapshots__color_or_facet']])
+        updateRadioButtons(session, 'var_plots__date_cr__snapshots__color_or_facet', selected=params[['var_plots__date_cr__snapshots__color_or_facet']])
+    }
+    if (!is.null(params[['var_plots__date_cr__last_n_cohorts']])) {
+        log_message_variable('updating date_cr__last_n_cohorts', params[['var_plots__date_cr__last_n_cohorts']])
+        updateSliderInput(session, 'var_plots__date_cr__last_n_cohorts', value=params[['var_plots__date_cr__last_n_cohorts']])
+    }
+    if (!is.null(params[['var_plots__date_cr__n_units_after_first_date']])) {
+        log_message_variable('updating date_cr__n_units_after_first_date', params[['var_plots__date_cr__n_units_after_first_date']])
+        updateSliderInput(session, 'var_plots__date_cr__n_units_after_first_date', value=params[['var_plots__date_cr__n_units_after_first_date']])
+    }
+    if (!is.null(params[['var_plots__date_cr__separate_colors']])) {
+        log_message_variable('updating date_cr__separate_colors', params[['var_plots__date_cr__separate_colors']])
+        updateCheckboxInput(session, 'var_plots__date_cr__separate_colors', value=params[['var_plots__date_cr__separate_colors']])
+    }
     if (!is.null(params[['var_plots__year_over_year']])) {
         log_message_variable('updating year_over_year', params[['var_plots__year_over_year']])
         updateCheckboxInput(session, 'var_plots__year_over_year', value=params[['var_plots__year_over_year']])
@@ -2453,8 +2846,6 @@ update_var_plot_variables_from_url_params <- function(session, params, dataset, 
     }
     if (!is.null(params[['var_plots__transparency']])) {
         log_message_variable('updating transparency', params[['var_plots__transparency']])
-        #updateSliderTextInput(session, 'var_plots__transparency', selected=params[['var_plots__transparency']])
-
         updateSliderTextInput(session, 'var_plots__transparency',
                                             choices=c(seq(0, 90, 10), 99),
                                             selected=params[['var_plots__transparency']])
