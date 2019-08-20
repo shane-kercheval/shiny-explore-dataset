@@ -20,12 +20,15 @@ devtools::install_github('shane-kercheval/rtools')
 
 ## Notes On How to Use
 
-### General Comments
+The typical dataset to use with this app is a tidy dataset.
 
-- The intent of this app is A) a personal learning project, not necessarily meant to be consumed by others or be continually updated/maintained B) as a very basic (surface-level) tool for Exploratory Data Analysis. The goal is to quickly become familiar with the dataset, and to streamline the most common data-slicing techniques you will initially do when exploring datasets for the first time. Most EDAs will require much more in-depth techniques than this tool can provide, but it should get you to that point faster.
-- This app:
-    - expects tidy datasets (http://vita.had.co.nz/papers/tidy-data.pdf)
-    - doesn't always play nice with `tibbles`
+> In tidy data:
+> 
+> - Each variable forms a column.
+> - Each observation forms a row.
+> - Each type of observational unit forms a table.
+
+https://cran.r-project.org/web/packages/tidyr/vignettes/tidy-data.html
 
 ### Loading datasets
 
