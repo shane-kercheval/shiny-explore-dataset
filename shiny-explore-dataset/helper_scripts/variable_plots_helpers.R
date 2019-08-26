@@ -1856,7 +1856,7 @@ create_ggplot_object <- function(dataset,
             ##########################################################################################
             } else {
 
-                if(multi_value_delimiter == '') {
+                if(!is.null(multi_value_delimiter) && multi_value_delimiter == '') {
 
                     multi_value_delimiter <- NULL
                 }

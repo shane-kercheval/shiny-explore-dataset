@@ -2043,3 +2043,71 @@ test_that("create_ggplot_plot - date projection - POSIXct", {
                                         trend_line_se = 'Yes')
     test_save_plot(file_name='graphs/plot__time_series__projection__ci__POSIXct.png', plot=plot_object)
 })
+
+test_that("create_ggplot_plot - bar", { 
+    context("create_ggplot_plot - bar")
+    
+    global__should_log_message <<- FALSE
+    dataset <- select_preloaded_dataset("Credit", defualt_path = '../')$dataset
+    set.seed(42)
+    dataset$ids_not_unique <- as.character(sample(1:100, 1000, replace=T))
+    dataset$ids_unique <- as.character(1:1000)
+    
+    plot_object <- create_ggplot_object(dataset = dataset,
+                                        primary_variable = 'checking_balance')
+    test_save_plot(file_name='graphs/create_ggplot_object__single_categoric.png', plot=plot_object)
+    
+    plot_object <- create_ggplot_object(dataset = dataset,
+                                        primary_variable = 'checking_balance',
+                                        count_distinct_variable = 'ids_unique')
+    test_save_plot(file_name='graphs/create_ggplot_object__single_categoric__unique_id.png', plot=plot_object)
+    
+    plot_object <- create_ggplot_object(dataset = dataset,
+                                        primary_variable = 'checking_balance',
+                                        count_distinct_variable = 'ids_not_unique')
+    test_save_plot(file_name='graphs/create_ggplot_object__single_categoric__distinct_ids.png', plot=plot_object)
+    
+    plot_object <- create_ggplot_object(dataset = dataset,
+                                        primary_variable = 'checking_balance',
+                                        comparison_variable = 'default')
+    test_save_plot(file_name='graphs/create_ggplot_object__double_categoric.png', plot=plot_object)
+    
+    plot_object <- create_ggplot_object(dataset = dataset,
+                                        primary_variable = 'checking_balance',
+                                        comparison_variable = 'default',
+                                        count_distinct_variable = 'ids_unique')
+    test_save_plot(file_name='graphs/create_ggplot_object__double_categoric__unique_id.png', plot=plot_object)
+    
+    plot_object <- create_ggplot_object(dataset = dataset,
+                                        primary_variable = 'checking_balance',
+                                        comparison_variable = 'default',
+                                        count_distinct_variable = 'ids_not_unique')
+    test_save_plot(file_name='graphs/create_ggplot_object__double_categoric__distinct_ids.png', plot=plot_object)
+    
+    plot_object <- create_ggplot_object(dataset = dataset,
+                                        primary_variable = 'checking_balance',
+                                        comparison_variable = 'default',
+                                        sum_by_variable = 'amount')
+    test_save_plot(file_name='graphs/create_ggplot_object__double_categoric__sum_by.png', plot=plot_object)
+    
+    plot_object <- create_ggplot_object(dataset = dataset,
+                                        primary_variable = 'checking_balance',
+                                        comparison_variable = 'default',
+                                        sum_by_variable = 'amount',
+                                        categoric_view_type = 'Facet by Comparison')
+    test_save_plot(file_name='graphs/create_ggplot_object__double_categoric__sum_by__facet.png', plot=plot_object)
+    
+    plot_object <- create_ggplot_object(dataset = dataset,
+                                        primary_variable = 'checking_balance',
+                                        comparison_variable = 'default',
+                                        sum_by_variable = 'amount',
+                                        categoric_view_type = 'Stack')
+    test_save_plot(file_name='graphs/create_ggplot_object__double_categoric__sum_by__stack.png', plot=plot_object)
+    
+    plot_object <- create_ggplot_object(dataset = dataset,
+                                        primary_variable = 'checking_balance',
+                                        comparison_variable = 'default',
+                                        sum_by_variable = 'amount',
+                                        categoric_view_type = 'Stack Percent')
+    test_save_plot(file_name='graphs/create_ggplot_object__double_categoric__sum_by__stack_perc.png', plot=plot_object)
+})
