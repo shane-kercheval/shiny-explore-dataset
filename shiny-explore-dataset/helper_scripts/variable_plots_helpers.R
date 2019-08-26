@@ -1072,6 +1072,16 @@ reactive__var_plots__ggplot__creator <- function(input, session, dataset, url_pa
         show_comparison_totals <- isolate(input$var_plots__show_comparison_totals)
         categoric_view_type <- default_if_null_or_empty_string(isolate(input$var_plots__categoric_view_type),
                                                                default="Bar")
+
+        if(!is.null(count_distinct_variable)) {
+
+            if((is.null(comparison_variable) && categoric_view_type != "Bar") || 
+               (!is.null(comparison_variable) && !categoric_view_type %in% c("Bar", "Facet by Comparison"))) {
+
+                showModal(modalDialog(title = "Invalid 'View Type' for counting distinct variables, setting the View Type to 'Bar'."))
+                categoric_view_type <- "Bar"
+            } 
+        }
         
         trend_line <- isolate(input$var_plots__trend_line)
         trend_extend_date <- isolate(input$var_plots__trend_extend_date)
