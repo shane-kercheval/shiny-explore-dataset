@@ -1870,6 +1870,17 @@ create_ggplot_object <- function(dataset,
                     temp_order_by_variable <- NULL
                 }
 
+                if(!is.null(comparison_variable)
+                        && is.null(count_distinct_variable) &&
+                        categoric_view_type == "Bar") {
+
+                    show_dual_axes <- TRUE
+                
+                } else {
+                
+                    show_dual_axes <- FALSE
+                }
+
                 ggplot_object <- dataset %>%
                     select(primary_variable,
                            comparison_variable,
@@ -1889,7 +1900,7 @@ create_ggplot_object <- function(dataset,
                                                  show_comparison_totals=show_comparison_totals,
                                                  view_type=categoric_view_type,
                                                  multi_value_delimiter=multi_value_delimiter,
-                                                 show_dual_axes=FALSE,
+                                                 show_dual_axes=show_dual_axes,
                                                  reverse_stack=reverse_stack_order,
                                                  base_size=base_size)
             }
