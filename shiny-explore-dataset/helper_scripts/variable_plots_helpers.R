@@ -749,18 +749,33 @@ var_plots__color__logic <- function(dataset, primary_variable, comparison_variab
                 selected=selected_variable))
 }
 
-var_plots__categoric_view_type__logic <- function(dataset, comparison_variable, sum_by_variable, current_value) {
+var_plots__categoric_view_type__logic <- function(dataset,
+                                                  comparison_variable,
+                                                  sum_by_variable,
+                                                  count_distinct_variable,
+                                                  current_value) {
 
     log_message("Executing Logic for Categoric View Type")
     log_message_variable('var_plots__comparison', comparison_variable)
     log_message_variable('var_plots__sum_by_variable', sum_by_variable)
+    log_message_variable('var_plots__count_distinct_variable', count_distinct_variable)
     log_message_variable('var_plots__categoric_view_type', current_value)
 
     comparison_variable <- null_if_select_variable_optional(comparison_variable)
     sum_by_variable <- null_if_select_variable_optional(sum_by_variable)
+    count_distinct_variable <- null_if_select_variable_optional(count_distinct_variable)
 
     view_type_options <- NULL
-    if(is.null(comparison_variable) && is.null(sum_by_variable)) {
+    if(!is.null(count_distinct_variable)) {
+        if(is.null(comparison_variable)) {
+
+            view_type_options <- c("Bar")
+
+        } else {
+
+            view_type_options <- c("Bar", "Facet by Comparison")
+        }
+    } else if(is.null(comparison_variable) && is.null(sum_by_variable)) {
 
         view_type_options <- c("Bar", "Confidence Interval")
 
@@ -934,6 +949,7 @@ reactive__var_plots__ggplot__creator <- function(input, session, dataset, url_pa
                     input$var_plots__comparison,
                     input$var_plots__numeric_aggregation,
                     input$var_plots__sum_by_variable,
+                    input$var_plots__count_distinct_variable,
                     input$var_plots__size_variable,
                     input$var_plots__color_variable,
                     input$var_plots__facet_variable,
@@ -978,6 +994,7 @@ reactive__var_plots__ggplot__creator <- function(input, session, dataset, url_pa
         # these can actually be NULL (unlike comparison_variable which is req)
         # these can't be req because they aren't even shown initially
         sum_by_variable <- null_if_select_variable_optional(input$var_plots__sum_by_variable)
+        count_distinct_variable <- null_if_select_variable_optional(input$var_plots__count_distinct_variable)
         size_variable <- null_if_select_variable_optional(input$var_plots__size_variable)
         label_variables <- null_if_select_variable_optional(isolate(input$var_plots__label_variables))
         color_variable <- null_if_select_variable_optional(input$var_plots__color_variable)
@@ -1176,6 +1193,7 @@ reactive__var_plots__ggplot__creator <- function(input, session, dataset, url_pa
                                               primary_variable=primary_variable,
                                               comparison_variable=comparison_variable,
                                               sum_by_variable=sum_by_variable,
+                                              count_distinct_variable=count_distinct_variable,
                                               size_variable=size_variable,
                                               label_variables=label_variables,
                                               color_variable=color_variable,
@@ -1274,6 +1292,7 @@ create_ggplot_object <- function(dataset,
                                  primary_variable=NULL,
                                  comparison_variable=NULL,
                                  sum_by_variable=NULL,
+                                 count_distinct_variable=NULL,
                                  size_variable=NULL,
                                  label_variables=NULL,
                                  color_variable=NULL,
@@ -1354,6 +1373,7 @@ create_ggplot_object <- function(dataset,
         log_message_variable('primary_variable', primary_variable)
         log_message_variable('comparison_variable', comparison_variable)
         log_message_variable('sum_by_variable', sum_by_variable)
+        log_message_variable('count_distinct_variable', count_distinct_variable)
         log_message_variable('size_variable', size_variable)
         log_message_variable('label_variables', label_variables)
         log_message_variable('color_variable', color_variable)
@@ -1446,6 +1466,7 @@ create_ggplot_object <- function(dataset,
             required_variables <- c(default_if_null_or_empty_string(primary_variable),
                                     default_if_null_or_empty_string(comparison_variable),
                                     default_if_null_or_empty_string(sum_by_variable),
+                                    default_if_null_or_empty_string(count_distinct_variable),
                                     default_if_null_or_empty_string(size_variable),
                                     default_if_null_or_empty_string(color_variable),
                                     default_if_null_or_empty_string(facet_variable),
@@ -1472,6 +1493,10 @@ create_ggplot_object <- function(dataset,
 
                 sum_by_variable <- rt_pretty_text(sum_by_variable)
             }
+            if(!is_null_or_empty_string(count_distinct_variable)) {
+
+                count_distinct_variable <- rt_pretty_text(count_distinct_variable)
+            }
             if(!is_null_or_empty_string(size_variable)) {
 
                 size_variable <- rt_pretty_text(size_variable)
@@ -1496,6 +1521,7 @@ create_ggplot_object <- function(dataset,
             log_message_variable('updated primary_variable', primary_variable)
             log_message_variable('updated comparison_variable', comparison_variable)
             log_message_variable('updated sum_by_variable', sum_by_variable)
+            log_message_variable('updated count_distinct_variable', count_distinct_variable)
             log_message_variable('updated var_plots__size_variable', size_variable)
             log_message_variable('updated var_plots__color_variable', color_variable)
             log_message_variable('updated var_plots__facet_variable', facet_variable)
@@ -1820,7 +1846,7 @@ create_ggplot_object <- function(dataset,
             ##########################################################################################
             } else {
 
-                if(multi_value_delimiter == '' || !is.null(comparison_variable)) {
+                if(multi_value_delimiter == '') {
 
                     multi_value_delimiter <- NULL
                 }
@@ -1838,13 +1864,16 @@ create_ggplot_object <- function(dataset,
                     select(primary_variable,
                            comparison_variable,
                            sum_by_variable,
+                           count_distinct_variable,
                            temp_order_by_variable) %>%
-                    mutate_factor_lump(factor_lump_number=filter_factor_lump_number) %>%
+                    mutate_factor_lump(factor_lump_number=filter_factor_lump_number,
+                                       ignore_columns=count_distinct_variable) %>%
                     mutate_factor_reorder(variable_to_order_by=order_by_variable,
                                           variable_to_order=primary_variable) %>%
                     rt_explore_plot_value_totals(variable=primary_variable,
                                                  comparison_variable=comparison_variable,
                                                  sum_by_variable=sum_by_variable,
+                                                 count_distinct_variable=count_distinct_variable,
                                                  order_by_count=order_by_variable == "Frequency",
                                                  show_variable_totals=show_variable_totals,
                                                  show_comparison_totals=show_comparison_totals,
@@ -1946,6 +1975,7 @@ clear_variables <- function(session, input, swap_primary_and_comparison=FALSE) {
     }
 
     updateSelectInput(session, 'var_plots__sum_by_variable', selected=global__select_variable_optional)
+    updateSelectInput(session, 'var_plots__count_distinct_variable', selected=global__select_variable_optional)
     updateSelectInput(session, 'var_plots__color_variable', selected=global__select_variable_optional)
     updateSelectInput(session, 'var_plots__facet_variable', selected=global__select_variable_optional)
     updateSelectInput(session, 'var_plots__size_variable', selected=global__select_variable_optional)
@@ -2180,6 +2210,7 @@ hide_show_date <- function(session, input) {
     reset_hide_var_plot_option(session, 'var_plots__categoric_view_type')
     reset_hide_var_plot_option(session, 'var_plots__numeric_graph_type')
     reset_hide_var_plot_option(session, 'var_plots__sum_by_variable')
+    reset_hide_var_plot_option(session, 'var_plots__count_distinct_variable')
     reset_hide_var_plot_option(session, 'var_plots__multi_value_delimiter')
     updateCollapse(session, 'var_plots__bscollapse', close="Map Options")
     reset_hide_var_plot_option(session, 'var_plots__map_format')
@@ -2297,6 +2328,7 @@ hide_show_numeric_numeric <- function(session,
     reset_hide_var_plot_option(session, 'var_plots__categoric_view_type')
     reset_hide_var_plot_option(session, 'var_plots__numeric_graph_type')
     reset_hide_var_plot_option(session, 'var_plots__sum_by_variable')
+    reset_hide_var_plot_option(session, 'var_plots__count_distinct_variable')
     reset_hide_var_plot_option(session, 'var_plots__multi_value_delimiter')
 }
 
@@ -2385,6 +2417,7 @@ hide_show_numeric_categoric <- function(session, showing_boxplot, has_comparison
     reset_hide_var_plot_option(session, 'var_plots__annotate_points')
     reset_hide_var_plot_option(session, 'var_plots__show_points')
     reset_hide_var_plot_option(session, 'var_plots__sum_by_variable')
+    reset_hide_var_plot_option(session, 'var_plots__count_distinct_variable')
     reset_hide_var_plot_option(session, 'var_plots__multi_value_delimiter')
     updateCollapse(session, 'var_plots__bscollapse', close="Map Options")
     reset_hide_var_plot_option(session, 'var_plots__map_format')
@@ -2402,12 +2435,32 @@ hide_show_categoric_categoric <- function(session, input, has_comparison_variabl
     shinyjs::show('var_plots__variables_buttons_swap')
     shinyjs::hide('var_plots__color_facet_buttons_swap')
     
-    # grouped barchart
-    shinyjs::show('var_plots__sum_by_variable') # categoric with categoric (or NULL) can select numeric sum_by_variable
+    ####
+    # Can only use SUM BY varaible or COUNT DISTINCT variable, so hide one of the other is not null
+    ####
+    if(is.null(input$var_plots__sum_by_variable) || input$var_plots__sum_by_variable == global__select_variable_optional) {
+
+        shinyjs::show('var_plots__count_distinct_variable')
+
+    } else {
+
+        reset_hide_var_plot_option(session, 'var_plots__count_distinct_variable')
+
+    }
+    if(is.null(input$var_plots__count_distinct_variable) || input$var_plots__count_distinct_variable == global__select_variable_optional) {
+
+        shinyjs::show('var_plots__sum_by_variable')
+
+    } else {
+
+        reset_hide_var_plot_option(session, 'var_plots__sum_by_variable')
+
+    }
+
+    shinyjs::show('var_plots__multi_value_delimiter')
 
     if(is.null(input$var_plots__comparison) || input$var_plots__comparison == global__select_variable_optional) {
 
-        shinyjs::show('var_plots__multi_value_delimiter')
         reset_hide_var_plot_option(session, 'var_plots__reverse_stack_order')
 
     } else {
@@ -2420,7 +2473,6 @@ hide_show_categoric_categoric <- function(session, input, has_comparison_variabl
 
             reset_hide_var_plot_option(session, 'var_plots__reverse_stack_order')
         }
-        reset_hide_var_plot_option(session, 'var_plots__multi_value_delimiter')
     }
 
     reset_hide_var_plot_option(session, 'var_plots__facet_variable')
@@ -2498,6 +2550,7 @@ observe__var_plots__hide_show_uncollapse_on_primary_vars <- function(session, in
             reset_hide_var_plot_option(session, 'var_plots__comparison')
             reset_hide_var_plot_option(session, 'var_plots__numeric_aggregation')
             reset_hide_var_plot_option(session, 'var_plots__sum_by_variable')
+            reset_hide_var_plot_option(session, 'var_plots__count_distinct_variable')
             reset_hide_var_plot_option(session, 'var_plots__multi_value_delimiter')
             reset_hide_var_plot_option(session, 'var_plots__size_variable')
             reset_hide_var_plot_option(session, 'var_plots__numeric_group_comp_variable')
@@ -2669,6 +2722,16 @@ update_var_plot_variables_from_url_params <- function(session, params, dataset, 
                       choices=c(global__select_variable_optional, numeric_column_names),
                       selected=selected_sum_by_variable)
 
+    selected_count_distinct_variable <- global__select_variable_optional
+    if (!is.null(params[['var_plots__count_distinct_variable']])) {
+
+        selected_count_distinct_variable <- params[['var_plots__count_distinct_variable']]
+        log_message_variable('updating count_distinct_variable', params[['var_plots__count_distinct_variable']])
+    }
+    updateSelectInput(session, 'var_plots__count_distinct_variable',
+                      choices=c(global__select_variable_optional, categoric_column_names),
+                      selected=selected_count_distinct_variable)
+
     #######################################################################
     # Update Categoric View
     #######################################################################
@@ -2685,6 +2748,7 @@ update_var_plot_variables_from_url_params <- function(session, params, dataset, 
     results <- var_plots__categoric_view_type__logic(dataset=dataset,
                                                      comparison_variable=selected_comparison,
                                                      sum_by_variable=selected_sum_by_variable,
+                                                     count_distinct_variable=selected_count_distinct_variable,
                                                      current_value=selected_value)
     updateSelectInput(session, 'var_plots__categoric_view_type',
                       choices=results$choices,

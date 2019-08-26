@@ -155,6 +155,16 @@ shinyUI(fluidPage(theme="custom.css",
                                         width='100%')
                         ),
                         shinyjs::hidden(
+                            selectInput(inputId='var_plots__count_distinct_variable',
+                                        label='Count Unique Values',
+                                        choices=var_plots__default_values[['var_plots__count_distinct_variable']],
+                                        selected=var_plots__default_values[['var_plots__count_distinct_variable']],
+                                        width='100%')
+                        ),
+                        bsTooltipResistant(id='var_plots__count_distinct_variable',
+                                           title="For the selected variable, count the unique number of values.",
+                                           placement='top', trigger='hover'),
+                        shinyjs::hidden(
                             selectInput(inputId='var_plots__color_variable',
                                         label='Color Variable',
                                         choices=var_plots__default_values[['var_plots__color_variable']],
@@ -182,7 +192,7 @@ shinyUI(fluidPage(theme="custom.css",
                                       value=var_plots__default_values[['var_plots__multi_value_delimiter']])
                         ),
                         bsTooltip(id='var_plots__multi_value_delimiter',
-                                  title="For variables that have multi-value instances seperated by a delimiter (e.g. value_x;value_y), this feature seperates the multi-value instance into multiple instances and counts them individually.",
+                                  title="Regex text used for variables that have multi-value instances seperated by a delimiter (e.g. value_x;value_y), this feature seperates the multi-value instance into multiple instances and counts them individually.",
                                   placement='top', trigger='hover'),
                         ################
                         # CONVERSION RATE FIELDS
