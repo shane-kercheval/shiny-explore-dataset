@@ -839,7 +839,7 @@ var_plots__trend_extend_date__logic <- function(dataset, primary_variable, curre
         selected <- current_value
 
         #if current value is beyond the max value of the primary variable, if yes, keep it, if not, get max of primary val
-        max_date <- as.Date(as.POSIXct(max(dataset[[primary_variable]], na.rm=TRUE)))
+        max_date <- floor_date(as.POSIXct(max(dataset[[primary_variable]], na.rm=TRUE)), unit = 'day')
         if(is.null(current_value) || current_value < max_date) {
 
             selected <- floor_date(max_date %m+% months(6), unit='month')

@@ -1496,7 +1496,7 @@ test_that("setting dynamic variables - comparison", {
     dataset <- results$dataset
     numeric_column_names <- colnames(dataset %>% select_if(is.numeric))
     
-    primary_selection <- 'date'
+    primary_selection <- 'takeoff_datetime'
     comparison_selection <- var_plots__comparison__logic(dataset=dataset,
                                                          primary_variable=primary_selection,
                                                          current_value=NULL)
@@ -1689,7 +1689,7 @@ test_that("setting dynamic variables - color", {
     categoric_column_names <- colnames(dataset %>% select_if(is_categoric))
     numeric_column_names <- colnames(dataset %>% select_if(is.numeric))
     
-    primary_selection <- 'date'
+    primary_selection <- 'takeoff_datetime'
     comparison_variable <- NULL
     selection <- var_plots__color__logic(dataset=dataset,
                                          primary_variable=primary_selection,
@@ -1705,7 +1705,7 @@ test_that("setting dynamic variables - color", {
     expect_identical(selection$choices, c(global__select_variable_optional, categoric_column_names))
     expect_equal(selection$selected, global__select_variable_optional)
 
-    primary_selection <- 'date'
+    primary_selection <- 'takeoff_datetime'
     comparison_variable <- 'dep_delay'
     selection <- var_plots__color__logic(dataset=dataset,
                                          primary_variable=primary_selection,
@@ -1766,7 +1766,7 @@ test_that("setting dynamic variables - trend_extend_date", {
     ########
     # Date Primary Variable
     ########
-    primary_selection <- 'date'
+    primary_selection <- 'takeoff_datetime'
     date_selection <- var_plots__trend_extend_date__logic(dataset=dataset,
                                                           primary_variable=primary_selection,
                                                           current_value=NULL)
@@ -1950,47 +1950,47 @@ test_that("create_ggplot_plot - date projection", {
     dataset <- select_preloaded_dataset("Flights", defualt_path = '../')$dataset
     
     plot_object <- create_ggplot_object(dataset = dataset,
-                                        primary_variable = 'date')
+                                        primary_variable = 'takeoff_datetime')
     test_save_plot(file_name='graphs/plot__time_series__default.png', plot=plot_object)
     
     plot_object <- create_ggplot_object(dataset = dataset,
-                                        primary_variable = 'date',
+                                        primary_variable = 'takeoff_datetime',
                                         trend_line = 'Straight')
     test_save_plot(file_name='graphs/plot__time_series__straight.png', plot=plot_object)
 
     plot_object <- create_ggplot_object(dataset = dataset,
-                                        primary_variable = 'date',
+                                        primary_variable = 'takeoff_datetime',
                                         trend_line = 'Straight', trend_line_se = 'Yes')
     test_save_plot(file_name='graphs/plot__time_series__straight__ci.png', plot=plot_object)
         
     plot_object <- create_ggplot_object(dataset = dataset,
-                                        primary_variable = 'date',
+                                        primary_variable = 'takeoff_datetime',
                                         trend_line = 'Smooth')
     test_save_plot(file_name='graphs/plot__time_series__smooth.png', plot=plot_object)
     
     plot_object <- create_ggplot_object(dataset = dataset,
-                                        primary_variable = 'date',
+                                        primary_variable = 'takeoff_datetime',
                                         trend_line = 'Smooth', trend_line_se = 'Yes')
     test_save_plot(file_name='graphs/plot__time_series__smooth__ci.png', plot=plot_object)
     
     plot_object <- create_ggplot_object(dataset = dataset,
-                                        primary_variable = 'date',
+                                        primary_variable = 'takeoff_datetime',
                                         trend_line = 'Projection',
                                         trend_extend_date = as.Date('2015-01-01'))
     test_save_plot(file_name='graphs/plot__time_series__projection.png', plot=plot_object)
     
     plot_object <- create_ggplot_object(dataset = dataset,
-                                        primary_variable = 'date',
+                                        primary_variable = 'takeoff_datetime',
                                         trend_line = 'Projection',
                                         trend_extend_date = as.Date('2015-01-01'),
                                         trend_line_se = 'Yes')
     test_save_plot(file_name='graphs/plot__time_series__projection__ci.png', plot=plot_object)
     
     # test when min date is e.g. at the end of a given period
-    dataset <- dataset %>% filter(date > ymd('2013-02-15'))
-    #min(dataset$date)
+    dataset <- dataset %>% filter(takeoff_datetime >= ymd('2013-02-16'))
+    #min(dataset$takeoff_datetime)
     plot_object <- create_ggplot_object(dataset = dataset,
-                                        primary_variable = 'date',
+                                        primary_variable = 'takeoff_datetime',
                                         trend_line = 'Projection',
                                         trend_extend_date = as.Date('2015-01-01'),
                                         trend_line_se = 'Yes')
@@ -1999,7 +1999,7 @@ test_that("create_ggplot_plot - date projection", {
     
     # test week, 2/15 was a friday
     plot_object <- create_ggplot_object(dataset = dataset,
-                                        primary_variable = 'date',
+                                        primary_variable = 'takeoff_datetime',
                                         trend_line = 'Projection',
                                         ts_date_floor='week',
                                         ts_date_breaks_width='4 weeks',
@@ -2009,7 +2009,7 @@ test_that("create_ggplot_plot - date projection", {
     
     # test week, 2/15 was a friday
     plot_object <- create_ggplot_object(dataset = dataset,
-                                        primary_variable = 'date',
+                                        primary_variable = 'takeoff_datetime',
                                         trend_line = 'Projection',
                                         ts_date_floor='quarter',
                                         #ts_date_breaks_width='4 weeks',
@@ -2019,7 +2019,7 @@ test_that("create_ggplot_plot - date projection", {
     
     # test week, 2/15 was a friday
     plot_object <- create_ggplot_object(dataset = dataset,
-                                        primary_variable = 'date',
+                                        primary_variable = 'takeoff_datetime',
                                         trend_line = 'Projection',
                                         ts_date_floor='day',
                                         ts_date_breaks_width='4 weeks',
@@ -2034,10 +2034,10 @@ test_that("create_ggplot_plot - date projection - POSIXct", {
     global__should_log_message <<- FALSE
     dataset <- select_preloaded_dataset("Flights", defualt_path = '../')$dataset
     
-    dataset$date <- as.POSIXct(dataset$date)
+    dataset$date <- as.POSIXct(dataset$takeoff_datetime)
     
     plot_object <- create_ggplot_object(dataset = dataset,
-                                        primary_variable = 'date',
+                                        primary_variable = 'takeoff_datetime',
                                         trend_line = 'Projection',
                                         trend_extend_date = as.Date('2015-01-01'),
                                         trend_line_se = 'Yes')
