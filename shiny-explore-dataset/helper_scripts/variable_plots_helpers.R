@@ -114,6 +114,8 @@ reactive__filter_controls_list__creator <- function(input, dataset) {
                                                      width='100%')
                 } else {
                     #class(.)[1]
+                    log_message_block_start("Creating Filter for Unknown Class")
+                    log_message_variable('class', class(.x))
                     stopifnot(FALSE)
                 }
 
