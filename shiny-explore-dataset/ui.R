@@ -17,7 +17,7 @@ shinyUI(fluidPage(theme="custom.css",
     ),
     shinyjs::hidden(div(id = 'div__main_content',
     navbarPage(id='navbar_page_app',
-               title = 'Explore Dataset',
+               title = "Dataset Explorer",
         tabPanel(
             'Load Dataset',
             tabsetPanel(type='tabs',

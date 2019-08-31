@@ -34,6 +34,6 @@ renderPlot__correlation__plot <- function(input, session, dataset) {
         })
     }, height = function() {
 
-        session$clientData$output_correlation__plot_width * 0.66  # set height to % of width
+        session$clientData$output_correlation__plot_width * 0.60  # set height to % of width
     })
 }
