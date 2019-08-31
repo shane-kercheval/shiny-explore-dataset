@@ -20,8 +20,8 @@ names(global__date_break_format_vector) <- c("Auto", "Day", "Week", "Month", "Ye
 global__date_cr_options <- c("Snapshots", "Adoption")
 global__date_cr_color_or_facet <- c("color", "facet")
 names(global__date_cr_color_or_facet) <- c("Color", "Facet")
-global__date_cr__unit_options <- c('hours', 'days', 'weeks', 'months', 'quarters', 'years')
-names(global__date_cr__unit_options) <- c("Hours", "Days", "Weeks", "Months", "Quarters", "Years")
+global__date_cr__unit_options <- c('mins', 'hours', 'days', 'weeks')
+names(global__date_cr__unit_options) <- c("Minutes", "Hours", "Days", "Weeks")
 
 
 global__url_params_filter_prefix <- '!!_'
@@ -49,7 +49,7 @@ var_plots__default_values <- list(
     'var_plots__include_zero_y_axis' = TRUE,
     'var_plots__date_cr__plot_type' = global__date_cr_options[1],
     'var_plots__date_cr__snapshots__values' = "1, 7, 14",
-    'var_plots__date_cr__snapshots__units' = global__date_cr__unit_options[2],
+    'var_plots__date_cr__snapshots__units' = global__date_cr__unit_options[3],
     'var_plots__date_cr__snapshots__color_or_facet' = global__date_cr_color_or_facet[1],
     'var_plots__date_cr__last_n_cohorts' = 10,
     'var_plots__date_cr__n_units_after_first_date' = 30,
