@@ -493,6 +493,9 @@ build_parameters_list <- function(input, preloaded_dataset, filter_list=NULL) {
 #' @param url_search the search part of the url 
 extract_url_parameters <- function(url_search) {
 
+    # seems like when using a shiny app that is redirecting after e.g. sso login, '&' get double-encoded
+    url_search <- str_replace_all(string=url_search, pattern='&amp;', replacement='&')
+
     parameters_list <- mergeUrlArgs(shiny::parseQueryString(url_search))
     default_params <- c('data', 'tab')
     

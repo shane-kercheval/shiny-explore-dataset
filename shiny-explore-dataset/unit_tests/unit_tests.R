@@ -1161,7 +1161,7 @@ test_that("build_parse_url_params", {
         'var_plots__y_zoom_min' = 'not NA',
         'var_plots__y_zoom_max' = 'not NA',
         'var_plots__custom_title' = "This is my title",
-        'var_plots__custom_subtitle' = "This is my subtitle",
+        'var_plots__custom_subtitle' = "Test & out &amp; amp;",
         'var_plots__custom_x_axis_label' = "This is my X Axis Label",
         'var_plots__custom_y_axis_label' = "This is my Y Axis Label",
         'var_plots__custom_caption' = "This is my caption",
@@ -1189,12 +1189,13 @@ test_that("build_parse_url_params", {
     }
     
     custom_url <- build_custom_url(base_url = 'http://127.0.0.1:3158/', parameters_list = parameters)
-    expected_url <- "http://127.0.0.1:3158/?data=flights&tab=Graphs&variable=Test%20values%20with%20spaces%20and%20sh%2A%26%25t.%21&comparison=expected_value_comparison&sum_by_variable=expected_value_sum_by_variable&color_variable=expected_value_color_variable&facet_variable=expected_value_facet_variable&size_variable=expected_value_size_variable&numeric_group_comp_variable=TRUE&numeric_aggregation_function=month&numeric_aggregation=week&multi_value_delimiter=%3B%20&filter_factor_lump_number=20&label_variables=this&label_variables=has&label_variables=multiple&label_variables=values&annotate_points=FALSE&show_points=FALSE&year_over_year=TRUE&include_zero_y_axis=FALSE&numeric_graph_type=Boxplot%20Whoot&categoric_view_type=Bar%20Whoot&order_by_variable=Default%20Whoot&show_variable_totals=FALSE&show_comparison_totals=FALSE&histogram_bins=1000&transparency=1999&jitter=TRUE&numeric_aggregation_count_minimum=3009&numeric_show_resampled_conf_int=TRUE&trend_line=None%20Whoot&trend_line_se=Yes%20Whoot&ts_date_floor=None%20Whoot&ts_date_break_format=Auto%20Whoot&ts_breaks_width=not%20null&scale_x_log_base_10=TRUE&x_zoom_min=not%20NA&x_zoom_max=40&scale_y_log_base_10=TRUE&y_zoom_min=not%20NA&y_zoom_max=not%20NA&custom_title=This%20is%20my%20title&custom_subtitle=This%20is%20my%20subtitle&custom_x_axis_label=This%20is%20my%20X%20Axis%20Label&custom_y_axis_label=This%20is%20my%20Y%20Axis%20Label&custom_caption=This%20is%20my%20caption&custom_tag=This%20is%20my%20Tag&pretty_text=TRUE&base_size=155&vertical_annotations=vertical%20annotations&horizontal_annotations=horizontal%20annotations"
+    expected_url <- "http://127.0.0.1:3158/?data=flights&tab=Graphs&variable=Test%20values%20with%20spaces%20and%20sh%2A%26%25t.%21&comparison=expected_value_comparison&sum_by_variable=expected_value_sum_by_variable&color_variable=expected_value_color_variable&facet_variable=expected_value_facet_variable&size_variable=expected_value_size_variable&numeric_group_comp_variable=TRUE&numeric_aggregation_function=month&numeric_aggregation=week&multi_value_delimiter=%3B%20&filter_factor_lump_number=20&label_variables=this&label_variables=has&label_variables=multiple&label_variables=values&annotate_points=FALSE&show_points=FALSE&year_over_year=TRUE&include_zero_y_axis=FALSE&numeric_graph_type=Boxplot%20Whoot&categoric_view_type=Bar%20Whoot&order_by_variable=Default%20Whoot&show_variable_totals=FALSE&show_comparison_totals=FALSE&histogram_bins=1000&transparency=1999&jitter=TRUE&numeric_aggregation_count_minimum=3009&numeric_show_resampled_conf_int=TRUE&trend_line=None%20Whoot&trend_line_se=Yes%20Whoot&ts_date_floor=None%20Whoot&ts_date_break_format=Auto%20Whoot&ts_breaks_width=not%20null&scale_x_log_base_10=TRUE&x_zoom_min=not%20NA&x_zoom_max=40&scale_y_log_base_10=TRUE&y_zoom_min=not%20NA&y_zoom_max=not%20NA&custom_title=This%20is%20my%20title&custom_subtitle=Test%20%26%20out%20%26amp%3B%20amp%3B&custom_x_axis_label=This%20is%20my%20X%20Axis%20Label&custom_y_axis_label=This%20is%20my%20Y%20Axis%20Label&custom_caption=This%20is%20my%20caption&custom_tag=This%20is%20my%20Tag&pretty_text=TRUE&base_size=155&vertical_annotations=vertical%20annotations&horizontal_annotations=horizontal%20annotations"
     expect_equal(custom_url, expected_url)
-    expect_equal(nchar(custom_url), 1579)
+    expect_equal(nchar(custom_url), 1591)  # redundant, but want to track how long the url is (max url ~2000)
     
     # extract_url_parameters only expects the ?.... part of the url
-    extracted_parameters <- extract_url_parameters(url_search=str_replace(custom_url, 'http://127.0.0.1:3158/', ''))
+    url_search <- str_replace(custom_url, 'http://127.0.0.1:3158/', '')
+    extracted_parameters <- extract_url_parameters(url_search=url_search)
     expect_identical(names(extracted_parameters), c('data', 'tab', names(mock_input)))
     
     var_plots_extracted_parameters <- extracted_parameters[which(!names(extracted_parameters) %in% c('data', 'tab'))]
@@ -1204,6 +1205,23 @@ test_that("build_parse_url_params", {
         
         expect_equal(var_plots_extracted_parameters[[variable]], mock_input[[variable]])
     }
+    
+    # seems like when using a shiny app that is redirecting after e.g. sso login, '&' get double-encoded
+    double_encoded_search <- str_replace_all(string = url_search, pattern = '&', replacement = '&amp;')
+    extracted_parameters <- extract_url_parameters(url_search=double_encoded_search)
+    expect_identical(names(extracted_parameters), c('data', 'tab', names(mock_input)))
+    
+    var_plots_extracted_parameters <- extracted_parameters[which(!names(extracted_parameters) %in% c('data', 'tab'))]
+    expect_identical(names(var_plots_extracted_parameters), names(mock_input))
+    
+    for(variable in names(mock_input)) {
+        
+        expect_equal(var_plots_extracted_parameters[[variable]], mock_input[[variable]])
+    }
+    # this should have been tested in the for loop above but want to explicitly test and call out
+    # first, make sure this hasn't changed, need to explicitly test & &amp; amp; values in case these show up in the parameters
+    expect_equal(mock_input[['var_plots__custom_subtitle']], "Test & out &amp; amp;")
+    expect_equal(var_plots_extracted_parameters[['var_plots__custom_subtitle']], mock_input[['var_plots__custom_subtitle']])
 })
 
 test_that("build_parse_url_params - filtering", {
