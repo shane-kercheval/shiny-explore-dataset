@@ -1074,16 +1074,6 @@ reactive__var_plots__ggplot__creator <- function(input, session, dataset, url_pa
         show_comparison_totals <- isolate(input$var_plots__show_comparison_totals)
         categoric_view_type <- default_if_null_or_empty_string(isolate(input$var_plots__categoric_view_type),
                                                                default="Bar")
-
-        if(!is.null(count_distinct_variable)) {
-
-            if((is.null(comparison_variable) && categoric_view_type != "Bar") || 
-               (!is.null(comparison_variable) && !categoric_view_type %in% c("Bar", "Facet by Comparison"))) {
-
-                showModal(modalDialog(title = "Invalid 'View Type' for counting distinct variables, setting the View Type to 'Bar'."))
-                categoric_view_type <- "Bar"
-            } 
-        }
         
         trend_line <- isolate(input$var_plots__trend_line)
         trend_extend_date <- isolate(input$var_plots__trend_extend_date)
@@ -1173,6 +1163,39 @@ reactive__var_plots__ggplot__creator <- function(input, session, dataset, url_pa
             # Categoric Primary Variable
             ##############################################################################################
             } else {
+
+                # if(!is.null(count_distinct_variable)) {
+                #     if((is.null(comparison_variable) && categoric_view_type != "Bar") || 
+                #        (!is.null(comparison_variable) && !categoric_view_type %in% c("Bar", "Facet by Comparison"))) {
+
+                #         showModal(modalDialog(title = "Invalid 'View Type' for counting distinct variables, setting the View Type to 'Bar'."))
+                #         categoric_view_type <- "Bar"
+                #     } 
+                # }
+
+                # if(!is.null(sum_by_variable) && str_detect(string=categoric_view_type, pattern='Confidence Interval')) {
+
+                #     showModal(modalDialog(title = "Invalid 'View Type'. Cannot select 'Confidence Interval' when using Sum-By-Variable, setting the View Type to 'Bar'."))
+                #     categoric_view_type <- "Bar"
+                # }
+
+                # based on the current variables selected, let's get the valid View Types
+                # if view_type_results$selected does not equal the current selection (categoric_view_type)
+                # then that means that the current selection is not valid, so let's set it to something
+                # that is valid which will be e.g. the value in view_type_results$selected
+                view_type_results <- var_plots__categoric_view_type__logic(dataset=dataset,
+                                                                           comparison_variable=comparison_variable,
+                                                                           sum_by_variable=sum_by_variable,
+                                                                           count_distinct_variable=count_distinct_variable,
+                                                                           current_value=categoric_view_type)
+                if(categoric_view_type != view_type_results$selected) {
+
+                    showModal(modalDialog(title = paste0("Invalid 'View Type' of `",
+                                                         categoric_view_type,
+                                                         "` with current settings. Setting 'View Type' to `",
+                                                         view_type_results$selected, "`.")))
+                    categoric_view_type <- view_type_results$selected
+                }
 
                 ##########################################################################################
                 # Numeric Secondary Variable
