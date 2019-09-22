@@ -156,6 +156,7 @@ capture_messages_warnings <- function(func) {
 #'      index 2: string containing information about what was filtered
 filter_data <- function(dataset, filter_list, callback=NULL) {
 
+    missing_value_string <- "<Missing Values (NA)>"
     end_message <- function(message, num_is_na) {
         if(num_is_na > 0) {
         
@@ -219,10 +220,9 @@ filter_data <- function(dataset, filter_list, callback=NULL) {
                     filter(!!symbol_column_name >= filter_values[1] & !!symbol_column_name <= filter_values[2])
 
             } else if(is.factor(dataset[[column_name]]) ||
-                        is.character(dataset[[column_name]])) {
+                        is.character(dataset[[column_name]]) ||
+                        is.logical(dataset[[column_name]])) {
                 
-                missing_value_string <- "<Missing Values (NA)>"
-        
                 if(missing_value_string %in% filter_values) {
                     
                     num_is_na <- 0
@@ -244,19 +244,6 @@ filter_data <- function(dataset, filter_list, callback=NULL) {
                 
                 message <- paste0(column_name, ": ", paste0(filter_values, collapse=", "), " (Removing ", my_number_format(num_removing), " rows") %>%
                     end_message(num_is_na)
-                
-            } else if(is.logical(dataset[[column_name]])) {
-
-                num_is_na <- sum(is.na(dataset[[column_name]]))
-                num_removing <- sum(!is.na(dataset[[column_name]]) & 
-                                    !dataset[[column_name]] %in% filter_values)
-
-                message <- paste0(column_name, ": ", paste0(filter_values, collapse=", "), " (Removing ", my_number_format(num_removing), " rows") %>%
-                    end_message(num_is_na)
-
-                #'logical'
-                dataset <- dataset %>%
-                    filter(!!symbol_column_name %in% filter_values)
 
             } else if("hms" %in% class(dataset[[column_name]])) {
 

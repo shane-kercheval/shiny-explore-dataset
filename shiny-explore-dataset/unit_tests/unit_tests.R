@@ -487,6 +487,134 @@ test_that("filter: missing_values_options", {
     expect_equal(filter_results[[2]][[3]], "color: Not Filtering")
 })
 
+test_that("filter: missing_values_options_logical", {
+    context("generic_helpers::missing_values_options_logical")
+  
+    # originally did not include logical types in the code when creating filter controls and filtering NA values
+    missing_value_string <- '<Missing Values (NA)>'
+    
+    dataset <- dataset_or_null('../example_datasets/credit.csv')
+    dataset$default <- ifelse(dataset$default == 'yes', TRUE, FALSE) 
+    
+    # build filter list
+    # build filter selection list (to mimic shiny and also reuse list)
+    global_filter_list <- list(
+        default = TRUE
+    )
+
+    filter_results <- filter_data(dataset=dataset,
+                                  filter_list=global_filter_list,
+                                  callback=NULL)
+    
+    expect_equal(filter_results[[2]][[1]], "default: TRUE (Removing 700 rows)")
+    filtered_df <- filter_results[[1]]
+    
+    expect_true(all(filtered_df$default))
+    expect_equal(nrow(filtered_df), 300)
+    expect_true(rt_are_dataframes_equal(dataset %>% filter(default), filtered_df))
+    
+    global_filter_list <- list(
+        default = FALSE
+    )
+    
+    filter_results <- filter_data(dataset=dataset,
+                                  filter_list=global_filter_list,
+                                  callback=NULL)
+    
+    expect_equal(filter_results[[2]][[1]], "default: FALSE (Removing 300 rows)")
+    filtered_df <- filter_results[[1]]
+    expect_true(!any(filtered_df$default))
+    expect_equal(nrow(filtered_df), 700)
+    expect_true(rt_are_dataframes_equal(dataset %>% filter(!default), filtered_df))
+    
+    
+    # now test with NAs
+    # make sure this dataset doesn't change
+    expect_false(dataset$default[1])
+    dataset$default[1] <- NA
+    
+    global_filter_list <- list(
+        default = TRUE
+    )
+    
+    filter_results <- filter_data(dataset=dataset,
+                                  filter_list=global_filter_list,
+                                  callback=NULL)
+    
+    expect_equal(filter_results[[2]][[1]], "default: TRUE (Removing 699 rows; Removing 1 rows with missing values)")
+    filtered_df <- filter_results[[1]]
+    
+    expect_true(all(filtered_df$default))
+    expect_true(!any(is.na(filtered_df$default)))
+    expect_equal(nrow(filtered_df), 300)
+    expect_true(rt_are_dataframes_equal(dataset %>% filter(default), filtered_df))
+    
+    global_filter_list <- list(
+        default = FALSE
+    )
+    filter_results <- filter_data(dataset=dataset,
+                                  filter_list=global_filter_list,
+                                  callback=NULL)
+    
+    expect_equal(filter_results[[2]][[1]], "default: FALSE (Removing 300 rows; Removing 1 rows with missing values)")
+    filtered_df <- filter_results[[1]]
+    expect_true(!any(is.na(filtered_df$default)))
+    expect_true(!any(filtered_df$default))
+    expect_equal(nrow(filtered_df), 699)
+    expect_true(rt_are_dataframes_equal(dataset %>% filter(!default), filtered_df))
+    
+    global_filter_list <- list(
+        default = missing_value_string
+    )
+    filter_results <- filter_data(dataset=dataset,
+                                  filter_list=global_filter_list,
+                                  callback=NULL)
+    
+    expect_equal(filter_results[[2]][[1]], "default: <Missing Values (NA)> (Removing 999 rows)")
+    filtered_df <- filter_results[[1]]
+    expect_true(all(is.na(filtered_df$default)))
+    expect_equal(nrow(filtered_df), 1)
+    expect_true(rt_are_dataframes_equal(dataset %>% filter(is.na(default)), filtered_df))
+    
+    global_filter_list <- list(
+        default = c(missing_value_string, FALSE)
+    )
+    
+    filter_results <- filter_data(dataset=dataset,
+                                  filter_list=global_filter_list,
+                                  callback=NULL)
+    
+    expect_equal(filter_results[[2]][[1]], "default: <Missing Values (NA)>, FALSE (Removing 300 rows)")
+    filtered_df <- filter_results[[1]]
+    expect_equal(nrow(filtered_df), 700)
+    expect_true(rt_are_dataframes_equal(dataset %>% filter(is.na(default) | !default), filtered_df))
+    
+    global_filter_list <- list(
+        default = c(missing_value_string, TRUE)
+    )
+    filter_results <- filter_data(dataset=dataset,
+                                  filter_list=global_filter_list,
+                                  callback=NULL)
+    
+    expect_equal(filter_results[[2]][[1]], "default: <Missing Values (NA)>, TRUE (Removing 699 rows)")
+    filtered_df <- filter_results[[1]]
+    expect_equal(nrow(filtered_df), 301)
+    expect_true(rt_are_dataframes_equal(dataset %>% filter(is.na(default) | default), filtered_df))
+    
+    global_filter_list <- list(
+        default = c(missing_value_string, TRUE, FALSE)
+    )
+    filter_results <- filter_data(dataset=dataset,
+                                  filter_list=global_filter_list,
+                                  callback=NULL)
+    
+    expect_equal(filter_results[[2]][[1]], "default: <Missing Values (NA)>, TRUE, FALSE (Removing 0 rows)")
+    filtered_df <- filter_results[[1]]
+    expect_equal(nrow(filtered_df), 1000)
+    expect_true(rt_are_dataframes_equal(dataset, filtered_df))
+    
+})
+
 test_that("generic_helpers::filter_data - flights/date", {
     context("generic_helpers::filter_data - flights/date")
     

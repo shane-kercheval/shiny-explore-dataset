@@ -26,6 +26,8 @@ reactive__filter_controls_list__creator <- function(input, dataset) {
         withProgress(value=1/2, message="Generating Filters", {
 
             log_message("Generating Filter Controls")
+
+            missing_value_string <- "<Missing Values (NA)>"
             
             ui_list <- imap(dataset$data, ~ {
                 log_message_variable('filter control for', .y)
@@ -50,7 +52,7 @@ reactive__filter_controls_list__creator <- function(input, dataset) {
 
                         if(any(is.na(.x))) {
 
-                            choices <- c("<Missing Values (NA)>", choices)
+                            choices <- c(missing_value_string, choices)
                         }
 
                         filter_object <- selectInput(inputId=input_id,
@@ -69,7 +71,7 @@ reactive__filter_controls_list__creator <- function(input, dataset) {
 
                         if(any(is.na(.x))) {
 
-                            choices <- c("<Missing Values (NA)>", choices)
+                            choices <- c(missing_value_string, choices)
                         }
 
                         filter_object <- selectInput(inputId=input_id,
@@ -91,9 +93,17 @@ reactive__filter_controls_list__creator <- function(input, dataset) {
                                                  width='100%')
                 } else if(is.logical(.x)) {
 
+                    choices <- c(TRUE, FALSE)
+
+                    if(any(is.na(.x))) {
+
+                        choices <- c(missing_value_string, choices)
+                    }
+
+
                     filter_object <- selectInput(inputId=input_id,
                                 label=.y,
-                                choices=c(TRUE, FALSE),
+                                choices=choices,
                                 selected = NULL,
                                 multiple = TRUE,
                                 width='100%')
