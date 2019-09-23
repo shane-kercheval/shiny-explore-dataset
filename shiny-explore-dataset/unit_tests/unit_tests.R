@@ -2235,14 +2235,7 @@ test_that("create_ggplot_plot - bar", {
                                         comparison_variable = 'default',
                                         sum_by_variable = 'amount')
     test_save_plot(file_name='graphs/create_ggplot_object__double_categoric__sum_by.png', plot=plot_object)
-    
-    plot_object <- create_ggplot_object(dataset = dataset,
-                                        primary_variable = 'checking_balance',
-                                        comparison_variable = 'default',
-                                        sum_by_variable = 'amount',
-                                        categoric_view_type = 'Facet by Comparison')
-    test_save_plot(file_name='graphs/create_ggplot_object__double_categoric__sum_by__facet.png', plot=plot_object)
-    
+
     plot_object <- create_ggplot_object(dataset = dataset,
                                         primary_variable = 'checking_balance',
                                         comparison_variable = 'default',
@@ -2256,4 +2249,74 @@ test_that("create_ggplot_plot - bar", {
                                         sum_by_variable = 'amount',
                                         categoric_view_type = 'Stack Percent')
     test_save_plot(file_name='graphs/create_ggplot_object__double_categoric__sum_by__stack_perc.png', plot=plot_object)
+})
+
+test_that("create_ggplot_plot - bar - facet", { 
+    context("create_ggplot_plot - bar - facet")
+    
+    global__should_log_message <<- FALSE
+    dataset <- select_preloaded_dataset("Credit", defualt_path = '../')$dataset
+    set.seed(42)
+    dataset$ids_not_unique <- as.character(sample(1:100, 1000, replace=T))
+    dataset$ids_unique <- as.character(1:1000)
+    
+    plot_object <- create_ggplot_object(dataset = dataset,
+                                        primary_variable = 'checking_balance',
+                                        facet_variable = 'default')
+    test_save_plot(file_name='graphs/create_ggplot_object__single_categoric__facet.png', plot=plot_object)
+    
+    plot_object <- create_ggplot_object(dataset = dataset,
+                                        primary_variable = 'checking_balance',
+                                        count_distinct_variable = 'ids_unique',
+                                        facet_variable = 'default')
+    test_save_plot(file_name='graphs/create_ggplot_object__single_categoric__unique_id__facet.png', plot=plot_object)
+    
+    plot_object <- create_ggplot_object(dataset = dataset,
+                                        primary_variable = 'checking_balance',
+                                        count_distinct_variable = 'ids_not_unique',
+                                        facet_variable = 'default')
+    test_save_plot(file_name='graphs/create_ggplot_object__single_categoric__distinct_ids__facet.png', plot=plot_object)
+    
+    plot_object <- create_ggplot_object(dataset = dataset,
+                                        primary_variable = 'checking_balance',
+                                        comparison_variable = 'credit_history',
+                                        facet_variable = 'default')
+    test_save_plot(file_name='graphs/create_ggplot_object__double_categoric__facet.png', plot=plot_object)
+    
+    plot_object <- create_ggplot_object(dataset = dataset,
+                                        primary_variable = 'checking_balance',
+                                        comparison_variable = 'credit_history',
+                                        count_distinct_variable = 'ids_unique',
+                                        facet_variable = 'default')
+    test_save_plot(file_name='graphs/create_ggplot_object__double_categoric__unique_id__facet.png', plot=plot_object)
+    
+    plot_object <- create_ggplot_object(dataset = dataset,
+                                        primary_variable = 'checking_balance',
+                                        comparison_variable = 'credit_history',
+                                        count_distinct_variable = 'ids_not_unique',
+                                        facet_variable = 'default')
+    test_save_plot(file_name='graphs/create_ggplot_object__double_categoric__distinct_ids__facet.png', plot=plot_object)
+    
+    plot_object <- create_ggplot_object(dataset = dataset,
+                                        primary_variable = 'checking_balance',
+                                        #comparison_variable = 'credit_history',
+                                        sum_by_variable = 'amount',
+                                        facet_variable = 'default')
+    test_save_plot(file_name='graphs/create_ggplot_object__double_categoric__sum_by__facet.png', plot=plot_object)
+    
+    plot_object <- create_ggplot_object(dataset = dataset,
+                                        primary_variable = 'checking_balance',
+                                        comparison_variable = 'credit_history',
+                                        sum_by_variable = 'amount',
+                                        categoric_view_type = 'Stack',
+                                        facet_variable = 'default')
+    test_save_plot(file_name='graphs/create_ggplot_object__double_categoric__sum_by__stack__facet.png', plot=plot_object)
+    
+    plot_object <- create_ggplot_object(dataset = dataset,
+                                        primary_variable = 'checking_balance',
+                                        comparison_variable = 'credit_history',
+                                        sum_by_variable = 'amount',
+                                        categoric_view_type = 'Stack Percent',
+                                        facet_variable = 'default')
+    test_save_plot(file_name='graphs/create_ggplot_object__double_categoric__sum_by__stack_perc__facet.png', plot=plot_object)
 })

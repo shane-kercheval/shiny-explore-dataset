@@ -779,14 +779,9 @@ var_plots__categoric_view_type__logic <- function(dataset,
 
     view_type_options <- NULL
     if(!is.null(count_distinct_variable)) {
-        if(is.null(comparison_variable)) {
+        
+        view_type_options <- c("Bar")
 
-            view_type_options <- c("Bar")
-
-        } else {
-
-            view_type_options <- c("Bar", "Facet by Comparison")
-        }
     } else if(is.null(comparison_variable) && is.null(sum_by_variable)) {
 
         view_type_options <- c("Bar", "Confidence Interval")
@@ -801,12 +796,11 @@ var_plots__categoric_view_type__logic <- function(dataset,
                                "Confidence Interval",
                                "Stack",
                                "Stack Percent",
-                               "Facet by Comparison",
                                "Confidence Interval - within Variable")
 
     } else { # both are not null
         
-        view_type_options <- c("Bar", "Stack", "Stack Percent", "Facet by Comparison")
+        view_type_options <- c("Bar", "Stack", "Stack Percent")
     }
 
     if(!is.null(current_value) && current_value %in% view_type_options) {
@@ -882,6 +876,7 @@ helper__plot_numeric_categoric <- function(dataset,
                                            primary_variable,
                                            comparison_variable,
                                            color_variable,
+                                           facet_variable,
                                            order_by_variable,
                                            filter_factor_lump_number,
                                            histogram_bins,
@@ -919,6 +914,7 @@ helper__plot_numeric_categoric <- function(dataset,
             select(primary_variable,
                    comparison_variable,
                    color_variable,
+                   facet_variable,
                    temp_order_by_variable) %>%
             mutate_factor_lump(factor_lump_number=filter_factor_lump_number) %>%
             mutate_factor_reorder(variable_to_order_by=order_by_variable,
@@ -926,6 +922,7 @@ helper__plot_numeric_categoric <- function(dataset,
             rt_explore_plot_boxplot(variable=primary_variable,
                                     comparison_variable=comparison_variable,
                                     color_variable=color_variable,
+                                    facet_variable=facet_variable,
                                     y_zoom_min=y_zoom_min,
                                     y_zoom_max=y_zoom_max,
                                     base_size=base_size) %>%
@@ -1173,21 +1170,6 @@ reactive__var_plots__ggplot__creator <- function(input, session, dataset, url_pa
             # Categoric Primary Variable
             ##############################################################################################
             } else {
-
-                # if(!is.null(count_distinct_variable)) {
-                #     if((is.null(comparison_variable) && categoric_view_type != "Bar") || 
-                #        (!is.null(comparison_variable) && !categoric_view_type %in% c("Bar", "Facet by Comparison"))) {
-
-                #         showModal(modalDialog(title = "Invalid 'View Type' for counting distinct variables, setting the View Type to 'Bar'."))
-                #         categoric_view_type <- "Bar"
-                #     } 
-                # }
-
-                # if(!is.null(sum_by_variable) && str_detect(string=categoric_view_type, pattern='Confidence Interval')) {
-
-                #     showModal(modalDialog(title = "Invalid 'View Type'. Cannot select 'Confidence Interval' when using Sum-By-Variable, setting the View Type to 'Bar'."))
-                #     categoric_view_type <- "Bar"
-                # }
 
                 # based on the current variables selected, let's get the valid View Types
                 # if view_type_results$selected does not equal the current selection (categoric_view_type)
@@ -1845,6 +1827,7 @@ create_ggplot_object <- function(dataset,
                                                                 primary_variable=primary_variable,
                                                                 comparison_variable=comparison_variable,
                                                                 color_variable=color_variable,
+                                                                facet_variable=facet_variable,
                                                                 order_by_variable=order_by_variable,
                                                                 filter_factor_lump_number=filter_factor_lump_number,
                                                                 histogram_bins=histogram_bins,
@@ -1874,6 +1857,7 @@ create_ggplot_object <- function(dataset,
                                                                 primary_variable=comparison_variable,
                                                                 comparison_variable=primary_variable,
                                                                 color_variable=color_variable,
+                                                                facet_variable=facet_variable,
                                                                 order_by_variable=order_by_variable,
                                                                 filter_factor_lump_number=filter_factor_lump_number,
                                                                 histogram_bins=histogram_bins,
@@ -1920,6 +1904,7 @@ create_ggplot_object <- function(dataset,
                     select(primary_variable,
                            comparison_variable,
                            sum_by_variable,
+                           facet_variable,
                            count_distinct_variable,
                            temp_order_by_variable) %>%
                     mutate_factor_lump(factor_lump_number=filter_factor_lump_number,
@@ -1929,6 +1914,7 @@ create_ggplot_object <- function(dataset,
                     rt_explore_plot_value_totals(variable=primary_variable,
                                                  comparison_variable=comparison_variable,
                                                  sum_by_variable=sum_by_variable,
+                                                 facet_variable=facet_variable,
                                                  count_distinct_variable=count_distinct_variable,
                                                  order_by_count=order_by_variable == "Frequency",
                                                  show_variable_totals=show_variable_totals,
@@ -2414,11 +2400,15 @@ hide_show_numeric_categoric <- function(session, showing_boxplot, has_comparison
 
             shinyjs::show('var_plots__color_variable')
             shinyjs::show('var_plots__order_by_variable')
+            shinyjs::show('var_plots__facet_variable')
+            shinyjs::show('var_plots__color_facet_buttons_swap')
 
         } else {
 
             reset_hide_var_plot_option(session, 'var_plots__color_variable')
             reset_hide_var_plot_option(session, 'var_plots__order_by_variable')
+            reset_hide_var_plot_option(session, 'var_plots__facet_variable')
+            shinyjs::hide('var_plots__color_facet_buttons_swap')
         }
 
     } else {
@@ -2431,9 +2421,9 @@ hide_show_numeric_categoric <- function(session, showing_boxplot, has_comparison
         reset_hide_var_plot_option(session, 'var_plots__y_zoom_min')
         reset_hide_var_plot_option(session, 'var_plots__y_zoom_max')
         reset_hide_var_plot_option(session, 'var_plots__color_variable')
+        reset_hide_var_plot_option(session, 'var_plots__facet_variable')
     }
 
-    reset_hide_var_plot_option(session, 'var_plots__facet_variable')
     reset_hide_var_plot_option(session, 'var_plots__date_conversion_variable')
     reset_hide_var_plot_option(session, 'var_plots__date_cr__snapshots__group_variable')
     reset_hide_var_plot_option(session, 'var_plots__date_cr__plot_type')
@@ -2489,6 +2479,7 @@ hide_show_categoric_categoric <- function(session, input, has_comparison_variabl
     shinyjs::show('var_plots__comparison')
     shinyjs::show('var_plots__variables_buttons_clear')
     shinyjs::show('var_plots__variables_buttons_swap')
+    shinyjs::show('var_plots__facet_variable')
     shinyjs::hide('var_plots__color_facet_buttons_swap')
     
     ####
@@ -2531,7 +2522,6 @@ hide_show_categoric_categoric <- function(session, input, has_comparison_variabl
         }
     }
 
-    reset_hide_var_plot_option(session, 'var_plots__facet_variable')
     reset_hide_var_plot_option(session, 'var_plots__date_conversion_variable')
     reset_hide_var_plot_option(session, 'var_plots__date_cr__snapshots__group_variable')
     reset_hide_var_plot_option(session, 'var_plots__date_cr__plot_type')
