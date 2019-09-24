@@ -105,22 +105,23 @@ shinyUI(fluidPage(theme="custom.css",
                                     choices=var_plots__default_values[['var_plots__variable']],
                                     selected=var_plots__default_values[['var_plots__variable']],
                                     width='100%'),
+
+                        shinyjs::hidden(
+                            div(id='var_plots__ts_date_floor', style="display:inline-block",
+                                selectInput(inputId='var_plots__ts_date_floor',
+                                            label=NULL,
+                                            choices=global__date_part_vector,
+                                            selected=var_plots__default_values[['var_plots__ts_date_floor']],
+                                            width=100)
+                            )
+                        ),
                         shinyjs::hidden(
                             div(id='var_plots__convert_primary_date_to_categoric',
-                                style='display:inline-block; vertical-align: text-bottom; height:40px',
+                                style='display:inline-block; vertical-align: text-bottom; height:40px; margin-left: 10px',
                                 checkboxInput(inputId='var_plots__convert_primary_date_to_categoric',
                                               label="Convert to Categoric",
                                               value=var_plots__default_values[['var_plots__convert_primary_date_to_categoric']],
                                               width=165)
-                            )
-                        ),
-                        shinyjs::hidden(
-                            div(id='var_plots__date_categoric_floor', style="display:inline-block; margin-left: 10px",
-                                selectInput(inputId='var_plots__date_categoric_floor',
-                                            label=NULL,
-                                            choices=global__date_part_vector,
-                                            selected=var_plots__default_values[['var_plots__date_categoric_floor']],
-                                            width=100)
                             )
                         ),
                         shinyjs::hidden(
@@ -487,11 +488,6 @@ shinyUI(fluidPage(theme="custom.css",
                                      inline=TRUE,
                                      width='100%'),
                         # TIME SERIES
-                        selectInput(inputId='var_plots__ts_date_floor',
-                                    label='Date Aggregation:',
-                                    choices=global__date_part_vector,
-                                    selected=var_plots__default_values[['var_plots__ts_date_floor']],
-                                    width='100%'),
                         selectInput(inputId='var_plots__ts_date_break_format',
                                     label='Date Format:',
                                     choices=global__date_break_format_vector,

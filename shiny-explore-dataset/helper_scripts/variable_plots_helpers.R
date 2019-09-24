@@ -308,7 +308,6 @@ helper__restore_defaults_graph_options <- function(session) {
     reset_hide_var_plot_option(session, option_name='var_plots__trend_line', hide_option=FALSE)
     reset_hide_var_plot_option(session, option_name='var_plots__trend_extend_date', hide_option=FALSE)
     reset_hide_var_plot_option(session, option_name='var_plots__trend_line_se', hide_option=FALSE)
-    reset_hide_var_plot_option(session, option_name='var_plots__ts_date_floor', hide_option=FALSE)
     reset_hide_var_plot_option(session, option_name='var_plots__ts_date_break_format', hide_option=FALSE)
     reset_hide_var_plot_option(session, option_name='var_plots__ts_breaks_width', hide_option=FALSE)
     reset_hide_var_plot_option(session, option_name='var_plots__scale_x_log_base_10', hide_option=FALSE)
@@ -372,7 +371,6 @@ hide_graph_options <- function(session) {
     reset_hide_var_plot_option(session, 'var_plots__trend_line')
     reset_hide_var_plot_option(session, 'var_plots__trend_extend_date')
     reset_hide_var_plot_option(session, 'var_plots__trend_line_se')
-    reset_hide_var_plot_option(session, 'var_plots__ts_date_floor')
     reset_hide_var_plot_option(session, 'var_plots__ts_date_break_format')
     reset_hide_var_plot_option(session, 'var_plots__ts_breaks_width')
     reset_hide_var_plot_option(session, 'var_plots__scale_x_log_base_10')
@@ -417,7 +415,6 @@ observeEvent__var_plots__graph_options__any_used__function <- function(input, se
                    input$var_plots__trend_line,
                    input$var_plots__trend_extend_date,
                    input$var_plots__trend_line_se,
-                   input$var_plots__ts_date_floor,
                    input$var_plots__ts_date_break_format,
                    input$var_plots__ts_breaks_width,
                    input$var_plots__scale_x_log_base_10,
@@ -631,7 +628,7 @@ reactive__var_plots__filtered_data__creator <- function(input, dataset, reactive
         if(is_date_type(local_dataset[[input$var_plots__variable]]) && input$var_plots__convert_primary_date_to_categoric) {
 
             local_dataset[[input$var_plots__variable]] <- rt_floor_date_factor(local_dataset[[input$var_plots__variable]],
-                                                                               date_floor=input$var_plots__date_categoric_floor)
+                                                                               date_floor=input$var_plots__ts_date_floor)
         }
 
         return (local_dataset)
@@ -993,6 +990,7 @@ reactive__var_plots__ggplot__creator <- function(input,
                     input$var_plots__facet_variable,
                     input$var_plots__date_conversion_variable,
                     input$var_plots__date_cr__snapshots__group_variable,
+                    input$var_plots__ts_date_floor,
                     input$var_plots__multi_value_delimiter,
                     input$var_plots__numeric_group_comp_variable,
                     input$var_plots__numeric_aggregation_function,
@@ -1166,27 +1164,6 @@ reactive__var_plots__ggplot__creator <- function(input,
         if(primary_variable != global__select_variable &&
                 primary_variable %in% colnames(dataset)) {
 
-            # if the original dataset's primary variable is a date type, let's show the date controls
-            # that allow the user to change the date to a categoric variable
-            if(is_date_type(master_dataset$data[[primary_variable]])) {
-
-                shinyjs::show('var_plots__convert_primary_date_to_categoric')
-
-                if(input$var_plots__convert_primary_date_to_categoric) {
-
-                    shinyjs::show('var_plots__date_categoric_floor')
-
-                } else {
-
-                    shinyjs::hide('var_plots__date_categoric_floor')
-                }
-
-            } else {
-
-                reset_hide_var_plot_option(session, 'var_plots__convert_primary_date_to_categoric')
-                reset_hide_var_plot_option(session, 'var_plots__date_categoric_floor')
-            }
-
             if(is_date_type(dataset[[primary_variable]])) {
 
                 hide_show_date(session, input)
@@ -1248,8 +1225,9 @@ reactive__var_plots__ggplot__creator <- function(input,
 
                     show_boxplot <- numeric_graph_type == 'Boxplot'
                     hide_show_numeric_categoric(session=session,
-                                showing_boxplot=show_boxplot,
-                                has_comparison_variable=!is.null(comparison_variable))
+                                                showing_boxplot=show_boxplot,
+                                                has_comparison_variable=!is.null(comparison_variable),
+                                                original_primary_var_is_date_type=is_date_type(master_dataset$data[[primary_variable]]))
 
                 ##########################################################################################
                 # NULL Or Categoric Secondary Variable
@@ -1258,7 +1236,8 @@ reactive__var_plots__ggplot__creator <- function(input,
 
                     hide_show_categoric_categoric(session,
                                                   input,
-                                                  has_comparison_variable=!is.null(comparison_variable))
+                                                  has_comparison_variable=!is.null(comparison_variable),
+                                                  original_primary_var_is_date_type=is_date_type(master_dataset$data[[primary_variable]]))
                 }
             }
 
@@ -2098,7 +2077,7 @@ clear_variables <- function(session, input, swap_primary_and_comparison=FALSE) {
     updateSelectInput(session, 'var_plots__date_cr__snapshots__group_variable', selected=global__select_variable_optional)
 
     updateCheckboxInput(session, 'var_plots__convert_primary_date_to_categoric', value=var_plots__default_values[['var_plots__convert_primary_date_to_categoric']])
-    updateSelectInput(session, 'var_plots__date_categoric_floor', selected=var_plots__default_values[['var_plots__date_categoric_floor']])
+    updateSelectInput(session, 'var_plots__ts_date_floor', selected=var_plots__default_values[['var_plots__ts_date_floor']])
 
     updateCheckboxInput(session, 'var_plots__numeric_group_comp_variable', value=FALSE)
     updateSelectInput(session,
@@ -2239,6 +2218,7 @@ hide_show_date <- function(session, input) {
     shinyjs::show('var_plots__include_zero_y_axis')
     helper__show_hide_trend_line(session, input)
     shinyjs::show('var_plots__ts_date_floor')
+    shinyjs::show('var_plots__convert_primary_date_to_categoric')
     shinyjs::show('var_plots__ts_date_break_format')
     shinyjs::show('var_plots__ts_breaks_width')
 
@@ -2450,7 +2430,10 @@ hide_show_numeric_numeric <- function(session,
     reset_hide_var_plot_option(session, 'var_plots__multi_value_delimiter')
 }
 
-hide_show_numeric_categoric <- function(session, showing_boxplot, has_comparison_variable) {
+hide_show_numeric_categoric <- function(session,
+                                        showing_boxplot,
+                                        has_comparison_variable,
+                                        original_primary_var_is_date_type) {
     
     log_message('hide_show_numeric_categoric')
 
@@ -2500,6 +2483,19 @@ hide_show_numeric_categoric <- function(session, showing_boxplot, has_comparison
         reset_hide_var_plot_option(session, 'var_plots__facet_variable')
     }
 
+    # if the original dataset's primary variable is a date type, but now is converted to categoric
+    # let's show the date controls that allow the user to change the date to a categoric variable
+    if(original_primary_var_is_date_type) {
+
+        shinyjs::show('var_plots__convert_primary_date_to_categoric')
+        shinyjs::show('var_plots__ts_date_floor')
+
+    } else {
+
+        reset_hide_var_plot_option(session, 'var_plots__convert_primary_date_to_categoric')
+        reset_hide_var_plot_option(session, 'var_plots__ts_date_floor')
+    }
+
     reset_hide_var_plot_option(session, 'var_plots__date_conversion_variable')
     reset_hide_var_plot_option(session, 'var_plots__date_cr__snapshots__group_variable')
     reset_hide_var_plot_option(session, 'var_plots__date_cr__plot_type')
@@ -2529,7 +2525,7 @@ hide_show_numeric_categoric <- function(session, showing_boxplot, has_comparison
     reset_hide_var_plot_option(session, 'var_plots__trend_line')
     reset_hide_var_plot_option(session, 'var_plots__trend_extend_date')
     reset_hide_var_plot_option(session, 'var_plots__trend_line_se')
-    reset_hide_var_plot_option(session, 'var_plots__ts_date_floor')
+    #reset_hide_var_plot_option(session, 'var_plots__ts_date_floor')
     reset_hide_var_plot_option(session, 'var_plots__ts_date_break_format')
     reset_hide_var_plot_option(session, 'var_plots__ts_breaks_width')
     reset_hide_var_plot_option(session, 'var_plots__reverse_stack_order')
@@ -2547,7 +2543,10 @@ hide_show_numeric_categoric <- function(session, showing_boxplot, has_comparison
     reset_hide_var_plot_option(session, 'var_plots__map_borders_regions')
 }
 
-hide_show_categoric_categoric <- function(session, input, has_comparison_variable) {
+hide_show_categoric_categoric <- function(session,
+                                          input,
+                                          has_comparison_variable,
+                                          original_primary_var_is_date_type) {
 
     log_message('hide_show_categoric_categoric')
 
@@ -2605,6 +2604,19 @@ hide_show_categoric_categoric <- function(session, input, has_comparison_variabl
         }
     }
 
+    # if the original dataset's primary variable is a date type, but now is converted to categoric
+    # let's show the date controls that allow the user to change the date to a categoric variable
+    if(original_primary_var_is_date_type) {
+
+        shinyjs::show('var_plots__convert_primary_date_to_categoric')
+        shinyjs::show('var_plots__ts_date_floor')
+
+    } else {
+
+        reset_hide_var_plot_option(session, 'var_plots__convert_primary_date_to_categoric')
+        reset_hide_var_plot_option(session, 'var_plots__ts_date_floor')
+    }
+
     reset_hide_var_plot_option(session, 'var_plots__date_conversion_variable')
     reset_hide_var_plot_option(session, 'var_plots__date_cr__snapshots__group_variable')
     reset_hide_var_plot_option(session, 'var_plots__date_cr__plot_type')
@@ -2648,7 +2660,7 @@ hide_show_categoric_categoric <- function(session, input, has_comparison_variabl
     reset_hide_var_plot_option(session, 'var_plots__trend_line')
     reset_hide_var_plot_option(session, 'var_plots__trend_extend_date')
     reset_hide_var_plot_option(session, 'var_plots__trend_line_se')
-    reset_hide_var_plot_option(session, 'var_plots__ts_date_floor')
+    #reset_hide_var_plot_option(session, 'var_plots__ts_date_floor')
     reset_hide_var_plot_option(session, 'var_plots__ts_date_break_format')
     reset_hide_var_plot_option(session, 'var_plots__ts_breaks_width')
     reset_hide_var_plot_option(session, 'var_plots__histogram_bins')
@@ -2690,7 +2702,7 @@ observe__var_plots__hide_show_uncollapse_on_primary_vars <- function(session, in
             reset_hide_var_plot_option(session, 'var_plots__color_variable')
             reset_hide_var_plot_option(session, 'var_plots__facet_variable')
             reset_hide_var_plot_option(session, 'var_plots__convert_primary_date_to_categoric')
-            reset_hide_var_plot_option(session, 'var_plots__date_categoric_floor')
+            reset_hide_var_plot_option(session, 'var_plots__ts_date_floor')
             reset_hide_var_plot_option(session, 'var_plots__date_conversion_variable')
             reset_hide_var_plot_option(session, 'var_plots__date_cr__snapshots__group_variable')
             reset_hide_var_plot_option(session, 'var_plots__date_cr__plot_type')
@@ -2802,12 +2814,6 @@ update_var_plot_variables_from_url_params <- function(session, params, dataset, 
         log_message_variable('updating convert_primary_date_to_categoric', selected_convert_primary_date_to_categoric)
     }
     updateCheckboxInput(session, 'var_plots__convert_primary_date_to_categoric', value=selected_convert_primary_date_to_categoric)
-
-    if (!is.null(params[['var_plots__date_categoric_floor']])) {
-
-        log_message_variable('updating date_categoric_floor', params[['var_plots__date_categoric_floor']])
-        updateSelectInput(session, 'var_plots__date_categoric_floor', selected=params[['var_plots__date_categoric_floor']])
-    }
 
     # Update Comparison Variable - cache selected for color logic
     #######################################################################
