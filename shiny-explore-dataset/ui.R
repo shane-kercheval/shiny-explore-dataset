@@ -106,6 +106,24 @@ shinyUI(fluidPage(theme="custom.css",
                                     selected=var_plots__default_values[['var_plots__variable']],
                                     width='100%'),
                         shinyjs::hidden(
+                            div(id='var_plots__convert_primary_date_to_categoric',
+                                style='display:inline-block; vertical-align: text-bottom; height:40px',
+                                checkboxInput(inputId='var_plots__convert_primary_date_to_categoric',
+                                              label="Convert to Categoric",
+                                              value=var_plots__default_values[['var_plots__convert_primary_date_to_categoric']],
+                                              width=165)
+                            )
+                        ),
+                        shinyjs::hidden(
+                            div(id='var_plots__date_categoric_floor', style="display:inline-block; margin-left: 10px",
+                                selectInput(inputId='var_plots__date_categoric_floor',
+                                            label=NULL,
+                                            choices=global__date_part_vector,
+                                            selected=var_plots__default_values[['var_plots__date_categoric_floor']],
+                                            width=100)
+                            )
+                        ),
+                        shinyjs::hidden(
                             selectInput(inputId='var_plots__comparison',
                                         label='Secondary Variable',
                                         choices=var_plots__default_values[['var_plots__comparison']],

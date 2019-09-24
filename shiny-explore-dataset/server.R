@@ -139,6 +139,7 @@ shinyServer(function(input, output, session) {
     reactive__var_plots__ggplot <- reactive__var_plots__ggplot__creator(input,
                                                                         session,
                                                                         reactive__var_plots__filtered_data,
+                                                                        reactive__source_data,
                                                                         url_parameter_info,
                                                                         var_plots_graph_options_can_dirty)
     # stores any messages/warnings that ggplot produces when rendering the plot (outputs below the graph
@@ -264,7 +265,8 @@ shinyServer(function(input, output, session) {
                           selected="Default")
     }, suspended=TRUE)
 
-    observeEvent_comparison <- observeEvent(input$var_plots__variable, {
+    observeEvent_comparison <- observeEvent(c(input$var_plots__variable,
+                                              input$var_plots__convert_primary_date_to_categoric), {
 
         req(!isolate(url_parameter_info$currently_updating))  # should never update if we have params (until set to false)
         req(reactive__source_data$data)
@@ -279,7 +281,8 @@ shinyServer(function(input, output, session) {
 
             results <- var_plots__comparison__logic(dataset=reactive__source_data$data,
                                                     primary_variable=input$var_plots__variable,
-                                                    current_value=input$var_plots__comparison)
+                                                    current_value=input$var_plots__comparison,
+                                                    primary_date_converted_to_categoric=input$var_plots__convert_primary_date_to_categoric)
 
             updateSelectInput(session, 'var_plots__comparison',
                               choices=results$choices,
@@ -342,17 +345,19 @@ shinyServer(function(input, output, session) {
         req(!isolate(url_parameter_info$currently_updating))  # should never update if we have params (until set to false)
         req(reactive__source_data$data)
 
-        log_message_block_start("Updating Categoric View Logic")
-        results <- var_plots__categoric_view_type__logic(dataset=reactive__source_data$data,
-                                                         comparison_variable=input$var_plots__comparison,
-                                                         sum_by_variable=input$var_plots__sum_by_variable,
-                                                         count_distinct_variable=input$var_plots__count_distinct_variable,
-                                                         current_value=input$var_plots__categoric_view_type)
+        # if(is_categoric(reactive__source_data$data[[input$var_plots__variable]])) {
 
-        updateSelectInput(session, 'var_plots__categoric_view_type',
-                          choices=results$choices,
-                          selected=results$selected)
+            log_message_block_start("Updating Categoric View Logic")
+            results <- var_plots__categoric_view_type__logic(dataset=reactive__source_data$data,
+                                                             comparison_variable=input$var_plots__comparison,
+                                                             sum_by_variable=input$var_plots__sum_by_variable,
+                                                             count_distinct_variable=input$var_plots__count_distinct_variable,
+                                                             current_value=input$var_plots__categoric_view_type)
 
+            updateSelectInput(session, 'var_plots__categoric_view_type',
+                              choices=results$choices,
+                              selected=results$selected)
+        # }
     }, suspended=TRUE)
 
     # hide/show trend_extend_date

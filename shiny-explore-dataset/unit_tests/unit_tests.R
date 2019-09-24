@@ -1550,19 +1550,36 @@ test_that("setting dynamic variables - comparison", {
     ########
     comparison_selection <- var_plots__comparison__logic(dataset=dataset,
                                                          primary_variable=NULL,
-                                                         current_value=NULL)
+                                                         current_value=NULL,
+                                                         primary_date_converted_to_categoric=FALSE)
     expect_identical(comparison_selection$choices, c(global__select_variable_optional, column_names))
     expect_equal(comparison_selection$selected, global__select_variable_optional)
     
     comparison_selection <- var_plots__comparison__logic(dataset=dataset,
                                                          primary_variable=NULL,
-                                                         current_value=global__select_variable_optional)
+                                                         current_value=global__select_variable_optional,
+                                                         primary_date_converted_to_categoric=FALSE)
     expect_identical(comparison_selection$choices, c(global__select_variable_optional, column_names))
     expect_equal(comparison_selection$selected, global__select_variable_optional)
     
     comparison_selection <- var_plots__comparison__logic(dataset=dataset,
                                                          primary_variable=NULL,
-                                                         current_value="Doesn't Matter Column Name")
+                                                         current_value="Doesn't Matter Column Name",
+                                                         primary_date_converted_to_categoric=FALSE)
+    expect_identical(comparison_selection$choices, c(global__select_variable_optional, column_names))
+    expect_equal(comparison_selection$selected, global__select_variable_optional)
+
+    comparison_selection <- var_plots__comparison__logic(dataset=dataset,
+                                                         primary_variable=NULL,
+                                                         current_value=global__select_variable_optional,
+                                                         primary_date_converted_to_categoric=TRUE)
+    expect_identical(comparison_selection$choices, c(global__select_variable_optional, column_names))
+    expect_equal(comparison_selection$selected, global__select_variable_optional)
+    
+    comparison_selection <- var_plots__comparison__logic(dataset=dataset,
+                                                         primary_variable=NULL,
+                                                         current_value="Doesn't Matter Column Name",
+                                                         primary_date_converted_to_categoric=TRUE)
     expect_identical(comparison_selection$choices, c(global__select_variable_optional, column_names))
     expect_equal(comparison_selection$selected, global__select_variable_optional)
     
@@ -1585,6 +1602,29 @@ test_that("setting dynamic variables - comparison", {
     comparison_selection <- var_plots__comparison__logic(dataset=dataset,
                                                          primary_variable=primary_variable_default,
                                                          current_value="Doesn't Matter Column Name")
+    expect_identical(comparison_selection$choices, c(global__select_variable_optional, column_names))
+    expect_equal(comparison_selection$selected, global__select_variable_optional)
+
+
+    primary_variable_default <- var_plots__default_values[['var_plots__variable']]
+    comparison_selection <- var_plots__comparison__logic(dataset=dataset,
+                                                         primary_variable=primary_variable_default,
+                                                         current_value=NULL,
+                                                         primary_date_converted_to_categoric=TRUE)
+    expect_identical(comparison_selection$choices, c(global__select_variable_optional, column_names))
+    expect_equal(comparison_selection$selected, global__select_variable_optional)
+    
+    comparison_selection <- var_plots__comparison__logic(dataset=dataset,
+                                                         primary_variable=primary_variable_default,
+                                                         current_value=global__select_variable_optional,
+                                                         primary_date_converted_to_categoric=TRUE)
+    expect_identical(comparison_selection$choices, c(global__select_variable_optional, column_names))
+    expect_equal(comparison_selection$selected, global__select_variable_optional)
+    
+    comparison_selection <- var_plots__comparison__logic(dataset=dataset,
+                                                         primary_variable=primary_variable_default,
+                                                         current_value="Doesn't Matter Column Name",
+                                                         primary_date_converted_to_categoric=TRUE)
     expect_identical(comparison_selection$choices, c(global__select_variable_optional, column_names))
     expect_equal(comparison_selection$selected, global__select_variable_optional)
     
@@ -1611,6 +1651,29 @@ test_that("setting dynamic variables - comparison", {
     expect_identical(comparison_selection$choices, c(global__select_variable_optional, column_names))
     expect_equal(comparison_selection$selected, 'phone')
     
+    
+    primary_selection <- 'amount'
+    comparison_selection <- var_plots__comparison__logic(dataset=dataset,
+                                                         primary_variable=primary_selection,
+                                                         current_value=NULL,
+                                                         primary_date_converted_to_categoric=TRUE)
+    expect_identical(comparison_selection$choices, c(global__select_variable_optional, column_names))
+    expect_equal(comparison_selection$selected, global__select_variable_optional)
+    
+    comparison_selection <- var_plots__comparison__logic(dataset=dataset,
+                                                         primary_variable=primary_selection,
+                                                         current_value=global__select_variable_optional,
+                                                         primary_date_converted_to_categoric=TRUE)
+    expect_identical(comparison_selection$choices, c(global__select_variable_optional, column_names))
+    expect_equal(comparison_selection$selected, global__select_variable_optional)
+    
+    comparison_selection <- var_plots__comparison__logic(dataset=dataset,
+                                                         primary_variable=primary_selection,
+                                                         current_value='phone',
+                                                         primary_date_converted_to_categoric=TRUE)
+    expect_identical(comparison_selection$choices, c(global__select_variable_optional, column_names))
+    expect_equal(comparison_selection$selected, 'phone')
+    
     ########
     # Categoric Primary Variable
     # All columns names should be available as possible choices for the comparison
@@ -1633,6 +1696,29 @@ test_that("setting dynamic variables - comparison", {
                                                          current_value='dependents')
     expect_identical(comparison_selection$choices, c(global__select_variable_optional, column_names))
     expect_equal(comparison_selection$selected, 'dependents')
+
+
+    primary_selection <- 'purpose'
+    comparison_selection <- var_plots__comparison__logic(dataset=dataset,
+                                                         primary_variable=primary_selection,
+                                                         current_value=NULL,
+                                                         primary_date_converted_to_categoric=TRUE)
+    expect_identical(comparison_selection$choices, c(global__select_variable_optional, column_names))
+    expect_equal(comparison_selection$selected, global__select_variable_optional)
+    
+    comparison_selection <- var_plots__comparison__logic(dataset=dataset,
+                                                         primary_variable=primary_selection,
+                                                         current_value=global__select_variable_optional,
+                                                         primary_date_converted_to_categoric=TRUE)
+    expect_identical(comparison_selection$choices, c(global__select_variable_optional, column_names))
+    expect_equal(comparison_selection$selected, global__select_variable_optional)
+    
+    comparison_selection <- var_plots__comparison__logic(dataset=dataset,
+                                                         primary_variable=primary_selection,
+                                                         current_value='dependents',
+                                                         primary_date_converted_to_categoric=TRUE)
+    expect_identical(comparison_selection$choices, c(global__select_variable_optional, column_names))
+    expect_equal(comparison_selection$selected, 'dependents')
     
     ########
     # Date Primary Variable
@@ -1640,6 +1726,7 @@ test_that("setting dynamic variables - comparison", {
     ########
     results <- select_preloaded_dataset("Flights", defualt_path = '../')
     dataset <- results$dataset
+    column_names <- colnames(dataset)
     numeric_column_names <- colnames(dataset %>% select_if(is.numeric))
     
     primary_selection <- 'takeoff_datetime'
@@ -1660,6 +1747,41 @@ test_that("setting dynamic variables - comparison", {
                                                          current_value='dep_delay')
     expect_identical(comparison_selection$choices, c(global__select_variable_optional, numeric_column_names))
     expect_equal(comparison_selection$selected, 'dep_delay')
+    
+    # if the date is converted to a categoric, we need to show all variables categoric/numeric
+    primary_selection <- 'takeoff_datetime'
+    comparison_selection <- var_plots__comparison__logic(dataset=dataset,
+                                                         primary_variable=primary_selection,
+                                                         current_value=NULL,
+                                                         primary_date_converted_to_categoric=TRUE)
+    expect_identical(comparison_selection$choices, c(global__select_variable_optional, column_names))
+    expect_equal(comparison_selection$selected, global__select_variable_optional)
+    
+    comparison_selection <- var_plots__comparison__logic(dataset=dataset,
+                                                         primary_variable=primary_selection,
+                                                         current_value=global__select_variable_optional,
+                                                         primary_date_converted_to_categoric=TRUE)
+    expect_identical(comparison_selection$choices, c(global__select_variable_optional, column_names))
+    expect_equal(comparison_selection$selected, global__select_variable_optional)
+    
+    comparison_selection <- var_plots__comparison__logic(dataset=dataset,
+                                                         primary_variable=primary_selection,
+                                                         current_value='dep_delay',
+                                                         primary_date_converted_to_categoric=TRUE)
+    expect_identical(comparison_selection$choices, c(global__select_variable_optional, column_names))
+    expect_equal(comparison_selection$selected, 'dep_delay')
+    
+    # if the current value is categoric, but we switched primary_date_converted_to_categoric off, then
+    # the current value should be switched back to default
+    primary_selection <- 'takeoff_datetime'
+    current_comparison <- 'origin'
+    expect_true(is_categoric(dataset[[current_comparison]]))
+    comparison_selection <- var_plots__comparison__logic(dataset=dataset,
+                                                         primary_variable=primary_selection,
+                                                         current_value=current_comparison,
+                                                         primary_date_converted_to_categoric=FALSE)
+    expect_identical(comparison_selection$choices, c(global__select_variable_optional, numeric_column_names))
+    expect_equal(comparison_selection$selected, global__select_variable_optional)
 })
 
 test_that("setting dynamic variables - color", {
