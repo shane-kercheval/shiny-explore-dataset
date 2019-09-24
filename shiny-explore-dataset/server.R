@@ -132,13 +132,31 @@ shinyServer(function(input, output, session) {
     reactive__var_plots__filtered_data <- reactive__var_plots__filtered_data__creator(input,
                                                                                       reactive__source_data,
                                                                                       reactiveValues__vp_filtering_message)
+
+    # reactive__var_plots__final_dataset takes the master->filtered dataset and applies any additional 
+    # changes to it before it passes it on to be plotted
+    # DO NOT DO ANY ADDITIONAL FILTERING
+    reactive__var_plots__final_dataset <- reactive({
+
+        # update when filtering changes
+        local_dataset <- reactive__var_plots__filtered_data()
+
+        if(is_date_type(local_dataset[[input$var_plots__variable]]) && input$var_plots__convert_primary_date_to_categoric) {
+
+            local_dataset[[input$var_plots__variable]] <- rt_floor_date_factor(local_dataset[[input$var_plots__variable]],
+                                                                               date_floor=input$var_plots__ts_date_floor)
+        }
+
+        return (local_dataset)
+    })
+
     output$var_plots__filtering_messages <- renderPrint__reactiveValues__vp_filtering_message(reactiveValues__vp_filtering_message,
                                                                                               reactive__var_plots__filtered_data)
     
     # creates the ggplot object
     reactive__var_plots__ggplot <- reactive__var_plots__ggplot__creator(input,
                                                                         session,
-                                                                        reactive__var_plots__filtered_data,
+                                                                        reactive__var_plots__final_dataset,
                                                                         reactive__source_data,
                                                                         url_parameter_info,
                                                                         var_plots_graph_options_can_dirty)

@@ -616,19 +616,13 @@ reactive__var_plots__filtered_data__creator <- function(input, dataset, reactive
                                               callback=progress_bar_callback)
                 local_dataset <- filter_results[[1]]
 
-                log_message(format_filtering_message(filter_results[[2]], local_dataset))
+                log_message(format_filtering_message(filter_results[[2]], nrow(local_dataset)))
                 reactive_filter_message_list$value <- filter_results[[2]]
             })
         } else {
 
             log_message_block_start('Not Filtering')
             reactive_filter_message_list$value <- NULL
-        }
-
-        if(is_date_type(local_dataset[[input$var_plots__variable]]) && input$var_plots__convert_primary_date_to_categoric) {
-
-            local_dataset[[input$var_plots__variable]] <- rt_floor_date_factor(local_dataset[[input$var_plots__variable]],
-                                                                               date_floor=input$var_plots__ts_date_floor)
         }
 
         return (local_dataset)
@@ -896,7 +890,7 @@ helper__plot_numeric_categoric <- function(dataset,
                                            color_variable,
                                            facet_variable,
                                            order_by_variable,
-                                           simple_mode,
+                                           convert_primary_date_to_categoric,
                                            filter_factor_lump_number,
                                            histogram_bins,
                                            horizontal_annotations,
@@ -923,6 +917,17 @@ helper__plot_numeric_categoric <- function(dataset,
             temp_order_by_variable <- NULL
         }
 
+        simple_mode <- FALSE
+        ignore_columns <- NULL
+        if(convert_primary_date_to_categoric) {
+
+            # we are ignoring the comparison_variable because if convert_primary_date_to_categoric is TRUE
+            # then that means the primary variable is the but for this function, it is passed in as the 
+            # comparison variable because we always do num/categoric for this 
+            ignore_columns <- comparison_variable
+            simple_mode <- TRUE
+        }
+
         annotation_x_location <- 0.5
         if(is.null(comparison_variable)) {
             # need this logic because the position changes depending on if it is a single boxplot or multiple
@@ -935,7 +940,8 @@ helper__plot_numeric_categoric <- function(dataset,
                    color_variable,
                    facet_variable,
                    temp_order_by_variable) %>%
-            mutate_factor_lump(factor_lump_number=filter_factor_lump_number) %>%
+            mutate_factor_lump(factor_lump_number=filter_factor_lump_number,
+                               ignore_columns=ignore_columns) %>%
             mutate_factor_reorder(variable_to_order_by=order_by_variable,
                                   variable_to_order=comparison_variable) %>%
             rt_explore_plot_boxplot(variable=primary_variable,
@@ -1868,7 +1874,7 @@ create_ggplot_object <- function(dataset,
                                                                 color_variable=color_variable,
                                                                 facet_variable=facet_variable,
                                                                 order_by_variable=order_by_variable,
-                                                                simple_mode=FALSE,
+                                                                convert_primary_date_to_categoric=convert_primary_date_to_categoric,
                                                                 filter_factor_lump_number=filter_factor_lump_number,
                                                                 histogram_bins=histogram_bins,
                                                                 horizontal_annotations=horizontal_annotations,
@@ -1886,11 +1892,6 @@ create_ggplot_object <- function(dataset,
         ##############################################################################################
         } else {
 
-            simple_mode <- FALSE
-            if(convert_primary_date_to_categoric) {
-
-                simple_mode <- TRUE
-            }
             ##########################################################################################
             # Numeric Secondary Variable
             ##########################################################################################
@@ -1904,7 +1905,7 @@ create_ggplot_object <- function(dataset,
                                                                 color_variable=color_variable,
                                                                 facet_variable=facet_variable,
                                                                 order_by_variable=order_by_variable,
-                                                                simple_mode=simple_mode,
+                                                                convert_primary_date_to_categoric=convert_primary_date_to_categoric,
                                                                 filter_factor_lump_number=filter_factor_lump_number,
                                                                 histogram_bins=histogram_bins,
                                                                 horizontal_annotations=horizontal_annotations,
@@ -1946,10 +1947,12 @@ create_ggplot_object <- function(dataset,
                     show_dual_axes <- FALSE
                 }
 
+                simple_mode <- FALSE
                 ignore_columns <- count_distinct_variable
                 if(convert_primary_date_to_categoric) {
 
                     ignore_columns <- c(ignore_columns, primary_variable)
+                    simple_mode <- TRUE
                 }
 
                 ggplot_object <- dataset %>%
@@ -2526,7 +2529,6 @@ hide_show_numeric_categoric <- function(session,
     reset_hide_var_plot_option(session, 'var_plots__trend_line')
     reset_hide_var_plot_option(session, 'var_plots__trend_extend_date')
     reset_hide_var_plot_option(session, 'var_plots__trend_line_se')
-    #reset_hide_var_plot_option(session, 'var_plots__ts_date_floor')
     reset_hide_var_plot_option(session, 'var_plots__ts_date_break_format')
     reset_hide_var_plot_option(session, 'var_plots__ts_breaks_width')
     reset_hide_var_plot_option(session, 'var_plots__reverse_stack_order')
@@ -2661,7 +2663,6 @@ hide_show_categoric_categoric <- function(session,
     reset_hide_var_plot_option(session, 'var_plots__trend_line')
     reset_hide_var_plot_option(session, 'var_plots__trend_extend_date')
     reset_hide_var_plot_option(session, 'var_plots__trend_line_se')
-    #reset_hide_var_plot_option(session, 'var_plots__ts_date_floor')
     reset_hide_var_plot_option(session, 'var_plots__ts_date_break_format')
     reset_hide_var_plot_option(session, 'var_plots__ts_breaks_width')
     reset_hide_var_plot_option(session, 'var_plots__histogram_bins')
@@ -2755,12 +2756,12 @@ renderPrint__reactiveValues__vp__ggplot_message <- function(message) {
 renderPrint__reactiveValues__vp_filtering_message <- function(reactive_filter_message_list, dataset) {
 
     renderPrint({
-        cat(format_filtering_message(reactive_filter_message_list$value, dataset()))
+        cat(format_filtering_message(reactive_filter_message_list$value, nrow(dataset())))
     })
 }
 
 #' @param filter_message_list list object that contains a string value for each variable being filtered
-format_filtering_message <- function(filter_message_list, dataset) {
+format_filtering_message <- function(filter_message_list, num_rows_remaining_dataset) {
 
     message <- NULL
     
@@ -2768,7 +2769,7 @@ format_filtering_message <- function(filter_message_list, dataset) {
 
         message <- paste0("Filtering Variables:\n\n", paste0(filter_message_list, collapse="\n"))
 
-        message <- paste0(message, "\n\n", my_number_format(nrow(dataset)), " Records Remaining")
+        message <- paste0(message, "\n\n", my_number_format(num_rows_remaining_dataset), " Records Remaining")
     }
 
     return (message)
