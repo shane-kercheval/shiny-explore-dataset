@@ -690,8 +690,9 @@ var_plots__comparison__logic <- function(dataset,
        # if the current SELECTED comparison is categoric, it means that we were converting the date to categoric
        # but if primary_date_converted_to_categoric is FALSE it means we switched it off and the current
        # selection is no longer valid
-       (is_date_type(dataset[[primary_variable]]) && 
-        is_categoric(dataset[[current_comparison]]) && 
+       (is_date_type(dataset[[primary_variable]]) &&
+        !is.null(current_value) &&
+        is_categoric(dataset[[current_value]]) && 
         !is.null(primary_date_converted_to_categoric) &&
         primary_date_converted_to_categoric == FALSE)) {
 
