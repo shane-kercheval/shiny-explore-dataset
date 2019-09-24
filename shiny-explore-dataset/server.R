@@ -132,6 +132,8 @@ shinyServer(function(input, output, session) {
     reactive__var_plots__filtered_data <- reactive__var_plots__filtered_data__creator(input,
                                                                                       reactive__source_data,
                                                                                       reactiveValues__vp_filtering_message)
+    output$var_plots__filtering_messages <- renderPrint__reactiveValues__vp_filtering_message(reactiveValues__vp_filtering_message,
+                                                                                              reactive__var_plots__filtered_data)
 
     # reactive__var_plots__final_dataset takes the master->filtered dataset and applies any additional 
     # changes to it before it passes it on to be plotted
@@ -149,9 +151,6 @@ shinyServer(function(input, output, session) {
 
         return (local_dataset)
     })
-
-    output$var_plots__filtering_messages <- renderPrint__reactiveValues__vp_filtering_message(reactiveValues__vp_filtering_message,
-                                                                                              reactive__var_plots__filtered_data)
     
     # creates the ggplot object
     reactive__var_plots__ggplot <- reactive__var_plots__ggplot__creator(input,
