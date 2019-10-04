@@ -1197,8 +1197,9 @@ reactive__var_plots__ggplot__creator <- function(input,
 
                     show_boxplot <- numeric_graph_type == 'Boxplot'
                     hide_show_numeric_categoric(session=session,
-                                showing_boxplot=show_boxplot,
-                                has_comparison_variable=!is.null(comparison_variable))
+                                                showing_boxplot=show_boxplot,
+                                                has_comparison_variable=!is.null(comparison_variable),
+                                                original_primary_var_is_date_type=is_date_type(master_dataset$data[[primary_variable]]))
                 }
 
             ##############################################################################################
