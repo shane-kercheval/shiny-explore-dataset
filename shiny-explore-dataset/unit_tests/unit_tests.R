@@ -2245,7 +2245,6 @@ test_that("create_ggplot_plot - numeric categoric", {
                                         num_cat_aggregation_type = 'Median')
     test_save_plot(file_name='graphs/plot__numeric_categoric__median.png', plot=plot_object)
 })
-    
 
 test_that("create_ggplot_plot - date projection", {
     context("create_ggplot_plot - date projection")
