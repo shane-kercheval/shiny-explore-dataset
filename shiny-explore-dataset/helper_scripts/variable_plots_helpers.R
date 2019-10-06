@@ -881,12 +881,13 @@ custom_max_min <- function(x_vector, y_value) {
     max(min(x_vector, na.rm=TRUE), y_value, na.rm=TRUE)
 }
 
-#' @param local_primary_variable numeric
-#' @param local_comparison_variable categoric
+#' @param primary_variable numeric
+#' @param comparison_variable categoric
 helper__plot_numeric_categoric <- function(dataset,
                                            numeric_graph_type,
                                            primary_variable,
                                            comparison_variable,
+                                           aggregation_type,
                                            color_variable,
                                            facet_variable,
                                            order_by_variable,
@@ -903,37 +904,77 @@ helper__plot_numeric_categoric <- function(dataset,
                                            base_size
                                            ) {
 
+    if(order_by_variable %in% colnames(dataset)) {
+        
+        temp_order_by_variable <- order_by_variable
+        
+    } else {
+        
+        temp_order_by_variable <- NULL
+    }
 
-    show_boxplot <- numeric_graph_type == 'Boxplot'
+    if(is.null(comparison_variable)) {
+        
+        show_boxplot <- numeric_graph_type == 'Boxplot'
+        
+        if(show_boxplot) {
 
-    if(show_boxplot) {
-
-        if(order_by_variable %in% colnames(dataset)) {
+            # the position changes depending on if it is a single boxplot or multiple
+            annotation_x_location <- -0.9
             
-            temp_order_by_variable <- order_by_variable
-
+            ggplot_object <- dataset %>%
+                select(primary_variable,
+                       comparison_variable,
+                       color_variable,
+                       facet_variable,
+                       temp_order_by_variable) %>%
+                mutate_factor_lump(factor_lump_number=filter_factor_lump_number) %>%
+                mutate_factor_reorder(variable_to_order_by=order_by_variable,
+                                      variable_to_order=comparison_variable) %>%
+                rt_explore_plot_boxplot(variable=primary_variable,
+                                        comparison_variable=comparison_variable,
+                                        color_variable=color_variable,
+                                        facet_variable=facet_variable,
+                                        #simple_mode=simple_mode,
+                                        y_zoom_min=y_zoom_min,
+                                        y_zoom_max=y_zoom_max,
+                                        base_size=base_size) %>%
+                scale_axes_log10(scale_x=FALSE,
+                                 scale_y=scale_y_log_base_10) %>%
+                add_horizontal_annotations(horizontal_annotations,
+                                           x_location=annotation_x_location)
+            
         } else {
-
-            temp_order_by_variable <- NULL
+            
+            ggplot_object <- dataset %>% select(primary_variable, comparison_variable) %>%
+                mutate_factor_lump(factor_lump_number=filter_factor_lump_number) %>%
+                rt_explore_plot_histogram(variable=primary_variable,
+                                          comparison_variable=comparison_variable,
+                                          num_bins=histogram_bins,
+                                          x_zoom_min=x_zoom_min,
+                                          x_zoom_max=x_zoom_max,
+                                          base_size=base_size) %>%
+                scale_axes_log10(scale_x=scale_x_log_base_10,
+                                 scale_y=FALSE)
         }
+        
+        
+    } else {
 
-        simple_mode <- FALSE
         ignore_columns <- NULL
+        simple_mode <- FALSE
         if(convert_primary_date_to_categoric) {
-
+            
             # we are ignoring the comparison_variable because if convert_primary_date_to_categoric is TRUE
-            # then that means the primary variable is the but for this function, it is passed in as the 
+            # then that means the primary variable is a date the but for this function, it is passed in as the 
             # comparison variable because we always do num/categoric for this 
             ignore_columns <- comparison_variable
             simple_mode <- TRUE
         }
-
+        
+        # the position changes depending on if it is a single boxplot or multiple
         annotation_x_location <- 0.5
-        if(is.null(comparison_variable)) {
-            # need this logic because the position changes depending on if it is a single boxplot or multiple
-            annotation_x_location <- -0.9
-        }
-
+        
         ggplot_object <- dataset %>%
             select(primary_variable,
                    comparison_variable,
@@ -944,33 +985,22 @@ helper__plot_numeric_categoric <- function(dataset,
                                ignore_columns=ignore_columns) %>%
             mutate_factor_reorder(variable_to_order_by=order_by_variable,
                                   variable_to_order=comparison_variable) %>%
-            rt_explore_plot_boxplot(variable=primary_variable,
-                                    comparison_variable=comparison_variable,
-                                    color_variable=color_variable,
-                                    facet_variable=facet_variable,
-                                    simple_mode=simple_mode,
-                                    y_zoom_min=y_zoom_min,
-                                    y_zoom_max=y_zoom_max,
-                                    base_size=base_size) %>%
+            rt_explore_plot_categoric_numeric_aggregation(categoric_variable=comparison_variable,
+                                                          numeric_variable=primary_variable,
+                                                          aggregation_type=aggregation_type,
+                                                          color_variable=color_variable,
+                                                          facet_variable=facet_variable,
+                                                          show_variable_totals=TRUE,
+                                                          show_comparison_totals=TRUE,
+                                                          simple_mode=simple_mode,
+                                                          base_size=base_size)  %>%
             scale_axes_log10(scale_x=FALSE,
                              scale_y=scale_y_log_base_10) %>%
-            add_horizontal_annotations(horizontal_annotations,
-                                       x_location=annotation_x_location)
-
-    } else {
-
-        ggplot_object <- dataset %>% select(primary_variable, comparison_variable) %>%
-            mutate_factor_lump(factor_lump_number=filter_factor_lump_number) %>%
-            rt_explore_plot_histogram(variable=primary_variable,
-                                      comparison_variable=comparison_variable,
-                                      num_bins=histogram_bins,
-                                      x_zoom_min=x_zoom_min,
-                                      x_zoom_max=x_zoom_max,
-                                      base_size=base_size) %>%
-            scale_axes_log10(scale_x=scale_x_log_base_10,
-                             scale_y=FALSE)
+            add_horizontal_annotations(horizontal_annotations, x_location=annotation_x_location)
     }
+    
 
+    
     return (ggplot_object)
 }
 
@@ -989,6 +1019,7 @@ reactive__var_plots__ggplot__creator <- function(input,
                     dataset(),
                     input$var_plots__variable,
                     input$var_plots__comparison,
+                    input$var_plots__num_cat_aggregation_type,
                     input$var_plots__numeric_aggregation,
                     input$var_plots__sum_by_variable,
                     input$var_plots__count_distinct_variable,
@@ -1026,7 +1057,6 @@ reactive__var_plots__ggplot__creator <- function(input,
         updateTextInput(session, 'var_plots__mock_input', value=runif(1, 0, 1000))
 
         log_message_block_start('Preparing to Create ggplot Object')
-
         
         primary_variable <- input$var_plots__variable
         numeric_aggregation <- input$var_plots__numeric_aggregation
@@ -1036,6 +1066,7 @@ reactive__var_plots__ggplot__creator <- function(input,
         comparison_variable <- null_if_select_variable_optional(input$var_plots__comparison)
         # these can actually be NULL (unlike comparison_variable which is req)
         # these can't be req because they aren't even shown initially
+        num_cat_aggregation_type <- input$var_plots__num_cat_aggregation_type
         sum_by_variable <- null_if_select_variable_optional(input$var_plots__sum_by_variable)
         count_distinct_variable <- null_if_select_variable_optional(input$var_plots__count_distinct_variable)
         size_variable <- null_if_select_variable_optional(input$var_plots__size_variable)
@@ -1183,8 +1214,7 @@ reactive__var_plots__ggplot__creator <- function(input,
                 ##########################################################################################
                 # Numeric Secondary Variable
                 ##########################################################################################
-                if(!is.null(comparison_variable) &&
-                        is.numeric(dataset[[comparison_variable]])) {
+                if(!is.null(comparison_variable) && is.numeric(dataset[[comparison_variable]])) {
 
                     hide_show_numeric_numeric(session, 
                                               numeric_group_comp_variable,
@@ -1228,8 +1258,7 @@ reactive__var_plots__ggplot__creator <- function(input,
                 ##########################################################################################
                 # Numeric Secondary Variable
                 ##########################################################################################
-                if(!is.null(comparison_variable) &&
-                        is.numeric(dataset[[comparison_variable]])) {
+                if(!is.null(comparison_variable) && is.numeric(dataset[[comparison_variable]])) {
 
                     show_boxplot <- numeric_graph_type == 'Boxplot'
                     hide_show_numeric_categoric(session=session,
@@ -1257,6 +1286,7 @@ reactive__var_plots__ggplot__creator <- function(input,
         ggplot_object <- create_ggplot_object(dataset=dataset,
                                               primary_variable=primary_variable,
                                               comparison_variable=comparison_variable,
+                                              num_cat_aggregation_type=num_cat_aggregation_type,
                                               sum_by_variable=sum_by_variable,
                                               count_distinct_variable=count_distinct_variable,
                                               size_variable=size_variable,
@@ -1354,9 +1384,13 @@ reactive__var_plots__ggplot__creator <- function(input,
     })
 }
 
+#' @param convert_primary_date_to_categoric doesn't actually convert the variable (that logic is in server.R);
+#'      but rather it is an indication that, if the primary variable is categoric, it was actually originally
+#'      a date, and we should adjust the graphs accordingly e.g. simple_mode (i.e. adjust color scheme)
 create_ggplot_object <- function(dataset,
                                  primary_variable=NULL,
                                  comparison_variable=NULL,
+                                 num_cat_aggregation_type='Total',
                                  sum_by_variable=NULL,
                                  count_distinct_variable=NULL,
                                  size_variable=NULL,
@@ -1439,6 +1473,7 @@ create_ggplot_object <- function(dataset,
 
         log_message_variable('primary_variable', primary_variable)
         log_message_variable('comparison_variable', comparison_variable)
+        log_message_variable('num_cat_aggregation_type', num_cat_aggregation_type)
         log_message_variable('sum_by_variable', sum_by_variable)
         log_message_variable('count_distinct_variable', count_distinct_variable)
         log_message_variable('size_variable', size_variable)
@@ -1872,6 +1907,7 @@ create_ggplot_object <- function(dataset,
                                                                 # same as above, except we need to swap the numeric/categoric variables
                                                                 primary_variable=primary_variable,
                                                                 comparison_variable=comparison_variable,
+                                                                aggregation_type=num_cat_aggregation_type,
                                                                 color_variable=color_variable,
                                                                 facet_variable=facet_variable,
                                                                 order_by_variable=order_by_variable,
@@ -1903,6 +1939,7 @@ create_ggplot_object <- function(dataset,
                                                                 # same as above, except we need to swap the numeric/categoric variables
                                                                 primary_variable=comparison_variable,
                                                                 comparison_variable=primary_variable,
+                                                                aggregation_type=num_cat_aggregation_type,
                                                                 color_variable=color_variable,
                                                                 facet_variable=facet_variable,
                                                                 order_by_variable=order_by_variable,
@@ -2073,6 +2110,7 @@ clear_variables <- function(session, input, swap_primary_and_comparison=FALSE) {
         updateSelectInput(session, 'var_plots__comparison', selected=global__select_variable_optional)
     }
 
+    updateSelectInput(session, 'var_plots__num_cat_aggregation_type', selected=var_plots__default_values[['var_plots__num_cat_aggregation_type']])
     updateSelectInput(session, 'var_plots__sum_by_variable', selected=global__select_variable_optional)
     updateSelectInput(session, 'var_plots__count_distinct_variable', selected=global__select_variable_optional)
     updateSelectInput(session, 'var_plots__color_variable', selected=global__select_variable_optional)
@@ -2313,6 +2351,7 @@ hide_show_date <- function(session, input) {
     reset_hide_var_plot_option(session, 'var_plots__categoric_view_type')
     reset_hide_var_plot_option(session, 'var_plots__numeric_graph_type')
     reset_hide_var_plot_option(session, 'var_plots__sum_by_variable')
+    reset_hide_var_plot_option(session, 'var_plots__num_cat_aggregation_type')
     reset_hide_var_plot_option(session, 'var_plots__count_distinct_variable')
     reset_hide_var_plot_option(session, 'var_plots__multi_value_delimiter')
     updateCollapse(session, 'var_plots__bscollapse', close="Map Options")
@@ -2431,16 +2470,21 @@ hide_show_numeric_numeric <- function(session,
     reset_hide_var_plot_option(session, 'var_plots__categoric_view_type')
     reset_hide_var_plot_option(session, 'var_plots__numeric_graph_type')
     reset_hide_var_plot_option(session, 'var_plots__sum_by_variable')
+    reset_hide_var_plot_option(session, 'var_plots__num_cat_aggregation_type')
     reset_hide_var_plot_option(session, 'var_plots__count_distinct_variable')
     reset_hide_var_plot_option(session, 'var_plots__multi_value_delimiter')
 }
 
+#' always numeric primary variable, may or may not be have categoric comparison variable
 hide_show_numeric_categoric <- function(session,
                                         showing_boxplot,
                                         has_comparison_variable,
                                         original_primary_var_is_date_type) {
     
     log_message('hide_show_numeric_categoric')
+    log_message_variable('showing_boxplot', showing_boxplot)
+    log_message_variable('has_comparison_variable', has_comparison_variable)
+    log_message_variable('original_primary_var_is_date_type', original_primary_var_is_date_type)
 
     updateSelectInput(session, 'var_plots__comparison', label="Secondary Variable")
 
@@ -2448,46 +2492,61 @@ hide_show_numeric_categoric <- function(session,
     shinyjs::show('var_plots__variables_buttons_clear')
     shinyjs::show('var_plots__variables_buttons_swap')
     shinyjs::hide('var_plots__color_facet_buttons_swap')
-    
-    # could be a boxplot or a histogram; if it is a boxplot, we want to show y-axis-controls, otherwise x-axis
-    if(showing_boxplot) {
 
-        shinyjs::show('var_plots__scale_y_log_base_10')
-        shinyjs::show('var_plots__y_zoom_min')
-        shinyjs::show('var_plots__y_zoom_max')
+    if(has_comparison_variable) {
+        # i.e. has categoric comparison
+
+        shinyjs::show('var_plots__num_cat_aggregation_type')
+        reset_hide_var_plot_option(session, 'var_plots__numeric_graph_type')
+
+        shinyjs::show('var_plots__color_variable')
+        shinyjs::show('var_plots__order_by_variable')
+        shinyjs::show('var_plots__facet_variable')
+        shinyjs::show('var_plots__color_facet_buttons_swap')
+
         reset_hide_var_plot_option(session, 'var_plots__histogram_bins')
         reset_hide_var_plot_option(session, 'var_plots__scale_x_log_base_10')
         reset_hide_var_plot_option(session, 'var_plots__x_zoom_min')
         reset_hide_var_plot_option(session, 'var_plots__x_zoom_max')
-
-        if(has_comparison_variable) {
-
-            shinyjs::show('var_plots__color_variable')
-            shinyjs::show('var_plots__order_by_variable')
-            shinyjs::show('var_plots__facet_variable')
-            shinyjs::show('var_plots__color_facet_buttons_swap')
-
-        } else {
-
-            reset_hide_var_plot_option(session, 'var_plots__color_variable')
-            reset_hide_var_plot_option(session, 'var_plots__order_by_variable')
-            reset_hide_var_plot_option(session, 'var_plots__facet_variable')
-            shinyjs::hide('var_plots__color_facet_buttons_swap')
-        }
-
-    } else {
-
-        shinyjs::show('var_plots__histogram_bins')
-        shinyjs::show('var_plots__scale_x_log_base_10')
-        shinyjs::show('var_plots__x_zoom_min')
-        shinyjs::show('var_plots__x_zoom_max')
         reset_hide_var_plot_option(session, 'var_plots__scale_y_log_base_10')
         reset_hide_var_plot_option(session, 'var_plots__y_zoom_min')
         reset_hide_var_plot_option(session, 'var_plots__y_zoom_max')
-        reset_hide_var_plot_option(session, 'var_plots__color_variable')
-        reset_hide_var_plot_option(session, 'var_plots__facet_variable')
-    }
 
+    } else {
+        # else single numeric boxplot/histogram
+
+        reset_hide_var_plot_option(session, 'var_plots__color_variable')
+        reset_hide_var_plot_option(session, 'var_plots__order_by_variable')
+        reset_hide_var_plot_option(session, 'var_plots__facet_variable')
+        shinyjs::hide('var_plots__color_facet_buttons_swap')
+
+        shinyjs::show('var_plots__numeric_graph_type')
+        reset_hide_var_plot_option(session, 'var_plots__num_cat_aggregation_type')
+
+        # could be a boxplot or a histogram; if it is a boxplot, we want to show y-axis-controls, otherwise x-axis
+        if(showing_boxplot) {
+
+            shinyjs::show('var_plots__scale_y_log_base_10')
+            shinyjs::show('var_plots__y_zoom_min')
+            shinyjs::show('var_plots__y_zoom_max')
+            reset_hide_var_plot_option(session, 'var_plots__histogram_bins')
+            reset_hide_var_plot_option(session, 'var_plots__scale_x_log_base_10')
+            reset_hide_var_plot_option(session, 'var_plots__x_zoom_min')
+            reset_hide_var_plot_option(session, 'var_plots__x_zoom_max')
+
+        } else {
+
+            shinyjs::show('var_plots__histogram_bins')
+            shinyjs::show('var_plots__scale_x_log_base_10')
+            shinyjs::show('var_plots__x_zoom_min')
+            shinyjs::show('var_plots__x_zoom_max')
+            reset_hide_var_plot_option(session, 'var_plots__scale_y_log_base_10')
+            reset_hide_var_plot_option(session, 'var_plots__y_zoom_min')
+            reset_hide_var_plot_option(session, 'var_plots__y_zoom_max')
+            reset_hide_var_plot_option(session, 'var_plots__color_variable')
+            reset_hide_var_plot_option(session, 'var_plots__facet_variable')
+        }
+    }
     # if the original dataset's primary variable is a date type, but now is converted to categoric
     # let's show the date controls that allow the user to change the date to a categoric variable
     if(original_primary_var_is_date_type) {
@@ -2523,7 +2582,6 @@ hide_show_numeric_categoric <- function(session,
     shinyjs::show('var_plots__base_size')
     reset_hide_var_plot_option(session, 'var_plots__vertical_annotations')
     shinyjs::show('var_plots__horizontal_annotations')
-    shinyjs::show('var_plots__numeric_graph_type')
 
     reset_hide_var_plot_option(session, 'var_plots__transparency')
     reset_hide_var_plot_option(session, 'var_plots__jitter')
@@ -2634,6 +2692,7 @@ hide_show_categoric_categoric <- function(session,
     reset_hide_var_plot_option(session, 'var_plots__include_zero_y_axis')
     reset_hide_var_plot_option(session, 'var_plots__size_variable')
     reset_hide_var_plot_option(session, 'var_plots__label_variables')
+    reset_hide_var_plot_option(session, 'var_plots__num_cat_aggregation_type')
     reset_hide_var_plot_option(session, 'var_plots__numeric_group_comp_variable')
     reset_hide_var_plot_option(session, 'var_plots__numeric_aggregation_function')
     reset_hide_var_plot_option(session, 'var_plots__numeric_aggregation_count_minimum')
@@ -2695,6 +2754,7 @@ observe__var_plots__hide_show_uncollapse_on_primary_vars <- function(session, in
             reset_hide_var_plot_option(session, 'var_plots__comparison')
             reset_hide_var_plot_option(session, 'var_plots__numeric_aggregation')
             reset_hide_var_plot_option(session, 'var_plots__sum_by_variable')
+            reset_hide_var_plot_option(session, 'var_plots__num_cat_aggregation_type')
             reset_hide_var_plot_option(session, 'var_plots__count_distinct_variable')
             reset_hide_var_plot_option(session, 'var_plots__multi_value_delimiter')
             reset_hide_var_plot_option(session, 'var_plots__size_variable')
@@ -2880,7 +2940,10 @@ update_var_plot_variables_from_url_params <- function(session, params, dataset, 
     updateSelectInput(session, 'var_plots__sum_by_variable',
                       choices=c(global__select_variable_optional, numeric_column_names),
                       selected=selected_sum_by_variable)
-
+    
+    #######################################################################
+    # Update Count-Distinct Variable
+    #######################################################################
     selected_count_distinct_variable <- global__select_variable_optional
     if (!is.null(params[['var_plots__count_distinct_variable']])) {
 
@@ -3050,6 +3113,10 @@ update_var_plot_variables_from_url_params <- function(session, params, dataset, 
     if (!is.null(params[['var_plots__numeric_graph_type']])) {
         log_message_variable('updating numeric_graph_type', params[['var_plots__numeric_graph_type']])
         updateSelectInput(session, 'var_plots__numeric_graph_type', selected=params[['var_plots__numeric_graph_type']])
+    }
+    if (!is.null(params[['var_plots__num_cat_aggregation_type']])) {
+        log_message_variable('updating num_cat_aggregation_type', params[['var_plots__num_cat_aggregation_type']])
+        updateSelectInput(session, 'var_plots__num_cat_aggregation_type', selected=params[['var_plots__num_cat_aggregation_type']])
     }
     if (!is.null(params[['var_plots__reverse_stack_order']])) {
         log_message_variable('updating show_variable_totals', params[['var_plots__reverse_stack_order']])

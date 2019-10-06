@@ -23,6 +23,7 @@ names(global__date_cr_color_or_facet) <- c("Color", "Facet")
 global__date_cr__unit_options <- c('mins', 'hours', 'days', 'weeks')
 names(global__date_cr__unit_options) <- c("Minutes", "Hours", "Days", "Weeks")
 
+global__num_cat_aggregation_type <- c("Total", "Mean", "Average Value Per Record", "Median", "Boxplot")
 
 global__url_params_filter_prefix <- '!!_'
 
@@ -30,6 +31,7 @@ var_plots__default_values <- list(
 
     'var_plots__variable' = global__select_variable,
     'var_plots__comparison' = global__select_variable_optional,
+    'var_plots__num_cat_aggregation_type' = global__num_cat_aggregation_type[1],
     'var_plots__sum_by_variable' = global__select_variable_optional,
     'var_plots__count_distinct_variable' = global__select_variable_optional,
     'var_plots__color_variable' = global__select_variable_optional,
@@ -97,6 +99,7 @@ var_plots__variable_types <- list(
 
     'var_plots__variable' = 'updateSelectInput',
     'var_plots__comparison' = 'updateSelectInput',
+    'var_plots__num_cat_aggregation_type' = 'updateSelectInput',
     'var_plots__sum_by_variable' = 'updateSelectInput',
     'var_plots__count_distinct_variable' = 'updateSelectInput',
     'var_plots__color_variable' = 'updateSelectInput',

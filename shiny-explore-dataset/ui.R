@@ -132,6 +132,13 @@ shinyUI(fluidPage(theme="custom.css",
                                         width='100%')
                         ),
                         shinyjs::hidden(
+                            selectInput(inputId='var_plots__num_cat_aggregation_type',
+                                        label='Aggregation Type',
+                                        choices=global__num_cat_aggregation_type,
+                                        selected=var_plots__default_values[['var_plots__num_cat_aggregation_type']],
+                                        width='100%')
+                        ),
+                        shinyjs::hidden(
                             checkboxInput(inputId='var_plots__numeric_group_comp_variable',
                                           label='Group Secondary Variable',
                                           value=var_plots__default_values[['var_plots__numeric_group_comp_variable']],
