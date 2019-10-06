@@ -681,7 +681,7 @@ shinyUI(fluidPage(theme="custom.css",
                 verbatimTextOutput(outputId='var_plots__filtering_messages'),
                 verbatimTextOutput(outputId='var_plots__ggplot_messages'),
                 shinyjs::hidden(div(id='var_plots__div__buttons_below_graphs',
-                    actionButton(inputId='var_plots__generate_link', "Generate Link (Beta)"),
+                    actionButton(inputId='var_plots__generate_link', "Generate Link"),
                     actionButton(inputId='var_plots__clear_all_settings', label='Clear All Settings')
                 ))
             )
