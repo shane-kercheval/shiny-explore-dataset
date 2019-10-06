@@ -2312,6 +2312,42 @@ test_that("create_ggplot_plot - date projection - POSIXct", {
     test_save_plot(file_name='graphs/plot__time_series__projection__ci__POSIXct.png', plot=plot_object)
 })
 
+test_that("create_ggplot_plot - convert date to categoric", {
+    context("create_ggplot_plot - convert date to categoric")
+    
+    global__should_log_message <<- FALSE
+    dataset <- select_preloaded_dataset("Flights", defualt_path = '../')$dataset
+    primary_variable <- 'takeoff_datetime'
+    dataset[[primary_variable]] <- rt_floor_date_factor(dataset[[primary_variable]], date_floor='month')
+    
+    
+    plot_object <- create_ggplot_object(dataset = dataset,
+                                        primary_variable = primary_variable,
+                                        convert_primary_date_to_categoric=TRUE)
+    test_save_plot(file_name='graphs/plot__date_as_categoric__prim.png', plot=plot_object)
+    
+    plot_object <- create_ggplot_object(dataset = dataset,
+                                        primary_variable = primary_variable,
+                                        comparison_variable = 'dep_delay',
+                                        convert_primary_date_to_categoric=TRUE)
+    test_save_plot(file_name='graphs/plot__date_as_categoric__prim_num.png', plot=plot_object)
+    
+    plot_object <- create_ggplot_object(dataset = dataset,
+                                        primary_variable = primary_variable,
+                                        comparison_variable = 'dep_delay',
+                                        num_cat_aggregation_type = 'Average Value Per Record',
+                                        convert_primary_date_to_categoric=TRUE)
+    test_save_plot(file_name='graphs/plot__date_as_categoric__prim_num_avg.png', plot=plot_object)
+    
+    plot_object <- create_ggplot_object(dataset = dataset,
+                                        primary_variable = primary_variable,
+                                        comparison_variable = 'origin',
+                                        categoric_view_type = "Stack",
+                                        convert_primary_date_to_categoric=TRUE)
+    test_save_plot(file_name='graphs/plot__date_as_categoric__prim_cat_stack.png', plot=plot_object)
+})
+
+
 test_that("create_ggplot_plot - bar", { 
     context("create_ggplot_plot - bar")
     
