@@ -2211,6 +2211,42 @@ test_that("create_ggplot_plot - numeric", {
     test_save_plot(file_name='graphs/plot__scatter_options.png', plot=plot_object)
 })
 
+test_that("create_ggplot_plot - numeric categoric", {
+    context("create_ggplot_plot - numeric categoric")
+  
+    global__should_log_message <<- FALSE
+    dataset <- select_preloaded_dataset("Credit", defualt_path = '../')$dataset
+    
+    numeric_variable <- 'amount'
+    categoric_variable <- 'checking_balance'
+    
+    # single numeric
+    plot_object <- create_ggplot_object(dataset = dataset,
+                                        primary_variable = categoric_variable,
+                                        comparison_variable = numeric_variable,
+                                        num_cat_aggregation_type = 'Total')
+    test_save_plot(file_name='graphs/plot__categoric_numeric__total.png', plot=plot_object)
+    
+    plot_object <- create_ggplot_object(dataset = dataset,
+                                        primary_variable = categoric_variable,
+                                        comparison_variable = numeric_variable,
+                                        num_cat_aggregation_type = 'Median')
+    test_save_plot(file_name='graphs/plot__categoric_numeric__median.png', plot=plot_object)
+    
+    plot_object <- create_ggplot_object(dataset = dataset,
+                                        primary_variable = numeric_variable,
+                                        comparison_variable = categoric_variable,
+                                        num_cat_aggregation_type = 'Total')
+    test_save_plot(file_name='graphs/plot__numeric_categoric__total.png', plot=plot_object)
+    
+    plot_object <- create_ggplot_object(dataset = dataset,
+                                        primary_variable = numeric_variable,
+                                        comparison_variable = categoric_variable,
+                                        num_cat_aggregation_type = 'Median')
+    test_save_plot(file_name='graphs/plot__numeric_categoric__median.png', plot=plot_object)
+})
+    
+
 test_that("create_ggplot_plot - date projection", {
     context("create_ggplot_plot - date projection")
     
@@ -2346,7 +2382,6 @@ test_that("create_ggplot_plot - convert date to categoric", {
                                         convert_primary_date_to_categoric=TRUE)
     test_save_plot(file_name='graphs/plot__date_as_categoric__prim_cat_stack.png', plot=plot_object)
 })
-
 
 test_that("create_ggplot_plot - bar", { 
     context("create_ggplot_plot - bar")
