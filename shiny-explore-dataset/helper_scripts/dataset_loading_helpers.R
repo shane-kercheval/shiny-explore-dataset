@@ -317,7 +317,7 @@ renderUI__source_data__add_date_fields__UI <- function(dataset) {
 ##############################################################################################################
 renderDataTable__source_data__head <- function(dataset) {
 
-    renderDataTable({
+    DT::renderDataTable({
 
         return (head(dataset$data, 500))
     })
@@ -325,7 +325,7 @@ renderDataTable__source_data__head <- function(dataset) {
 
 renderDataTable__source_data__types <- function(dataset) {
 
-    renderDataTable({
+    DT::renderDataTable({
 
         withProgress(value=1/2, message='Loading Types',{
 

@@ -55,7 +55,7 @@ shinyUI(fluidPage(theme="custom.css",
                 id='load_data__dataset_tabset_panel',
                 tabPanel(
                     "First 500 Records of Dataset",
-                    tags$div(class='results-table', dataTableOutput(outputId='source_data__head_table'))
+                    tags$div(class='results-table', DT::dataTableOutput(outputId='source_data__head_table'))
                 ),
                 tabPanel(
                     'Dataset Description',
@@ -64,7 +64,7 @@ shinyUI(fluidPage(theme="custom.css",
                 ),
                 tabPanel(
                     'Variable Types',
-                    tags$div(class='results-table', dataTableOutput(outputId='source_data__types_table'))
+                    tags$div(class='results-table', DT::dataTableOutput(outputId='source_data__types_table'))
                 ),
                 tabPanel(
                     'Update Dataset w/ R Code',
@@ -692,11 +692,11 @@ shinyUI(fluidPage(theme="custom.css",
                    class='column-input-control-style',
                    tags$div(class='input-control-style', uiOutput('numeric_summary__options__UI'))
             ),
-            column(10, tags$div(class='results-table', dataTableOutput(outputId='numeric_summary__table')))
+            column(10, tags$div(class='results-table', DT::dataTableOutput(outputId='numeric_summary__table')))
         ),
         tabPanel(
             'Categoric Summary',
-            tags$div(class='results-table', dataTableOutput(outputId='categoric_summary__table')),
+            tags$div(class='results-table', DT::dataTableOutput(outputId='categoric_summary__table')),
             tags$br(),
             h4('Summary of Values'),
             tags$div(style='width: 800px', verbatimTextOutput(outputId='categoric_summary__text'))

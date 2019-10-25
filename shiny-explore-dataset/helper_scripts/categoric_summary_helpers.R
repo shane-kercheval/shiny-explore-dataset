@@ -30,7 +30,7 @@ renderPrint__categoric_summary__text <- function(dataset, categoric_summary) {
 ##############################################################################################################
 renderDataTable__categoric_summary__table <- function(categoric_summary) {
 
-    renderDataTable({
+    DT::renderDataTable({
         
         return (categoric_summary())
     })
