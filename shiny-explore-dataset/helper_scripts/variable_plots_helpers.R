@@ -2005,8 +2005,6 @@ create_ggplot_object <- function(dataset,
                            temp_order_by_variable) %>%
                     mutate_factor_lump(factor_lump_number=filter_factor_lump_number,
                                        ignore_columns=ignore_columns) %>%
-                    # mutate_factor_reorder(variable_to_order_by=order_by_variable,
-                    #                       variable_to_order=primary_variable) %>%
                     mutate_factor_reorder(variable_to_order_by=order_by_variable,
                                           # if converted to date, pass NULL so nothing happens, otherwise pass primary variable
                                           variable_to_order=primary_variable_to_reorder) %>%
@@ -2061,7 +2059,7 @@ create_ggplot_object <- function(dataset,
 ##############################################################################################################
 renderUI__var_plots__filter_controls_selections__UI <- function(input, dataset, url_parameter_info) {
     renderUI({
-	req(dataset$data)
+        req(dataset$data)
         input$var_plots__filter_clear
 
         log_message_block_start('Creating Filter Controls Selections')
