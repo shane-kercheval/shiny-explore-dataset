@@ -2390,8 +2390,7 @@ test_that("create_ggplot_plot - convert date to categoric - order by", {
     dataset <- select_preloaded_dataset("Flights", defualt_path = '../')$dataset
     primary_variable <- 'takeoff_datetime'
     dataset[[primary_variable]] <- rt_floor_date_factor(dataset[[primary_variable]], date_floor='month')
-    
-    
+
     # date : order by Freq
     plot_object <- create_ggplot_object(dataset = dataset,
                                         primary_variable = primary_variable,
