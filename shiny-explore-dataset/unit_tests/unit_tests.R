@@ -2421,6 +2421,24 @@ test_that("create_ggplot_plot - convert date to categoric - order by", {
                                         order_by_variable = 'dep_delay')
     test_save_plot(file_name='graphs/plot__date_as_categoric__prim_num__order_by_dep_delay.png', plot=plot_object)
     
+    # date/numeric : order by freq
+    plot_object <- create_ggplot_object(dataset = dataset,
+                                        primary_variable = primary_variable,
+                                        comparison_variable = 'dep_delay',
+                                        convert_primary_date_to_categoric=TRUE,
+                                        color_variable='dest',
+                                        order_by_variable = 'Frequency')
+    test_save_plot(file_name='graphs/plot__date_as_categoric__prim_num_col__order_by_freq.png', plot=plot_object)
+    
+    # date/numeric : order by numeric
+    plot_object <- create_ggplot_object(dataset = dataset,
+                                        primary_variable = primary_variable,
+                                        comparison_variable = 'dep_delay',
+                                        convert_primary_date_to_categoric=TRUE,
+                                        color_variable='dest',
+                                        order_by_variable = 'dep_delay')
+    test_save_plot(file_name='graphs/plot__date_as_categoric__prim_num_col__order_by_dep_delay.png', plot=plot_object)
+    
     # date/categoric : order by freq
     plot_object <- create_ggplot_object(dataset = dataset,
                                         primary_variable = primary_variable,

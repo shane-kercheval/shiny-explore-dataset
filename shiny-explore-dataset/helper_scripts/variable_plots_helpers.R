@@ -957,12 +957,11 @@ helper__plot_numeric_categoric <- function(dataset,
                 scale_axes_log10(scale_x=scale_x_log_base_10,
                                  scale_y=FALSE)
         }
-        
-        
     } else {
 
         ignore_columns <- NULL
         simple_mode <- FALSE
+        comparison_variable_to_reorder <- comparison_variable
         if(convert_primary_date_to_categoric) {
             
             # we are ignoring the comparison_variable because if convert_primary_date_to_categoric is TRUE
@@ -970,6 +969,7 @@ helper__plot_numeric_categoric <- function(dataset,
             # comparison variable because we always do num/categoric for this 
             ignore_columns <- comparison_variable
             simple_mode <- TRUE
+            comparison_variable_to_reorder <- NULL
         }
         
         # the position changes depending on if it is a single boxplot or multiple
@@ -984,7 +984,11 @@ helper__plot_numeric_categoric <- function(dataset,
             mutate_factor_lump(factor_lump_number=filter_factor_lump_number,
                                ignore_columns=ignore_columns) %>%
             mutate_factor_reorder(variable_to_order_by=order_by_variable,
-                                  variable_to_order=comparison_variable) %>%
+                                  variable_to_order=comparison_variable_to_reorder) %>%
+            mutate_factor_reorder(variable_to_order_by=order_by_variable,
+                                  variable_to_order=facet_variable) %>%
+            mutate_factor_reorder(variable_to_order_by=order_by_variable,
+                                  variable_to_order=color_variable) %>%
             rt_explore_plot_categoric_numeric_aggregation(categoric_variable=comparison_variable,
                                                           numeric_variable=primary_variable,
                                                           aggregation_type=aggregation_type,
@@ -998,9 +1002,7 @@ helper__plot_numeric_categoric <- function(dataset,
                              scale_y=scale_y_log_base_10) %>%
             add_horizontal_annotations(horizontal_annotations, x_location=annotation_x_location)
     }
-    
 
-    
     return (ggplot_object)
 }
 
@@ -1986,12 +1988,12 @@ create_ggplot_object <- function(dataset,
 
                 simple_mode <- FALSE
                 ignore_columns <- count_distinct_variable
-                #primary_variable_to_reorder <- primary_variable
+                primary_variable_to_reorder <- primary_variable
                 if(convert_primary_date_to_categoric) {
 
                     ignore_columns <- c(ignore_columns, primary_variable)
                     simple_mode <- TRUE
-                    #primary_variable_to_reorder <- NULL
+                    primary_variable_to_reorder <- NULL
                 }
 
                 ggplot_object <- dataset %>%
@@ -2003,22 +2005,22 @@ create_ggplot_object <- function(dataset,
                            temp_order_by_variable) %>%
                     mutate_factor_lump(factor_lump_number=filter_factor_lump_number,
                                        ignore_columns=ignore_columns) %>%
+                    # mutate_factor_reorder(variable_to_order_by=order_by_variable,
+                    #                       variable_to_order=primary_variable) %>%
                     mutate_factor_reorder(variable_to_order_by=order_by_variable,
-                                          variable_to_order=primary_variable) %>%
-                    # mutate_factor_reorder(variable_to_order_by=order_by_variable,
-                    #                       # if converted to date, pass NULL so nothing happens, otherwise pass primary variable
-                    #                       variable_to_order=primary_variable_to_reorder) %>%
-                    # mutate_factor_reorder(variable_to_order_by=order_by_variable,
-                    #                       variable_to_order=comparison_variable) %>%
-                    # mutate_factor_reorder(variable_to_order_by=order_by_variable,
-                    #                       variable_to_order=facet_variable) %>%
+                                          # if converted to date, pass NULL so nothing happens, otherwise pass primary variable
+                                          variable_to_order=primary_variable_to_reorder) %>%
+                    mutate_factor_reorder(variable_to_order_by=order_by_variable,
+                                          variable_to_order=comparison_variable) %>%
+                    mutate_factor_reorder(variable_to_order_by=order_by_variable,
+                                          variable_to_order=facet_variable) %>%
                     rt_explore_plot_value_totals(variable=primary_variable,
                                                  comparison_variable=comparison_variable,
                                                  sum_by_variable=sum_by_variable,
                                                  facet_variable=facet_variable,
                                                  count_distinct_variable=count_distinct_variable,
-                                                 #order_by_count=FALSE,
-                                                 order_by_count=order_by_variable == "Frequency",
+                                                 order_by_count=FALSE,
+                                                 #order_by_count=order_by_variable == "Frequency",
                                                  show_variable_totals=show_variable_totals,
                                                  show_comparison_totals=show_comparison_totals,
                                                  view_type=categoric_view_type,
