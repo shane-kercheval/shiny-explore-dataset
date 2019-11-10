@@ -2383,6 +2383,84 @@ test_that("create_ggplot_plot - convert date to categoric", {
     test_save_plot(file_name='graphs/plot__date_as_categoric__prim_cat_stack.png', plot=plot_object)
 })
 
+test_that("create_ggplot_plot - convert date to categoric - order by", {
+    context("create_ggplot_plot - convert date to categoric - order by")
+    
+    global__should_log_message <<- FALSE
+    dataset <- select_preloaded_dataset("Flights", defualt_path = '../')$dataset
+    primary_variable <- 'takeoff_datetime'
+    dataset[[primary_variable]] <- rt_floor_date_factor(dataset[[primary_variable]], date_floor='month')
+    
+    
+    # date : order by Freq
+    plot_object <- create_ggplot_object(dataset = dataset,
+                                        primary_variable = primary_variable,
+                                        convert_primary_date_to_categoric=TRUE,
+                                        order_by_variable = 'Frequency')
+    test_save_plot(file_name='graphs/plot__date_as_categoric__prim__order_by_freq.png', plot=plot_object)
+    
+    # date : order by numeric
+    plot_object <- create_ggplot_object(dataset = dataset,
+                                        primary_variable = primary_variable,
+                                        convert_primary_date_to_categoric=TRUE,
+                                        order_by_variable = 'dep_delay')
+    test_save_plot(file_name='graphs/plot__date_as_categoric__prim__order_by_dep_delay.png', plot=plot_object)
+    
+    # date/numeric : order by freq
+    plot_object <- create_ggplot_object(dataset = dataset,
+                                        primary_variable = primary_variable,
+                                        comparison_variable = 'dep_delay',
+                                        convert_primary_date_to_categoric=TRUE,
+                                        order_by_variable = 'Frequency')
+    test_save_plot(file_name='graphs/plot__date_as_categoric__prim_num__order_by_freq.png', plot=plot_object)
+    
+    # date/numeric : order by numeric
+    plot_object <- create_ggplot_object(dataset = dataset,
+                                        primary_variable = primary_variable,
+                                        comparison_variable = 'dep_delay',
+                                        convert_primary_date_to_categoric=TRUE,
+                                        order_by_variable = 'dep_delay')
+    test_save_plot(file_name='graphs/plot__date_as_categoric__prim_num__order_by_dep_delay.png', plot=plot_object)
+    
+    # date/categoric : order by freq
+    plot_object <- create_ggplot_object(dataset = dataset,
+                                        primary_variable = primary_variable,
+                                        comparison_variable = 'dest',
+                                        filter_factor_lump_number = 3,
+                                        convert_primary_date_to_categoric=TRUE,
+                                        order_by_variable = 'Frequency')
+    test_save_plot(file_name='graphs/plot__date_as_categoric__prim_categoric__order_by_freq.png', plot=plot_object)
+    
+    # date/categoric : order by numeric
+    plot_object <- create_ggplot_object(dataset = dataset,
+                                        primary_variable = primary_variable,
+                                        comparison_variable = 'dest',
+                                        filter_factor_lump_number = 3,
+                                        convert_primary_date_to_categoric=TRUE,
+                                        order_by_variable = 'dep_delay')
+    test_save_plot(file_name='graphs/plot__date_as_categoric__prim_categoric__order_by_dep_delay.png', plot=plot_object)
+    
+    # date/categoric/categoric : order by freq
+    plot_object <- create_ggplot_object(dataset = dataset,
+                                        primary_variable = primary_variable,
+                                        comparison_variable = 'dest',
+                                        filter_factor_lump_number = 3,
+                                        convert_primary_date_to_categoric=TRUE,
+                                        facet_variable = 'origin',
+                                        order_by_variable = 'Frequency')
+    test_save_plot(file_name='graphs/plot__date_as_categoric__prim_categoric_facet__order_by_freq.png', plot=plot_object)
+    
+    # date/categoric/categoric : order by numeric
+    plot_object <- create_ggplot_object(dataset = dataset,
+                                        primary_variable = primary_variable,
+                                        comparison_variable = 'dest',
+                                        filter_factor_lump_number = 3,
+                                        convert_primary_date_to_categoric=TRUE,
+                                        facet_variable = 'origin',
+                                        order_by_variable = 'dep_delay')
+    test_save_plot(file_name='graphs/plot__date_as_categoric__prim_categoric_facet__order_by_dep_delay.png', plot=plot_object)
+})
+
 test_that("create_ggplot_plot - bar", { 
     context("create_ggplot_plot - bar")
     
@@ -2512,4 +2590,47 @@ test_that("create_ggplot_plot - bar - facet", {
                                         categoric_view_type = 'Stack Percent',
                                         facet_variable = 'default')
     test_save_plot(file_name='graphs/create_ggplot_object__double_categoric__sum_by__stack_perc__facet.png', plot=plot_object)
+})
+
+test_that("create_ggplot_plot - bar - order by", { 
+    context("create_ggplot_plot - bar - order by")
+    
+    global__should_log_message <<- FALSE
+    dataset <- select_preloaded_dataset("Credit", defualt_path = '../')$dataset
+
+    plot_object <- create_ggplot_object(dataset = dataset,
+                                        primary_variable = 'checking_balance',
+                                        order_by_variable = 'Frequency')
+    test_save_plot(file_name='graphs/create_ggplot_object__bar__order_by__freq.png', plot=plot_object)
+
+    plot_object <- create_ggplot_object(dataset = dataset,
+                                        primary_variable = 'checking_balance',
+                                        order_by_variable = 'Default')
+    test_save_plot(file_name='graphs/create_ggplot_object__bar__order_by__no_freq.png', plot=plot_object)
+    
+    plot_object <- create_ggplot_object(dataset = dataset,
+                                        primary_variable = 'checking_balance',
+                                        facet_variable = 'default',
+                                        order_by_variable = 'Frequency')
+    test_save_plot(file_name='graphs/create_ggplot_object__bar__order_by__freq__facet.png', plot=plot_object)
+
+    plot_object <- create_ggplot_object(dataset = dataset,
+                                        primary_variable = 'checking_balance',
+                                        facet_variable = 'default',
+                                        order_by_variable = 'Default')
+    test_save_plot(file_name='graphs/create_ggplot_object__bar__order_by__no_freq__facet.png', plot=plot_object)
+    
+    plot_object <- create_ggplot_object(dataset = dataset,
+                                        primary_variable = 'checking_balance',
+                                        comparison_variable = 'credit_history',
+                                        facet_variable = 'default',
+                                        order_by_variable = 'Frequency')
+    test_save_plot(file_name='graphs/create_ggplot_object__bar__order_by__freq__facet__comp.png', plot=plot_object)
+    
+    plot_object <- create_ggplot_object(dataset = dataset,
+                                        primary_variable = 'checking_balance',
+                                        comparison_variable = 'credit_history',
+                                        facet_variable = 'default',
+                                        order_by_variable = 'Default')
+    test_save_plot(file_name='graphs/create_ggplot_object__bar__order_by__no_freq__facet__comp.png', plot=plot_object)
 })

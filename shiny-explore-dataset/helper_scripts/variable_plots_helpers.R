@@ -1923,7 +1923,6 @@ create_ggplot_object <- function(dataset,
                                                                 y_zoom_max=y_zoom_max,
                                                                 base_siz=base_size)
             }
-
         ##############################################################################################
         # Categoric Primary Variable
         ##############################################################################################
@@ -1987,10 +1986,12 @@ create_ggplot_object <- function(dataset,
 
                 simple_mode <- FALSE
                 ignore_columns <- count_distinct_variable
+                #primary_variable_to_reorder <- primary_variable
                 if(convert_primary_date_to_categoric) {
 
                     ignore_columns <- c(ignore_columns, primary_variable)
                     simple_mode <- TRUE
+                    #primary_variable_to_reorder <- NULL
                 }
 
                 ggplot_object <- dataset %>%
@@ -2004,11 +2005,19 @@ create_ggplot_object <- function(dataset,
                                        ignore_columns=ignore_columns) %>%
                     mutate_factor_reorder(variable_to_order_by=order_by_variable,
                                           variable_to_order=primary_variable) %>%
+                    # mutate_factor_reorder(variable_to_order_by=order_by_variable,
+                    #                       # if converted to date, pass NULL so nothing happens, otherwise pass primary variable
+                    #                       variable_to_order=primary_variable_to_reorder) %>%
+                    # mutate_factor_reorder(variable_to_order_by=order_by_variable,
+                    #                       variable_to_order=comparison_variable) %>%
+                    # mutate_factor_reorder(variable_to_order_by=order_by_variable,
+                    #                       variable_to_order=facet_variable) %>%
                     rt_explore_plot_value_totals(variable=primary_variable,
                                                  comparison_variable=comparison_variable,
                                                  sum_by_variable=sum_by_variable,
                                                  facet_variable=facet_variable,
                                                  count_distinct_variable=count_distinct_variable,
+                                                 #order_by_count=FALSE,
                                                  order_by_count=order_by_variable == "Frequency",
                                                  show_variable_totals=show_variable_totals,
                                                  show_comparison_totals=show_comparison_totals,

@@ -80,7 +80,7 @@ mutate_factor_lump <- function(dataset, factor_lump_number=NULL, ignore_columns=
     return (dataset)
 }
 
-#' mutates a categoricvariable in order (factor) to order it (and display) it on a graph in that particular order
+#' mutates a categoric variable in order (factor) to order it (and display) it on a graph in that particular order
 #' @param dataset the dataset
 #' @param variable_to_order_by: "Default", "Frequency", or the name of the variable
 #' @param variable_to_order: the variable to mutate the factor order
