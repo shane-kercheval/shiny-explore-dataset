@@ -2458,6 +2458,11 @@ test_that("create_ggplot_plot - convert date to categoric - order by", {
                                         facet_variable = 'origin',
                                         order_by_variable = 'dep_delay')
     test_save_plot(file_name='graphs/plot__date_as_categoric__prim_categoric_facet__order_by_dep_delay.png', plot=plot_object)
+    
+    
+    ##########################################################################################################
+    # Equivalent "Actual" Categoric Graphs
+    ##########################################################################################################
 })
 
 test_that("create_ggplot_plot - bar", { 
@@ -2632,4 +2637,32 @@ test_that("create_ggplot_plot - bar - order by", {
                                         facet_variable = 'default',
                                         order_by_variable = 'Default')
     test_save_plot(file_name='graphs/create_ggplot_object__bar__order_by__no_freq__facet__comp.png', plot=plot_object)
+    
+    plot_object <- create_ggplot_object(dataset = dataset,
+                                        primary_variable = 'checking_balance',
+                                        comparison_variable = 'months_loan_duration',
+                                        facet_variable = 'default',
+                                        order_by_variable = 'Frequency')
+    test_save_plot(file_name='graphs/create_ggplot_object__bar__order_by__freq__facet__comp_numeric.png', plot=plot_object)
+    
+    plot_object <- create_ggplot_object(dataset = dataset,
+                                        primary_variable = 'checking_balance',
+                                        comparison_variable = 'months_loan_duration',
+                                        facet_variable = 'default',
+                                        order_by_variable = 'Default')
+    test_save_plot(file_name='graphs/create_ggplot_object__bar__order_by__no_freq__facet__comp_numeric.png', plot=plot_object)
+    
+    plot_object <- create_ggplot_object(dataset = dataset,
+                                        comparison_variable = 'checking_balance',
+                                        primary_variable = 'months_loan_duration',
+                                        facet_variable = 'default',
+                                        order_by_variable = 'Frequency')
+    test_save_plot(file_name='graphs/create_ggplot_object__bar__order_by__freq__facet__comp_numeric_swap.png', plot=plot_object)
+    
+    plot_object <- create_ggplot_object(dataset = dataset,
+                                        comparison_variable = 'checking_balance',
+                                        primary_variable = 'months_loan_duration',
+                                        facet_variable = 'default',
+                                        order_by_variable = 'Default')
+    test_save_plot(file_name='graphs/create_ggplot_object__bar__order_by__no_freq__facet__comp_numeric_swap.png', plot=plot_object)
 })
