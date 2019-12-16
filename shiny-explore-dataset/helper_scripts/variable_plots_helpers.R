@@ -1900,10 +1900,6 @@ create_ggplot_object <- function(dataset,
                                        confidence_interval=add_confidence_interval,
                                        color_variable=color_variable)
 
-                    if(scatter_add_histograms) {
-                        ggplot_object <- ggMarginal(ggplot_object, type = "histogram", fill="transparent")
-                    }
-
                     if(map_format) {
 
                         ggplot_object <- ggplot_object + coord_map()
@@ -2103,6 +2099,14 @@ create_ggplot_object <- function(dataset,
             ggplot_object <- ggplot_object + labs(tag=custom_tag)
         }
 
+        # only applicable for Numeric/Numeric; but need to do this after we add the `labs`
+        if(scatter_add_histograms &&
+            is.numeric(dataset[[primary_variable]]) &&
+            !is.null(comparison_variable) &&
+            is.numeric(dataset[[comparison_variable]])) {
+
+            ggplot_object <- ggMarginal(ggplot_object, type = "histogram", fill="transparent")
+        }
     }
 
     return (ggplot_object)

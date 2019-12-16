@@ -2159,7 +2159,8 @@ test_that("create_ggplot_plot - numeric", {
     # scatter
     plot_object <- create_ggplot_object(dataset = dataset,
                                         primary_variable = 'months_loan_duration',
-                                        comparison_variable = 'amount')
+                                        comparison_variable = 'amount',
+                                        scatter_add_histograms = FALSE)
     test_save_plot(file_name='graphs/plot__scatter_defaults.png', plot=plot_object)
     
     plot_object <- create_ggplot_object(dataset = dataset,
@@ -2168,6 +2169,7 @@ test_that("create_ggplot_plot - numeric", {
                                         label_variables = c('age', 'purpose'),
                                         transparency = 0.90,
                                         jitter = TRUE,
+                                        scatter_add_histograms = FALSE,
                                         trend_line = "Straight",
                                         trend_line_se = "Yes",
                                         x_zoom_min = 50,
@@ -2185,14 +2187,18 @@ test_that("create_ggplot_plot - numeric", {
                                         horizontal_annotations = "30;test",
                                         vertical_annotations = "6000;test2")
     test_save_plot(file_name='graphs/plot__scatter_options.png', plot=plot_object)
-    
-    # aggregation
+})
+
+test_that("create_ggplot_plot - scatter - histograms", {
+    global__should_log_message <<- FALSE
+    dataset <- select_preloaded_dataset("Credit", defualt_path = '../')$dataset
     plot_object <- create_ggplot_object(dataset = dataset,
                                         primary_variable = 'months_loan_duration',
                                         comparison_variable = 'amount',
                                         label_variables = c('age', 'purpose'),
                                         transparency = 0.90,
                                         jitter = TRUE,
+                                        scatter_add_histograms = TRUE,
                                         trend_line = "Straight",
                                         trend_line_se = "Yes",
                                         x_zoom_min = 50,
@@ -2209,7 +2215,7 @@ test_that("create_ggplot_plot - numeric", {
                                         pretty_text = TRUE,
                                         horizontal_annotations = "30;test",
                                         vertical_annotations = "6000;test2")
-    test_save_plot(file_name='graphs/plot__scatter_options.png', plot=plot_object)
+    test_save_plot(file_name='graphs/plot__scatter__histograms.png', plot=plot_object)
 })
 
 test_that("create_ggplot_plot - numeric categoric", {
