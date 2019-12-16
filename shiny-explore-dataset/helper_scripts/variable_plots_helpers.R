@@ -2039,8 +2039,6 @@ create_ggplot_object <- function(dataset,
                                               variable_to_order=primary_variable_to_reorder) %>%
                         mutate_factor_reorder(variable_to_order_by=order_by_variable,
                                               variable_to_order=comparison_variable) %>%
-                        mutate_factor_reorder(variable_to_order_by=order_by_variable,
-                                              variable_to_order=facet_variable) %>%
                         rt_explore_plot_categoric_heatmap(x_variable=primary_variable,
                                                           y_variable=comparison_variable,
                                                           sum_by_variable=sum_by_variable,
