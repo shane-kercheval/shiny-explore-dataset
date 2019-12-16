@@ -303,6 +303,7 @@ helper__restore_defaults_graph_options <- function(session) {
     reset_hide_var_plot_option(session, option_name='var_plots__histogram_bins', hide_option=FALSE)
     reset_hide_var_plot_option(session, option_name='var_plots__transparency', hide_option=FALSE)
     reset_hide_var_plot_option(session, option_name='var_plots__jitter', hide_option=FALSE)
+    reset_hide_var_plot_option(session, option_name='var_plots__scatter_add_histograms', hide_option=FALSE)
     reset_hide_var_plot_option(session, option_name='var_plots__numeric_aggregation_count_minimum', hide_option=FALSE)
     reset_hide_var_plot_option(session, option_name='var_plots__numeric_show_resampled_conf_int', hide_option=FALSE)
     reset_hide_var_plot_option(session, option_name='var_plots__trend_line', hide_option=FALSE)
@@ -366,6 +367,7 @@ hide_graph_options <- function(session) {
     reset_hide_var_plot_option(session, 'var_plots__histogram_bins')
     reset_hide_var_plot_option(session, 'var_plots__transparency')
     reset_hide_var_plot_option(session, 'var_plots__jitter')
+    reset_hide_var_plot_option(session, 'var_plots__scatter_add_histograms')
     reset_hide_var_plot_option(session, 'var_plots__numeric_aggregation_count_minimum')
     reset_hide_var_plot_option(session, 'var_plots__numeric_show_resampled_conf_int')
     reset_hide_var_plot_option(session, 'var_plots__trend_line')
@@ -410,6 +412,7 @@ observeEvent__var_plots__graph_options__any_used__function <- function(input, se
                    input$var_plots__histogram_bins,
                    input$var_plots__transparency,
                    input$var_plots__jitter,
+                   input$var_plots__scatter_add_histograms,
                    input$var_plots__numeric_aggregation_count_minimum,
                    input$var_plots__numeric_show_resampled_conf_int,
                    input$var_plots__trend_line,
@@ -1132,6 +1135,7 @@ reactive__var_plots__ggplot__creator <- function(input,
         base_size <- isolate(input$var_plots__base_size)
         histogram_bins <- isolate(input$var_plots__histogram_bins)
         jitter <- isolate(input$var_plots__jitter)
+        scatter_add_histograms <- isolate(input$var_plots__scatter_add_histograms)
         order_by_variable <- isolate(input$var_plots__order_by_variable)
         numeric_graph_type <- isolate(input$var_plots__numeric_graph_type)
         date_cr__plot_type <- isolate(input$var_plots__date_cr__plot_type)
@@ -1312,6 +1316,7 @@ reactive__var_plots__ggplot__creator <- function(input,
                                               show_comparison_totals=show_comparison_totals,
                                               histogram_bins=histogram_bins,
                                               jitter=jitter,
+                                              scatter_add_histograms=scatter_add_histograms,
                                               order_by_variable=order_by_variable,
                                               filter_factor_lump_number=filter_factor_lump_number,
                                               numeric_graph_type=numeric_graph_type,
@@ -1416,6 +1421,7 @@ create_ggplot_object <- function(dataset,
                                  show_comparison_totals=TRUE,
                                  histogram_bins=30,
                                  jitter=FALSE,
+                                 scatter_add_histograms=TRUE,
                                  order_by_variable='Default',
                                  filter_factor_lump_number=10,
                                  numeric_graph_type='Boxplot',
@@ -1498,6 +1504,7 @@ create_ggplot_object <- function(dataset,
         log_message_variable('show_comparison_totals', show_comparison_totals)
         log_message_variable('histogram_bins', histogram_bins)
         log_message_variable('jitter', jitter)
+        log_message_variable('scatter_add_histograms', scatter_add_histograms)
         log_message_variable('order_by_variable', order_by_variable)
         log_message_variable('numeric_graph_type', numeric_graph_type)
 
@@ -1875,6 +1882,10 @@ create_ggplot_object <- function(dataset,
                         add_trend_line(trend_line_type=trend_line,
                                        confidence_interval=add_confidence_interval,
                                        color_variable=color_variable)
+
+                    if(scatter_add_histograms) {
+                        ggplot_object <- ggMarginal(ggplot_object, type = "histogram", fill="transparent")
+                    }
 
                     if(map_format) {
 
@@ -2349,6 +2360,7 @@ hide_show_date <- function(session, input) {
     reset_hide_var_plot_option(session, 'var_plots__numeric_show_resampled_conf_int')
     reset_hide_var_plot_option(session, 'var_plots__transparency')
     reset_hide_var_plot_option(session, 'var_plots__jitter')
+    reset_hide_var_plot_option(session, 'var_plots__scatter_add_histograms')
     reset_hide_var_plot_option(session, 'var_plots__scale_x_log_base_10')
     reset_hide_var_plot_option(session, 'var_plots__x_zoom_min')
     reset_hide_var_plot_option(session, 'var_plots__x_zoom_max')
@@ -2415,6 +2427,7 @@ hide_show_numeric_numeric <- function(session,
 
         reset_hide_var_plot_option(session, 'var_plots__transparency')
         reset_hide_var_plot_option(session, 'var_plots__jitter')
+        reset_hide_var_plot_option(session, 'var_plots__scatter_add_histograms')
 
         reset_hide_var_plot_option(session, 'var_plots__trend_line')
         reset_hide_var_plot_option(session, 'var_plots__trend_extend_date')
@@ -2439,6 +2452,7 @@ hide_show_numeric_numeric <- function(session,
 
         shinyjs::show('var_plots__transparency')
         shinyjs::show('var_plots__jitter')
+        shinyjs::show('var_plots__scatter_add_histograms')
 
         shinyjs::show('var_plots__trend_line')
         reset_hide_var_plot_option(session, 'var_plots__trend_extend_date')
@@ -2594,6 +2608,7 @@ hide_show_numeric_categoric <- function(session,
 
     reset_hide_var_plot_option(session, 'var_plots__transparency')
     reset_hide_var_plot_option(session, 'var_plots__jitter')
+    reset_hide_var_plot_option(session, 'var_plots__scatter_add_histograms')
     reset_hide_var_plot_option(session, 'var_plots__trend_line')
     reset_hide_var_plot_option(session, 'var_plots__trend_extend_date')
     reset_hide_var_plot_option(session, 'var_plots__trend_line_se')
@@ -2729,6 +2744,7 @@ hide_show_categoric_categoric <- function(session,
 
     reset_hide_var_plot_option(session, 'var_plots__transparency')
     reset_hide_var_plot_option(session, 'var_plots__jitter')
+    reset_hide_var_plot_option(session, 'var_plots__scatter_add_histograms')
     reset_hide_var_plot_option(session, 'var_plots__trend_line')
     reset_hide_var_plot_option(session, 'var_plots__trend_extend_date')
     reset_hide_var_plot_option(session, 'var_plots__trend_line_se')
@@ -3152,6 +3168,10 @@ update_var_plot_variables_from_url_params <- function(session, params, dataset, 
     if (!is.null(params[['var_plots__jitter']])) {
         log_message_variable('updating jitter', params[['var_plots__jitter']])
         updateCheckboxInput(session, 'var_plots__jitter', value=params[['var_plots__jitter']])
+    }
+    if (!is.null(params[['var_plots__scatter_add_histograms']])) {
+        log_message_variable('updating scatter_add_histograms', params[['var_plots__scatter_add_histograms']])
+        updateCheckboxInput(session, 'var_plots__scatter_add_histograms', value=params[['var_plots__scatter_add_histograms']])
     }
     if (!is.null(params[['var_plots__numeric_aggregation_count_minimum']])) {
         log_message_variable('updating numeric_aggregation_count_minimum', params[['var_plots__numeric_aggregation_count_minimum']])
