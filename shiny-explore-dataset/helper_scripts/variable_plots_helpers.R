@@ -780,22 +780,32 @@ var_plots__categoric_view_type__logic <- function(dataset,
                                                   comparison_variable,
                                                   sum_by_variable,
                                                   count_distinct_variable,
+                                                  facet_variable,
                                                   current_value) {
 
     log_message("Executing Logic for Categoric View Type")
     log_message_variable('var_plots__comparison', comparison_variable)
     log_message_variable('var_plots__sum_by_variable', sum_by_variable)
     log_message_variable('var_plots__count_distinct_variable', count_distinct_variable)
+    log_message_variable('var_plots__facet_variable', facet_variable)
     log_message_variable('var_plots__categoric_view_type', current_value)
 
     comparison_variable <- null_if_select_variable_optional(comparison_variable)
     sum_by_variable <- null_if_select_variable_optional(sum_by_variable)
     count_distinct_variable <- null_if_select_variable_optional(count_distinct_variable)
+    facet_variable <- null_if_select_variable_optional(facet_variable)
 
     view_type_options <- NULL
     if(!is.null(count_distinct_variable)) {
         
-        view_type_options <- c("Bar")
+        if(is.null(comparison_variable)) {
+
+            view_type_options <- c("Bar")
+
+        } else {
+
+            view_type_options <- c("Bar", "Heatmap")
+        }
 
     } else if(is.null(comparison_variable) && is.null(sum_by_variable)) {
 
@@ -811,11 +821,17 @@ var_plots__categoric_view_type__logic <- function(dataset,
                                "Confidence Interval",
                                "Stack",
                                "Stack Percent",
-                               "Confidence Interval - within Variable")
+                               "Confidence Interval - within Variable",
+                               "Heatmap")
 
     } else { # both are not null
         
-        view_type_options <- c("Bar", "Stack", "Stack Percent")
+        view_type_options <- c("Bar", "Stack", "Stack Percent", "Heatmap")
+    }
+
+    if(!is.null(facet_variable)) {
+
+        view_type_options <- view_type_options %>% rt_remove_val("Heatmap")
     }
 
     if(!is.null(current_value) && current_value %in% view_type_options) {
@@ -1251,6 +1267,7 @@ reactive__var_plots__ggplot__creator <- function(input,
                                                                            comparison_variable=comparison_variable,
                                                                            sum_by_variable=sum_by_variable,
                                                                            count_distinct_variable=count_distinct_variable,
+                                                                           facet_variable=facet_variable,
                                                                            current_value=categoric_view_type)
                 if(categoric_view_type != view_type_results$selected) {
 
@@ -2007,37 +2024,65 @@ create_ggplot_object <- function(dataset,
                     primary_variable_to_reorder <- NULL
                 }
 
-                ggplot_object <- dataset %>%
-                    select(primary_variable,
-                           comparison_variable,
-                           sum_by_variable,
-                           facet_variable,
-                           count_distinct_variable,
-                           temp_order_by_variable) %>%
-                    mutate_factor_lump(factor_lump_number=filter_factor_lump_number,
-                                       ignore_columns=ignore_columns) %>%
-                    mutate_factor_reorder(variable_to_order_by=order_by_variable,
-                                          # if converted to date, pass NULL so nothing happens, otherwise pass primary variable
-                                          variable_to_order=primary_variable_to_reorder) %>%
-                    mutate_factor_reorder(variable_to_order_by=order_by_variable,
-                                          variable_to_order=comparison_variable) %>%
-                    mutate_factor_reorder(variable_to_order_by=order_by_variable,
-                                          variable_to_order=facet_variable) %>%
-                    rt_explore_plot_value_totals(variable=primary_variable,
-                                                 comparison_variable=comparison_variable,
-                                                 sum_by_variable=sum_by_variable,
-                                                 facet_variable=facet_variable,
-                                                 count_distinct_variable=count_distinct_variable,
-                                                 order_by_count=FALSE,
-                                                 #order_by_count=order_by_variable == "Frequency",
-                                                 show_variable_totals=show_variable_totals,
-                                                 show_comparison_totals=show_comparison_totals,
-                                                 view_type=categoric_view_type,
-                                                 multi_value_delimiter=multi_value_delimiter,
-                                                 show_dual_axes=show_dual_axes,
-                                                 reverse_stack=reverse_stack_order,
-                                                 simple_mode=simple_mode,
-                                                 base_size=base_size)
+
+                if(categoric_view_type == "Heatmap") {
+
+                    ggplot_object <- dataset %>%
+                        select(primary_variable,
+                               comparison_variable,
+                               sum_by_variable,
+                               count_distinct_variable) %>%
+                        mutate_factor_lump(factor_lump_number=filter_factor_lump_number,
+                                           ignore_columns=ignore_columns) %>%
+                        mutate_factor_reorder(variable_to_order_by=order_by_variable,
+                                              # if converted to date, pass NULL so nothing happens, otherwise pass primary variable
+                                              variable_to_order=primary_variable_to_reorder) %>%
+                        mutate_factor_reorder(variable_to_order_by=order_by_variable,
+                                              variable_to_order=comparison_variable) %>%
+                        mutate_factor_reorder(variable_to_order_by=order_by_variable,
+                                              variable_to_order=facet_variable) %>%
+                        rt_explore_plot_categoric_heatmap(x_variable=primary_variable,
+                                                          y_variable=comparison_variable,
+                                                          sum_by_variable=sum_by_variable,
+                                                          count_distinct_variable=count_distinct_variable,
+                                                          #multi_value_delimiter=NULL,
+                                                          #rev_na_factor_y=FALSE,
+                                                          base_size=base_size)
+
+                } else {
+
+                    ggplot_object <- dataset %>%
+                        select(primary_variable,
+                               comparison_variable,
+                               sum_by_variable,
+                               facet_variable,
+                               count_distinct_variable,
+                               temp_order_by_variable) %>%
+                        mutate_factor_lump(factor_lump_number=filter_factor_lump_number,
+                                           ignore_columns=ignore_columns) %>%
+                        mutate_factor_reorder(variable_to_order_by=order_by_variable,
+                                              # if converted to date, pass NULL so nothing happens, otherwise pass primary variable
+                                              variable_to_order=primary_variable_to_reorder) %>%
+                        mutate_factor_reorder(variable_to_order_by=order_by_variable,
+                                              variable_to_order=comparison_variable) %>%
+                        mutate_factor_reorder(variable_to_order_by=order_by_variable,
+                                              variable_to_order=facet_variable) %>%
+                        rt_explore_plot_value_totals(variable=primary_variable,
+                                                     comparison_variable=comparison_variable,
+                                                     sum_by_variable=sum_by_variable,
+                                                     facet_variable=facet_variable,
+                                                     count_distinct_variable=count_distinct_variable,
+                                                     order_by_count=FALSE,
+                                                     #order_by_count=order_by_variable == "Frequency",
+                                                     show_variable_totals=show_variable_totals,
+                                                     show_comparison_totals=show_comparison_totals,
+                                                     view_type=categoric_view_type,
+                                                     multi_value_delimiter=multi_value_delimiter,
+                                                     show_dual_axes=show_dual_axes,
+                                                     reverse_stack=reverse_stack_order,
+                                                     simple_mode=simple_mode,
+                                                     base_size=base_size)
+                }
             }
         }
 
@@ -2992,18 +3037,7 @@ update_var_plot_variables_from_url_params <- function(session, params, dataset, 
         selected_value <- params[['var_plots__categoric_view_type']]
         log_message_variable('updating categoric_view_type', params[['var_plots__categoric_view_type']])
     }
-    results <- var_plots__categoric_view_type__logic(dataset=dataset,
-                                                     comparison_variable=selected_comparison,
-                                                     sum_by_variable=selected_sum_by_variable,
-                                                     count_distinct_variable=selected_count_distinct_variable,
-                                                     current_value=selected_value)
-    updateSelectInput(session, 'var_plots__categoric_view_type',
-                      choices=results$choices,
-                      selected=results$selected)
 
-    #######################################################################
-    # Update Other Dynamic values that don't depend on other variables
-    #######################################################################
     selected_facet_variable <- global__select_variable_optional
     if (!is.null(params[['var_plots__facet_variable']])) {
 
@@ -3014,6 +3048,19 @@ update_var_plot_variables_from_url_params <- function(session, params, dataset, 
                       choices=c(global__select_variable_optional, categoric_column_names),
                       selected=selected_facet_variable)
 
+    results <- var_plots__categoric_view_type__logic(dataset=dataset,
+                                                     comparison_variable=selected_comparison,
+                                                     sum_by_variable=selected_sum_by_variable,
+                                                     count_distinct_variable=selected_count_distinct_variable,
+                                                     facet_variable=selected_facet_variable,
+                                                     current_value=selected_value)
+    updateSelectInput(session, 'var_plots__categoric_view_type',
+                      choices=results$choices,
+                      selected=results$selected)
+
+    #######################################################################
+    # Update Other Dynamic values that don't depend on other variables
+    #######################################################################
     selected_size_variable <- global__select_variable_optional
     if (!is.null(params[['var_plots__size_variable']])) {
 

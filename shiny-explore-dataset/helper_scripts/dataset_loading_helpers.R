@@ -69,7 +69,22 @@ select_preloaded_dataset <- function(dataset_name, defualt_path='') {
     if(dataset_name == 'Credit') {
 
         loaded_dataset <- dataset_or_null(paste0(defualt_path, 'example_datasets/credit.csv')) %>%
-            mutate(default = ifelse(default == 'yes', TRUE, FALSE))
+            mutate(default = ifelse(default == 'yes', TRUE, FALSE),
+                   purpose = ifelse(purpose == 'car0', 'car', purpose),
+                   checking_balance = factor(checking_balance,
+                                             levels = c("< 0 DM", "1 - 200 DM", "> 200 DM", "unknown"),
+                                             ordered = TRUE),
+                   credit_history = factor(credit_history,
+                                           levels = c("critical", "poor", "good", "very good", "perfect"),
+                                           ordered = TRUE),
+                   savings_balance = factor(savings_balance,
+                                            levels = c("< 100 DM", "100 - 500 DM", "500 - 1000 DM",
+                                                       "> 1000 DM", "unknown"),
+                                            ordered = TRUE),
+                   employment_duration = factor(employment_duration,
+                                             levels = c("unemployed", "< 1 year", "1 - 4 years",
+                                                        "4 - 7 years", "> 7 years"),
+                                             ordered = TRUE))
 
         data_description <- "This is where a description of the Credit dataset should be given."
 

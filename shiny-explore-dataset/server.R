@@ -360,7 +360,8 @@ shinyServer(function(input, output, session) {
 
     observeEvent_categoric <- observeEvent(c(input$var_plots__comparison,
                                              input$var_plots__sum_by_variable,
-                                             input$var_plots__count_distinct_variable), {
+                                             input$var_plots__count_distinct_variable,
+                                             input$var_plots__facet_variable), {
 
         req(!isolate(url_parameter_info$currently_updating))  # should never update if we have params (until set to false)
         req(reactive__source_data$data)
@@ -372,6 +373,7 @@ shinyServer(function(input, output, session) {
                                                              comparison_variable=input$var_plots__comparison,
                                                              sum_by_variable=input$var_plots__sum_by_variable,
                                                              count_distinct_variable=input$var_plots__count_distinct_variable,
+                                                             facet_variable=input$var_plots__facet_variable,
                                                              current_value=input$var_plots__categoric_view_type)
 
             updateSelectInput(session, 'var_plots__categoric_view_type',
