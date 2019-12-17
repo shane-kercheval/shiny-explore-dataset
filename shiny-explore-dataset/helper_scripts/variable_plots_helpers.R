@@ -2080,28 +2080,33 @@ create_ggplot_object <- function(dataset,
             }
         }
 
-        if(!is_null_or_empty_string(custom_title)) {
-            ggplot_object <- ggplot_object + labs(title=custom_title)
-        }
-        if(!is_null_or_empty_string(custom_subtitle)) {
-            ggplot_object <- ggplot_object + labs(subtitle=custom_subtitle)
-        }
-        if(!is_null_or_empty_string(custom_x_axis_label)) {
-            ggplot_object <- ggplot_object + labs(x=custom_x_axis_label)
-        }
-        if(!is_null_or_empty_string(custom_y_axis_label)) {
-            ggplot_object <- ggplot_object + labs(y=custom_y_axis_label)
-        }
-        if(!is_null_or_empty_string(custom_caption)) {
-            ggplot_object <- ggplot_object + labs(caption=custom_caption)
-        }
-        if(!is_null_or_empty_string(custom_tag)) {
-            ggplot_object <- ggplot_object + labs(tag=custom_tag)
+
+        if(is.null(categoric_view_type) || categoric_view_type != "Heatmap") {
+
+            if(!is_null_or_empty_string(custom_title)) {
+                ggplot_object <- ggplot_object + labs(title=custom_title)
+            }
+            if(!is_null_or_empty_string(custom_subtitle)) {
+                ggplot_object <- ggplot_object + labs(subtitle=custom_subtitle)
+            }
+            if(!is_null_or_empty_string(custom_x_axis_label)) {
+                ggplot_object <- ggplot_object + labs(x=custom_x_axis_label)
+            }
+            if(!is_null_or_empty_string(custom_y_axis_label)) {
+                ggplot_object <- ggplot_object + labs(y=custom_y_axis_label)
+            }
+            if(!is_null_or_empty_string(custom_caption)) {
+                ggplot_object <- ggplot_object + labs(caption=custom_caption)
+            }
+            if(!is_null_or_empty_string(custom_tag)) {
+                ggplot_object <- ggplot_object + labs(tag=custom_tag)
+            }
         }
 
         # only applicable for Numeric/Numeric; but need to do this after we add the `labs`
         if(scatter_add_histograms &&
             is.numeric(dataset[[primary_variable]]) &&
+            numeric_group_comp_variable == FALSE &&
             !is.null(comparison_variable) &&
             is.numeric(dataset[[comparison_variable]])) {
 
