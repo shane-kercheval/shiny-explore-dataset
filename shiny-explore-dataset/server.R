@@ -52,6 +52,7 @@ shinyServer(function(input, output, session) {
                                          progress=NULL)
 
     var_plots_graph_options_can_dirty <- reactiveVal(TRUE)
+    var_plots__convert_numerics_to_categoric__clicked <- reactiveVal(FALSE)
     ##########################################################################################################
     # LOAD DATA
     ##########################################################################################################
@@ -145,6 +146,7 @@ shinyServer(function(input, output, session) {
 
         # update when filtering changes
         local_dataset <- reactive__var_plots__filtered_data()
+        input$var_plots__convert_numerics_to_categoric__cut_seq_apply
 
         if(is_date_type(local_dataset[[input$var_plots__variable]]) && input$var_plots__convert_primary_date_to_categoric) {
 
@@ -152,8 +154,58 @@ shinyServer(function(input, output, session) {
                                                                                date_floor=input$var_plots__ts_date_floor)
         }
 
+        if(is.numeric(local_dataset[[input$var_plots__variable]]) &&
+            is.numeric(local_dataset[[input$var_plots__comparison]]) &&
+            input$var_plots__convert_numerics_to_categoric) {
+
+            n_cuts <- input$var_plots__convert_numerics_to_categoric__num_groups + 1
+            x_cut_sequence <- str_trim(isolate(input$var_plots__convert_numerics_to_categoric__x_cut_sequence))
+            y_cut_sequence <- str_trim(isolate(input$var_plots__convert_numerics_to_categoric__y_cut_sequence))
+
+            convert_variable <- function(dataset, variable, cut_sequence, n_cuts) {
+
+                if(is_null_or_empty_string(cut_sequence)) {
+
+                    cut_sequence <- seq(min(dataset[[variable]], na.rm = TRUE),
+                                        max(dataset[[variable]], na.rm = TRUE),
+                                        length.out = n_cuts)
+                } else {
+
+                    cut_sequence <- as.numeric(str_split(cut_sequence, ",", simplify = TRUE))
+                }
+
+                return (cut(dataset[[variable]],
+                            breaks = cut_sequence,
+                            include.lowest = TRUE, ordered_result = TRUE,
+                            dig.lab = 5))
+            }
+
+            local_dataset[[input$var_plots__variable]] <- convert_variable(local_dataset,
+                                                                           input$var_plots__variable,
+                                                                           y_cut_sequence,
+                                                                           n_cuts)
+
+            local_dataset[[input$var_plots__comparison]] <- convert_variable(local_dataset,
+                                                                             input$var_plots__comparison,
+                                                                             x_cut_sequence,
+                                                                             n_cuts)
+        }
+
         return (local_dataset)
     })
+
+    observeEvent(c(input$var_plots__convert_numerics_to_categoric), {
+
+        req(!isolate(url_parameter_info$currently_updating))  # should never update if we have params (until set to false)
+
+        if(!is.null(input$var_plots__convert_numerics_to_categoric) &&
+            input$var_plots__convert_numerics_to_categoric) {
+            
+            updateSelectInput(session, 'var_plots__categoric_view_type',
+                              selected="Heatmap")
+            var_plots__convert_numerics_to_categoric__clicked(TRUE)
+        }
+    }, ignoreInit=TRUE)
     
     # creates the ggplot object
     reactive__var_plots__ggplot <- reactive__var_plots__ggplot__creator(input,
@@ -161,7 +213,8 @@ shinyServer(function(input, output, session) {
                                                                         reactive__var_plots__final_dataset,
                                                                         reactive__source_data,
                                                                         url_parameter_info,
-                                                                        var_plots_graph_options_can_dirty)
+                                                                        var_plots_graph_options_can_dirty,
+                                                                        var_plots__convert_numerics_to_categoric__clicked)
     # stores any messages/warnings that ggplot produces when rendering the plot (outputs below the graph
     #(var_plots__ggplot_messages))
     reactiveValues__vp__ggplot_message <- reactiveValues(value=NULL)

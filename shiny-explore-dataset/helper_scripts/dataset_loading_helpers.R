@@ -70,7 +70,7 @@ select_preloaded_dataset <- function(dataset_name, defualt_path='') {
 
         loaded_dataset <- dataset_or_null(paste0(defualt_path, 'example_datasets/credit.csv')) %>%
             mutate(default = ifelse(default == 'yes', TRUE, FALSE),
-                   purpose = ifelse(purpose == 'car0', 'car', purpose),
+                   purpose = ifelse(as.character(purpose) == 'car0', 'car', as.character(purpose)),
                    checking_balance = factor(checking_balance,
                                              levels = c("< 0 DM", "1 - 200 DM", "> 200 DM", "unknown"),
                                              ordered = TRUE),

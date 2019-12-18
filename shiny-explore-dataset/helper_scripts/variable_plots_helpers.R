@@ -633,9 +633,12 @@ reactive__var_plots__filtered_data__creator <- function(input, dataset, reactive
 }
 
 hide_show_top_n_categories <- function(session, dataset, variable, comparison_variable, size_variable,
-                                       color_variable, facet_variable, conversion_group_variable) {
+                                       color_variable, facet_variable, conversion_group_variable,
+                                       convert_numerics_to_categoric) {
 
-    if(variable == global__select_variable || !(variable %in% colnames(dataset))) {
+    if(variable == global__select_variable ||
+        !(variable %in% colnames(dataset)) ||
+        convert_numerics_to_categoric) {
 
         reset_hide_var_plot_option(session, 'var_plots__filter_factor_lump_number')
         return (TRUE)
@@ -1032,7 +1035,8 @@ reactive__var_plots__ggplot__creator <- function(input,
                                                  # variable selected is a date
                                                  master_dataset,
                                                  url_parameter_info,
-                                                 var_plots_graph_options_can_dirty) {
+                                                 var_plots_graph_options_can_dirty,
+                                                 var_plots__convert_numerics_to_categoric__clicked) {
     
     eventReactive(c(input$var_plots__graph_options_apply,
                     input$var_plots__custom_labels_apply,
@@ -1096,7 +1100,8 @@ reactive__var_plots__ggplot__creator <- function(input,
         facet_variable <- null_if_select_variable_optional(input$var_plots__facet_variable)
         date_conversion_variable <- null_if_select_variable_optional(input$var_plots__date_conversion_variable)
         date_cr__snapshots__group_variable <- null_if_select_variable_optional(input$var_plots__date_cr__snapshots__group_variable)
-        convert_primary_date_to_categoric <- input$var_plots__convert_primary_date_to_categoric        
+        convert_primary_date_to_categoric <- input$var_plots__convert_primary_date_to_categoric
+        convert_numerics_to_categoric <- input$var_plots__convert_numerics_to_categoric
         year_over_year <- default_if_null_or_empty_string(isolate(input$var_plots__year_over_year),
                                                           default=FALSE)
         include_zero_y_axis <- default_if_null_or_empty_string(isolate(input$var_plots__include_zero_y_axis),
@@ -1169,6 +1174,14 @@ reactive__var_plots__ggplot__creator <- function(input,
         show_comparison_totals <- isolate(input$var_plots__show_comparison_totals)
         categoric_view_type <- default_if_null_or_empty_string(isolate(input$var_plots__categoric_view_type),
                                                                default="Bar")
+    	# if i've just clicked the "Convert to Categorics" checkbox, then let's default the view to
+	# a heatmap so it switches from a scatter to heatmap; seems more natural than a bar graph 
+        if(isolate(var_plots__convert_numerics_to_categoric__clicked())) {
+
+            categoric_view_type <- "Heatmap"
+            var_plots__convert_numerics_to_categoric__clicked(FALSE)
+        }
+
         
         trend_line <- isolate(input$var_plots__trend_line)
         trend_extend_date <- isolate(input$var_plots__trend_extend_date)
@@ -1196,7 +1209,8 @@ reactive__var_plots__ggplot__creator <- function(input,
                                                       size_variable,
                                                       color_variable,
                                                       facet_variable,
-                                                      date_cr__snapshots__group_variable)
+                                                      date_cr__snapshots__group_variable,
+                                                      convert_numerics_to_categoric)
 
         if(top_n_is_hidden ||
                is.null(filter_factor_lump_number) ||
@@ -1297,7 +1311,11 @@ reactive__var_plots__ggplot__creator <- function(input,
                     hide_show_categoric_categoric(session,
                                                   input,
                                                   has_comparison_variable=!is.null(comparison_variable),
-                                                  original_primary_var_is_date_type=is_date_type(master_dataset$data[[primary_variable]]))
+                                                  original_primary_var_is_date_type=is_date_type(master_dataset$data[[primary_variable]]),
+                                                  original_vars_are_numeric_type=is.numeric(master_dataset$data[[primary_variable]]) &&
+                                                                                 !is.null(master_dataset$data[[comparison_variable]]) &&
+                                                                                 is.numeric(master_dataset$data[[comparison_variable]]),
+                                                  updated_categoric_view_type=categoric_view_type)
                 }
             }
 
@@ -1319,6 +1337,7 @@ reactive__var_plots__ggplot__creator <- function(input,
                                               date_conversion_variable=date_conversion_variable,
                                               date_cr__snapshots__group_variable=date_cr__snapshots__group_variable,
                                               convert_primary_date_to_categoric=convert_primary_date_to_categoric,
+                                              convert_numerics_to_categoric=convert_numerics_to_categoric,
 
                                               numeric_aggregation=numeric_aggregation,
                                               numeric_group_comp_variable=numeric_group_comp_variable,
@@ -1411,6 +1430,7 @@ reactive__var_plots__ggplot__creator <- function(input,
 #' @param convert_primary_date_to_categoric doesn't actually convert the variable (that logic is in server.R);
 #'      but rather it is an indication that, if the primary variable is categoric, it was actually originally
 #'      a date, and we should adjust the graphs accordingly e.g. simple_mode (i.e. adjust color scheme)
+#' @param convert_numerics_to_categoric same as convert_primary_date_to_categoric
 create_ggplot_object <- function(dataset,
                                  primary_variable=NULL,
                                  comparison_variable=NULL,
@@ -1424,6 +1444,7 @@ create_ggplot_object <- function(dataset,
                                  date_conversion_variable=NULL,
                                  date_cr__snapshots__group_variable=NULL,
                                  convert_primary_date_to_categoric=FALSE,
+                                 convert_numerics_to_categoric=FALSE,
                                  
                                  numeric_aggregation='Mean',
                                  numeric_group_comp_variable=FALSE,
@@ -1508,6 +1529,7 @@ create_ggplot_object <- function(dataset,
         log_message_variable('date_conversion_variable', date_conversion_variable)
         log_message_variable('date_cr__snapshots__group_variable', date_cr__snapshots__group_variable)
         log_message_variable('convert_primary_date_to_categoric', convert_primary_date_to_categoric)
+        log_message_variable('convert_numerics_to_categoric', convert_numerics_to_categoric)
 
         log_message_variable('numeric_aggregation', numeric_aggregation)
         log_message_variable('numeric_group_comp_variable', numeric_group_comp_variable)
@@ -2020,7 +2042,6 @@ create_ggplot_object <- function(dataset,
                     primary_variable_to_reorder <- NULL
                 }
 
-
                 if(categoric_view_type == "Heatmap") {
 
                     ggplot_object <- dataset %>%
@@ -2030,13 +2051,9 @@ create_ggplot_object <- function(dataset,
                                count_distinct_variable) %>%
                         mutate_factor_lump(factor_lump_number=filter_factor_lump_number,
                                            ignore_columns=ignore_columns) %>%
-                        mutate_factor_reorder(variable_to_order_by=order_by_variable,
-                                              # if converted to date, pass NULL so nothing happens, otherwise pass primary variable
-                                              variable_to_order=primary_variable_to_reorder) %>%
-                        mutate_factor_reorder(variable_to_order_by=order_by_variable,
-                                              variable_to_order=comparison_variable) %>%
-                        rt_explore_plot_categoric_heatmap(x_variable=primary_variable,
-                                                          y_variable=comparison_variable,
+                        mutate_factor_reverse(primary_variable) %>%
+                        rt_explore_plot_categoric_heatmap(x_variable=comparison_variable,
+                                                          y_variable=primary_variable,
                                                           sum_by_variable=sum_by_variable,
                                                           count_distinct_variable=count_distinct_variable,
                                                           #multi_value_delimiter=NULL,
@@ -2176,12 +2193,34 @@ clear_variables <- function(session, input, swap_primary_and_comparison=FALSE) {
         updateSelectInput(session, 'var_plots__variable', selected=current_comparison_selected)
         updateSelectInput(session, 'var_plots__comparison', selected=current_variable_selected)
 
+
+        if(input$var_plots__convert_numerics_to_categoric) {
+
+            x_cut_sequence <- input$var_plots__convert_numerics_to_categoric__x_cut_sequence
+            y_cut_sequence <- input$var_plots__convert_numerics_to_categoric__y_cut_sequence
+
+            updateTextInput(session, 'var_plots__convert_numerics_to_categoric__x_cut_sequence', value=y_cut_sequence)
+            updateTextInput(session, 'var_plots__convert_numerics_to_categoric__y_cut_sequence', value=x_cut_sequence)
+        }
     } else {
 
         updateSelectInput(session, 'var_plots__variable', selected=global__select_variable)
         updateSelectInput(session, 'var_plots__comparison', selected=global__select_variable_optional)
+
+	# these are the variables that we do not want to clear if we are simply swapping the Primary and Secondary variables
+        updateCheckboxInput(session, 'var_plots__convert_numerics_to_categoric', value=var_plots__default_values[['var_plots__convert_numerics_to_categoric']])
+        updateCheckboxInput(session, 'var_plots__convert_numerics_to_categoric__num_groups', value=var_plots__default_values[['var_plots__convert_numerics_to_categoric__num_groups']])
+        updateCheckboxInput(session, 'var_plots__convert_numerics_to_categoric__x_cut_sequence', value=var_plots__default_values[['var_plots__convert_numerics_to_categoric__x_cut_sequence']])
+        updateCheckboxInput(session, 'var_plots__convert_numerics_to_categoric__y_cut_sequence', value=var_plots__default_values[['var_plots__convert_numerics_to_categoric__y_cut_sequence']])
+
+        updateCheckboxInput(session, 'var_plots__numeric_group_comp_variable', value=FALSE)
+        updateSelectInput(session,
+                          'var_plots__numeric_aggregation_function',
+                          selected=var_plots__default_values[['var_plots__numeric_aggregation_function']])
     }
 
+    # these are the variables we want to clear regardless if we are swapping or not.
+    updateCheckboxInput(session, 'var_plots__convert_primary_date_to_categoric', value=var_plots__default_values[['var_plots__convert_primary_date_to_categoric']])
     updateSelectInput(session, 'var_plots__num_cat_aggregation_type', selected=var_plots__default_values[['var_plots__num_cat_aggregation_type']])
     updateSelectInput(session, 'var_plots__sum_by_variable', selected=global__select_variable_optional)
     updateSelectInput(session, 'var_plots__count_distinct_variable', selected=global__select_variable_optional)
@@ -2191,13 +2230,7 @@ clear_variables <- function(session, input, swap_primary_and_comparison=FALSE) {
     updateSelectInput(session, 'var_plots__date_conversion_variable', selected=global__select_variable_optional)
     updateSelectInput(session, 'var_plots__date_cr__snapshots__group_variable', selected=global__select_variable_optional)
 
-    updateCheckboxInput(session, 'var_plots__convert_primary_date_to_categoric', value=var_plots__default_values[['var_plots__convert_primary_date_to_categoric']])
     updateSelectInput(session, 'var_plots__ts_date_floor', selected=var_plots__default_values[['var_plots__ts_date_floor']])
-
-    updateCheckboxInput(session, 'var_plots__numeric_group_comp_variable', value=FALSE)
-    updateSelectInput(session,
-                      'var_plots__numeric_aggregation_function',
-                      selected=var_plots__default_values[['var_plots__numeric_aggregation_function']])
     updateSelectInput(session,
                       'var_plots__numeric_aggregation',
                       selected=var_plots__default_values[['var_plots__numeric_aggregation']])
@@ -2404,6 +2437,11 @@ hide_show_date <- function(session, input) {
         reset_hide_var_plot_option(session, 'var_plots__numeric_aggregation')
     }
 
+    reset_hide_var_plot_option(session, 'var_plots__convert_numerics_to_categoric')
+    reset_hide_var_plot_option(session, 'var_plots__convert_numerics_to_categoric__num_groups')
+    reset_hide_var_plot_option(session, 'var_plots__convert_numerics_to_categoric__x_cut_sequence')
+    reset_hide_var_plot_option(session, 'var_plots__convert_numerics_to_categoric__y_cut_sequence')
+    shinyjs::hide('var_plots__convert_numerics_to_categoric__cut_seq_apply')
     reset_hide_var_plot_option(session, 'var_plots__size_variable')
     reset_hide_var_plot_option(session, 'var_plots__label_variables')
     reset_hide_var_plot_option(session, 'var_plots__numeric_group_comp_variable')
@@ -2450,6 +2488,11 @@ hide_show_numeric_numeric <- function(session,
 
     reset_hide_var_plot_option(session, 'var_plots__numeric_aggregation')
     shinyjs::show('var_plots__numeric_group_comp_variable')
+    
+    reset_hide_var_plot_option(session, 'var_plots__convert_numerics_to_categoric__num_groups')
+    reset_hide_var_plot_option(session, 'var_plots__convert_numerics_to_categoric__x_cut_sequence')
+    reset_hide_var_plot_option(session, 'var_plots__convert_numerics_to_categoric__y_cut_sequence')
+    shinyjs::hide('var_plots__convert_numerics_to_categoric__cut_seq_apply')
 
     if(is_grouping_main_variable) {
 
@@ -2469,6 +2512,7 @@ hide_show_numeric_numeric <- function(session,
             shinyjs::show('var_plots__numeric_show_resampled_conf_int')
         }
     
+        reset_hide_var_plot_option(session, 'var_plots__convert_numerics_to_categoric')
         reset_hide_var_plot_option(session, 'var_plots__size_variable')
         reset_hide_var_plot_option(session, 'var_plots__label_variables')
         reset_hide_var_plot_option(session, 'var_plots__color_variable')
@@ -2494,6 +2538,7 @@ hide_show_numeric_numeric <- function(session,
         reset_hide_var_plot_option(session, 'var_plots__numeric_show_resampled_conf_int')
         reset_hide_var_plot_option(session, 'var_plots__annotate_points')
 
+        shinyjs::show('var_plots__convert_numerics_to_categoric')
         shinyjs::show('var_plots__size_variable')
         shinyjs::show('var_plots__label_variables')
         shinyjs::show('var_plots__color_variable')
@@ -2635,6 +2680,11 @@ hide_show_numeric_categoric <- function(session,
         reset_hide_var_plot_option(session, 'var_plots__ts_date_floor')
     }
 
+    reset_hide_var_plot_option(session, 'var_plots__convert_numerics_to_categoric')
+    reset_hide_var_plot_option(session, 'var_plots__convert_numerics_to_categoric__num_groups')
+    reset_hide_var_plot_option(session, 'var_plots__convert_numerics_to_categoric__x_cut_sequence')
+    reset_hide_var_plot_option(session, 'var_plots__convert_numerics_to_categoric__y_cut_sequence')
+    shinyjs::hide('var_plots__convert_numerics_to_categoric__cut_seq_apply')
     reset_hide_var_plot_option(session, 'var_plots__date_conversion_variable')
     reset_hide_var_plot_option(session, 'var_plots__date_cr__snapshots__group_variable')
     reset_hide_var_plot_option(session, 'var_plots__date_cr__plot_type')
@@ -2684,7 +2734,9 @@ hide_show_numeric_categoric <- function(session,
 hide_show_categoric_categoric <- function(session,
                                           input,
                                           has_comparison_variable,
-                                          original_primary_var_is_date_type) {
+                                          original_primary_var_is_date_type,
+                                          original_vars_are_numeric_type,
+                                          updated_categoric_view_type) {
 
     log_message('hide_show_categoric_categoric')
 
@@ -2755,6 +2807,31 @@ hide_show_categoric_categoric <- function(session,
         reset_hide_var_plot_option(session, 'var_plots__ts_date_floor')
     }
 
+    # if the original dataset's primary & secondary variables are numeric, but now are converted to categoric
+    # let's show the controls that allow the user to change how the numerics are cut/sliced
+    if(original_vars_are_numeric_type) {
+
+        shinyjs::show('var_plots__convert_numerics_to_categoric')
+        shinyjs::show('var_plots__convert_numerics_to_categoric__num_groups')
+        shinyjs::show('var_plots__convert_numerics_to_categoric__x_cut_sequence')
+        shinyjs::show('var_plots__convert_numerics_to_categoric__y_cut_sequence')
+        shinyjs::show('var_plots__convert_numerics_to_categoric__cut_seq_apply')
+
+        reset_hide_var_plot_option(session, 'var_plots__facet_variable')
+        reset_hide_var_plot_option(session, 'var_plots__multi_value_delimiter')
+
+    } else {
+
+        reset_hide_var_plot_option(session, 'var_plots__convert_numerics_to_categoric')
+        shinyjs::reset_hide_var_plot_option('var_plots__convert_numerics_to_categoric__num_groups')
+        shinyjs::reset_hide_var_plot_option('var_plots__convert_numerics_to_categoric__x_cut_sequence')
+        shinyjs::reset_hide_var_plot_option('var_plots__convert_numerics_to_categoric__y_cut_sequence')
+        shinyjs::hide('var_plots__convert_numerics_to_categoric__cut_seq_apply')
+
+        shinyjs::show('var_plots__facet_variable')
+        shinyjs::show('var_plots__multi_value_delimiter')
+    }
+
     reset_hide_var_plot_option(session, 'var_plots__date_conversion_variable')
     reset_hide_var_plot_option(session, 'var_plots__date_cr__snapshots__group_variable')
     reset_hide_var_plot_option(session, 'var_plots__date_cr__plot_type')
@@ -2776,9 +2853,19 @@ hide_show_categoric_categoric <- function(session,
     reset_hide_var_plot_option(session, 'var_plots__color_variable')
 
     shinyjs::show('var_plots__categoric_view_type')
-    shinyjs::show('var_plots__show_variable_totals')
-    shinyjs::show('var_plots__show_comparison_totals')
-    shinyjs::show('var_plots__order_by_variable')
+    if(updated_categoric_view_type == "Heatmap") {
+
+        reset_hide_var_plot_option(session, 'var_plots__show_variable_totals')
+        reset_hide_var_plot_option(session, 'var_plots__show_comparison_totals')
+        reset_hide_var_plot_option(session, 'var_plots__order_by_variable')
+
+    } else {
+
+        shinyjs::show('var_plots__show_variable_totals')
+        shinyjs::show('var_plots__show_comparison_totals')
+        shinyjs::show('var_plots__order_by_variable')
+
+    }
     shinyjs::show('var_plots__base_size')
     reset_hide_var_plot_option(session, 'var_plots__vertical_annotations')
     reset_hide_var_plot_option(session, 'var_plots__horizontal_annotations')
@@ -2842,6 +2929,11 @@ observe__var_plots__hide_show_uncollapse_on_primary_vars <- function(session, in
             reset_hide_var_plot_option(session, 'var_plots__color_variable')
             reset_hide_var_plot_option(session, 'var_plots__facet_variable')
             reset_hide_var_plot_option(session, 'var_plots__convert_primary_date_to_categoric')
+            reset_hide_var_plot_option(session, 'var_plots__convert_numerics_to_categoric')
+            reset_hide_var_plot_option(session, 'var_plots__convert_numerics_to_categoric__num_groups')
+            reset_hide_var_plot_option(session, 'var_plots__convert_numerics_to_categoric__x_cut_sequence')
+            reset_hide_var_plot_option(session, 'var_plots__convert_numerics_to_categoric__y_cut_sequence')
+            shinyjs::hide('var_plots__convert_numerics_to_categoric__cut_seq_apply')
             reset_hide_var_plot_option(session, 'var_plots__ts_date_floor')
             reset_hide_var_plot_option(session, 'var_plots__date_conversion_variable')
             reset_hide_var_plot_option(session, 'var_plots__date_cr__snapshots__group_variable')
@@ -3112,6 +3204,38 @@ update_var_plot_variables_from_url_params <- function(session, params, dataset, 
     # Update Non-Dynamic
     # These should already have `choices` defined in UI
     #######################################################################
+    selected_convert_numerics_to_categoric <- var_plots__default_values[['var_plots__convert_numerics_to_categoric']]
+    if (!is.null(params[['var_plots__convert_numerics_to_categoric']])) {
+
+        selected_convert_numerics_to_categoric <- params[['var_plots__convert_numerics_to_categoric']]
+        log_message_variable('updating convert_numerics_to_categoric', selected_convert_numerics_to_categoric)
+    }
+    updateCheckboxInput(session, 'var_plots__convert_numerics_to_categoric', value=selected_convert_numerics_to_categoric)
+
+    selected_convert_numerics_to_categoric__num_groups <- var_plots__default_values[['var_plots__convert_numerics_to_categoric__num_groups']]
+    if (!is.null(params[['var_plots__convert_numerics_to_categoric__num_groups']])) {
+
+        selected_convert_numerics_to_categoric__num_groups <- params[['var_plots__convert_numerics_to_categoric__num_groups']]
+        log_message_variable('updating convert_numerics_to_categoric__num_groups', selected_convert_numerics_to_categoric__num_groups)
+    }
+    updateCheckboxInput(session, 'var_plots__convert_numerics_to_categoric__num_groups', value=selected_convert_numerics_to_categoric__num_groups)
+
+    selected_convert_numerics_to_categoric__x_cut_sequence <- var_plots__default_values[['var_plots__convert_numerics_to_categoric__x_cut_sequence']]
+    if (!is.null(params[['var_plots__convert_numerics_to_categoric__x_cut_sequence']])) {
+
+        selected_convert_numerics_to_categoric__x_cut_sequence <- params[['var_plots__convert_numerics_to_categoric__x_cut_sequence']]
+        log_message_variable('updating convert_numerics_to_categoric__x_cut_sequence', selected_convert_numerics_to_categoric__x_cut_sequence)
+    }
+    updateCheckboxInput(session, 'var_plots__convert_numerics_to_categoric__x_cut_sequence', value=selected_convert_numerics_to_categoric__x_cut_sequence)
+
+    selected_convert_numerics_to_categoric__y_cut_sequence <- var_plots__default_values[['var_plots__convert_numerics_to_categoric__y_cut_sequence']]
+    if (!is.null(params[['var_plots__convert_numerics_to_categoric__y_cut_sequence']])) {
+
+        selected_convert_numerics_to_categoric__y_cut_sequence <- params[['var_plots__convert_numerics_to_categoric__y_cut_sequence']]
+        log_message_variable('updating convert_numerics_to_categoric__y_cut_sequence', selected_convert_numerics_to_categoric__y_cut_sequence)
+    }
+    updateCheckboxInput(session, 'var_plots__convert_numerics_to_categoric__y_cut_sequence', value=selected_convert_numerics_to_categoric__y_cut_sequence)
+
     if (!is.null(params[['var_plots__numeric_group_comp_variable']])) {
 
         log_message_variable('updating numeric_group_comp_variable', params[['var_plots__numeric_group_comp_variable']])

@@ -77,3 +77,4 @@ https://cran.r-project.org/web/packages/tidyr/vignettes/tidy-data.html
     * fixed/workaround for shinybs bug where toolstips don't work when controls are updated (e.g. via updateSelectInput)
     * cleaned up controls (converted some to inline/side-by-side)
     * added `Count Distinct` option to categoric variables; made `Multi-Value Delimiter` available for `Comparison Variable` & new `Count Distinct Variable`
+    * added heatmaps for categoric/categoric graphs (with ability to convert numeric/numeric to categorics)

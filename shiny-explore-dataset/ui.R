@@ -132,6 +132,50 @@ shinyUI(fluidPage(theme="custom.css",
                                         width='100%')
                         ),
                         shinyjs::hidden(
+                            div(id='var_plots__convert_numerics_to_categoric',
+                                checkboxInput(inputId='var_plots__convert_numerics_to_categoric',
+                                              label="Convert to Categoric",
+                                              value=var_plots__default_values[['var_plots__convert_numerics_to_categoric']],
+                                              width='100%')
+                            )
+                        ),
+                        shinyjs::hidden(
+                            div(id='var_plots__convert_numerics_to_categoric__num_groups',
+                                #style="margin-left: 50px",
+                                sliderInput(inputId='var_plots__convert_numerics_to_categoric__num_groups',
+                                            label='Number of Groups',
+                                            min=1,
+                                            max=20,
+                                            step=1,
+                                            value=var_plots__default_values[['var_plots__convert_numerics_to_categoric__num_groups']],
+                                            width='100%')
+                            )
+                        ),
+                        shinyjs::hidden(
+                            div(id='var_plots__convert_numerics_to_categoric__x_cut_sequence',
+                                style="display:inline-block",
+                            textInput(inputId='var_plots__convert_numerics_to_categoric__x_cut_sequence',
+                                      label="X Cut Sequence",
+                                      width=120,
+                                      value=var_plots__default_values[['var_plots__convert_numerics_to_categoric__x_cut_sequence']]))
+                        ),
+                        shinyjs::hidden(
+                            div(id='var_plots__convert_numerics_to_categoric__y_cut_sequence',
+                                style="display:inline-block; margin-left: 10px",
+                                textInput(inputId='var_plots__convert_numerics_to_categoric__y_cut_sequence',
+                                          label="Y Cut Sequence",
+                                          width=120,
+                                          value=var_plots__default_values[['var_plots__convert_numerics_to_categoric__y_cut_sequence']])
+                            )
+                        ),
+                        shinyjs::hidden(
+                            div(id='var_plots__convert_numerics_to_categoric__cut_seq_apply',
+                                style="display:inline-block; margin-left: 10px",
+                                actionButton(inputId='var_plots__convert_numerics_to_categoric__cut_seq_apply',
+                                                             label='Apply')
+                            )
+                        ),
+                        shinyjs::hidden(
                             selectInput(inputId='var_plots__num_cat_aggregation_type',
                                         label='Aggregation Type',
                                         choices=global__num_cat_aggregation_type,

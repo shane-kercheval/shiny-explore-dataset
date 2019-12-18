@@ -40,7 +40,7 @@ null_if_select_variable_optional <- function(value) {
 
 is_null_or_empty_string <- function(value) {
 
-    return(is.null(value) || value == "")
+    return(identical(value, character(0)) || is.null(value) || value == "")
 }
 
 default_if_null_or_empty_string <- function(value, string_values_as_null=NULL, default=NULL) {
@@ -53,6 +53,13 @@ default_if_null_or_empty_string <- function(value, string_values_as_null=NULL, d
 
         return (value)
     }
+}
+
+mutate_factor_reverse <- function(dataset, column_name) {
+
+    dataset[[column_name]] <- fct_rev(dataset[[column_name]])
+
+    return (dataset)
 }
 
 mutate_factor_lump <- function(dataset, factor_lump_number=NULL, ignore_columns=NULL) {
