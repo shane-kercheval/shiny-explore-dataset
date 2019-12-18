@@ -529,3 +529,95 @@ bsTooltipResistant <- function(id, title, content, placement = "bottom", trigger
         ")))
     htmltools::attachDependencies(bsTag, shinyBS:::shinyBSDep)
 }
+
+update_select_input_choices_selected <- function(session, params, var_plots_variable, choices, selected) {
+    
+    if (!is.null(params[[var_plots_variable]])) {
+
+        selected <- params[[var_plots_variable]]
+        log_message_variable(paste('updating', var_plots_variable), selected)
+    }
+    updateSelectInput(session, var_plots_variable,
+                      choices=choices,
+                      selected=selected)
+}
+
+update_select_input <- function(session, params, var_plots_variable) {
+    if (!is.null(params[[var_plots_variable]])) {
+
+        log_message_variable(paste('updating', var_plots_variable), params[[var_plots_variable]])
+        updateSelectInput(session, var_plots_variable, selected=params[[var_plots_variable]])
+    }
+}
+
+update_checkbox_input <- function(session, params, var_plots_variable) {
+    if (!is.null(params[[var_plots_variable]])) {
+
+        log_message_variable(paste('updating', var_plots_variable), params[[var_plots_variable]])
+        updateCheckboxInput(session, var_plots_variable, value=params[[var_plots_variable]])
+    }
+}
+
+update_slider_input <- function(session, params, var_plots_variable) {
+
+    if (!is.null(params[[var_plots_variable]])) {
+
+        log_message_variable(paste('updating', var_plots_variable), params[[var_plots_variable]])
+        updateSliderInput(session, var_plots_variable, value=params[[var_plots_variable]])
+    }
+}
+
+update_text_input <- function(session, params, var_plots_variable) {
+
+    if (!is.null(params[[var_plots_variable]])) {
+
+        log_message_variable(paste('updating', var_plots_variable), params[[var_plots_variable]])
+        updateTextInput(session, var_plots_variable, value=params[[var_plots_variable]])
+    }
+}
+
+update_radio_buttons <- function(session, params, var_plots_variable) {
+
+    if (!is.null(params[[var_plots_variable]])) {
+
+        log_message_variable(paste('updating', var_plots_variable), params[[var_plots_variable]])
+        updateRadioButtons(session, var_plots_variable, selected=params[[var_plots_variable]])
+    }
+}
+
+update_slider_text_input <- function(session, params, var_plots_variable, choices) {
+
+    if (!is.null(params[[var_plots_variable]])) {
+        log_message_variable(paste('updating', var_plots_variable), params[[var_plots_variable]])
+        updateSliderTextInput(session, var_plots_variable,
+                              choices=choices,
+                              selected=params[[var_plots_variable]])
+    }
+}
+
+update_numeric_input <- function(session, params, var_plots_variable) {
+
+    if (!is.null(params[[var_plots_variable]])) {
+
+        log_message_variable(paste('updating', var_plots_variable), params[[var_plots_variable]])
+        updateNumericInput(session, var_plots_variable, value=params[[var_plots_variable]])
+    }
+}
+
+update_date_input <- function(session, params, var_plots_variable) {
+
+    if (!is.null(params[[var_plots_variable]])) {
+
+        log_message_variable(paste('updating', var_plots_variable), params[[var_plots_variable]])
+        updateDateInput(session, var_plots_variable, value=params[[var_plots_variable]])
+    }
+}
+
+update_text_area_input <- function(session, params, var_plots_variable) {
+
+    if (!is.null(params[[var_plots_variable]])) {
+
+        log_message_variable(paste('updating', var_plots_variable), params[[var_plots_variable]])
+        updateTextAreaInput(session, var_plots_variable, value=params[[var_plots_variable]])
+    }
+}

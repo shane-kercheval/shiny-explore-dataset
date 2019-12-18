@@ -3161,102 +3161,76 @@ update_var_plot_variables_from_url_params <- function(session, params, dataset, 
     #######################################################################
     # Update Other Dynamic values that don't depend on other variables
     #######################################################################
-    selected_size_variable <- global__select_variable_optional
-    if (!is.null(params[['var_plots__size_variable']])) {
-
-        selected_size_variable <- params[['var_plots__size_variable']]
-        log_message_variable('updating size_variable', params[['var_plots__size_variable']])
-    }
-    updateSelectInput(session, 'var_plots__size_variable',
-                      choices=c(global__select_variable_optional, column_names),
-                      selected=selected_size_variable)
-
-    selected_cr_group_variable <- global__select_variable_optional
-    if (!is.null(params[['var_plots__date_cr__snapshots__group_variable']])) {
-
-        selected_cr_group_variable <- params[['var_plots__date_cr__snapshots__group_variable']]
-        log_message_variable('updating cr_group_variable', params[['var_plots__date_cr__snapshots__group_variable']])
-    }
-    updateSelectInput(session, 'var_plots__date_cr__snapshots__group_variable',
-                      choices=c(global__select_variable_optional, categoric_column_names),
-                      selected=selected_cr_group_variable)
-
-    selected_label_variables <- NULL
-    if (!is.null(params[['var_plots__label_variables']])) {
-
-        selected_label_variables <- params[['var_plots__label_variables']]
-        log_message_variable('updating label_variables', paste0(params[['var_plots__label_variables']], collapse="; "))
-    }
-    updateSelectInput(session, 'var_plots__label_variables',
-                      choices=column_names,
-                      selected=selected_label_variables)
-
-    selected_order_by_variable <- "Default"
-    if (!is.null(params[['var_plots__order_by_variable']])) {
-
-        selected_order_by_variable <- params[['var_plots__order_by_variable']]
-        log_message_variable('updating order_by_variable', params[['var_plots__order_by_variable']])
-    }
-    updateSelectInput(session, 'var_plots__order_by_variable',
-                      choices=c("Default", "Frequency", numeric_column_names),
-                      selected=selected_order_by_variable)
-
+    update_select_input_choices_selected(session, params, 'var_plots__size_variable', 
+                                         choices=c(global__select_variable_optional, column_names),
+                                         selected=global__select_variable_optional)
+    update_select_input_choices_selected(session, params, 'var_plots__date_cr__snapshots__group_variable',
+                                         choices=c(global__select_variable_optional, categoric_column_names),
+                                         selected=global__select_variable_optional)
+    update_select_input_choices_selected(session, params, 'var_plots__label_variables',
+                                         choices=column_names,
+                                         selected=NULL)
+    update_select_input_choices_selected(session, params, 'var_plots__order_by_variable',
+                                         choices=c("Default", "Frequency", numeric_column_names),
+                                         selected="Default")
     #######################################################################
     # Update Non-Dynamic
     # These should already have `choices` defined in UI
     #######################################################################
-    selected_convert_numerics_to_categoric <- var_plots__default_values[['var_plots__convert_numerics_to_categoric']]
-    if (!is.null(params[['var_plots__convert_numerics_to_categoric']])) {
 
-        selected_convert_numerics_to_categoric <- params[['var_plots__convert_numerics_to_categoric']]
-        log_message_variable('updating convert_numerics_to_categoric', selected_convert_numerics_to_categoric)
-    }
-    updateCheckboxInput(session, 'var_plots__convert_numerics_to_categoric', value=selected_convert_numerics_to_categoric)
+    update_checkbox_input(session, params, 'var_plots__convert_numerics_to_categoric')
+    update_slider_input(session, params, 'var_plots__convert_numerics_to_categoric__num_groups')
+    update_text_input(session, params, 'var_plots__convert_numerics_to_categoric__x_cut_sequence')
+    update_text_input(session, params, 'var_plots__convert_numerics_to_categoric__y_cut_sequence')
+    update_checkbox_input(session, params, 'var_plots__numeric_group_comp_variable')
+    update_select_input(session, params, 'var_plots__numeric_aggregation_function')
+    update_select_input(session, params, 'var_plots__numeric_aggregation')
+    update_text_input(session, params, 'var_plots__multi_value_delimiter')
+    update_checkbox_input(session, params, 'var_plots__annotate_points')
+    update_checkbox_input(session, params, 'var_plots__show_points')
+    update_select_input(session, params, 'var_plots__date_cr__plot_type')
+    update_text_input(session, params, 'var_plots__date_cr__snapshots__values')
+    update_select_input(session, params, 'var_plots__date_cr__snapshots__units')
+    update_radio_buttons(session, params, 'var_plots__date_cr__snapshots__color_or_facet')
+    update_slider_input(session, params, 'var_plots__date_cr__last_n_cohorts')
+    update_slider_input(session, params, 'var_plots__date_cr__n_units_after_first_date')
+    update_checkbox_input(session, params, 'var_plots__date_cr__separate_colors')
+    update_checkbox_input(session, params, 'var_plots__year_over_year')
+    update_checkbox_input(session, params, 'var_plots__include_zero_y_axis')
+    update_select_input(session, params, 'var_plots__numeric_graph_type')
+    update_select_input(session, params, 'var_plots__num_cat_aggregation_type')
+    update_checkbox_input(session, params, 'var_plots__reverse_stack_order')
+    update_checkbox_input(session, params, 'var_plots__show_variable_totals')
+    update_checkbox_input(session, params, 'var_plots__show_comparison_totals')
+    update_numeric_input(session, params, 'var_plots__histogram_bins')
+    update_checkbox_input(session, params, 'var_plots__jitter')
+    update_checkbox_input(session, params, 'var_plots__scatter_add_histograms')
+    update_numeric_input(session, params, 'var_plots__numeric_aggregation_count_minimum')
+    update_checkbox_input(session, params, 'var_plots__numeric_show_resampled_conf_int')
+    update_radio_buttons(session, params, 'var_plots__trend_line')
+    update_date_input(session, params, 'var_plots__trend_extend_date')
+    update_radio_buttons(session, params, 'var_plots__trend_line_se')
+    update_select_input(session, params, 'var_plots__ts_date_floor')
+    update_select_input(session, params, 'var_plots__ts_date_break_format')
+    update_text_input(session, params, 'var_plots__ts_breaks_width')
+    update_checkbox_input(session, params, 'var_plots__scale_x_log_base_10')
+    update_numeric_input(session, params, 'var_plots__x_zoom_min')
+    update_numeric_input(session, params, 'var_plots__x_zoom_max')
+    update_checkbox_input(session, params, 'var_plots__scale_y_log_base_10')
+    update_numeric_input(session, params, 'var_plots__y_zoom_min')
+    update_numeric_input(session, params, 'var_plots__y_zoom_max')
+    update_text_input(session, params, 'var_plots__custom_title')
+    update_text_input(session, params, 'var_plots__custom_subtitle')
+    update_text_input(session, params, 'var_plots__custom_x_axis_label')
+    update_text_input(session, params, 'var_plots__custom_y_axis_label')
+    update_text_input(session, params, 'var_plots__custom_caption')
+    update_text_input(session, params, 'var_plots__custom_tag')
+    update_checkbox_input(session, params, 'var_plots__pretty_text')
+    update_text_area_input(session, params, 'var_plots__vertical_annotations')
+    update_text_area_input(session, params, 'var_plots__horizontal_annotations')
+    update_slider_text_input(session, params, 'var_plots__transparency', c(seq(0, 90, 10), 99))
+    update_slider_text_input(session, params, 'var_plots__base_size', seq(6, 20, 1))
 
-    selected_convert_numerics_to_categoric__num_groups <- var_plots__default_values[['var_plots__convert_numerics_to_categoric__num_groups']]
-    if (!is.null(params[['var_plots__convert_numerics_to_categoric__num_groups']])) {
-
-        selected_convert_numerics_to_categoric__num_groups <- params[['var_plots__convert_numerics_to_categoric__num_groups']]
-        log_message_variable('updating convert_numerics_to_categoric__num_groups', selected_convert_numerics_to_categoric__num_groups)
-    }
-    updateCheckboxInput(session, 'var_plots__convert_numerics_to_categoric__num_groups', value=selected_convert_numerics_to_categoric__num_groups)
-
-    selected_convert_numerics_to_categoric__x_cut_sequence <- var_plots__default_values[['var_plots__convert_numerics_to_categoric__x_cut_sequence']]
-    if (!is.null(params[['var_plots__convert_numerics_to_categoric__x_cut_sequence']])) {
-
-        selected_convert_numerics_to_categoric__x_cut_sequence <- params[['var_plots__convert_numerics_to_categoric__x_cut_sequence']]
-        log_message_variable('updating convert_numerics_to_categoric__x_cut_sequence', selected_convert_numerics_to_categoric__x_cut_sequence)
-    }
-    updateCheckboxInput(session, 'var_plots__convert_numerics_to_categoric__x_cut_sequence', value=selected_convert_numerics_to_categoric__x_cut_sequence)
-
-    selected_convert_numerics_to_categoric__y_cut_sequence <- var_plots__default_values[['var_plots__convert_numerics_to_categoric__y_cut_sequence']]
-    if (!is.null(params[['var_plots__convert_numerics_to_categoric__y_cut_sequence']])) {
-
-        selected_convert_numerics_to_categoric__y_cut_sequence <- params[['var_plots__convert_numerics_to_categoric__y_cut_sequence']]
-        log_message_variable('updating convert_numerics_to_categoric__y_cut_sequence', selected_convert_numerics_to_categoric__y_cut_sequence)
-    }
-    updateCheckboxInput(session, 'var_plots__convert_numerics_to_categoric__y_cut_sequence', value=selected_convert_numerics_to_categoric__y_cut_sequence)
-
-    if (!is.null(params[['var_plots__numeric_group_comp_variable']])) {
-
-        log_message_variable('updating numeric_group_comp_variable', params[['var_plots__numeric_group_comp_variable']])
-        updateCheckboxInput(session, 'var_plots__numeric_group_comp_variable', value=params[['var_plots__numeric_group_comp_variable']])
-    }
-    if (!is.null(params[['var_plots__numeric_aggregation_function']])) {
-
-        log_message_variable('updating numeric_aggregation_function', params[['var_plots__numeric_aggregation_function']])
-        updateSelectInput(session, 'var_plots__numeric_aggregation_function', selected=params[['var_plots__numeric_aggregation_function']])
-    }
-    if (!is.null(params[['var_plots__numeric_aggregation']])) {
-
-        log_message_variable('updating numeric_aggregation', params[['var_plots__numeric_aggregation']])
-        updateSelectInput(session, 'var_plots__numeric_aggregation', selected=params[['var_plots__numeric_aggregation']])
-    }
-    if (!is.null(params[['var_plots__multi_value_delimiter']])) {
-
-        log_message_variable('updating multi_value_delimiter', params[['var_plots__multi_value_delimiter']])
-        updateTextInput(session, 'var_plots__multi_value_delimiter', value=params[['var_plots__multi_value_delimiter']])
-    }
     if (!is.null(params[['var_plots__filter_factor_lump_number']])) {
 
         # this object is actually a string, not a number, because "Off" can be chosen, and setting the
@@ -3270,185 +3244,5 @@ update_var_plot_variables_from_url_params <- function(session, params, dataset, 
                               choices=as.character(c("Off", seq(1, 10), seq(15, 50, 5))),
                               selected=lump_number_string)
     }
-    if (!is.null(params[['var_plots__annotate_points']])) {
-        log_message_variable('updating annotate_points', params[['var_plots__annotate_points']])
-        updateCheckboxInput(session, 'var_plots__annotate_points', value=params[['var_plots__annotate_points']])
-    }
-    if (!is.null(params[['var_plots__show_points']])) {
-        log_message_variable('updating show_points', params[['var_plots__show_points']])
-        updateCheckboxInput(session, 'var_plots__show_points', value=params[['var_plots__show_points']])
-    }
-    if (!is.null(params[['var_plots__date_cr__plot_type']])) {
-        log_message_variable('updating date_cr__plot_type', params[['var_plots__date_cr__plot_type']])
-        updateSelectInput(session, 'var_plots__date_cr__plot_type', selected=params[['var_plots__date_cr__plot_type']])
-    }
-    if (!is.null(params[['var_plots__date_cr__snapshots__values']])) {
-        log_message_variable('updating date_cr__snapshots__values', params[['var_plots__date_cr__snapshots__values']])
-        updateTextInput(session, 'var_plots__date_cr__snapshots__values', value=params[['var_plots__date_cr__snapshots__values']])
-    }
-    if (!is.null(params[['var_plots__date_cr__snapshots__units']])) {
-        log_message_variable('updating date_cr__snapshots__units', params[['var_plots__date_cr__snapshots__units']])
-        updateSelectInput(session, 'var_plots__date_cr__snapshots__units', selected=params[['var_plots__date_cr__snapshots__units']])
-    }
-    if (!is.null(params[['var_plots__date_cr__snapshots__color_or_facet']])) {
-        log_message_variable('updating date_cr__snapshots__color_or_facet', params[['var_plots__date_cr__snapshots__color_or_facet']])
-        updateRadioButtons(session, 'var_plots__date_cr__snapshots__color_or_facet', selected=params[['var_plots__date_cr__snapshots__color_or_facet']])
-    }
-    if (!is.null(params[['var_plots__date_cr__last_n_cohorts']])) {
-        log_message_variable('updating date_cr__last_n_cohorts', params[['var_plots__date_cr__last_n_cohorts']])
-        updateSliderInput(session, 'var_plots__date_cr__last_n_cohorts', value=params[['var_plots__date_cr__last_n_cohorts']])
-    }
-    if (!is.null(params[['var_plots__date_cr__n_units_after_first_date']])) {
-        log_message_variable('updating date_cr__n_units_after_first_date', params[['var_plots__date_cr__n_units_after_first_date']])
-        updateSliderInput(session, 'var_plots__date_cr__n_units_after_first_date', value=params[['var_plots__date_cr__n_units_after_first_date']])
-    }
-    if (!is.null(params[['var_plots__date_cr__separate_colors']])) {
-        log_message_variable('updating date_cr__separate_colors', params[['var_plots__date_cr__separate_colors']])
-        updateCheckboxInput(session, 'var_plots__date_cr__separate_colors', value=params[['var_plots__date_cr__separate_colors']])
-    }
-    if (!is.null(params[['var_plots__year_over_year']])) {
-        log_message_variable('updating year_over_year', params[['var_plots__year_over_year']])
-        updateCheckboxInput(session, 'var_plots__year_over_year', value=params[['var_plots__year_over_year']])
-    }
-    if (!is.null(params[['var_plots__include_zero_y_axis']])) {
-        log_message_variable('updating include_zero_y_axis', params[['var_plots__include_zero_y_axis']])
-        updateCheckboxInput(session, 'var_plots__include_zero_y_axis', value=params[['var_plots__include_zero_y_axis']])
-    }
-    if (!is.null(params[['var_plots__numeric_graph_type']])) {
-        log_message_variable('updating numeric_graph_type', params[['var_plots__numeric_graph_type']])
-        updateSelectInput(session, 'var_plots__numeric_graph_type', selected=params[['var_plots__numeric_graph_type']])
-    }
-    if (!is.null(params[['var_plots__num_cat_aggregation_type']])) {
-        log_message_variable('updating num_cat_aggregation_type', params[['var_plots__num_cat_aggregation_type']])
-        updateSelectInput(session, 'var_plots__num_cat_aggregation_type', selected=params[['var_plots__num_cat_aggregation_type']])
-    }
-    if (!is.null(params[['var_plots__reverse_stack_order']])) {
-        log_message_variable('updating show_variable_totals', params[['var_plots__reverse_stack_order']])
-        updateCheckboxInput(session, 'var_plots__reverse_stack_order', value=params[['var_plots__reverse_stack_order']])
-    }
-    if (!is.null(params[['var_plots__show_variable_totals']])) {
-        log_message_variable('updating show_variable_totals', params[['var_plots__show_variable_totals']])
-        updateCheckboxInput(session, 'var_plots__show_variable_totals', value=params[['var_plots__show_variable_totals']])
-    }
-    if (!is.null(params[['var_plots__show_comparison_totals']])) {
-        log_message_variable('updating show_comparison_totals', params[['var_plots__show_comparison_totals']])
-        updateCheckboxInput(session, 'var_plots__show_comparison_totals', value=params[['var_plots__show_comparison_totals']])
-    }
-    if (!is.null(params[['var_plots__histogram_bins']])) {
-        log_message_variable('updating histogram_bins', params[['var_plots__histogram_bins']])
-        updateNumericInput(session, 'var_plots__histogram_bins', value=params[['var_plots__histogram_bins']])
-    }
-    if (!is.null(params[['var_plots__transparency']])) {
-        log_message_variable('updating transparency', params[['var_plots__transparency']])
-        updateSliderTextInput(session, 'var_plots__transparency',
-                                            choices=c(seq(0, 90, 10), 99),
-                                            selected=params[['var_plots__transparency']])
-    }
-    if (!is.null(params[['var_plots__jitter']])) {
-        log_message_variable('updating jitter', params[['var_plots__jitter']])
-        updateCheckboxInput(session, 'var_plots__jitter', value=params[['var_plots__jitter']])
-    }
-    if (!is.null(params[['var_plots__scatter_add_histograms']])) {
-        log_message_variable('updating scatter_add_histograms', params[['var_plots__scatter_add_histograms']])
-        updateCheckboxInput(session, 'var_plots__scatter_add_histograms', value=params[['var_plots__scatter_add_histograms']])
-    }
-    if (!is.null(params[['var_plots__numeric_aggregation_count_minimum']])) {
-        log_message_variable('updating numeric_aggregation_count_minimum', params[['var_plots__numeric_aggregation_count_minimum']])
-        updateNumericInput(session, 'var_plots__numeric_aggregation_count_minimum', value=params[['var_plots__numeric_aggregation_count_minimum']])
-    }
-    if (!is.null(params[['var_plots__numeric_show_resampled_conf_int']])) {
-        log_message_variable('updating numeric_show_resampled_conf_int', params[['var_plots__numeric_show_resampled_conf_int']])
-        updateCheckboxInput(session, 'var_plots__numeric_show_resampled_conf_int', value=params[['var_plots__numeric_show_resampled_conf_int']])
-    }
-    if (!is.null(params[['var_plots__trend_line']])) {
-        log_message_variable('updating trend_line', params[['var_plots__trend_line']])
-        updateRadioButtons(session, 'var_plots__trend_line', selected=params[['var_plots__trend_line']])
-    }
-    if (!is.null(params[['var_plots__trend_extend_date']])) {
-        log_message_variable('updating trend_extend_date', params[['var_plots__trend_extend_date']])
-        updateDateInput(session, inputId='var_plots__trend_extend_date', value = params[['var_plots__trend_extend_date']])
-    }
-    if (!is.null(params[['var_plots__trend_line_se']])) {
-        log_message_variable('updating trend_line_se', params[['var_plots__trend_line_se']])
-        updateRadioButtons(session, 'var_plots__trend_line_se', selected=params[['var_plots__trend_line_se']])
-    }
-    if (!is.null(params[['var_plots__ts_date_floor']])) {
-        log_message_variable('updating ts_date_floor', params[['var_plots__ts_date_floor']])
-        updateSelectInput(session, 'var_plots__ts_date_floor', selected=params[['var_plots__ts_date_floor']])
-    }
-    if (!is.null(params[['var_plots__ts_date_break_format']])) {
-        log_message_variable('updating ts_date_break_format', params[['var_plots__ts_date_break_format']])
-        updateSelectInput(session, 'var_plots__ts_date_break_format', selected=params[['var_plots__ts_date_break_format']])
-    }
-    if (!is.null(params[['var_plots__ts_breaks_width']])) {
-        log_message_variable('updating ts_breaks_width', params[['var_plots__ts_breaks_width']])
-        updateTextInput(session, 'var_plots__ts_breaks_width', value=params[['var_plots__ts_breaks_width']])
-    }
-    if (!is.null(params[['var_plots__scale_x_log_base_10']])) {
-        log_message_variable('updating scale_x_log_base_10', params[['var_plots__scale_x_log_base_10']])
-        updateCheckboxInput(session, 'var_plots__scale_x_log_base_10', value=params[['var_plots__scale_x_log_base_10']])
-    }
-    if (!is.null(params[['var_plots__x_zoom_min']])) {
-        log_message_variable('updating x_zoom_min', params[['var_plots__x_zoom_min']])
-        updateNumericInput(session, 'var_plots__x_zoom_min', value=params[['var_plots__x_zoom_min']])
-    }
-    if (!is.null(params[['var_plots__x_zoom_max']])) {
-        log_message_variable('updating x_zoom_max', params[['var_plots__x_zoom_max']])
-        updateNumericInput(session, 'var_plots__x_zoom_max', value=params[['var_plots__x_zoom_max']])
-    }
-    if (!is.null(params[['var_plots__scale_y_log_base_10']])) {
-        log_message_variable('updating scale_y_log_base_10', params[['var_plots__scale_y_log_base_10']])
-        updateCheckboxInput(session, 'var_plots__scale_y_log_base_10', value=params[['var_plots__scale_y_log_base_10']])
-    }
-    if (!is.null(params[['var_plots__y_zoom_min']])) {
-        log_message_variable('updating y_zoom_min', params[['var_plots__y_zoom_min']])
-        updateNumericInput(session, 'var_plots__y_zoom_min', value=params[['var_plots__y_zoom_min']])
-    }
-    if (!is.null(params[['var_plots__y_zoom_max']])) {
-        log_message_variable('updating y_zoom_max', params[['var_plots__y_zoom_max']])
-        updateNumericInput(session, 'var_plots__y_zoom_max', value=params[['var_plots__y_zoom_max']])
-    }
-    if (!is.null(params[['var_plots__custom_title']])) {
-        log_message_variable('updating custom_title', params[['var_plots__custom_title']])
-        updateTextInput(session, 'var_plots__custom_title', value=params[['var_plots__custom_title']])
-    }
-    if (!is.null(params[['var_plots__custom_subtitle']])) {
-        log_message_variable('updating custom_subtitle', params[['var_plots__custom_subtitle']])
-        updateTextInput(session, 'var_plots__custom_subtitle', value=params[['var_plots__custom_subtitle']])
-    }
-    if (!is.null(params[['var_plots__custom_x_axis_label']])) {
-        log_message_variable('updating custom_x_axis_label', params[['var_plots__custom_x_axis_label']])
-        updateTextInput(session, 'var_plots__custom_x_axis_label', value=params[['var_plots__custom_x_axis_label']])
-    }
-    if (!is.null(params[['var_plots__custom_y_axis_label']])) {
-        log_message_variable('updating custom_y_axis_label', params[['var_plots__custom_y_axis_label']])
-        updateTextInput(session, 'var_plots__custom_y_axis_label', value=params[['var_plots__custom_y_axis_label']])
-    }
-    if (!is.null(params[['var_plots__custom_caption']])) {
-        log_message_variable('updating custom_caption', params[['var_plots__custom_caption']])
-        updateTextInput(session, 'var_plots__custom_caption', value=params[['var_plots__custom_caption']])
-    }
-    if (!is.null(params[['var_plots__custom_tag']])) {
-        log_message_variable('updating custom_tag', params[['var_plots__custom_tag']])
-        updateTextInput(session, 'var_plots__custom_tag', value=params[['var_plots__custom_tag']])
-    }
-    if (!is.null(params[['var_plots__pretty_text']])) {
-        log_message_variable('updating pretty_text', params[['var_plots__pretty_text']])
-        updateCheckboxInput(session, 'var_plots__pretty_text', value=params[['var_plots__pretty_text']])
-    }
-    if (!is.null(params[['var_plots__base_size']])) {
-        log_message_variable('updating base_size', params[['var_plots__base_size']])
-        updateSliderTextInput(session,
-                      'var_plots__base_size',
-                      choices=seq(6, 20, 1),
-                      selected=params[['var_plots__base_size']])
-    }
-    if (!is.null(params[['var_plots__vertical_annotations']])) {
-        log_message_variable('updating vertical_annotations', params[['var_plots__vertical_annotations']])
-        updateTextAreaInput(session, 'var_plots__vertical_annotations', value=params[['var_plots__vertical_annotations']])
-    }
-    if (!is.null(params[['var_plots__horizontal_annotations']])) {
-        log_message_variable('updating horizontal_annotations', params[['var_plots__horizontal_annotations']])
-        updateTextAreaInput(session, 'var_plots__horizontal_annotations', value=params[['var_plots__horizontal_annotations']])
-    }
+
 }
