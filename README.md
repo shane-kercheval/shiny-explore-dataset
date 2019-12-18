@@ -67,14 +67,14 @@ https://cran.r-project.org/web/packages/tidyr/vignettes/tidy-data.html
 
 # Version History (Major Changes)
 
-* `1.0`: Stable 
-* `1.1`: 
+* `v1.x`: Stable version is `v1.stable`
     * Added "Loading Application" screen 
     * refactored hide/show controls code to reset the variables back to the default value when hiding
     * updated logging
-* `vCurrent`:
     * added conversion rate & adoption graphs
     * fixed/workaround for shinybs bug where toolstips don't work when controls are updated (e.g. via updateSelectInput)
     * cleaned up controls (converted some to inline/side-by-side)
     * added `Count Distinct` option to categoric variables; made `Multi-Value Delimiter` available for `Comparison Variable` & new `Count Distinct Variable`
+* `vCurrent` (master):
     * added heatmaps for categoric/categoric graphs (with ability to convert numeric/numeric to categorics)
+    
