@@ -2823,9 +2823,9 @@ hide_show_categoric_categoric <- function(session,
     } else {
 
         reset_hide_var_plot_option(session, 'var_plots__convert_numerics_to_categoric')
-        shinyjs::reset_hide_var_plot_option('var_plots__convert_numerics_to_categoric__num_groups')
-        shinyjs::reset_hide_var_plot_option('var_plots__convert_numerics_to_categoric__x_cut_sequence')
-        shinyjs::reset_hide_var_plot_option('var_plots__convert_numerics_to_categoric__y_cut_sequence')
+        reset_hide_var_plot_option(session, 'var_plots__convert_numerics_to_categoric__num_groups')
+        reset_hide_var_plot_option(session, 'var_plots__convert_numerics_to_categoric__x_cut_sequence')
+        reset_hide_var_plot_option(session, 'var_plots__convert_numerics_to_categoric__y_cut_sequence')
         shinyjs::hide('var_plots__convert_numerics_to_categoric__cut_seq_apply')
 
         shinyjs::show('var_plots__facet_variable')
