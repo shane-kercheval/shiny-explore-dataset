@@ -9,6 +9,7 @@ source('../helper_scripts/logging_functions.R', chdir = TRUE)
 source('../helper_scripts/variable_plots_helpers.R', chdir = TRUE)
 source('../helper_scripts/dataset_loading_helpers.R', chdir = TRUE)
 source('../helper_scripts/plot_helpers.R', chdir = TRUE)
+source('../helper_scripts/graph_functions.R', chdir = TRUE)
 Sys.setenv(TZ='UTC')
 
 global__should_log_message <<- FALSE
@@ -2690,3 +2691,745 @@ test_that("create_ggplot_plot - bar - order by", {
                                         order_by_variable = 'Default')
     test_save_plot(file_name='graphs/create_ggplot_object__bar__order_by__no_freq__facet__comp_numeric_swap.png', plot=plot_object)
 })
+
+##############################################################################################################
+# Test graph_functions.R
+##############################################################################################################
+test_that('private__fill_missing_periods', {
+    
+    
+    global__should_log_message <<- FALSE
+    conversion_data <- select_preloaded_dataset("Mock Conversions", defualt_path = '../')$dataset
+    
+    ##############################
+    ### test scenario when no periods are missing
+    ##############################
+    date_floor <- 'quarter'
+    aggregated_dataset <- private__plot_time_series_change__floor_date(dataset=conversion_data,
+                                                                          date_variable='create_date_time',
+                                                                          date_floor=date_floor) %>%
+        count(create_date_time)
+    found_dataset <- private__fill_missing_periods(aggregated_dataset=aggregated_dataset,
+                                                   date_floor=date_floor,
+                                                   date_variable='create_date_time',
+                                                   color_variable=NULL,
+                                                   facet_variable=NULL)
+    expect_true(rt_are_dataframes_equal(aggregated_dataset, found_dataset))
+    
+    ##############################
+    ### remove periods and test
+    ##############################
+    remove_period_values <- ymd(c('2018-01-01', '2019-01-01')) 
+    aggregated_dataset <- private__plot_time_series_change__floor_date(dataset=conversion_data,
+                                                                       date_variable='create_date_time',
+                                                                       date_floor=date_floor) %>%
+        count(create_date_time) %>%
+        filter(!create_date_time %in% remove_period_values)
+    found_dataset <- private__fill_missing_periods(aggregated_dataset=aggregated_dataset,
+                                                   date_floor=date_floor,
+                                                   date_variable='create_date_time',
+                                                   color_variable=NULL,
+                                                   facet_variable=NULL)
+    # test that the non-missing values are untouched
+    expect_true(rt_are_dataframes_equal(aggregated_dataset,
+                                        found_dataset %>% filter(!create_date_time %in% remove_period_values)))
+    
+    found_missing_rows <- found_dataset %>% filter(create_date_time %in% remove_period_values)
+    expect_equal(length(remove_period_values), nrow(found_missing_rows))
+    expect_true(all(0 == found_missing_rows$n))
+    
+    
+    ##############################
+    ### remove periods and test; facet_variable
+    ##############################
+    remove_period_values <- ymd(c('2018-01-01', '2019-01-01'))
+    aggregated_dataset <- private__plot_time_series_change__floor_date(dataset=conversion_data,
+                                                                       date_variable='create_date_time',
+                                                                       date_floor=date_floor) %>%
+        count(create_date_time, continent) %>%
+        filter(!create_date_time %in% remove_period_values)
+    # remove a single facet value from the first and last time period
+    remove_a <- which(with(aggregated_dataset, create_date_time == ymd(min(create_date_time)) & continent == 'Africa'))
+    remove_b <- which(with(aggregated_dataset, create_date_time == ymd(max(create_date_time)) & continent == 'Asia'))
+    aggregated_dataset <- aggregated_dataset[-c(remove_a, remove_b),]
+    
+    found_dataset <- private__fill_missing_periods(aggregated_dataset=aggregated_dataset,
+                                                   date_floor=date_floor,
+                                                   date_variable='create_date_time',
+                                                   color_variable=NULL,
+                                                   facet_variable='continent')
+    
+    remove_a <- which(with(found_dataset, create_date_time == ymd(min(create_date_time)) & continent == 'Africa'))
+    remove_b <- which(with(found_dataset, create_date_time == ymd(max(create_date_time)) & continent == 'Asia'))
+    
+    expect_equal(length(remove_a), 1)
+    expect_equal(length(remove_b), 1)
+    
+    # test that the non-missing values are untouched
+    expect_true(rt_are_dataframes_equal(aggregated_dataset,
+                                        found_dataset[-c(remove_a, remove_b),] %>% 
+                                            filter(!create_date_time %in% remove_period_values)))
+    
+    found_missing_rows_periods <- found_dataset %>% filter(create_date_time %in% remove_period_values)
+    expect_equal(length(remove_period_values) * length(unique(aggregated_dataset$continent)), nrow(found_missing_rows_periods))
+    expect_true(all(0 == found_missing_rows_periods$n))
+    
+    df_a <- found_dataset[remove_a,]
+    df_b <- found_dataset[remove_b,]
+    
+    expect_equal(df_a$create_date_time, ymd(min(aggregated_dataset$create_date_time)))
+    expect_equal(df_b$create_date_time, ymd(max(aggregated_dataset$create_date_time)))
+    expect_equal(df_a$continent, 'Africa')
+    expect_equal(df_b$continent, 'Asia')
+    expect_equal(df_a$n, 0)
+    expect_equal(df_b$n, 0)
+
+    ##############################
+    ### remove periods and test; color_variable
+    ##############################
+    remove_period_values <- ymd(c('2018-01-01', '2019-01-01'))
+    aggregated_dataset <- private__plot_time_series_change__floor_date(dataset=conversion_data,
+                                                                       date_variable='create_date_time',
+                                                                       date_floor=date_floor) %>%
+        count(create_date_time, continent) %>%
+        filter(!create_date_time %in% remove_period_values)
+    # remove a single facet value from the first and last time period
+    remove_a <- which(with(aggregated_dataset, create_date_time == ymd(min(create_date_time)) & continent == 'Africa'))
+    remove_b <- which(with(aggregated_dataset, create_date_time == ymd(max(create_date_time)) & continent == 'Asia'))
+    aggregated_dataset <- aggregated_dataset[-c(remove_a, remove_b),]
+    
+    found_dataset <- private__fill_missing_periods(aggregated_dataset=aggregated_dataset,
+                                                   date_floor=date_floor,
+                                                   date_variable='create_date_time',
+                                                   color_variable='continent',
+                                                   facet_variable=NULL)
+    
+    remove_a <- which(with(found_dataset, create_date_time == ymd(min(create_date_time)) & continent == 'Africa'))
+    remove_b <- which(with(found_dataset, create_date_time == ymd(max(create_date_time)) & continent == 'Asia'))
+    
+    expect_equal(length(remove_a), 1)
+    expect_equal(length(remove_b), 1)
+    
+    # test that the non-missing values are untouched
+    expect_true(rt_are_dataframes_equal(aggregated_dataset,
+                                        found_dataset[-c(remove_a, remove_b),] %>% 
+                                            filter(!create_date_time %in% remove_period_values)))
+    
+    found_missing_rows_periods <- found_dataset %>% filter(create_date_time %in% remove_period_values)
+    expect_equal(length(remove_period_values) * length(unique(aggregated_dataset$continent)), nrow(found_missing_rows_periods))
+    expect_true(all(0 == found_missing_rows_periods$n))
+    
+    df_a <- found_dataset[remove_a,]
+    df_b <- found_dataset[remove_b,]
+    
+    expect_equal(df_a$create_date_time, ymd(min(aggregated_dataset$create_date_time)))
+    expect_equal(df_b$create_date_time, ymd(max(aggregated_dataset$create_date_time)))
+    expect_equal(df_a$continent, 'Africa')
+    expect_equal(df_b$continent, 'Asia')
+    expect_equal(df_a$n, 0)
+    expect_equal(df_b$n, 0)
+    
+    
+    ##############################
+    ### remove periods and test; color_variable; facet_variable
+    ##############################
+    remove_period_values <- ymd(c('2018-01-01', '2019-01-01'))
+    aggregated_dataset <- private__plot_time_series_change__floor_date(dataset=conversion_data,
+                                                                       date_variable='create_date_time',
+                                                                       date_floor=date_floor) %>%
+        count(create_date_time, lead_source, continent) %>%
+        filter(!create_date_time %in% remove_period_values)
+    # remove a single facet value from the first and last time period
+    remove_a <- which(with(aggregated_dataset, create_date_time == ymd(min(create_date_time)) & continent == 'Africa'))
+    remove_b <- which(with(aggregated_dataset, create_date_time == ymd(max(create_date_time)) & continent == 'Asia'))
+    aggregated_dataset <- aggregated_dataset[-c(remove_a, remove_b),]
+    
+    found_dataset <- private__fill_missing_periods(aggregated_dataset=aggregated_dataset,
+                                                   date_floor=date_floor,
+                                                   date_variable='create_date_time',
+                                                   color_variable='lead_source',
+                                                   facet_variable='continent')
+    
+    remove_a <- which(with(found_dataset, create_date_time == ymd(min(create_date_time)) & continent == 'Africa'))
+    remove_b <- which(with(found_dataset, create_date_time == ymd(max(create_date_time)) & continent == 'Asia'))
+    
+    expect_equal(length(remove_a), length(unique(aggregated_dataset$lead_source)))
+    expect_equal(length(remove_b), length(unique(aggregated_dataset$lead_source)))
+    
+    # test that the non-missing values are untouched
+    expect_true(rt_are_dataframes_equal(aggregated_dataset,
+                                        found_dataset %>% filter(n != 0)))
+    
+    # the the dataset that has the missing periods only
+    found_missing_rows_periods <- found_dataset %>% filter(create_date_time %in% remove_period_values)
+    expect_equal(length(remove_period_values) * length(unique(aggregated_dataset$continent)) * length(unique(aggregated_dataset$lead_source)), 
+                 nrow(found_missing_rows_periods))
+    expect_true(all(0 == found_missing_rows_periods$n))
+    
+    df_a <- found_dataset[remove_a,]
+    df_b <- found_dataset[remove_b,]
+    
+    expect_true(all(df_a$create_date_time == ymd(min(aggregated_dataset$create_date_time))))
+    expect_true(all(df_b$create_date_time == ymd(max(aggregated_dataset$create_date_time))))
+    expect_true(all(df_a$continent == 'Africa'))
+    expect_true(all(df_b$continent == 'Asia'))
+    expect_true(all(df_a$n == 0))
+    expect_true(all(df_b$n == 0))
+    
+    
+    ##############################
+    ### remove periods and test; color_variable; facet_variable; same as before, but switch order of variables
+    ##############################
+    remove_period_values <- ymd(c('2018-01-01', '2019-01-01'))
+    aggregated_dataset <- private__plot_time_series_change__floor_date(dataset=conversion_data,
+                                                                       date_variable='create_date_time',
+                                                                       date_floor=date_floor) %>%
+        count(create_date_time, lead_source, continent) %>%
+        filter(!create_date_time %in% remove_period_values) %>%
+        select(n, continent, create_date_time, lead_source)
+    # remove a single facet value from the first and last time period
+    remove_a <- which(with(aggregated_dataset, create_date_time == ymd(min(create_date_time)) & continent == 'Africa'))
+    remove_b <- which(with(aggregated_dataset, create_date_time == ymd(max(create_date_time)) & continent == 'Asia'))
+    aggregated_dataset <- aggregated_dataset[-c(remove_a, remove_b),]
+    
+    found_dataset <- private__fill_missing_periods(aggregated_dataset=aggregated_dataset,
+                                                   date_floor=date_floor,
+                                                   date_variable='create_date_time',
+                                                   color_variable='lead_source',
+                                                   facet_variable='continent')
+    
+    # switch back to original order
+    aggregated_dataset <- aggregated_dataset %>% select(create_date_time, lead_source, continent, n)
+    
+    remove_a <- which(with(found_dataset, create_date_time == ymd(min(create_date_time)) & continent == 'Africa'))
+    remove_b <- which(with(found_dataset, create_date_time == ymd(max(create_date_time)) & continent == 'Asia'))
+    
+    expect_equal(length(remove_a), length(unique(aggregated_dataset$lead_source)))
+    expect_equal(length(remove_b), length(unique(aggregated_dataset$lead_source)))
+    
+    # test that the non-missing values are untouched
+    expect_true(rt_are_dataframes_equal(aggregated_dataset,
+                                        found_dataset %>% filter(n != 0)))
+    
+    # the the dataset that has the missing periods only
+    found_missing_rows_periods <- found_dataset %>% filter(create_date_time %in% remove_period_values)
+    expect_equal(length(remove_period_values) * length(unique(aggregated_dataset$continent)) * length(unique(aggregated_dataset$lead_source)), 
+                 nrow(found_missing_rows_periods))
+    expect_true(all(0 == found_missing_rows_periods$n))
+    
+    df_a <- found_dataset[remove_a,]
+    df_b <- found_dataset[remove_b,]
+    
+    expect_true(all(df_a$create_date_time == ymd(min(aggregated_dataset$create_date_time))))
+    expect_true(all(df_b$create_date_time == ymd(max(aggregated_dataset$create_date_time))))
+    expect_true(all(df_a$continent == 'Africa'))
+    expect_true(all(df_b$continent == 'Asia'))
+    expect_true(all(df_a$n == 0))
+    expect_true(all(df_b$n == 0))
+})
+
+test_that('private_create_gain_loss_total', {
+
+    replace_na_with_0 <- function(x) {
+
+        return (ifelse(is.na(x) | is.nan(x) | is.infinite(x), 0, x))
+    }
+    aggregation_function_sum <- function(values) {
+        return (sum(values, na.rm = TRUE))
+    }
+    aggregation_function_mean <- function(values) {
+        return (mean(values, na.rm = TRUE))
+    }
+    
+    global__should_log_message <<- FALSE
+    conversion_data <- select_preloaded_dataset("Mock Conversions", defualt_path = '../')$dataset
+
+    conversion_data[c(1, 2, 3, 4), 'create_date_time'] <- NA
+
+    test_by_date_floor <- function(date_floor) {
+
+        date_break_format <- private__time_series_date_break_format_2(date_floor=date_floor)
+        conversion_data_floor <- private__plot_time_series_change__floor_date(dataset=conversion_data,
+                                                                              date_variable='create_date_time',
+                                                                              date_floor=date_floor)
+        found_change_gain_loss_total <- private_create_gain_loss_total(dataset=conversion_data_floor,
+                                                                       date_variable='create_date_time',
+                                                                       date_floor=date_floor,
+                                                                       facet_variable=NULL,
+                                                                       percent_change=FALSE,
+                                                                       aggregation_variable=NULL,
+                                                                       aggregation_function=NULL)
+        expected_dataframe <- conversion_data_floor %>%
+            mutate(create_date_time=private__custom_date_format(date_floor,
+                                                                date_break_format)(floor_date(x=create_date_time,
+                                                                                              unit=date_floor,
+                                                                                              week_start=1))) %>%
+            count(create_date_time) %>%
+            arrange(create_date_time) %>%
+            mutate(previous_period = dplyr::lag(create_date_time),
+                   period_label = paste(previous_period, '->', create_date_time),
+                   previous_n = dplyr::lag(n),
+                   gain_loss = n - previous_n,
+                   percent_change = (n - previous_n) / previous_n) %>%
+            filter(!is.na(previous_period))
+
+        expect_true(rt_are_dataframes_equal(found_change_gain_loss_total, expected_dataframe))
+
+        # by day, SUM amount
+        found_change_gain_loss_total <- private_create_gain_loss_total(dataset=conversion_data_floor,
+                                                                       date_variable='create_date_time',
+                                                                       date_floor=date_floor,
+                                                                       facet_variable=NULL,
+                                                                       percent_change=FALSE,
+                                                                       aggregation_variable='amount',
+                                                                       aggregation_function=aggregation_function_sum)
+        expected_dataframe <- conversion_data_floor %>%
+            mutate(create_date_time=private__custom_date_format(date_floor,
+                                                                date_break_format)(floor_date(x=create_date_time,
+                                                                                              unit=date_floor,
+                                                                                              week_start=1))) %>%
+            count(create_date_time, wt=amount) %>%
+            arrange(create_date_time) %>%
+            mutate(previous_period = dplyr::lag(create_date_time),
+                   period_label = paste(previous_period, '->', create_date_time),
+                   previous_n = dplyr::lag(n),
+                   gain_loss = n - previous_n,
+                   percent_change = (n - previous_n) / previous_n) %>%
+            filter(!is.na(previous_period))
+
+        expect_true(rt_are_dataframes_equal(found_change_gain_loss_total, expected_dataframe))
+
+        # by day, MEAN amount
+        found_change_gain_loss_total <- private_create_gain_loss_total(dataset=conversion_data_floor,
+                                                                       date_variable='create_date_time',
+                                                                       date_floor=date_floor,
+                                                                       facet_variable=NULL,
+                                                                       percent_change=FALSE,
+                                                                       aggregation_variable='amount',
+                                                                       aggregation_function=aggregation_function_mean)
+        expected_dataframe <- conversion_data_floor %>%
+            mutate(create_date_time=private__custom_date_format(date_floor,
+                                                                date_break_format)(floor_date(x=create_date_time,
+                                                                                              unit=date_floor,
+                                                                                              week_start=1))) %>%
+            group_by(create_date_time) %>%
+            summarise(n = mean(amount, na.rm = TRUE)) %>%
+            arrange(create_date_time) %>%
+            mutate(previous_period = dplyr::lag(create_date_time),
+                   period_label = paste(previous_period, '->', create_date_time),
+                   previous_n = dplyr::lag(n),
+                   gain_loss = n - previous_n,
+                   percent_change = (n - previous_n) / previous_n) %>%
+            filter(!is.na(previous_period))
+
+        expect_true(rt_are_dataframes_equal(found_change_gain_loss_total, expected_dataframe))
+
+        # by day, continent, SUM amount
+        found_change_gain_loss_total <- private_create_gain_loss_total(dataset=conversion_data_floor,
+                                                                       date_variable='create_date_time',
+                                                                       date_floor=date_floor,
+                                                                       facet_variable='continent',
+                                                                       percent_change=FALSE,
+                                                                       aggregation_variable='amount',
+                                                                       aggregation_function=aggregation_function_sum) %>%
+            arrange(create_date_time, continent)
+        expected_dataframe <- conversion_data_floor %>%
+            group_by(create_date_time, continent) %>%
+            summarise(n = sum(amount, na.rm = TRUE)) %>%
+            ungroup() %>%
+            mutate(create_date_time=as.Date(create_date_time)) %>%
+            private__fill_missing_periods(date_floor=date_floor,
+                                          date_variable='create_date_time',
+                                          facet_variable='continent') %>%
+            mutate(create_date_time=private__custom_date_format(date_floor,
+                                                                date_break_format)(floor_date(x=create_date_time,
+                                                                                              unit=date_floor,
+                                                                                              week_start=1))) %>%
+            arrange(create_date_time, continent) %>%
+            group_by(continent) %>%
+            mutate(previous_period = dplyr::lag(create_date_time),
+                   period_label = paste(previous_period, '->', create_date_time),
+                   previous_n = dplyr::lag(n),
+                   gain_loss = n - previous_n,
+                   percent_change = (n - previous_n) / previous_n) %>%
+            ungroup() %>%
+            filter(!is.na(previous_period)) %>%
+            mutate(continent=factor(continent, levels=levels(found_change_gain_loss_total$continent), ordered=FALSE)) %>%
+            arrange(create_date_time, continent)
+
+        expect_true(rt_are_dataframes_equal(dataframe1=found_change_gain_loss_total, dataframe2=expected_dataframe))
+        expect_false(is.factor(conversion_data_floor$continent))
+        expect_true(is.factor(found_change_gain_loss_total$continent))
+
+        expected_factor_order <- suppressWarnings(expected_dataframe %>%
+            mutate(reorder_var=abs(replace_na_with_0(gain_loss))) %>%
+            group_by(continent) %>%
+            summarise(reorder_var=sum(reorder_var, na.rm = TRUE)) %>%
+            arrange(desc(reorder_var)) %>%
+            pull(continent) %>%
+            rt_remove_val(NA) %>%
+            as.character())
+
+        expect_identical(expected_factor_order, levels(found_change_gain_loss_total$continent))
+
+        # by day, continent, SUM amount, percent_change=TRUE, which means facet should be reordered by percent_change
+        found_change_gain_loss_total <- private_create_gain_loss_total(dataset=conversion_data_floor,
+                                                                       date_variable='create_date_time',
+                                                                       date_floor=date_floor,
+                                                                       facet_variable='continent',
+                                                                       percent_change=TRUE,
+                                                                       aggregation_variable='amount',
+                                                                       aggregation_function=aggregation_function_sum) %>%
+            arrange(create_date_time, continent)
+        expected_dataframe <- conversion_data_floor %>%
+            group_by(create_date_time, continent) %>%
+            summarise(n = sum(amount, na.rm = TRUE)) %>%
+            ungroup() %>%
+            mutate(create_date_time=as.Date(create_date_time)) %>%
+            private__fill_missing_periods(date_floor=date_floor,
+                                          date_variable='create_date_time',
+                                          facet_variable='continent') %>%
+            mutate(create_date_time=private__custom_date_format(date_floor,
+                                                                date_break_format)(floor_date(x=create_date_time,
+                                                                                              unit=date_floor,
+                                                                                              week_start=1))) %>%
+            arrange(create_date_time, continent) %>%
+            group_by(continent) %>%
+            mutate(previous_period = dplyr::lag(create_date_time),
+                   period_label = paste(previous_period, '->', create_date_time),
+                   previous_n = dplyr::lag(n),
+                   gain_loss = n - previous_n,
+                   percent_change = (n - previous_n) / previous_n) %>%
+            ungroup() %>%
+            filter(!is.na(previous_period)) %>%
+            mutate(continent=factor(continent, levels=levels(found_change_gain_loss_total$continent), ordered=FALSE)) %>%
+            arrange(create_date_time, continent)
+
+        expect_true(rt_are_dataframes_equal(found_change_gain_loss_total, expected_dataframe))
+        expect_false(is.factor(conversion_data_floor$continent))
+        expect_true(is.factor(found_change_gain_loss_total$continent))
+
+        expected_factor_order <- suppressWarnings(expected_dataframe %>%
+            mutate(reorder_var=abs(replace_na_with_0(percent_change))) %>%
+            group_by(continent) %>%
+            summarise(reorder_var=sum(reorder_var, na.rm = TRUE)) %>%
+            arrange(desc(reorder_var)) %>%
+            pull(continent) %>%
+            rt_remove_val(NA) %>%
+            as.character())
+
+        expect_identical(expected_factor_order, levels(found_change_gain_loss_total$continent))
+    }
+
+    test_by_date_floor(date_floor='day')
+    test_by_date_floor(date_floor='week')
+    test_by_date_floor(date_floor='month')
+    test_by_date_floor(date_floor='quarter')
+    test_by_date_floor(date_floor='year')
+})
+
+test_that('private_create_gain_loss_total_by_group', {
+    
+    replace_na_with_0 <- function(x) {
+        
+        return (ifelse(is.na(x) | is.nan(x) | is.infinite(x), 0, x))
+    }
+    aggregation_function_sum <- function(values) {
+        return (sum(values, na.rm = TRUE))
+    }
+    aggregation_function_mean <- function(values) {
+        return (mean(values, na.rm = TRUE))
+    }
+    
+    global__should_log_message <<- FALSE
+    conversion_data <- select_preloaded_dataset("Mock Conversions", defualt_path = '../')$dataset
+    
+    conversion_data[c(1, 2, 3, 4), 'create_date_time'] <- NA
+    
+    test_by_date_floor <- function(date_floor) {
+        
+        date_break_format <- private__time_series_date_break_format_2(date_floor=date_floor)
+        conversion_data_floor <- private__plot_time_series_change__floor_date(dataset=conversion_data,
+                                                                              date_variable='create_date_time',
+                                                                              date_floor=date_floor)
+        found_change_gain_loss_total <- private_create_gain_loss_total_by_group(dataset=conversion_data_floor,
+                                                                                date_variable='create_date_time',
+                                                                                date_floor=date_floor,
+                                                                                color_variable=NULL,
+                                                                                facet_variable=NULL,
+                                                                                percent_change=FALSE,
+                                                                                aggregation_variable=NULL,
+                                                                                aggregation_function=NULL)
+        expect_null(found_change_gain_loss_total)
+        
+        found_change_gain_loss_total <- private_create_gain_loss_total_by_group(dataset=conversion_data_floor,
+                                                                                date_variable='create_date_time',
+                                                                                date_floor=date_floor,
+                                                                                color_variable='lead_source',
+                                                                                facet_variable=NULL,
+                                                                                percent_change=FALSE,
+                                                                                aggregation_variable=NULL,
+                                                                                aggregation_function=NULL) %>%
+            arrange(create_date_time, lead_source)
+        
+        expected_dataframe <- conversion_data_floor %>%
+            count(create_date_time, lead_source) %>%
+            ungroup() %>%
+            mutate(create_date_time=as.Date(create_date_time)) %>%
+            private__fill_missing_periods(date_floor=date_floor,
+                                          date_variable='create_date_time',
+                                          color_variable='lead_source') %>%
+            mutate(create_date_time=private__custom_date_format(date_floor,
+                                                                date_break_format)(floor_date(x=create_date_time,
+                                                                                              unit=date_floor,
+                                                                                              week_start=1))) %>%
+            arrange(create_date_time, lead_source) %>%
+            group_by(lead_source) %>%
+            mutate(previous_period = dplyr::lag(create_date_time),
+                   period_label = paste(previous_period, '->', create_date_time),
+                   previous_n = dplyr::lag(n),
+                   gain_loss = n - previous_n,
+                   percent_change = (n - previous_n) / previous_n) %>%
+            ungroup() %>%
+            filter(!is.na(previous_period))# %>%
+            # mutate(lead_source=factor(lead_source, levels=levels(found_change_gain_loss_total$lead_source), ordered=FALSE)) %>%
+            # arrange(create_date_time, lead_source)
+        
+        expect_true(rt_are_dataframes_equal(found_change_gain_loss_total, expected_dataframe))
+        
+        # by day, SUM amount
+        found_change_gain_loss_total <- private_create_gain_loss_total_by_group(dataset=conversion_data_floor,
+                                                                       date_variable='create_date_time',
+                                                                       date_floor=date_floor,
+                                                                       color_variable='lead_source',
+                                                                       facet_variable=NULL,
+                                                                       percent_change=FALSE,
+                                                                       aggregation_variable='amount',
+                                                                       aggregation_function=aggregation_function_sum) %>%
+            arrange(create_date_time, lead_source)
+        
+        expected_dataframe <- conversion_data_floor %>%
+            group_by(create_date_time, lead_source) %>%
+            summarise(n = sum(amount, na.rm = TRUE)) %>%
+            ungroup() %>%
+            mutate(create_date_time=as.Date(create_date_time)) %>%
+            private__fill_missing_periods(date_floor=date_floor,
+                                          date_variable='create_date_time',
+                                          color_variable='lead_source') %>%
+            mutate(create_date_time=private__custom_date_format(date_floor,
+                                                                date_break_format)(floor_date(x=create_date_time,
+                                                                                              unit=date_floor,
+                                                                                              week_start=1))) %>%
+            arrange(create_date_time, lead_source) %>%
+            group_by(lead_source) %>%
+            mutate(previous_period = dplyr::lag(create_date_time),
+                   period_label = paste(previous_period, '->', create_date_time),
+                   previous_n = dplyr::lag(n),
+                   gain_loss = n - previous_n,
+                   percent_change = (n - previous_n) / previous_n) %>%
+            ungroup() %>%
+            filter(!is.na(previous_period)) %>%
+            arrange(create_date_time, lead_source)
+        
+        expect_true(rt_are_dataframes_equal(found_change_gain_loss_total, expected_dataframe))
+        
+        # by day, MEAN amount
+        found_change_gain_loss_total <- private_create_gain_loss_total_by_group(dataset=conversion_data_floor,
+                                                                       date_variable='create_date_time',
+                                                                       date_floor=date_floor,
+                                                                       color_variable='lead_source',
+                                                                       facet_variable=NULL,
+                                                                       percent_change=FALSE,
+                                                                       aggregation_variable='amount',
+                                                                       aggregation_function=aggregation_function_mean) %>%
+            arrange(create_date_time, lead_source)
+
+        expected_dataframe <- conversion_data_floor %>%
+            group_by(create_date_time, lead_source) %>%
+            summarise(n = mean(amount, na.rm = TRUE)) %>%
+            ungroup() %>%
+            mutate(create_date_time=as.Date(create_date_time)) %>%
+            private__fill_missing_periods(date_floor=date_floor,
+                                          date_variable='create_date_time',
+                                          facet_variable='lead_source') %>%
+            mutate(create_date_time=private__custom_date_format(date_floor,
+                                                                date_break_format)(floor_date(x=create_date_time,
+                                                                                              unit=date_floor,
+                                                                                              week_start=1))) %>%
+            arrange(create_date_time, lead_source) %>%
+            group_by(lead_source) %>%
+            mutate(previous_period = dplyr::lag(create_date_time),
+                   period_label = paste(previous_period, '->', create_date_time),
+                   previous_n = dplyr::lag(n),
+                   gain_loss = n - previous_n,
+                   percent_change = (n - previous_n) / previous_n) %>%
+            ungroup() %>%
+            filter(!is.na(previous_period)) %>%
+            arrange(create_date_time, lead_source)
+        
+        expect_true(rt_are_dataframes_equal(found_change_gain_loss_total, expected_dataframe))
+        
+        # by day, continent, SUM amount
+        found_change_gain_loss_total <- private_create_gain_loss_total_by_group(dataset=conversion_data_floor,
+                                                                                date_variable='create_date_time',
+                                                                                date_floor=date_floor,
+                                                                                color_variable='lead_source',
+                                                                                facet_variable='continent',
+                                                                                percent_change=FALSE,
+                                                                                aggregation_variable='amount',
+                                                                                aggregation_function=aggregation_function_sum) %>%
+            arrange(create_date_time, lead_source, continent)
+        expected_dataframe <- conversion_data_floor %>%
+            group_by(create_date_time, lead_source, continent) %>%
+            summarise(n = sum(amount, na.rm = TRUE)) %>%
+            ungroup() %>%
+            mutate(create_date_time=as.Date(create_date_time)) %>%
+            private__fill_missing_periods(date_floor=date_floor,
+                                          date_variable='create_date_time',
+                                          color_variable = 'lead_source',
+                                          facet_variable='continent') %>%
+            mutate(create_date_time=private__custom_date_format(date_floor,
+                                                                date_break_format)(floor_date(x=create_date_time,
+                                                                                              unit=date_floor,
+                                                                                              week_start=1))) %>%
+            arrange(create_date_time, lead_source, continent) %>%
+            group_by(lead_source, continent) %>%
+            mutate(previous_period = dplyr::lag(create_date_time),
+                   period_label = paste(previous_period, '->', create_date_time),
+                   previous_n = dplyr::lag(n),
+                   gain_loss = n - previous_n,
+                   percent_change = (n - previous_n) / previous_n) %>%
+            ungroup() %>%
+            filter(!is.na(previous_period)) %>%
+            mutate(continent=factor(continent, levels=levels(found_change_gain_loss_total$continent), ordered=FALSE)) %>%
+            arrange(create_date_time, lead_source, continent)
+        
+        expect_true(rt_are_dataframes_equal(dataframe1=found_change_gain_loss_total, dataframe2=expected_dataframe))
+        expect_false(is.factor(conversion_data_floor$continent))
+        expect_true(is.factor(found_change_gain_loss_total$continent))
+        
+        expected_factor_order <- suppressWarnings(expected_dataframe %>%
+                                                      mutate(reorder_var=abs(replace_na_with_0(gain_loss))) %>%
+                                                      group_by(continent) %>%
+                                                      summarise(reorder_var=sum(reorder_var, na.rm = TRUE)) %>%
+                                                      arrange(desc(reorder_var)) %>%
+                                                      pull(continent) %>%
+                                                      rt_remove_val(NA) %>%
+                                                      as.character())
+        
+        expect_identical(expected_factor_order, levels(found_change_gain_loss_total$continent))
+        
+        # by day, continent, SUM amount, percent_change=TRUE, which means facet should be reordered by percent_change
+        found_change_gain_loss_total <- private_create_gain_loss_total_by_group(dataset=conversion_data_floor,
+                                                                       date_variable='create_date_time',
+                                                                       date_floor=date_floor,
+                                                                       color_variable='lead_source',
+                                                                       facet_variable='continent',
+                                                                       percent_change=TRUE,
+                                                                       aggregation_variable='amount',
+                                                                       aggregation_function=aggregation_function_sum) %>%
+            arrange(create_date_time, lead_source, continent)
+        expected_dataframe <- conversion_data_floor %>%
+            group_by(create_date_time, lead_source, continent) %>%
+            summarise(n = sum(amount, na.rm = TRUE)) %>%
+            ungroup() %>%
+            mutate(create_date_time=as.Date(create_date_time)) %>%
+            private__fill_missing_periods(date_floor=date_floor,
+                                          date_variable='create_date_time',
+                                          color_variable='lead_source',
+                                          facet_variable='continent') %>%
+            mutate(create_date_time=private__custom_date_format(date_floor,
+                                                                date_break_format)(floor_date(x=create_date_time,
+                                                                                              unit=date_floor,
+                                                                                              week_start=1))) %>%
+            arrange(create_date_time, lead_source, continent) %>%
+            group_by(lead_source, continent) %>%
+            mutate(previous_period = dplyr::lag(create_date_time),
+                   period_label = paste(previous_period, '->', create_date_time),
+                   previous_n = dplyr::lag(n),
+                   gain_loss = n - previous_n,
+                   percent_change = (n - previous_n) / previous_n) %>%
+            ungroup() %>%
+            filter(!is.na(previous_period)) %>%
+            mutate(continent=factor(continent, levels=levels(found_change_gain_loss_total$continent), ordered=FALSE)) %>%
+            arrange(create_date_time, lead_source, continent)
+        
+        expect_true(rt_are_dataframes_equal(found_change_gain_loss_total, expected_dataframe))
+        expect_false(is.factor(conversion_data_floor$continent))
+        expect_true(is.factor(found_change_gain_loss_total$continent))
+        
+        expected_factor_order <- suppressWarnings(expected_dataframe %>%
+                                                      mutate(reorder_var=abs(replace_na_with_0(percent_change))) %>%
+                                                      group_by(continent) %>%
+                                                      summarise(reorder_var=sum(reorder_var, na.rm = TRUE)) %>%
+                                                      arrange(desc(reorder_var)) %>%
+                                                      pull(continent) %>%
+                                                      rt_remove_val(NA) %>%
+                                                      as.character())
+        
+        expect_identical(expected_factor_order, levels(found_change_gain_loss_total$continent))
+    }
+    
+    test_by_date_floor(date_floor='day')
+    test_by_date_floor(date_floor='week')
+    test_by_date_floor(date_floor='month')
+    test_by_date_floor(date_floor='quarter')
+    test_by_date_floor(date_floor='year')
+})
+
+
+
+
+    # rt_explore_plot_time_series_change(dataset=conversion_data %>% filter(create_date_time >= ymd('2019-01-01'),
+    #                                                                create_date_time < ymd('2019-12-01')),
+    #                             date_variable = 'create_date_time',
+    #                             color_variable = 'continent',
+    #                             facet_variable = 'continent',
+    #                             date_floor = 'quarter')
+    # #
+    # rt_explore_plot_time_series_change(dataset=conversion_data %>%
+    #                                        filter(create_date_time >= ymd('2019-01-01'),
+    #                                               create_date_time < ymd('2019-12-01')) %>%
+    #                                        mutate(lead_source = fct_lump(lead_source, n=3)),
+    # 
+    #                                    date_variable = 'create_date_time',
+    #                                    color_variable = 'continent',
+    #                                    facet_variable = NULL,
+    #                                    #facet_variable = 'lead_source',
+    #                                    date_floor = 'quarter',
+    #                                    show_labels = TRUE)
+
+    # rt_explore_plot_time_series_change(dataset=conversion_data %>%
+    #                                        filter(create_date_time >= ymd('2019-01-01'),
+    #                                               create_date_time < ymd('2019-12-01')) %>%
+    #                                        mutate(lead_source = fct_lump(lead_source, n=3)),
+    #
+    #                                    date_variable = 'create_date_time',
+    #                                    color_variable = NULL,
+    #                                    facet_variable = NULL,
+    #                                    date_floor = 'week',
+    #                                    show_labels = TRUE)
+    #
+    # rt_explore_plot_time_series_change(dataset=conversion_data %>%
+    #                                        filter(create_date_time >= ymd('2019-01-01'),
+    #                                               create_date_time < ymd('2019-12-01')) %>%
+    #                                        mutate(lead_source = fct_lump(lead_source, n=3)),
+    #
+    #                                    date_variable = 'create_date_time',
+    #                                    color_variable = NULL,
+    #                                    facet_variable = NULL,
+    #                                    date_floor = 'quarter',
+    #                                    show_labels = TRUE)
+    #
+    #
+    # rt_explore_plot_time_series_change(dataset=conversion_data %>%
+    #                                        filter(create_date_time >= ymd('2019-01-01'),
+    #                                               create_date_time < ymd('2019-12-01')) %>%
+    #                                        mutate(lead_source = fct_lump(lead_source, n=3)),
+    #
+    #                                    date_variable = 'create_date_time',
+    #                                    color_variable = 'continent',
+    #                                    facet_variable = 'lead_source',
+    #                                    show_labels = TRUE,
+    #                                    percent_change = TRUE,
+    #                                    date_floor = 'quarter')

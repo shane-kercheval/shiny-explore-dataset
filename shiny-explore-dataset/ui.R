@@ -275,7 +275,7 @@ shinyUI(fluidPage(theme="custom.css",
                                         width='100%')
                         ),
                         bsTooltipResistant(id='var_plots__date_conversion_variable',
-                                           title="Select a second date column to graph conversion rates. The primary variable is treated as the initial date and this variable is treated as the date of conversion.",
+                                           title="Select a second date column to graph conversion rates. The primary variable is treated as the initial date and this variable is treated as the date of conversion. Assumes 1 record per entity.",
                                            placement='top', trigger='hover'),
                         shinyjs::hidden(
                             selectInput(inputId='var_plots__date_cr__snapshots__group_variable',

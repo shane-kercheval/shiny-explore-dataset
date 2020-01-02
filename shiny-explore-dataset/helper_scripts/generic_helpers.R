@@ -20,6 +20,19 @@ dataset_or_null <- function(file) {
     }
 }
 
+dataset_or_null_RDS <- function(file) {
+    # loads the file if it exists, otherwise returns NULL.    
+    
+    if(file.exists(file)) {
+        
+        return (readRDS(file))
+        
+    } else {
+        
+        return (NULL)
+    }
+}
+
 is_date_type <- function(x) {
     return (is.Date(x) || is.POSIXct(x) || is.POSIXlt(x))
 }

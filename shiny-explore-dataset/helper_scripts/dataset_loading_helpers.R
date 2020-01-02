@@ -88,6 +88,11 @@ select_preloaded_dataset <- function(dataset_name, defualt_path='') {
 
         data_description <- "This is where a description of the Credit dataset should be given."
 
+    } else if(dataset_name == 'Mock Conversions') {
+
+        loaded_dataset <- dataset_or_null_RDS(paste0(defualt_path, 'example_datasets/conversions.RDS'))
+        data_description <- "Example dataset of conversion events."
+
     } else if(dataset_name == 'Housing') {
 
         loaded_dataset <- dataset_or_null(paste0(defualt_path, 'example_datasets/housing.csv'))
