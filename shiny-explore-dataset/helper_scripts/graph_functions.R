@@ -33,22 +33,22 @@ rt_explore_plot_time_series_change <- function(dataset,
 
     dataset <- private__plot_time_series_change__floor_date(dataset, date_variable, date_floor)
 
-    change_gain_loss_total <- private_create_gain_loss_total(dataset,
+    change_gain_loss_total <- suppressWarnings(private_create_gain_loss_total(dataset,
                                                              date_variable,
                                                              date_floor,
                                                              facet_variable,
                                                              percent_change,
                                                              aggregation_variable,
-                                                             aggregation_function)
+                                                             aggregation_function))
 
-    change_gain_loss_by_group <- private_create_gain_loss_total_by_group(dataset,
+    change_gain_loss_by_group <- suppressWarnings(private_create_gain_loss_total_by_group(dataset,
                                                                          date_variable,
                                                                          date_floor,
                                                                          color_variable,
                                                                          facet_variable,
                                                                          percent_change,
                                                                          aggregation_variable,
-                                                                         aggregation_function)
+                                                                         aggregation_function))
 
     if(is.null(color_variable)) {
 
@@ -58,21 +58,27 @@ rt_explore_plot_time_series_change <- function(dataset,
 
         custom_colors <- rt_get_colors_from_values(dataset[[color_variable]])
     }
+    
+    aggregation_label <- ""
+    if(!is.null(aggregation_variable)) {
+        aggregation_label <- paste("of", aggregation_function_name, aggregation_variable)
+    }
 
     if(percent_change) {
 
         label_legend <- "Total Percent Change"
-        label_y <- "Percent Change from Previous Period"
+        label_y <- paste("Percent Change", aggregation_label, "from Previous Period")
         column_y <- 'percent_change'
         symbol_y <- sym(column_y)
 
     } else {
 
         label_legend <- "Total Gain/Loss"
-        label_y <- "Gain/Loss from Previous Period"
+        label_y <- paste("Gain/Loss", aggregation_label, "from Previous Period")
         column_y <- 'gain_loss'
         symbol_y <- sym(column_y)
     }
+    label_x <- paste0(date_variable, " (", date_floor,")")
 
     # COLOR | FACET
     # ======|======
@@ -87,9 +93,11 @@ rt_explore_plot_time_series_change <- function(dataset,
             geom_bar(stat='identity') +
             geom_hline(yintercept = 0, color='black', size=0.3) +
             scale_fill_manual(values=c(rt_colors_good_bad()[1], rt_colors_good_bad()[2])) +
+            theme_light(base_size = base_size) +
             theme(legend.position = 'none',
                   axis.text.x = element_text(angle = 30, hjust = 1)) +
             labs(y=label_y,
+                 x=label_x,
                  title=paste0(label_y, " (", date_variable,")"))
 
 
@@ -100,9 +108,11 @@ rt_explore_plot_time_series_change <- function(dataset,
             geom_bar(stat='identity') +
             geom_hline(yintercept = 0, color='black', size=0.5) +
             scale_fill_manual(values=c(rt_colors_good_bad()[1], rt_colors_good_bad()[2])) +
+            theme_light(base_size = base_size) +
             theme(legend.position = 'none',
                   axis.text.x = element_text(angle = 30, hjust = 1)) +
             labs(y=label_y,
+                 x=label_x,
                  title=paste0(label_y, " (", date_variable,")"),
                  subtitle = paste0("by `", facet_variable, "`"))+
             facet_wrap(facets = facet_variable , ncol = 1, scales = 'free_y', strip.position = "right")
@@ -111,19 +121,24 @@ rt_explore_plot_time_series_change <- function(dataset,
 
         ggplot_object <- change_gain_loss_by_group %>%
             ggplot(aes(x=period_label, y=!!symbol_y)) +
-            geom_bar(aes(fill=!!sym(color_variable)), stat='identity', position = position_dodge(width=0.5)) +
+            geom_bar(aes(fill=!!sym(color_variable)), stat='identity', position = position_dodge(width=0.9)) +
             scale_fill_manual(values=rt_colors()[1:length(unique(change_gain_loss_by_group[[color_variable]]))]) +
             # hack to show legend without boxplot symbol
             geom_point(data=change_gain_loss_total, aes(x=period_label, y=!!symbol_y, shape=label_legend), size=-1) +
             scale_shape_manual(name = "", values = 95) +
-
             guides(fill=guide_legend(order=2),
                    shape = guide_legend(order=1,
                                         override.aes = list(shape = 95,
-                                                            size = 10))) +
-            geom_boxplot(data=change_gain_loss_total, aes(x=period_label, y=!!symbol_y), show.legend = FALSE) +
+                                                            size = 10,
+                                                            color='red'))) +
+            
+            geom_boxplot(data=change_gain_loss_total, aes(x=period_label, y=!!symbol_y),
+                         show.legend = FALSE,
+                         color='red') +
+            theme_light(base_size = base_size) +
             theme(axis.text.x = element_text(angle = 35, hjust = 1)) +
             labs(y=label_y,
+                 x=label_x,
                  title=paste0(label_y, " (", date_variable,")"),
                  subtitle = paste0("by `", color_variable, "`"))
 
@@ -131,7 +146,7 @@ rt_explore_plot_time_series_change <- function(dataset,
 
         ggplot_object <- change_gain_loss_by_group %>%
             ggplot(aes(x=period_label, y=!!symbol_y)) +
-            geom_bar(aes(fill=!!sym(color_variable)), stat='identity', position = position_dodge(width=1)) +
+            geom_bar(aes(fill=!!sym(color_variable)), stat='identity', position = position_dodge(width=0.9)) +
             geom_hline(yintercept = 0, color='black', size=0.2) +
             scale_fill_manual(values=rt_colors()[1:length(unique(change_gain_loss_by_group[[color_variable]]))],
                               na.value = '#2A3132') +
@@ -148,16 +163,14 @@ rt_explore_plot_time_series_change <- function(dataset,
             geom_boxplot(data=change_gain_loss_total, aes(x=period_label, y=!!symbol_y),
                          show.legend = FALSE,
                          color='red') +
+            theme_light(base_size = base_size) +
             theme(axis.text.x = element_text(angle = 35, hjust = 1)) +
             labs(y=label_y,
+                 x=label_x,
                  title=paste0(label_y, " (", date_variable,")"),
                  subtitle = paste0("by `", color_variable, "` & `", "`", facet_variable,"`")) +
             facet_wrap(facets = facet_variable , ncol = 1, scales = 'free_y', strip.position = "right")
     }
-
-    ggplot_object <- ggplot_object +
-        theme_light(base_size = base_size) +
-        theme(axis.text.x = element_text(angle = 30, hjust = 1))
 
     if(is.null(facet_variable)) {
 
@@ -193,43 +206,58 @@ rt_explore_plot_time_series_change <- function(dataset,
             format_function <- private__standard_prettyNum
         }
 
-        if(is.null(color_variable)) {
+        # vjsut for main graph
+        # Color | FACET
+        # 0 | 0 - outside of bars
+        # 1 | 0 - middle of bars
+        # 0 | 1 - inside of bars
+        # 1 | 1 - middle of bars
+        if(is.null(color_variable) && is.null(facet_variable)) {
 
+            # outside of bars
             vjust_high <- -0.25
             vjust_low <- 1.1
+
+        } else if (!is.null(color_variable)) {
+        
+            # middle of bars
+            vjust_high <- 0.5
+            vjust_low <- 0.3
+        
         } else {
-            vjust_high <- 0
-            vjust_low <- 0
+            # color is null & facet is not null, inside
+            vjust_high <- 1.25
+            vjust_low <- -0.5
         }
 
         # add per bar if color variable is supplied
         if(!is.null(color_variable)) {
 
             ggplot_object <- suppressWarnings(ggplot_object +
-                geom_text(aes(label = ifelse(!!symbol_y >= 0, format_function(!!symbol_y), ""),
+                geom_text(aes(label = ifelse(!!symbol_y >= 0, format_function(!!symbol_y), " "),
                               fill=!!sym(color_variable)),
-                          position = position_dodge(width=1),
+                          position = position_dodge(width=0.9),
                           check_overlap = TRUE,
                           vjust=1.25))
 
             ggplot_object <- suppressWarnings(ggplot_object +
-                geom_text(aes(label = ifelse(!!symbol_y < 0, format_function(!!symbol_y), ""),
+                geom_text(aes(label = ifelse(!!symbol_y < 0, format_function(!!symbol_y), " "),
                               fill=!!sym(color_variable)),
-                          position = position_dodge(width=1),
+                          position = position_dodge(width=0.9),
                           check_overlap = TRUE,
                           vjust=-0.5))
         }
 
         ggplot_object <- suppressWarnings(ggplot_object +
             geom_text(data=change_gain_loss_total,
-                      aes(label = ifelse(!!symbol_y >= 0, format_function(!!symbol_y), "")),
+                      aes(label = ifelse(!!symbol_y >= 0, format_function(!!symbol_y), " ")),
                       check_overlap = TRUE,
                       vjust=vjust_high
                       ))
 
         ggplot_object <- suppressWarnings(ggplot_object +
             geom_text(data=change_gain_loss_total,
-                      aes(label = ifelse(!!symbol_y < 0, format_function(!!symbol_y), "")),
+                      aes(label = ifelse(!!symbol_y < 0, format_function(!!symbol_y), " ")),
                       check_overlap = TRUE,
                       vjust=vjust_low
                       ))

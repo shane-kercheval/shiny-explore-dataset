@@ -3143,7 +3143,6 @@ test_that('private_create_gain_loss_total_by_group', {
     
     global__should_log_message <<- FALSE
     conversion_data <- select_preloaded_dataset("Mock Conversions", defualt_path = '../')$dataset
-    
     conversion_data[c(1, 2, 3, 4), 'create_date_time'] <- NA
     
     test_by_date_floor <- function(date_floor) {
@@ -3197,6 +3196,22 @@ test_that('private_create_gain_loss_total_by_group', {
         
         expect_true(rt_are_dataframes_equal(found_change_gain_loss_total, expected_dataframe))
         
+        # by_group should aggregate to private_create_gain_loss_total
+        expect_true(rt_are_dataframes_equal(found_change_gain_loss_total %>%
+                                                group_by(create_date_time, period_label) %>%
+                                                summarise(n=sum(n),
+                                                          previous_n=sum(previous_n),
+                                                          gain_loss=sum(gain_loss)) %>%
+                                                ungroup(),
+                                            private_create_gain_loss_total(dataset=conversion_data_floor,
+                                                                           date_variable='create_date_time',
+                                                                           date_floor=date_floor,
+                                                                           facet_variable=NULL,
+                                                                           percent_change=FALSE,
+                                                                           aggregation_variable=NULL,
+                                                                           aggregation_function=NULL) %>%
+                                                select(create_date_time, period_label, n, previous_n, gain_loss)))
+
         # by day, SUM amount
         found_change_gain_loss_total <- private_create_gain_loss_total_by_group(dataset=conversion_data_floor,
                                                                        date_variable='create_date_time',
@@ -3232,7 +3247,25 @@ test_that('private_create_gain_loss_total_by_group', {
             arrange(create_date_time, lead_source)
         
         expect_true(rt_are_dataframes_equal(found_change_gain_loss_total, expected_dataframe))
-        
+        # by_group should aggregate to private_create_gain_loss_total
+        expect_true(rt_are_dataframes_equal(found_change_gain_loss_total %>%
+                                                group_by(create_date_time, period_label) %>%
+                                                summarise(n=round(sum(n), 5),
+                                                          previous_n=round(sum(previous_n), 5),
+                                                          gain_loss=round(sum(gain_loss), 5)) %>%
+                                                ungroup(),
+                                            private_create_gain_loss_total(dataset=conversion_data_floor,
+                                                                           date_variable='create_date_time',
+                                                                           date_floor=date_floor,
+                                                                           facet_variable=NULL,
+                                                                           percent_change=FALSE,
+                                                                           aggregation_variable='amount',
+                                                                           aggregation_function=aggregation_function_sum) %>%
+                                                mutate(n=round(n, 5),
+                                                       previous_n=round(previous_n, 5),
+                                                       gain_loss=round(gain_loss, 5)) %>%
+                                                select(create_date_time, period_label, n, previous_n, gain_loss)))
+
         # by day, MEAN amount
         found_change_gain_loss_total <- private_create_gain_loss_total_by_group(dataset=conversion_data_floor,
                                                                        date_variable='create_date_time',
@@ -3268,7 +3301,7 @@ test_that('private_create_gain_loss_total_by_group', {
             arrange(create_date_time, lead_source)
         
         expect_true(rt_are_dataframes_equal(found_change_gain_loss_total, expected_dataframe))
-        
+
         # by day, continent, SUM amount
         found_change_gain_loss_total <- private_create_gain_loss_total_by_group(dataset=conversion_data_floor,
                                                                                 date_variable='create_date_time',
@@ -3319,6 +3352,52 @@ test_that('private_create_gain_loss_total_by_group', {
         
         expect_identical(expected_factor_order, levels(found_change_gain_loss_total$continent))
         
+        # by_group should aggregate to private_create_gain_loss_total
+        expect_true(rt_are_dataframes_equal(suppressWarnings(
+                                                found_change_gain_loss_total %>%
+                                                    group_by(create_date_time, period_label) %>%
+                                                    summarise(n=round(sum(n), 5),
+                                                              previous_n=round(sum(previous_n), 5),
+                                                              gain_loss=round(sum(gain_loss), 5)) %>%
+                                                    ungroup()),
+                                                private_create_gain_loss_total(dataset=conversion_data_floor,
+                                                                               date_variable='create_date_time',
+                                                                               date_floor=date_floor,
+                                                                               facet_variable=NULL,
+                                                                               percent_change=FALSE,
+                                                                               aggregation_variable='amount',
+                                                                               aggregation_function=aggregation_function_sum) %>%
+                                                    mutate(n=round(n, 5),
+                                                           previous_n=round(previous_n, 5),
+                                                           gain_loss=round(gain_loss, 5)) %>%
+                                                    select(create_date_time, period_label, n, previous_n, gain_loss)))
+        # by_group should aggregate to private_create_gain_loss_total, using Facet
+        expect_true(rt_are_dataframes_equal(suppressWarnings(
+                                                found_change_gain_loss_total %>%
+                                                group_by(create_date_time, period_label, continent) %>%
+                                                summarise(n=round(sum(n), 5),
+                                                          previous_n=round(sum(previous_n), 5),
+                                                          gain_loss=round(sum(gain_loss), 5)) %>%
+                                                ungroup() %>%
+                                                # convert to character so they sort the same way,
+                                                # because the levels returned from total vs by_group
+                                                # are not exaclty the same
+                                                mutate(continent=as.character(continent)) %>%
+                                                arrange(create_date_time, continent)),
+                                            private_create_gain_loss_total(dataset=conversion_data_floor,
+                                                                           date_variable='create_date_time',
+                                                                           date_floor=date_floor,
+                                                                           facet_variable='continent',
+                                                                           percent_change=FALSE,
+                                                                           aggregation_variable='amount',
+                                                                           aggregation_function=aggregation_function_sum) %>%
+                                                mutate(n=round(n, 5),
+                                                       previous_n=round(previous_n, 5),
+                                                       gain_loss=round(gain_loss, 5)) %>%
+                                                select(create_date_time, period_label, continent, n, previous_n, gain_loss) %>%
+                                                mutate(continent=as.character(continent)) %>%
+                                                arrange(create_date_time, continent)))
+
         # by day, continent, SUM amount, percent_change=TRUE, which means facet should be reordered by percent_change
         found_change_gain_loss_total <- private_create_gain_loss_total_by_group(dataset=conversion_data_floor,
                                                                        date_variable='create_date_time',
@@ -3377,59 +3456,120 @@ test_that('private_create_gain_loss_total_by_group', {
     test_by_date_floor(date_floor='year')
 })
 
-
-
-
-    # rt_explore_plot_time_series_change(dataset=conversion_data %>% filter(create_date_time >= ymd('2019-01-01'),
-    #                                                                create_date_time < ymd('2019-12-01')),
-    #                             date_variable = 'create_date_time',
-    #                             color_variable = 'continent',
-    #                             facet_variable = 'continent',
-    #                             date_floor = 'quarter')
-    # #
-    # rt_explore_plot_time_series_change(dataset=conversion_data %>%
-    #                                        filter(create_date_time >= ymd('2019-01-01'),
-    #                                               create_date_time < ymd('2019-12-01')) %>%
-    #                                        mutate(lead_source = fct_lump(lead_source, n=3)),
-    # 
-    #                                    date_variable = 'create_date_time',
-    #                                    color_variable = 'continent',
-    #                                    facet_variable = NULL,
-    #                                    #facet_variable = 'lead_source',
-    #                                    date_floor = 'quarter',
-    #                                    show_labels = TRUE)
-
-    # rt_explore_plot_time_series_change(dataset=conversion_data %>%
-    #                                        filter(create_date_time >= ymd('2019-01-01'),
-    #                                               create_date_time < ymd('2019-12-01')) %>%
-    #                                        mutate(lead_source = fct_lump(lead_source, n=3)),
-    #
-    #                                    date_variable = 'create_date_time',
-    #                                    color_variable = NULL,
-    #                                    facet_variable = NULL,
-    #                                    date_floor = 'week',
-    #                                    show_labels = TRUE)
-    #
-    # rt_explore_plot_time_series_change(dataset=conversion_data %>%
-    #                                        filter(create_date_time >= ymd('2019-01-01'),
-    #                                               create_date_time < ymd('2019-12-01')) %>%
-    #                                        mutate(lead_source = fct_lump(lead_source, n=3)),
-    #
-    #                                    date_variable = 'create_date_time',
-    #                                    color_variable = NULL,
-    #                                    facet_variable = NULL,
-    #                                    date_floor = 'quarter',
-    #                                    show_labels = TRUE)
-    #
-    #
-    # rt_explore_plot_time_series_change(dataset=conversion_data %>%
-    #                                        filter(create_date_time >= ymd('2019-01-01'),
-    #                                               create_date_time < ymd('2019-12-01')) %>%
-    #                                        mutate(lead_source = fct_lump(lead_source, n=3)),
-    #
-    #                                    date_variable = 'create_date_time',
-    #                                    color_variable = 'continent',
-    #                                    facet_variable = 'lead_source',
-    #                                    show_labels = TRUE,
-    #                                    percent_change = TRUE,
-    #                                    date_floor = 'quarter')
+test_that('rt_explore_plot_time_series_change', {
+    
+    global__should_log_message <<- FALSE
+    conversion_data <- select_preloaded_dataset("Mock Conversions", defualt_path = '../')$dataset
+    conversion_data[c(1, 2, 3, 4), 'create_date_time'] <- NA
+  
+    ####################
+    # Quarter
+    ####################
+    plot_object <- rt_explore_plot_time_series_change(dataset=conversion_data,
+                                                      date_variable='create_date_time',
+                                                      date_floor='quarter',
+                                                      show_labels=TRUE)
+    test_save_plot(file_name='graphs/rt_explore_plot_time_series_change__quarter.png', plot=plot_object)
+    
+    plot_object <- rt_explore_plot_time_series_change(dataset=conversion_data %>%
+                                                          filter(create_date_time >= ymd('2019-01-01')) %>%
+                                                          mutate(lead_source=fct_lump(lead_source, n=3)),
+                                                      date_variable='create_date_time',
+                                                      color_variable='lead_source',
+                                                      #facet_variable='continent',
+                                                      date_floor='quarter',
+                                                      show_labels=TRUE)
+    test_save_plot(file_name='graphs/rt_explore_plot_time_series_change__quarter__color.png', plot=plot_object)
+    
+    plot_object <- rt_explore_plot_time_series_change(dataset=conversion_data %>%
+                                                          filter(create_date_time >= ymd('2019-01-01')) %>%
+                                                          mutate(lead_source=fct_lump(lead_source, n=3)),
+                                                      date_variable='create_date_time',
+                                                      color_variable='lead_source',
+                                                      #facet_variable = 'continent',
+                                                      date_floor='quarter',
+                                                      show_labels=TRUE,
+                                                      percent_change=TRUE,
+                                                      aggregation_variable=NULL,
+                                                      aggregation_function=NULL,
+                                                      aggregation_function_name=NULL)
+    test_save_plot(file_name='graphs/rt_explore_plot_time_series_change__quarter__color__perc_change.png', plot=plot_object)
+    
+    plot_object <- rt_explore_plot_time_series_change(dataset=conversion_data %>%
+                                                          filter(create_date_time >= ymd('2019-01-01')) %>%
+                                                          mutate(lead_source=fct_lump(lead_source, n=3)),
+                                                      date_variable='create_date_time',
+                                                      color_variable='lead_source',
+                                                      #facet_variable = 'continent',
+                                                      date_floor='quarter',
+                                                      show_labels=TRUE,
+                                                      percent_change=FALSE,
+                                                      aggregation_variable='amount',
+                                                      aggregation_function=aggregation_function_sum,
+                                                      aggregation_function_name='TOTAL')
+    test_save_plot(file_name='graphs/rt_explore_plot_time_series_change__quarter__color__agg.png', plot=plot_object)
+    
+    
+    plot_object <- rt_explore_plot_time_series_change(dataset=conversion_data %>%
+                                                          filter(create_date_time >= ymd('2019-01-01')) %>%
+                                                          mutate(continent=fct_lump(continent, n=2)),
+                                                      date_variable='create_date_time',
+                                                      #color_variable='lead_source',
+                                                      facet_variable='continent',
+                                                      date_floor='quarter',
+                                                      show_labels=TRUE)
+    test_save_plot(file_name='graphs/rt_explore_plot_time_series_change__quarter__facet.png', plot=plot_object)
+    
+    plot_object <- rt_explore_plot_time_series_change(dataset=conversion_data %>%
+                                                          filter(create_date_time >= ymd('2019-01-01')) %>%
+                                                          mutate(continent=fct_lump(continent, n=2)),
+                                                      date_variable='create_date_time',
+                                                      #color_variable='lead_source',
+                                                      facet_variable='continent',
+                                                      date_floor='quarter',
+                                                      show_labels=TRUE,
+                                                      aggregation_variable='amount',
+                                                      aggregation_function=aggregation_function_sum,
+                                                      aggregation_function_name='TOTAL')
+    test_save_plot(file_name='graphs/rt_explore_plot_time_series_change__quarter__facet__agg.png', plot=plot_object)
+    
+    plot_object <- rt_explore_plot_time_series_change(dataset=conversion_data %>%
+                                                          filter(create_date_time >= ymd('2019-01-01')) %>%
+                                                          mutate(continent=fct_lump(continent, n=2),
+                                                                 lead_source=fct_lump(lead_source, n=3)),
+                                                      date_variable='create_date_time',
+                                                      color_variable='lead_source',
+                                                      facet_variable='continent',
+                                                      date_floor='quarter',
+                                                      show_labels=TRUE)
+    test_save_plot(file_name='graphs/rt_explore_plot_time_series_change__quarter__color_facet.png', plot=plot_object)
+    
+    plot_object <- rt_explore_plot_time_series_change(dataset=conversion_data %>%
+                                                          filter(create_date_time >= ymd('2019-01-01')) %>%
+                                                          mutate(continent=fct_lump(continent, n=2),
+                                                                 lead_source=fct_lump(lead_source, n=3)),
+                                                      date_variable='create_date_time',
+                                                      color_variable='lead_source',
+                                                      facet_variable='continent',
+                                                      date_floor='quarter',
+                                                      show_labels=TRUE,
+                                                      aggregation_variable='amount',
+                                                      aggregation_function=aggregation_function_sum,
+                                                      aggregation_function_name='TOTAL')
+    test_save_plot(file_name='graphs/rt_explore_plot_time_series_change__quarter__color_facet__agg.png', plot=plot_object)
+    
+    plot_object <- rt_explore_plot_time_series_change(dataset=conversion_data %>%
+                                                          filter(create_date_time >= ymd('2019-01-01')) %>%
+                                                          mutate(continent=fct_lump(continent, n=2),
+                                                                 lead_source=fct_lump(lead_source, n=3)),
+                                                      date_variable='create_date_time',
+                                                      color_variable='lead_source',
+                                                      facet_variable='continent',
+                                                      date_floor='quarter',
+                                                      show_labels=FALSE,
+                                                      aggregation_variable='amount',
+                                                      aggregation_function=aggregation_function_sum,
+                                                      aggregation_function_name='TOTAL')
+    test_save_plot(file_name='graphs/rt_explore_plot_time_series_change__quarter__color_facet__agg_no_label.png', plot=plot_object)
+    
+})
