@@ -3461,6 +3461,10 @@ test_that('rt_explore_plot_time_series_change', {
     global__should_log_message <<- FALSE
     conversion_data <- select_preloaded_dataset("Mock Conversions", defualt_path = '../')$dataset
     conversion_data[c(1, 2, 3, 4), 'create_date_time'] <- NA
+    
+    aggregation_function_sum <- function(values) {
+        return (sum(values, na.rm = TRUE))
+    }
   
     ####################
     # Quarter
