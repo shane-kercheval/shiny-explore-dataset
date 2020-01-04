@@ -1122,7 +1122,11 @@ reactive__var_plots__ggplot__creator <- function(input,
                                                  "`. Selecting `",
                                                  global__ts_graph_type__default,
                                                  "` graph type. Click 'Apply Options' in 'Graph Options' section.")))
-            updateCheckboxInput(session, 'var_plots__ts_graph_type', value=FALSE)
+            updateRadioButtons(session,
+                           'var_plots__ts_graph_type',
+                           choices=global__ts_graph_type__options,
+                           inline=TRUE,
+                           selected=global__ts_graph_type__default)
             return (NULL)   
         }
 
@@ -2415,8 +2419,6 @@ hide_show_date <- function(session, input) {
         shinyjs::show('var_plots__ts_date_break_format')
         shinyjs::show('var_plots__ts_breaks_width')
     }
-
-
 
     has_date_conversion_variable <- !is.null(input$var_plots__date_conversion_variable) &&
             input$var_plots__date_conversion_variable != global__select_variable_optional
