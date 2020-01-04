@@ -92,7 +92,7 @@ rt_explore_plot_time_series_change <- function(dataset,
             ggplot(aes(x=period_label, y=!!symbol_y, fill=ifelse(!!symbol_y < 0, TRUE, FALSE))) +
             geom_bar(stat='identity') +
             geom_hline(yintercept = 0, color='black', size=0.3) +
-            scale_fill_manual(values=c(rt_colors_good_bad()[1], rt_colors_good_bad()[2])) +
+            scale_fill_manual(values=c(rt_colors_good_bad()[1], rt_colors_good_bad()[2]), na.value = '#2A3132') +
             theme_light(base_size = base_size) +
             theme(legend.position = 'none',
                   axis.text.x = element_text(angle = 30, hjust = 1)) +
@@ -107,7 +107,7 @@ rt_explore_plot_time_series_change <- function(dataset,
             ggplot(aes(x=period_label, y=!!symbol_y, fill=ifelse(!!symbol_y < 0, TRUE, FALSE))) +
             geom_bar(stat='identity') +
             geom_hline(yintercept = 0, color='black', size=0.5) +
-            scale_fill_manual(values=c(rt_colors_good_bad()[1], rt_colors_good_bad()[2])) +
+            scale_fill_manual(values=c(rt_colors_good_bad()[1], rt_colors_good_bad()[2]), na.value = '#2A3132') +
             theme_light(base_size = base_size) +
             theme(legend.position = 'none',
                   axis.text.x = element_text(angle = 30, hjust = 1)) +
@@ -122,7 +122,8 @@ rt_explore_plot_time_series_change <- function(dataset,
         ggplot_object <- change_gain_loss_by_group %>%
             ggplot(aes(x=period_label, y=!!symbol_y)) +
             geom_bar(aes(fill=!!sym(color_variable)), stat='identity', position = position_dodge(width=0.9)) +
-            scale_fill_manual(values=rt_colors()[1:length(unique(change_gain_loss_by_group[[color_variable]]))]) +
+            scale_fill_manual(values=rt_colors()[1:length(unique(change_gain_loss_by_group[[color_variable]]))],
+                              na.value = '#2A3132') +
             # hack to show legend without boxplot symbol
             geom_point(data=change_gain_loss_total, aes(x=period_label, y=!!symbol_y, shape=label_legend), size=-1) +
             scale_shape_manual(name = "", values = 95) +

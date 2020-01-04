@@ -286,7 +286,7 @@ helper__restore_defaults_graph_options <- function(session) {
     reset_hide_var_plot_option(session, option_name='var_plots__label_variables', hide_option=FALSE)
     reset_hide_var_plot_option(session, option_name='var_plots__annotate_points', hide_option=FALSE)
     reset_hide_var_plot_option(session, option_name='var_plots__show_points', hide_option=FALSE)
-    reset_hide_var_plot_option(session, option_name='var_plots__year_over_year', hide_option=FALSE)
+    reset_hide_var_plot_option(session, option_name='var_plots__ts_graph_type', hide_option=FALSE)
     reset_hide_var_plot_option(session, option_name='var_plots__include_zero_y_axis', hide_option=FALSE)
     reset_hide_var_plot_option(session, option_name='var_plots__numeric_graph_type', hide_option=FALSE)
     reset_hide_var_plot_option(session, option_name='var_plots__date_cr__plot_type', hide_option=FALSE)
@@ -350,7 +350,7 @@ hide_graph_options <- function(session) {
     reset_hide_var_plot_option(session, 'var_plots__label_variables')
     reset_hide_var_plot_option(session, 'var_plots__annotate_points')
     reset_hide_var_plot_option(session, 'var_plots__show_points')
-    reset_hide_var_plot_option(session, 'var_plots__year_over_year')
+    reset_hide_var_plot_option(session, 'var_plots__ts_graph_type')
     reset_hide_var_plot_option(session, 'var_plots__include_zero_y_axis')
     reset_hide_var_plot_option(session, 'var_plots__numeric_graph_type')
     reset_hide_var_plot_option(session, 'var_plots__date_cr__plot_type')
@@ -395,7 +395,7 @@ observeEvent__var_plots__graph_options__any_used__function <- function(input, se
                    input$var_plots__label_variables,
                    input$var_plots__annotate_points,
                    input$var_plots__show_points,
-                   input$var_plots__year_over_year,
+                   input$var_plots__ts_graph_type,
                    input$var_plots__include_zero_y_axis,
                    input$var_plots__numeric_graph_type,
                    input$var_plots__date_cr__plot_type,
@@ -1103,8 +1103,8 @@ reactive__var_plots__ggplot__creator <- function(input,
         date_cr__snapshots__group_variable <- null_if_select_variable_optional(input$var_plots__date_cr__snapshots__group_variable)
         convert_primary_date_to_categoric <- input$var_plots__convert_primary_date_to_categoric
         convert_numerics_to_categoric <- input$var_plots__convert_numerics_to_categoric
-        year_over_year <- default_if_null_or_empty_string(isolate(input$var_plots__year_over_year),
-                                                          default=FALSE)
+        ts_graph_type <- default_if_null_or_empty_string(isolate(input$var_plots__ts_graph_type),
+                                                         default=global__ts_graph_type__default)
         include_zero_y_axis <- default_if_null_or_empty_string(isolate(input$var_plots__include_zero_y_axis),
                                                                default=TRUE)
         multi_value_delimiter <- input$var_plots__multi_value_delimiter
@@ -1116,13 +1116,19 @@ reactive__var_plots__ggplot__creator <- function(input,
             return (NULL)
         }
 
-        if(isolate(input$var_plots__trend_line) == "Projection" && year_over_year) {
-            showModal(modalDialog(title = "Cannot project year-over-year trend-line. Unselecting Year-over-Year. Click 'Apply Options' in 'Graph Options' section."))
-            updateCheckboxInput(session, 'var_plots__year_over_year', value=FALSE)
+        if(isolate(input$var_plots__trend_line) == "Projection" && ts_graph_type != global__ts_graph_type__default) {
+            showModal(modalDialog(title = paste0("Cannot project trend-line with graph type of `",
+                                                 ts_graph_type,
+                                                 "`. Selecting `",
+                                                 global__ts_graph_type__default,
+                                                 "` graph type. Click 'Apply Options' in 'Graph Options' section.")))
+            updateCheckboxInput(session, 'var_plots__ts_graph_type', value=FALSE)
             return (NULL)   
         }
 
-        if(is_date_type(dataset[[primary_variable]]) && !is.null(color_variable) && year_over_year) {
+        if(is_date_type(dataset[[primary_variable]]) &&
+                !is.null(color_variable) &&
+                ts_graph_type == global__ts_graph_type__yoy) {
             # we cannot use YOY and color (year will be the color)
             # So, if we aren't faceting, let's move color to the facet variable.
             # Otherwise, we will need to clear the color variable
@@ -1382,7 +1388,7 @@ reactive__var_plots__ggplot__creator <- function(input,
                                               ts_date_break_format=ts_date_break_format,
                                               ts_date_breaks_width=ts_date_breaks_width,
                                               include_zero_y_axis=include_zero_y_axis,
-                                              year_over_year=year_over_year,
+                                              ts_graph_type=ts_graph_type,
 
                                               # mapping options
                                               map_format=map_format,
@@ -1488,7 +1494,7 @@ create_ggplot_object <- function(dataset,
                                  ts_date_floor='month',
                                  ts_date_break_format=NULL,
                                  ts_date_breaks_width=NULL,
-                                 year_over_year=FALSE,
+                                 ts_graph_type="Standard",
                                  include_zero_y_axis=TRUE,
 
                                  # mapping options
@@ -1574,7 +1580,7 @@ create_ggplot_object <- function(dataset,
         log_message_variable('ts_date_floor', ts_date_floor)
         log_message_variable('ts_date_break_format', ts_date_break_format)
         log_message_variable('ts_date_breaks_width', ts_date_breaks_width)
-        log_message_variable('year_over_year', year_over_year)
+        log_message_variable('ts_graph_type', ts_graph_type)
         log_message_variable('include_zero_y_axis', include_zero_y_axis)
 
         log_message_variable('map_format', map_format)
@@ -1732,37 +1738,58 @@ create_ggplot_object <- function(dataset,
                     }
                 }
 
-                ggplot_object <- dataset %>%
-                    select(primary_variable, comparison_variable, color_variable, facet_variable) %>%
-                    mutate_factor_lump(factor_lump_number=filter_factor_lump_number) %>%
-                    rt_explore_plot_time_series(variable=primary_variable,
-                                                comparison_variable=comparison_variable,
-                                                comparison_function=comparison_function,
-                                                comparison_function_name=comparison_function_name,
-                                                color_variable=color_variable,
-                                                facet_variable=facet_variable,
-                                                year_over_year=year_over_year,
-                                                y_zoom_min=y_zoom_min,
-                                                y_zoom_max=y_zoom_max,
-                                                include_zero_y_axis=include_zero_y_axis,
-                                                show_points=show_points,
-                                                show_labels=annotate_points,
-                                                date_floor=ts_date_floor,
-                                                date_break_format=ts_date_break_format,
-                                                date_breaks_width=ts_date_breaks_width,
-                                                date_limits=date_limits,
-                                                base_size=base_size) %>%
-                    scale_axes_log10(scale_x=FALSE,
-                                     scale_y=scale_y_log_base_10) %>%
-                    add_trend_line(trend_line_type=trend_line,
-                                   confidence_interval=add_confidence_interval,
-                                   color_variable=color_variable) %>%
-                    add_vertical_annotations(vertical_annotations,
-                                             y_location=max(0, y_zoom_min, na.rm=TRUE),
-                                             is_date=TRUE) %>%
-                    add_horizontal_annotations(horizontal_annotations,
-                                               x_location=min(dataset[[primary_variable]], na.rm=TRUE),
-                                               x_location_is_date=TRUE)
+                if(ts_graph_type == global__ts_graph_type__percent_change) {
+
+                    ggplot_object <- dataset %>%
+                        select(primary_variable, comparison_variable, color_variable, facet_variable) %>%
+                        mutate_factor_lump(factor_lump_number=filter_factor_lump_number) %>%
+                        rt_explore_plot_time_series_change(date_variable=primary_variable,
+                                                           date_floor=ts_date_floor,
+                                                           aggregation_variable=comparison_variable,
+                                                           aggregation_function=comparison_function,
+                                                           aggregation_function_name=comparison_function_name,
+                                                           color_variable=color_variable,
+                                                           facet_variable=facet_variable,
+                                                           percent_change=FALSE,
+                                                           show_labels=annotate_points,
+                                                           base_size=base_size) %>%
+                        scale_axes_log10(scale_x=FALSE,
+                                         scale_y=scale_y_log_base_10)
+
+                } else {
+
+                    ggplot_object <- dataset %>%
+                        select(primary_variable, comparison_variable, color_variable, facet_variable) %>%
+                        mutate_factor_lump(factor_lump_number=filter_factor_lump_number) %>%
+                        rt_explore_plot_time_series(variable=primary_variable,
+                                                    comparison_variable=comparison_variable,
+                                                    comparison_function=comparison_function,
+                                                    comparison_function_name=comparison_function_name,
+                                                    color_variable=color_variable,
+                                                    facet_variable=facet_variable,
+                                                    year_over_year=ts_graph_type == global__ts_graph_type__yoy,
+                                                    y_zoom_min=y_zoom_min,
+                                                    y_zoom_max=y_zoom_max,
+                                                    include_zero_y_axis=include_zero_y_axis,
+                                                    show_points=show_points,
+                                                    show_labels=annotate_points,
+                                                    date_floor=ts_date_floor,
+                                                    date_break_format=ts_date_break_format,
+                                                    date_breaks_width=ts_date_breaks_width,
+                                                    date_limits=date_limits,
+                                                    base_size=base_size) %>%
+                        scale_axes_log10(scale_x=FALSE,
+                                         scale_y=scale_y_log_base_10) %>%
+                        add_trend_line(trend_line_type=trend_line,
+                                       confidence_interval=add_confidence_interval,
+                                       color_variable=color_variable) %>%
+                        add_vertical_annotations(vertical_annotations,
+                                                 y_location=max(0, y_zoom_min, na.rm=TRUE),
+                                                 is_date=TRUE) %>%
+                        add_horizontal_annotations(horizontal_annotations,
+                                                   x_location=min(dataset[[primary_variable]], na.rm=TRUE),
+                                                   x_location_is_date=TRUE)
+                }
 
             ##########################################################################################
             # Secondary Date, Plot Conversion Rates Or Adoption
@@ -1781,7 +1808,7 @@ create_ggplot_object <- function(dataset,
                                                          snapshots=as.numeric(str_split(string=date_cr__snapshots__values, pattern=', ', simplify = FALSE)[[1]]),
                                                          snapshot_units=date_cr__snapshots__units,
                                                          color_or_facet=date_cr__snapshots__color_or_facet,
-                                                         year_over_year=year_over_year,
+                                                         year_over_year=ts_graph_type == global__ts_graph_type__yoy,
                                                          y_zoom_min=y_zoom_min,
                                                          y_zoom_max=y_zoom_max,
                                                          include_zero_y_axis=include_zero_y_axis,
@@ -2295,11 +2322,11 @@ hide_show_date_cr_options <- function(session, input) {
             if(is.null(input$var_plots__date_cr__snapshots__group_variable) ||
                     input$var_plots__date_cr__snapshots__group_variable == global__select_variable_optional) {
 
-                shinyjs::show('var_plots__year_over_year')
+                shinyjs::show('var_plots__ts_graph_type')
 
             } else {
 
-                shinyjs::hide('var_plots__year_over_year')            
+                shinyjs::hide('var_plots__ts_graph_type')            
             }
 
         } else {
@@ -2315,7 +2342,7 @@ hide_show_date_cr_options <- function(session, input) {
             shinyjs::hide('var_plots__date_cr__snapshots__values')
             shinyjs::hide('var_plots__date_cr__snapshots__color_or_facet')
             helper__show_hide_trend_line(session, input, show=FALSE)
-            shinyjs::hide('var_plots__year_over_year')
+            shinyjs::hide('var_plots__ts_graph_type')
             shinyjs::hide('var_plots__ts_date_break_format')
             shinyjs::hide('var_plots__ts_breaks_width')
         }
@@ -2355,21 +2382,41 @@ hide_show_date <- function(session, input) {
     shinyjs::hide('var_plots__variables_buttons_swap')  # hide because we can't have date as comparison
     shinyjs::show('var_plots__color_facet_buttons_swap')
 
-    shinyjs::show('var_plots__scale_y_log_base_10')
-    shinyjs::show('var_plots__y_zoom_min')
-    shinyjs::show('var_plots__y_zoom_max')
+    selected_percent_change <- input$var_plots__ts_graph_type == global__ts_graph_type__percent_change
+
     shinyjs::show('var_plots__base_size')
-    shinyjs::show('var_plots__vertical_annotations')
-    shinyjs::show('var_plots__horizontal_annotations')
+    shinyjs::show('var_plots__scale_y_log_base_10')
     shinyjs::show('var_plots__annotate_points')
-    shinyjs::show('var_plots__show_points')
-    shinyjs::show('var_plots__year_over_year')
-    shinyjs::show('var_plots__include_zero_y_axis')
-    helper__show_hide_trend_line(session, input)
     shinyjs::show('var_plots__ts_date_floor')
     shinyjs::show('var_plots__convert_primary_date_to_categoric')
-    shinyjs::show('var_plots__ts_date_break_format')
-    shinyjs::show('var_plots__ts_breaks_width')
+    shinyjs::show('var_plots__ts_graph_type')
+
+    if(selected_percent_change) {
+
+        reset_hide_var_plot_option(session, 'var_plots__y_zoom_min')
+        reset_hide_var_plot_option(session, 'var_plots__y_zoom_max')
+        reset_hide_var_plot_option(session, 'var_plots__vertical_annotations')
+        reset_hide_var_plot_option(session, 'var_plots__horizontal_annotations')
+        reset_hide_var_plot_option(session, 'var_plots__show_points')
+        reset_hide_var_plot_option(session, 'var_plots__include_zero_y_axis')
+        helper__show_hide_trend_line(session, input, show=FALSE)
+        reset_hide_var_plot_option(session, 'var_plots__ts_date_break_format')
+        reset_hide_var_plot_option(session, 'var_plots__ts_breaks_width')
+    } else {
+
+        shinyjs::show('var_plots__y_zoom_min')
+        shinyjs::show('var_plots__y_zoom_max')
+        shinyjs::show('var_plots__vertical_annotations')
+        shinyjs::show('var_plots__horizontal_annotations')
+        shinyjs::show('var_plots__show_points')
+        shinyjs::show('var_plots__ts_graph_type')
+        shinyjs::show('var_plots__include_zero_y_axis')
+        helper__show_hide_trend_line(session, input)
+        shinyjs::show('var_plots__ts_date_break_format')
+        shinyjs::show('var_plots__ts_breaks_width')
+    }
+
+
 
     has_date_conversion_variable <- !is.null(input$var_plots__date_conversion_variable) &&
             input$var_plots__date_conversion_variable != global__select_variable_optional
@@ -2384,8 +2431,9 @@ hide_show_date <- function(session, input) {
             input$var_plots__facet_variable != global__select_variable_optional
 
     
-    # if either comparison/color/facet is selected, date_conversion_variable isn't applicable
-    if(has_comparison_variable || has_color_variable || has_facet_variable) {
+    # if either comparison/color/facet is selected, or we are showing percent change, 
+    # then the date_conversion_variable isn't applicable
+    if(has_comparison_variable || has_color_variable || has_facet_variable || selected_percent_change) {
 
         reset_hide_var_plot_option(session, 'var_plots__date_conversion_variable')
         reset_hide_var_plot_option(session, 'var_plots__date_cr__snapshots__group_variable')
@@ -2403,8 +2451,19 @@ hide_show_date <- function(session, input) {
         }
     }
 
-    # if secondary date, don't show color/facet
+    # if secondary date, don't show color/facet; Percent change is not applicable
     if(has_date_conversion_variable) {
+
+        selected_graph_type <- input$var_plots__ts_graph_type
+        if(selected_graph_type == global__ts_graph_type__percent_change) {
+            selected_graph_type <- global__ts_graph_type__default
+        }
+        updateRadioButtons(session,
+                           'var_plots__ts_graph_type',
+                           choices=global__ts_graph_type__options %>%
+                                        rt_remove_val(global__ts_graph_type__percent_change),
+                           inline=TRUE,
+                           selected=selected_graph_type)
 
         reset_hide_var_plot_option(session, 'var_plots__comparison')
         reset_hide_var_plot_option(session, 'var_plots__color_variable')
@@ -2416,6 +2475,12 @@ hide_show_date <- function(session, input) {
         hide_show_date_cr_options(session, input)
 
     } else {
+
+        updateRadioButtons(session,
+                           'var_plots__ts_graph_type',
+                           choices=global__ts_graph_type__options,
+                           selected=input$var_plots__ts_graph_type,
+                           inline=TRUE)
 
         shinyjs::show('var_plots__color_variable')
         shinyjs::show('var_plots__facet_variable')
@@ -2578,7 +2643,7 @@ hide_show_numeric_numeric <- function(session,
     reset_hide_var_plot_option(session, 'var_plots__date_cr__last_n_cohorts')
     reset_hide_var_plot_option(session, 'var_plots__date_cr__n_units_after_first_date')
     reset_hide_var_plot_option(session, 'var_plots__date_cr__separate_colors')
-    reset_hide_var_plot_option(session, 'var_plots__year_over_year')
+    reset_hide_var_plot_option(session, 'var_plots__ts_graph_type')
     reset_hide_var_plot_option(session, 'var_plots__include_zero_y_axis')
     reset_hide_var_plot_option(session, 'var_plots__ts_date_floor')
     reset_hide_var_plot_option(session, 'var_plots__ts_date_break_format')
@@ -2695,7 +2760,7 @@ hide_show_numeric_categoric <- function(session,
     reset_hide_var_plot_option(session, 'var_plots__date_cr__last_n_cohorts')
     reset_hide_var_plot_option(session, 'var_plots__date_cr__n_units_after_first_date')
     reset_hide_var_plot_option(session, 'var_plots__date_cr__separate_colors')
-    reset_hide_var_plot_option(session, 'var_plots__year_over_year')
+    reset_hide_var_plot_option(session, 'var_plots__ts_graph_type')
     reset_hide_var_plot_option(session, 'var_plots__include_zero_y_axis')
     reset_hide_var_plot_option(session, 'var_plots__numeric_aggregation')
     reset_hide_var_plot_option(session, 'var_plots__size_variable')
@@ -2842,7 +2907,7 @@ hide_show_categoric_categoric <- function(session,
     reset_hide_var_plot_option(session, 'var_plots__date_cr__last_n_cohorts')
     reset_hide_var_plot_option(session, 'var_plots__date_cr__n_units_after_first_date')
     reset_hide_var_plot_option(session, 'var_plots__date_cr__separate_colors')
-    reset_hide_var_plot_option(session, 'var_plots__year_over_year')
+    reset_hide_var_plot_option(session, 'var_plots__ts_graph_type')
     reset_hide_var_plot_option(session, 'var_plots__include_zero_y_axis')
     reset_hide_var_plot_option(session, 'var_plots__size_variable')
     reset_hide_var_plot_option(session, 'var_plots__label_variables')
@@ -2945,7 +3010,7 @@ observe__var_plots__hide_show_uncollapse_on_primary_vars <- function(session, in
             reset_hide_var_plot_option(session, 'var_plots__date_cr__last_n_cohorts')
             reset_hide_var_plot_option(session, 'var_plots__date_cr__n_units_after_first_date')
             reset_hide_var_plot_option(session, 'var_plots__date_cr__separate_colors')
-            reset_hide_var_plot_option(session, 'var_plots__year_over_year')
+            reset_hide_var_plot_option(session, 'var_plots__ts_graph_type')
             reset_hide_var_plot_option(session, 'var_plots__include_zero_y_axis')
 
         } else {
@@ -3195,7 +3260,7 @@ update_var_plot_variables_from_url_params <- function(session, params, dataset, 
     update_slider_input(session, params, 'var_plots__date_cr__last_n_cohorts')
     update_slider_input(session, params, 'var_plots__date_cr__n_units_after_first_date')
     update_checkbox_input(session, params, 'var_plots__date_cr__separate_colors')
-    update_checkbox_input(session, params, 'var_plots__year_over_year')
+    update_radio_buttons(session, params, 'var_plots__ts_graph_type')
     update_checkbox_input(session, params, 'var_plots__include_zero_y_axis')
     update_select_input(session, params, 'var_plots__numeric_graph_type')
     update_select_input(session, params, 'var_plots__num_cat_aggregation_type')

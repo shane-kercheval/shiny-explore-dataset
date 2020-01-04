@@ -27,6 +27,11 @@ global__num_cat_aggregation_type <- c("Total", "Mean", "Average Value Per Record
 
 global__url_params_filter_prefix <- '!!_'
 
+global__ts_graph_type__default <- "Standard"
+global__ts_graph_type__yoy <- "Year-Over-Year"
+global__ts_graph_type__percent_change <- "Percent Change"
+global__ts_graph_type__options <- c(global__ts_graph_type__default, global__ts_graph_type__yoy, global__ts_graph_type__percent_change)
+
 var_plots__default_values <- list(
 
     'var_plots__variable' = global__select_variable,
@@ -52,7 +57,7 @@ var_plots__default_values <- list(
     'var_plots__label_variables' = NULL,
     'var_plots__annotate_points' = TRUE,
     'var_plots__show_points' = TRUE,
-    'var_plots__year_over_year' = FALSE,
+    'var_plots__ts_graph_type' = global__ts_graph_type__default,
     'var_plots__include_zero_y_axis' = TRUE,
     'var_plots__date_cr__plot_type' = global__date_cr_options[1],
     'var_plots__date_cr__snapshots__values' = "1, 7, 14",
@@ -125,7 +130,7 @@ var_plots__variable_types <- list(
     'var_plots__label_variables' = 'updateSelectInput',
     'var_plots__annotate_points' = 'updateCheckboxInput',
     'var_plots__show_points' = 'updateCheckboxInput',
-    'var_plots__year_over_year' = 'updateCheckboxInput',
+    'var_plots__ts_graph_type' = 'updateRadioButtons',
     'var_plots__include_zero_y_axis' = 'updateCheckboxInput',
     'var_plots__date_cr__plot_type' = 'updateSelectInput',
     'var_plots__date_cr__snapshots__values' = 'updateTextInput',
