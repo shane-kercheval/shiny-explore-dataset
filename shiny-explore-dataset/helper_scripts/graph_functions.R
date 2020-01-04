@@ -122,7 +122,7 @@ rt_explore_plot_time_series_change <- function(dataset,
         ggplot_object <- change_gain_loss_by_group %>%
             ggplot(aes(x=period_label, y=!!symbol_y)) +
             geom_bar(aes(fill=!!sym(color_variable)), stat='identity', position = position_dodge(width=0.9)) +
-            scale_fill_manual(values=rt_colors()[1:length(unique(change_gain_loss_by_group[[color_variable]]))],
+            scale_fill_manual(values=rt_get_colors_from_values(change_gain_loss_by_group[[color_variable]]),
                               na.value = '#2A3132') +
             # hack to show legend without boxplot symbol
             geom_point(data=change_gain_loss_total, aes(x=period_label, y=!!symbol_y, shape=label_legend), size=-1) +
@@ -149,7 +149,7 @@ rt_explore_plot_time_series_change <- function(dataset,
             ggplot(aes(x=period_label, y=!!symbol_y)) +
             geom_bar(aes(fill=!!sym(color_variable)), stat='identity', position = position_dodge(width=0.9)) +
             geom_hline(yintercept = 0, color='black', size=0.2) +
-            scale_fill_manual(values=rt_colors()[1:length(unique(change_gain_loss_by_group[[color_variable]]))],
+            scale_fill_manual(values=rt_get_colors_from_values(change_gain_loss_by_group[[color_variable]]),
                               na.value = '#2A3132') +
             # hack to show legend without boxplot symbol
             geom_point(data=change_gain_loss_total,
