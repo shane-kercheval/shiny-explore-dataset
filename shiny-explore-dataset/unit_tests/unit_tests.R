@@ -2355,6 +2355,34 @@ test_that("create_ggplot_plot - date projection - POSIXct", {
     test_save_plot(file_name='graphs/plot__time_series__projection__ci__POSIXct.png', plot=plot_object)
 })
 
+test_that("create_ggplot_plot - time-series-change - POSIXct", { 
+    context("create_ggplot_plot - time-series-change - POSIXct")
+    
+    global__should_log_message <<- FALSE
+    conversion_data <- select_preloaded_dataset("Mock Conversions", defualt_path = '../')$dataset
+    conversion_data[c(1, 2, 3, 4), 'create_date_time'] <- NA
+    
+    aggregation_function_sum <- function(values) {
+        return (sum(values, na.rm = TRUE))
+    }
+    
+    conversion_data$create_date_time <- as.POSIXct(conversion_data$create_date_time)
+    
+    plot_object <- create_ggplot_object(dataset=conversion_data %>%
+                                            filter(create_date_time >= ymd('2019-01-01')) %>%
+                                            mutate(continent=fct_lump(continent, n=2),
+                                                   lead_source=fct_lump(lead_source, n=3)),
+                                        primary_variable='create_date_time',
+                                        ts_graph_type = global__ts_graph_type__percent_change,
+                                        color_variable='lead_source',
+                                        facet_variable='continent',
+                                        ts_date_floor='quarter',
+                                        annotate_points=TRUE,
+                                        comparison_variable='amount',
+                                        numeric_aggregation='Total')
+    test_save_plot(file_name='graphs/plot__time_series__percent_change__POSIXct.png', plot=plot_object)
+})
+
 test_that("create_ggplot_plot - convert date to categoric", {
     context("create_ggplot_plot - convert date to categoric")
     
@@ -3575,5 +3603,4 @@ test_that('rt_explore_plot_time_series_change', {
                                                       aggregation_function=aggregation_function_sum,
                                                       aggregation_function_name='TOTAL')
     test_save_plot(file_name='graphs/rt_explore_plot_time_series_change__quarter__color_facet__agg_no_label.png', plot=plot_object)
-    
 })
