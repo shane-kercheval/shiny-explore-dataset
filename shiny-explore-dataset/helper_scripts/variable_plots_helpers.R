@@ -1742,7 +1742,7 @@ create_ggplot_object <- function(dataset,
                     }
                 }
 
-                if(ts_graph_type == global__ts_graph_type__percent_change) {
+                if(ts_graph_type == global__ts_graph_type__period_change) {
 
                     ggplot_object <- dataset %>%
                         select(primary_variable, comparison_variable, color_variable, facet_variable) %>%
@@ -2386,7 +2386,7 @@ hide_show_date <- function(session, input) {
     shinyjs::hide('var_plots__variables_buttons_swap')  # hide because we can't have date as comparison
     shinyjs::show('var_plots__color_facet_buttons_swap')
 
-    selected_percent_change <- input$var_plots__ts_graph_type == global__ts_graph_type__percent_change
+    selected_percent_change <- input$var_plots__ts_graph_type == global__ts_graph_type__period_change
 
     shinyjs::show('var_plots__base_size')
     shinyjs::show('var_plots__scale_y_log_base_10')
@@ -2457,13 +2457,13 @@ hide_show_date <- function(session, input) {
     if(has_date_conversion_variable) {
 
         selected_graph_type <- input$var_plots__ts_graph_type
-        if(selected_graph_type == global__ts_graph_type__percent_change) {
+        if(selected_graph_type == global__ts_graph_type__period_change) {
             selected_graph_type <- global__ts_graph_type__default
         }
         updateRadioButtons(session,
                            'var_plots__ts_graph_type',
                            choices=global__ts_graph_type__options %>%
-                                        rt_remove_val(global__ts_graph_type__percent_change),
+                                        rt_remove_val(global__ts_graph_type__period_change),
                            inline=TRUE,
                            selected=selected_graph_type)
 

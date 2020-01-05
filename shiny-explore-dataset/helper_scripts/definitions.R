@@ -29,8 +29,8 @@ global__url_params_filter_prefix <- '!!_'
 
 global__ts_graph_type__default <- "Standard"
 global__ts_graph_type__yoy <- "Year-Over-Year"
-global__ts_graph_type__percent_change <- "Percent Change"
-global__ts_graph_type__options <- c(global__ts_graph_type__default, global__ts_graph_type__yoy, global__ts_graph_type__percent_change)
+global__ts_graph_type__period_change <- "Period Change"
+global__ts_graph_type__options <- c(global__ts_graph_type__default, global__ts_graph_type__yoy, global__ts_graph_type__period_change)
 
 var_plots__default_values <- list(
 
