@@ -184,28 +184,20 @@ rt_explore_plot_time_series_change <- function(dataset,
 
     if(percent_change) {
 
-        ggplot_object <- ggplot_object +
-            scale_y_continuous(breaks=pretty_breaks(num_pretty_breaks), labels = percent_format())
+        format_function_axis <- rt_pretty_percent
+        format_function_text <- rt_pretty_percent
 
     } else {
 
-        ggplot_object <- ggplot_object +
-            scale_y_continuous(breaks=pretty_breaks(num_pretty_breaks),
-                               labels = format_format(big.mark=",",
-                                                      preserve.width="none",
-                                                      digits=4,
-                                                      scientific=FALSE))
+        format_function_axis <- rt_pretty_numbers_short
+        format_function_text <- rt_pretty_numbers_long
+
     }
 
+    ggplot_object <- ggplot_object +
+        scale_y_continuous(breaks=pretty_breaks(num_pretty_breaks), labels = format_function_axis)
+
     if(show_labels) {
-
-        if(percent_change) {
-
-            format_function <- percent_format()
-        } else {
-
-            format_function <- private__standard_prettyNum
-        }
 
         # vjsut for main graph
         # Color | FACET
@@ -235,14 +227,14 @@ rt_explore_plot_time_series_change <- function(dataset,
         if(!is.null(color_variable)) {
 
             ggplot_object <- suppressWarnings(ggplot_object +
-                geom_text(aes(label = ifelse(!!symbol_y >= 0, format_function(!!symbol_y), " "),
+                geom_text(aes(label = ifelse(!!symbol_y >= 0, format_function_text(!!symbol_y), " "),
                               fill=!!sym(color_variable)),
                           position = position_dodge(width=0.9),
                           check_overlap = TRUE,
                           vjust=1.25))
 
             ggplot_object <- suppressWarnings(ggplot_object +
-                geom_text(aes(label = ifelse(!!symbol_y < 0, format_function(!!symbol_y), " "),
+                geom_text(aes(label = ifelse(!!symbol_y < 0, format_function_text(!!symbol_y), " "),
                               fill=!!sym(color_variable)),
                           position = position_dodge(width=0.9),
                           check_overlap = TRUE,
@@ -251,17 +243,15 @@ rt_explore_plot_time_series_change <- function(dataset,
 
         ggplot_object <- suppressWarnings(ggplot_object +
             geom_text(data=change_gain_loss_total,
-                      aes(label = ifelse(!!symbol_y >= 0, format_function(!!symbol_y), " ")),
+                      aes(label = ifelse(!!symbol_y >= 0, format_function_text(!!symbol_y), " ")),
                       check_overlap = TRUE,
-                      vjust=vjust_high
-                      ))
+                      vjust=vjust_high))
 
         ggplot_object <- suppressWarnings(ggplot_object +
             geom_text(data=change_gain_loss_total,
-                      aes(label = ifelse(!!symbol_y < 0, format_function(!!symbol_y), " ")),
+                      aes(label = ifelse(!!symbol_y < 0, format_function_text(!!symbol_y), " ")),
                       check_overlap = TRUE,
-                      vjust=vjust_low
-                      ))
+                      vjust=vjust_low))
     }
 
     return (ggplot_object)
@@ -591,12 +581,4 @@ private__custom_date_format <- function(date_floor, date_break_format) {
 
         return (rt_as_year_qtr_format)
     }
-}
-
-private__standard_prettyNum <- function(x) {
-    return (prettyNum(x,
-                      big.mark=",",
-                      preserve.width="none",
-                      digits=4,
-                      scientific=FALSE))
 }
