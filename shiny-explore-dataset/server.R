@@ -30,6 +30,8 @@ source('helper_scripts/variable_plots_helpers.R')
 source('helper_scripts/graph_functions.R')
 source('helper_scripts/regression_helpers.R')
 
+select <- dplyr::select
+
 options(shiny.maxRequestSize=200*1024^2)
 # options(shiny.reactlog=TRUE) 
 

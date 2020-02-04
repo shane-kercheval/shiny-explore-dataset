@@ -17,6 +17,29 @@ global__should_log_message <<- FALSE
 # to run from command line, use:
 # test_file("unit_tests.R")
 
+
+test_that("select_all_of", {
+    context("generic_helpers::select_all_of")
+    
+    expected <- c('a', 'b', 'c', 'd', 'e')
+    x_a <- 'a'
+    x_b <- c('b')
+    x_cd <- c('c', 'd')
+    x_e <- 'e'
+    expect_identical(expected, params_to_vector(expected))
+    expect_identical(expected, params_to_vector('a', c('b'), c('c', 'd'), 'e'))
+    expect_identical(expected, params_to_vector(x_a, x_b, x_cd, x_e))
+    expect_identical(expected, params_to_vector(x_a, c(x_b, x_cd), x_e))
+    
+    iris_columns <- colnames(iris)
+    expect_true(rt_are_dataframes_equal(iris, iris %>% select_all_of(iris_columns)))
+    expect_true(rt_are_dataframes_equal(iris, iris %>% select_all_of(iris_columns[1], iris_columns[2:5])))
+    expect_true(rt_are_dataframes_equal(iris %>% select(Sepal.Length, Sepal.Width),
+                                        iris %>% select_all_of(iris_columns[1:2])))
+    expect_true(rt_are_dataframes_equal(iris %>% select(Sepal.Length, Sepal.Width),
+                                        iris %>% select_all_of("Sepal.Length", "Sepal.Width")))
+})
+
 test_that("filter", {
     context("generic_helpers::filter_data")
 
@@ -1082,7 +1105,7 @@ test_that("add_x_annotations", {
     local_y_zoom_min <- NULL
     local_y_zoom_max <- NULL
     ggplot_object <- local_dataset %>%
-        select(local_primary_variable) %>%
+        select_all_of(local_primary_variable) %>%
         mutate_factor_lump(factor_lump_number=10) %>%
         rt_explore_plot_time_series(variable=local_primary_variable,
                                     comparison_variable=NULL,
@@ -1174,7 +1197,7 @@ test_that("add_x_annotations:POSIXct", {
     local_y_zoom_min <- NULL
     local_y_zoom_max <- NULL
     ggplot_object <- local_dataset %>%
-        select(local_primary_variable) %>%
+        select_all_of(local_primary_variable) %>%
         mutate_factor_lump(factor_lump_number=10) %>%
         rt_explore_plot_time_series(variable=local_primary_variable,
                                     comparison_variable=NULL,
@@ -2373,7 +2396,7 @@ test_that("create_ggplot_plot - time-series-change - POSIXct", {
                                             mutate(continent=fct_lump(continent, n=2),
                                                    lead_source=fct_lump(lead_source, n=3)),
                                         primary_variable='create_date_time',
-                                        ts_graph_type = global__ts_graph_type__percent_change,
+                                        ts_graph_type = global__ts_graph_type__period_change,
                                         color_variable='lead_source',
                                         facet_variable='continent',
                                         ts_date_floor='quarter',

@@ -646,8 +646,8 @@ hide_show_top_n_categories <- function(session, dataset, variable, comparison_va
     }
 
     dataset <- dataset %>% 
-        select(c(variable, comparison_variable, size_variable, color_variable, facet_variable, 
-                 conversion_group_variable)) %>%
+        select_all_of(c(variable, comparison_variable, size_variable, color_variable, facet_variable, 
+                        conversion_group_variable)) %>%
         select_if(is_categoric)
 
     if(ncol(dataset) > 0) {
@@ -946,11 +946,11 @@ helper__plot_numeric_categoric <- function(dataset,
             annotation_x_location <- -0.9
             
             ggplot_object <- dataset %>%
-                select(primary_variable,
-                       comparison_variable,
-                       color_variable,
-                       facet_variable,
-                       temp_order_by_variable) %>%
+                select_all_of(primary_variable,
+                              comparison_variable,
+                              color_variable,
+                              facet_variable,
+                              temp_order_by_variable) %>%
                 mutate_factor_lump(factor_lump_number=filter_factor_lump_number) %>%
                 mutate_factor_reorder(variable_to_order_by=order_by_variable,
                                       variable_to_order=comparison_variable) %>%
@@ -969,7 +969,7 @@ helper__plot_numeric_categoric <- function(dataset,
             
         } else {
             
-            ggplot_object <- dataset %>% select(primary_variable, comparison_variable) %>%
+            ggplot_object <- dataset %>% select_all_of(primary_variable, comparison_variable) %>%
                 mutate_factor_lump(factor_lump_number=filter_factor_lump_number) %>%
                 rt_explore_plot_histogram(variable=primary_variable,
                                           comparison_variable=comparison_variable,
@@ -999,11 +999,11 @@ helper__plot_numeric_categoric <- function(dataset,
         annotation_x_location <- 0.5
         
         ggplot_object <- dataset %>%
-            select(primary_variable,
-                   comparison_variable,
-                   color_variable,
-                   facet_variable,
-                   temp_order_by_variable) %>%
+            select_all_of(primary_variable,
+                          comparison_variable,
+                          color_variable,
+                          facet_variable,
+                          temp_order_by_variable) %>%
             mutate_factor_lump(factor_lump_number=filter_factor_lump_number,
                                ignore_columns=ignore_columns) %>%
             mutate_factor_reorder(variable_to_order_by=order_by_variable,
@@ -1643,7 +1643,7 @@ create_ggplot_object <- function(dataset,
                 log_message_variable('updated label_variables', paste0(label_variables, collapse = ', '))
             }
             
-            dataset <- rt_pretty_dataset(dataset=dataset %>% select(required_variables))
+            dataset <- rt_pretty_dataset(dataset=dataset %>% select_all_of(required_variables))
 
             # R uses the "`My Variable`" syntax for variables with spaces which dplyr's xxx_() relies on
             primary_variable <- rt_pretty_text(primary_variable)
@@ -1745,7 +1745,7 @@ create_ggplot_object <- function(dataset,
                 if(ts_graph_type == global__ts_graph_type__period_change) {
 
                     ggplot_object <- dataset %>%
-                        select(primary_variable, comparison_variable, color_variable, facet_variable) %>%
+                        select_all_of(primary_variable, comparison_variable, color_variable, facet_variable) %>%
                         mutate_factor_lump(factor_lump_number=filter_factor_lump_number) %>%
                         rt_explore_plot_time_series_change(date_variable=primary_variable,
                                                            date_floor=ts_date_floor,
@@ -1763,7 +1763,7 @@ create_ggplot_object <- function(dataset,
                 } else {
 
                     ggplot_object <- dataset %>%
-                        select(primary_variable, comparison_variable, color_variable, facet_variable) %>%
+                        select_all_of(primary_variable, comparison_variable, color_variable, facet_variable) %>%
                         mutate_factor_lump(factor_lump_number=filter_factor_lump_number) %>%
                         rt_explore_plot_time_series(variable=primary_variable,
                                                     comparison_variable=comparison_variable,
@@ -1803,7 +1803,7 @@ create_ggplot_object <- function(dataset,
                 if(date_cr__plot_type == global__date_cr_options[1]) {
 
                     ggplot_object <- dataset %>%
-                        select(primary_variable, date_conversion_variable, date_cr__snapshots__group_variable) %>%
+                        select_all_of(primary_variable, date_conversion_variable, date_cr__snapshots__group_variable) %>%
                         mutate_factor_lump(factor_lump_number=filter_factor_lump_number) %>%
                         rt_explore_plot_conversion_rates(first_date=primary_variable,
                                                          second_date=date_conversion_variable,
@@ -1928,11 +1928,12 @@ create_ggplot_object <- function(dataset,
                             (identical(ignore_columns, character(0)) || ignore_columns == '')) {
                         ignore_columns <- NULL
                     }
-                    ggplot_object <- dataset %>% select(primary_variable,
-                                                              comparison_variable,
-                                                              color_variable,
-                                                              size_variable,
-                                                              label_variables) %>%
+                    ggplot_object <- dataset %>%
+                        select_all_of(primary_variable,
+                                      comparison_variable,
+                                      color_variable,
+                                      size_variable,
+                                      label_variables) %>%
                         mutate_factor_lump(factor_lump_number=filter_factor_lump_number,
                                            ignore_columns=ignore_columns) %>%
                         rt_explore_plot_scatter(variable=primary_variable,
@@ -2077,10 +2078,10 @@ create_ggplot_object <- function(dataset,
                 if(categoric_view_type == "Heatmap") {
 
                     ggplot_object <- dataset %>%
-                        select(primary_variable,
-                               comparison_variable,
-                               sum_by_variable,
-                               count_distinct_variable) %>%
+                        select_all_of(primary_variable,
+                                      comparison_variable,
+                                      sum_by_variable,
+                                      count_distinct_variable) %>%
                         mutate_factor_lump(factor_lump_number=filter_factor_lump_number,
                                            ignore_columns=ignore_columns) %>%
                         mutate_factor_reverse(primary_variable) %>%
@@ -2095,12 +2096,12 @@ create_ggplot_object <- function(dataset,
                 } else {
 
                     ggplot_object <- dataset %>%
-                        select(primary_variable,
-                               comparison_variable,
-                               sum_by_variable,
-                               facet_variable,
-                               count_distinct_variable,
-                               temp_order_by_variable) %>%
+                        select_all_of(primary_variable,
+                                      comparison_variable,
+                                      sum_by_variable,
+                                      facet_variable,
+                                      count_distinct_variable,
+                                      temp_order_by_variable) %>%
                         mutate_factor_lump(factor_lump_number=filter_factor_lump_number,
                                            ignore_columns=ignore_columns) %>%
                         mutate_factor_reorder(variable_to_order_by=order_by_variable,

@@ -1,6 +1,24 @@
 library(lubridate)
 library(stringr)
 
+
+#' converts multi-argument values into flattened  vector
+#' @param ... values and/or vectors
+params_to_vector <- function(...){
+    x <- list(...)
+    return (unlist(x))
+}
+
+#' wrapper for change in DPLYR where we cannot send vector of strings as variable
+#' @param .data the data.frame to select from
+#' @param ... string values and/or string vectors
+#' 
+select_all_of <- function(.data, ...) {
+
+    columns <- params_to_vector(...)
+    return (dplyr::select(.data, all_of(columns)))
+}
+
 # defualt placement is 'bottom', but I want the default to be 'top'
 add_tooltip <- function(element, tooltip_text, placement='top', trigger='hover') {
 
@@ -83,17 +101,17 @@ mutate_factor_lump <- function(dataset, factor_lump_number=NULL, ignore_columns=
 
         if(!is.null(ignore_columns)) {
 
-            temp <- dataset %>% select(ignore_columns)
+            temp <- dataset %>% select_all_of(ignore_columns)
         }
 
-        dataset <- dataset %>% select(rt_remove_val(column_names, ignore_columns)) %>%
+        dataset <- dataset %>% select_all_of(rt_remove_val(column_names, ignore_columns)) %>%
             mutate_if(is.character, as.factor) %>%
             mutate_if(is.factor, ~fct_lump(.x, n=factor_lump_number))
 
         if(!is.null(ignore_columns)) {
 
             dataset <- cbind(dataset, temp)
-            dataset <- dataset %>% select(column_names)
+            dataset <- dataset %>% select_all_of(column_names)
         }
     }
 
