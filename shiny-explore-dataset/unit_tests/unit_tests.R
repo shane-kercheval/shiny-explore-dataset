@@ -18,28 +18,6 @@ global__should_log_message <<- FALSE
 # test_file("unit_tests.R")
 
 
-test_that("select_all_of", {
-    context("generic_helpers::select_all_of")
-    
-    expected <- c('a', 'b', 'c', 'd', 'e')
-    x_a <- 'a'
-    x_b <- c('b')
-    x_cd <- c('c', 'd')
-    x_e <- 'e'
-    expect_identical(expected, params_to_vector(expected))
-    expect_identical(expected, params_to_vector('a', c('b'), c('c', 'd'), 'e'))
-    expect_identical(expected, params_to_vector(x_a, x_b, x_cd, x_e))
-    expect_identical(expected, params_to_vector(x_a, c(x_b, x_cd), x_e))
-    
-    iris_columns <- colnames(iris)
-    expect_true(rt_are_dataframes_equal(iris, iris %>% select_all_of(iris_columns)))
-    expect_true(rt_are_dataframes_equal(iris, iris %>% select_all_of(iris_columns[1], iris_columns[2:5])))
-    expect_true(rt_are_dataframes_equal(iris %>% select(Sepal.Length, Sepal.Width),
-                                        iris %>% select_all_of(iris_columns[1:2])))
-    expect_true(rt_are_dataframes_equal(iris %>% select(Sepal.Length, Sepal.Width),
-                                        iris %>% select_all_of("Sepal.Length", "Sepal.Width")))
-})
-
 test_that("filter", {
     context("generic_helpers::filter_data")
 
@@ -1084,6 +1062,12 @@ test_that("generic_helpers::mutate_factor_reorder", {
     mutated <- local_dataset %>% 
         mutate_factor_reorder('amount', 'default')
     expect_identical(levels(mutated$default), c('TRUE', 'FALSE'))
+})
+
+test_that("generic_helpers::str_convert_to_column_name", {
+
+    x <- "`a1~!@#$%^&*(){}`_+:\"<>?,./;'[]-=This is a Sentence.11"
+    expect_equal(str_convert_to_column_name(x),  "a1_.ThisisaSentence.11")
 })
 
 test_that("add_x_annotations", {
@@ -2402,6 +2386,23 @@ test_that("create_ggplot_plot - time-series-change - POSIXct", {
                                         ts_date_floor='quarter',
                                         annotate_points=TRUE,
                                         comparison_variable='amount',
+                                        numeric_aggregation='Total')
+    test_save_plot(file_name='graphs/plot__time_series__percent_change__POSIXct.png', plot=plot_object)
+    
+    colnames(conversion_data) <- rt_pretty_text(colnames(conversion_data))
+    plot_object <- create_ggplot_object(dataset=conversion_data %>%
+                                            rename(`The Continent`=Continent,
+                                                   `The Amount`=Amount) %>%
+                                            filter(`Create Date Time` >= ymd('2019-01-01')) %>%
+                                            mutate(`The Continent`=fct_lump(`The Continent`, n=2),
+                                                   `Lead Source`=fct_lump(`Lead Source`, n=3)),
+                                        primary_variable='Create Date Time',
+                                        ts_graph_type = global__ts_graph_type__period_change,
+                                        color_variable='Lead Source',
+                                        facet_variable='The Continent',
+                                        ts_date_floor='quarter',
+                                        annotate_points=TRUE,
+                                        comparison_variable='The Amount',
                                         numeric_aggregation='Total')
     test_save_plot(file_name='graphs/plot__time_series__percent_change__POSIXct.png', plot=plot_object)
 })

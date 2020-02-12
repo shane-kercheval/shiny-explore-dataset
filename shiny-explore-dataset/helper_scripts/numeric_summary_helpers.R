@@ -44,6 +44,6 @@ renderDataTable__numeric_summary__table <- function(input, numeric_summary) {
         local_summary <- numeric_summary()
         local_options <- input$numeric_summary__options
 
-        return (local_summary %>% select_all_of(c('feature', local_options)))
+        return (local_summary %>% rt_select_all_of(c('feature', local_options)))
     })
 }

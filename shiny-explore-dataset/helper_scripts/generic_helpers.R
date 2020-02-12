@@ -1,22 +1,22 @@
 library(lubridate)
 library(stringr)
 
-
-#' converts multi-argument values into flattened  vector
-#' @param ... values and/or vectors
-params_to_vector <- function(...){
-    x <- list(...)
-    return (unlist(x))
+#' removes all special characters except '.' & '_'
+#' @param .x vector of strings
+str_convert_to_column_name <- function(.x) {
+    .x %>%
+        str_replace_all("[^._a-zA-Z0-9]", "")
+        # str_replace_all("[^[:alnum:]]", "")
+        # str_replace_all("[[:punct:]]", "") %>%
+        # str_replace_all(" ", "") %>%
+        # str_replace_all("`", "")
 }
 
-#' wrapper for change in DPLYR where we cannot send vector of strings as variable
-#' @param .data the data.frame to select from
-#' @param ... string values and/or string vectors
-#' 
-select_all_of <- function(.data, ...) {
+#' used for creating dynamic input$ variable names for filtering
+#' @param .x vector of strings
+str_convert_to_dynamic_filter <- function(.x) {
 
-    columns <- params_to_vector(...)
-    return (dplyr::select(.data, all_of(columns)))
+    paste0('var_plots__dynamic_filter__', str_convert_to_column_name(.x))
 }
 
 # defualt placement is 'bottom', but I want the default to be 'top'
@@ -101,17 +101,17 @@ mutate_factor_lump <- function(dataset, factor_lump_number=NULL, ignore_columns=
 
         if(!is.null(ignore_columns)) {
 
-            temp <- dataset %>% select_all_of(ignore_columns)
+            temp <- dataset %>% rt_select_all_of(ignore_columns)
         }
 
-        dataset <- dataset %>% select_all_of(rt_remove_val(column_names, ignore_columns)) %>%
+        dataset <- dataset %>% rt_select_all_of(rt_remove_val(column_names, ignore_columns)) %>%
             mutate_if(is.character, as.factor) %>%
             mutate_if(is.factor, ~fct_lump(.x, n=factor_lump_number))
 
         if(!is.null(ignore_columns)) {
 
             dataset <- cbind(dataset, temp)
-            dataset <- dataset %>% select_all_of(column_names)
+            dataset <- dataset %>% rt_select_all_of(column_names)
         }
     }
 

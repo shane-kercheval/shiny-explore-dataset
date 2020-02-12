@@ -720,9 +720,9 @@ shinyServer(function(input, output, session) {
         # also use it to check values (i.e. only update colors if the filters are active i.e. any are not null)
         selections <- list()
         for(variable_name in names(url_parameter_info$filter_params)) {
-            value <- input[[paste0('var_plots__dynamic_filter__', variable_name)]]
+            value <- input[[str_convert_to_dynamic_filter(variable_name)]]
 
-            log_message_variable(paste0('var_plots__dynamic_filter__', variable_name), value)
+            log_message_variable(str_convert_to_dynamic_filter(variable_name), value)
             selections <- append(selections, value)
         }
 
@@ -763,7 +763,7 @@ shinyServer(function(input, output, session) {
 
             for(variable_name in names(url_parameter_info$filter_params)) {
                 
-                dynamic_filter_name <- paste0('var_plots__dynamic_filter__', variable_name)
+                dynamic_filter_name <- str_convert_to_dynamic_filter(variable_name)
                 filter_values <- url_parameter_info$filter_params[[variable_name]]
 
                 log_message_variable(paste0("updating `", variable_name, "`"),
@@ -867,8 +867,9 @@ shinyServer(function(input, output, session) {
             filter_controls_selections <- isolate(input$var_plots__filter_controls_selections)
             if('All Variables' %in% filter_controls_selections) {
 
-                filter_controls_selections <- colnames(local_dataset)
+                filter_controls_selections <- column_names
             }
+            log_message_variable('filter_controls_selections', filter_controls_selections)
 
             all_filter_values <- get_dynamic_filter_values(input, column_names)
             filter_list <- all_filter_values[filter_controls_selections]

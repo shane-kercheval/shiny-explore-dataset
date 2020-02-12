@@ -220,6 +220,7 @@ select_preloaded_dataset <- function(dataset_name, defualt_path='') {
         loaded_dataset <- data.frame(gapminder::gapminder)
     }
 
+    colnames(loaded_dataset) <- rt_pretty_text(colnames(loaded_dataset))
     return (list(dataset=loaded_dataset, description=data_description))
 }
 

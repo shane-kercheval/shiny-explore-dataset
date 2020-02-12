@@ -58,10 +58,10 @@ rt_explore_plot_time_series_change <- function(dataset,
 
         custom_colors <- rt_get_colors_from_values(dataset[[color_variable]])
     }
-    
+
     aggregation_label <- ""
     if(!is.null(aggregation_variable)) {
-        aggregation_label <- paste("of", aggregation_function_name, aggregation_variable)
+        aggregation_label <- paste0("of ", aggregation_function_name, " `", aggregation_variable, "`")
     }
 
     if(percent_change) {
@@ -169,8 +169,8 @@ rt_explore_plot_time_series_change <- function(dataset,
             labs(y=label_y,
                  x=label_x,
                  title=paste0(label_y, " (", date_variable,")"),
-                 subtitle = paste0("by `", color_variable, "` & `", "`", facet_variable,"`")) +
-            facet_wrap(facets = facet_variable , ncol = 1, scales = 'free_y', strip.position = "right")
+                 subtitle = paste0("by `", color_variable, "` & `", facet_variable,"`")) +
+            facet_wrap(facets = paste0("`",facet_variable, "`") , ncol = 1, scales = 'free_y', strip.position = "right")
     }
 
     if(is.null(facet_variable)) {

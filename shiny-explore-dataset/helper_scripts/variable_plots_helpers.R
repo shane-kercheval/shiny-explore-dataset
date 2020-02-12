@@ -2,6 +2,7 @@ library(scales)
 library(purrr)
 library(stringr)
 library(ggExtra)
+
 ##############################################################################################################
 # FILTERS
 ##############################################################################################################
@@ -10,7 +11,7 @@ library(ggExtra)
 #' @param columns the names of the columns/filters of interest
 get_dynamic_filter_values <- function(input, columns) {
 
-    selections_list <- purrr::map(columns, ~ isolate(input[[paste0('var_plots__dynamic_filter__', .)]]))
+    selections_list <- purrr::map(columns, ~ isolate(input[[str_convert_to_dynamic_filter(.)]]))
     names(selections_list) <- columns
 
     return (selections_list)
@@ -32,7 +33,7 @@ reactive__filter_controls_list__creator <- function(input, dataset) {
             
             ui_list <- imap(dataset$data, ~ {
                 log_message_variable('filter control for', .y)
-                input_id <- paste0('var_plots__dynamic_filter__', .y)
+                input_id <- str_convert_to_dynamic_filter(.y)
                 filter_object <- NULL
                 if(is_date_type(.x)) {
                     #'date'
@@ -101,13 +102,12 @@ reactive__filter_controls_list__creator <- function(input, dataset) {
                         choices <- c(missing_value_string, choices)
                     }
 
-
                     filter_object <- selectInput(inputId=input_id,
-                                label=.y,
-                                choices=choices,
-                                selected = NULL,
-                                multiple = TRUE,
-                                width='100%')
+                                                 label=.y,
+                                                 choices=choices,
+                                                 selected = NULL,
+                                                 multiple = TRUE,
+                                                 width='100%')
 
                 } else if("hms" %in% class(.x)) {
 
@@ -534,17 +534,17 @@ observeEvent__var_plots__show_hide_dynamic_filters <- function(input, session, d
 
         unselected <- dataset_columns[!dataset_columns %in% filter_controls_selections]
 
-        log_message_variable("Selected Filter Variables", paste(filter_controls_selections, collapse="; "))
-        log_message_variable("Unselected Filter Variables", paste(unselected, collapse="; "))
+        log_message_variable("Selected Filter Variables", filter_controls_selections)
+        log_message_variable("Unselected Filter Variables", unselected)
 
         for(variable in filter_controls_selections) {
 
-            shinyjs::show(paste0('var_plots__dynamic_filter__', variable))
+            shinyjs::show(str_convert_to_dynamic_filter(variable))
         }
 
         for(variable in unselected) {
 
-            shinyjs::hide(paste0('var_plots__dynamic_filter__', variable))
+            shinyjs::hide(str_convert_to_dynamic_filter(variable))
         }
     
     }, ignoreNULL = FALSE, ignoreInit=TRUE)  # ignoreNULL so that the observeEvent is triggered when the user removes all
@@ -563,7 +563,7 @@ observe__var_plots__bscollapse__dynamic_inputs <- function(input, session, datas
         # also use it to check values (i.e. only update colors if the filters are active i.e. any are not null)
         selections <- list()
         for(column_name in colnames(dataset$data)) {
-            value <- input[[paste0('var_plots__dynamic_filter__', column_name)]]
+            value <- input[[str_convert_to_dynamic_filter(column_name)]]
             selections <- append(selections, value)
         }
 
@@ -646,8 +646,8 @@ hide_show_top_n_categories <- function(session, dataset, variable, comparison_va
     }
 
     dataset <- dataset %>% 
-        select_all_of(c(variable, comparison_variable, size_variable, color_variable, facet_variable, 
-                        conversion_group_variable)) %>%
+        rt_select_all_of(c(variable, comparison_variable, size_variable, color_variable, facet_variable, 
+                           conversion_group_variable)) %>%
         select_if(is_categoric)
 
     if(ncol(dataset) > 0) {
@@ -946,11 +946,11 @@ helper__plot_numeric_categoric <- function(dataset,
             annotation_x_location <- -0.9
             
             ggplot_object <- dataset %>%
-                select_all_of(primary_variable,
-                              comparison_variable,
-                              color_variable,
-                              facet_variable,
-                              temp_order_by_variable) %>%
+                rt_select_all_of(primary_variable,
+                                 comparison_variable,
+                                 color_variable,
+                                 facet_variable,
+                                 temp_order_by_variable) %>%
                 mutate_factor_lump(factor_lump_number=filter_factor_lump_number) %>%
                 mutate_factor_reorder(variable_to_order_by=order_by_variable,
                                       variable_to_order=comparison_variable) %>%
@@ -969,7 +969,7 @@ helper__plot_numeric_categoric <- function(dataset,
             
         } else {
             
-            ggplot_object <- dataset %>% select_all_of(primary_variable, comparison_variable) %>%
+            ggplot_object <- dataset %>% rt_select_all_of(primary_variable, comparison_variable) %>%
                 mutate_factor_lump(factor_lump_number=filter_factor_lump_number) %>%
                 rt_explore_plot_histogram(variable=primary_variable,
                                           comparison_variable=comparison_variable,
@@ -999,11 +999,11 @@ helper__plot_numeric_categoric <- function(dataset,
         annotation_x_location <- 0.5
         
         ggplot_object <- dataset %>%
-            select_all_of(primary_variable,
-                          comparison_variable,
-                          color_variable,
-                          facet_variable,
-                          temp_order_by_variable) %>%
+            rt_select_all_of(primary_variable,
+                             comparison_variable,
+                             color_variable,
+                             facet_variable,
+                             temp_order_by_variable) %>%
             mutate_factor_lump(factor_lump_number=filter_factor_lump_number,
                                ignore_columns=ignore_columns) %>%
             mutate_factor_reorder(variable_to_order_by=order_by_variable,
@@ -1643,7 +1643,7 @@ create_ggplot_object <- function(dataset,
                 log_message_variable('updated label_variables', paste0(label_variables, collapse = ', '))
             }
             
-            dataset <- rt_pretty_dataset(dataset=dataset %>% select_all_of(required_variables))
+            dataset <- rt_pretty_dataset(dataset=dataset %>% rt_select_all_of(required_variables))
 
             # R uses the "`My Variable`" syntax for variables with spaces which dplyr's xxx_() relies on
             primary_variable <- rt_pretty_text(primary_variable)
@@ -1745,7 +1745,7 @@ create_ggplot_object <- function(dataset,
                 if(ts_graph_type == global__ts_graph_type__period_change) {
 
                     ggplot_object <- dataset %>%
-                        select_all_of(primary_variable, comparison_variable, color_variable, facet_variable) %>%
+                        rt_select_all_of(primary_variable, comparison_variable, color_variable, facet_variable) %>%
                         mutate_factor_lump(factor_lump_number=filter_factor_lump_number) %>%
                         rt_explore_plot_time_series_change(date_variable=primary_variable,
                                                            date_floor=ts_date_floor,
@@ -1763,7 +1763,7 @@ create_ggplot_object <- function(dataset,
                 } else {
 
                     ggplot_object <- dataset %>%
-                        select_all_of(primary_variable, comparison_variable, color_variable, facet_variable) %>%
+                        rt_select_all_of(primary_variable, comparison_variable, color_variable, facet_variable) %>%
                         mutate_factor_lump(factor_lump_number=filter_factor_lump_number) %>%
                         rt_explore_plot_time_series(variable=primary_variable,
                                                     comparison_variable=comparison_variable,
@@ -1803,7 +1803,7 @@ create_ggplot_object <- function(dataset,
                 if(date_cr__plot_type == global__date_cr_options[1]) {
 
                     ggplot_object <- dataset %>%
-                        select_all_of(primary_variable, date_conversion_variable, date_cr__snapshots__group_variable) %>%
+                        rt_select_all_of(primary_variable, date_conversion_variable, date_cr__snapshots__group_variable) %>%
                         mutate_factor_lump(factor_lump_number=filter_factor_lump_number) %>%
                         rt_explore_plot_conversion_rates(first_date=primary_variable,
                                                          second_date=date_conversion_variable,
@@ -1929,11 +1929,11 @@ create_ggplot_object <- function(dataset,
                         ignore_columns <- NULL
                     }
                     ggplot_object <- dataset %>%
-                        select_all_of(primary_variable,
-                                      comparison_variable,
-                                      color_variable,
-                                      size_variable,
-                                      label_variables) %>%
+                        rt_select_all_of(primary_variable,
+                                         comparison_variable,
+                                         color_variable,
+                                         size_variable,
+                                         label_variables) %>%
                         mutate_factor_lump(factor_lump_number=filter_factor_lump_number,
                                            ignore_columns=ignore_columns) %>%
                         rt_explore_plot_scatter(variable=primary_variable,
@@ -2078,10 +2078,10 @@ create_ggplot_object <- function(dataset,
                 if(categoric_view_type == "Heatmap") {
 
                     ggplot_object <- dataset %>%
-                        select_all_of(primary_variable,
-                                      comparison_variable,
-                                      sum_by_variable,
-                                      count_distinct_variable) %>%
+                        rt_select_all_of(primary_variable,
+                                         comparison_variable,
+                                         sum_by_variable,
+                                         count_distinct_variable) %>%
                         mutate_factor_lump(factor_lump_number=filter_factor_lump_number,
                                            ignore_columns=ignore_columns) %>%
                         mutate_factor_reverse(primary_variable) %>%
@@ -2096,12 +2096,12 @@ create_ggplot_object <- function(dataset,
                 } else {
 
                     ggplot_object <- dataset %>%
-                        select_all_of(primary_variable,
-                                      comparison_variable,
-                                      sum_by_variable,
-                                      facet_variable,
-                                      count_distinct_variable,
-                                      temp_order_by_variable) %>%
+                        rt_select_all_of(primary_variable,
+                                         comparison_variable,
+                                         sum_by_variable,
+                                         facet_variable,
+                                         count_distinct_variable,
+                                         temp_order_by_variable) %>%
                         mutate_factor_lump(factor_lump_number=filter_factor_lump_number,
                                            ignore_columns=ignore_columns) %>%
                         mutate_factor_reorder(variable_to_order_by=order_by_variable,
