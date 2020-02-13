@@ -18,6 +18,14 @@ global__should_log_message <<- FALSE
 # test_file("unit_tests.R")
 
 
+test_helper__convert_names <- function(.names) {
+    return (paste(rt_pretty_text(.names), 'Col'))
+}
+
+test_helper__column_names <- function(.df) {
+    return (test_helper__convert_names(colnames(.df)))
+}
+
 test_that("filter", {
     context("generic_helpers::filter_data")
 
@@ -279,6 +287,273 @@ test_that("filter", {
     expect_equal(filter_results[[2]][[1]], "color: Not Filtering")
 
     expect_true(str_detect(filter_results[[2]][[2]], "price:"))
+    expect_true(str_detect(filter_results[[2]][[2]], "326"))
+    expect_true(str_detect(filter_results[[2]][[2]], "18,823"))
+    expect_true(str_detect(filter_results[[2]][[2]], "Removing 0 rows"))
+})
+
+test_that("filter - column name spaces", {
+    context("generic_helpers::filter_data - column name spaces")
+    
+    dataset <- data.frame(diamonds)
+    dataset[1:500, 'carat'] <- NA
+    dataset[501:1000, 'cut'] <- NA
+    dataset[1001:1500, 'color'] <- NA
+    colnames(dataset) <- test_helper__names(dataset)
+    
+    # build filter list
+    # build filter selection list (to mimic shiny and also reuse list)
+    global_filter_list <- list(
+        carat = c(0.5, 2),
+        cut = c('Ideal', 'Premium', 'Good'),
+        color = NULL,
+        price = c(326, 18823)
+    )
+    names(global_filter_list) <- test_helper__convert_names(names(global_filter_list))
+    
+    filter_selections <- c()
+    filter_results <- filter_data(dataset=dataset,
+                                  filter_list=global_filter_list[filter_selections],
+                                  callback=NULL)
+    expect_true(rt_are_dataframes_equal(dataset, filter_results[[1]]))
+    expect_equal(length(filter_results[[2]]), 0)
+    
+    filter_selections <- NULL
+    filter_results <- filter_data(dataset=dataset,
+                                  filter_list=global_filter_list[filter_selections],
+                                  callback=NULL)
+    expect_true(rt_are_dataframes_equal(dataset, filter_results[[1]]))
+    expect_equal(length(filter_results[[2]]), 0)
+    
+    ##########################################################################################################
+    filter_selections <- test_helper__convert_names(c('carat'))
+    filter_results <- filter_data(dataset=dataset,
+                                  filter_list=global_filter_list[filter_selections],
+                                  callback=NULL)
+    expected_filtered <- dataset %>% filter(!is.na(`Carat Col`),
+                                            `Carat Col` >= 0.5,
+                                            `Carat Col` <= 2)
+    expect_true(rt_are_dataframes_equal(expected_filtered, filter_results[[1]]))
+    expect_false(any(filter_results[[1]]$`Carat Col` < 0.5))
+    expect_false(any(filter_results[[1]]$`Carat Col` > 2))
+    
+    num_na <- sum(is.na(dataset$`Carat Col`))
+    num_filtered_out <- sum(dataset$`Carat Col` < 0.5 | dataset$`Carat Col` > 2, na.rm = TRUE)
+    expect_equal(length(filter_results[[2]]), length(filter_selections))
+    expect_true(str_detect(filter_results[[2]][[1]], "Carat Col:"))
+    expect_true(str_detect(filter_results[[2]][[1]], "0.5"))
+    expect_true(str_detect(filter_results[[2]][[1]], "2"))
+    expect_true(str_detect(filter_results[[2]][[1]], paste(my_number_format(num_na), "rows with missing values")))
+    expect_true(str_detect(filter_results[[2]][[1]], paste(my_number_format(num_filtered_out), "rows")))
+    
+    ##########################################################################################################
+    filter_selections <- test_helper__convert_names(c('carat', 'cut'))
+    filter_results <- filter_data(dataset=dataset,
+                                  filter_list=global_filter_list[filter_selections],
+                                  callback=NULL)
+    expected_filtered <- dataset %>% filter(!is.na(`Carat Col`),
+                                            `Carat Col` >= 0.5,
+                                            `Carat Col` <= 2,
+                                            `Cut Col` %in% c('Ideal', 'Premium', 'Good'))
+    expect_true(rt_are_dataframes_equal(expected_filtered, filter_results[[1]]))
+    expect_false(any(filter_results[[1]]$`Carat Col` < 0.5))
+    expect_false(any(filter_results[[1]]$`Carat Col` > 2))
+    expect_true(all(filter_results[[1]]$cut %in% c('Ideal', 'Premium', 'Good')))
+    expect_equal(length(filter_results[[2]]), length(filter_selections))
+    
+    # caret should have the same checks as above since it is the first filter
+    # more than 19443 values will be removed from other filters, but not from the carat filter directly
+    num_na <- sum(is.na(dataset$`Carat Col`))
+    num_filtered_out <- sum(dataset$`Carat Col` < 0.5 | dataset$`Carat Col` > 2, na.rm = TRUE)
+    expect_true(str_detect(filter_results[[2]][[1]], "Carat Col:"))
+    expect_true(str_detect(filter_results[[2]][[1]], "0.5"))
+    expect_true(str_detect(filter_results[[2]][[1]], "2"))
+    expect_true(str_detect(filter_results[[2]][[1]], paste(my_number_format(num_na), "rows with missing values")))
+    expect_true(str_detect(filter_results[[2]][[1]], paste(my_number_format(num_filtered_out), "rows")))
+    
+    # dataset at time of cut being filtered
+    t <- dataset %>% filter(!is.na(`Carat Col`),
+                            `Carat Col` >= 0.5,
+                            `Carat Col` <= 2)
+    num_na <- sum(is.na(t$`Cut Col`))
+    num_filtered_out <- sum(!is.na(t$`Cut Col`) & !t$`Cut Col` %in% c('Ideal', 'Premium', 'Good'))
+    expect_true(str_detect(filter_results[[2]][[2]], "Cut Col:"))
+    expect_true(str_detect(filter_results[[2]][[2]], "Ideal, Premium, Good"))
+    expect_true(str_detect(filter_results[[2]][[2]], paste(my_number_format(num_na), "rows with missing values")))
+    expect_true(str_detect(filter_results[[2]][[2]], paste(my_number_format(num_filtered_out), "rows")))
+    
+    ##########################################################################################################
+    filter_selections <- test_helper__convert_names(c('carat', 'cut'))
+    filter_results <- filter_data(dataset=dataset %>% mutate(`Cut Col` = as.character(`Cut Col`)),  # change to character
+                                  filter_list=global_filter_list[filter_selections],
+                                  callback=NULL)
+    expected_filtered <- dataset %>% filter(!is.na(`Carat Col`),
+                                            `Carat Col` >= 0.5,
+                                            `Carat Col` <= 2,
+                                            `Cut Col` %in% c('Ideal', 'Premium', 'Good'))
+    expect_true(rt_are_dataframes_equal(expected_filtered, filter_results[[1]]))
+    expect_false(any(filter_results[[1]]$`Carat Col` < 0.5))
+    expect_false(any(filter_results[[1]]$`Carat Col` > 2))
+    expect_true(all(filter_results[[1]]$`Cut Col` %in% c('Ideal', 'Premium', 'Good')))
+    expect_equal(length(filter_results[[2]]), length(filter_selections))
+    
+    # caret should have the same checks as above since it is the first filter
+    # more than 19443 values will be removed from other filters, but not from the carat filter directly
+    num_na <- sum(is.na(dataset$`Carat Col`))
+    num_filtered_out <- sum(dataset$`Carat Col` < 0.5 | dataset$`Carat Col` > 2, na.rm = TRUE)
+    expect_true(str_detect(filter_results[[2]][[1]], "Carat Col:"))
+    expect_true(str_detect(filter_results[[2]][[1]], "0.5"))
+    expect_true(str_detect(filter_results[[2]][[1]], "2"))
+    expect_true(str_detect(filter_results[[2]][[1]], paste(my_number_format(num_na), "rows with missing values")))
+    expect_true(str_detect(filter_results[[2]][[1]], paste(my_number_format(num_filtered_out), "rows")))
+    
+    # dataset at time of cut being filtered
+    t <- dataset %>% filter(!is.na(`Carat Col`),
+                            `Carat Col` >= 0.5,
+                            `Carat Col` <= 2)
+    num_na <- sum(is.na(t$`Cut Col`))
+    num_filtered_out <- sum(!is.na(t$`Cut Col`) & !t$`Cut Col` %in% c('Ideal', 'Premium', 'Good'))
+    expect_true(str_detect(filter_results[[2]][[2]], "Cut Col:"))
+    expect_true(str_detect(filter_results[[2]][[2]], "Ideal, Premium, Good"))
+    expect_true(str_detect(filter_results[[2]][[2]], paste(my_number_format(num_na), "rows with missing values")))
+    expect_true(str_detect(filter_results[[2]][[2]], paste(my_number_format(num_filtered_out), "rows")))
+    
+    ##########################################################################################################
+    filter_selections <- test_helper__convert_names(c('carat', 'cut', 'color'))
+    filter_results <- filter_data(dataset=dataset,
+                                  filter_list=global_filter_list[filter_selections],
+                                  callback=NULL)
+    # same as above since color is NULL and therefore even though there are NULLs we are not filtering tem
+    expected_filtered <- dataset %>% filter(!is.na(`Carat Col`),
+                                            `Carat Col` >= 0.5,
+                                            `Carat Col` <= 2,
+                                            `Cut Col` %in% c('Ideal', 'Premium', 'Good'))
+    expect_true(rt_are_dataframes_equal(expected_filtered, filter_results[[1]]))
+    expect_false(any(filter_results[[1]]$`Carat Col` < 0.5))
+    expect_false(any(filter_results[[1]]$`Carat Col` > 2))
+    expect_true(all(filter_results[[1]]$cut %in% c('Ideal', 'Premium', 'Good')))
+    expect_equal(length(filter_results[[2]]), length(filter_selections))
+    
+    # caret should have the same checks as above since it is the first filter
+    # more than 19443 values will be removed from other filters, but not from the carat filter directly
+    num_na <- sum(is.na(dataset$`Carat Col`))
+    num_filtered_out <- sum(dataset$`Carat Col` < 0.5 | dataset$`Carat Col` > 2, na.rm = TRUE)
+    expect_true(str_detect(filter_results[[2]][[1]], "Carat Col:"))
+    expect_true(str_detect(filter_results[[2]][[1]], "0.5"))
+    expect_true(str_detect(filter_results[[2]][[1]], "2"))
+    expect_true(str_detect(filter_results[[2]][[1]], paste(my_number_format(num_na), "rows with missing values")))
+    expect_true(str_detect(filter_results[[2]][[1]], paste(my_number_format(num_filtered_out), "rows")))
+    
+    # dataset at time of cut being filtered
+    t <- dataset %>% filter(!is.na(`Carat Col`),
+                            `Carat Col` >= 0.5,
+                            `Carat Col` <= 2)
+    num_na <- sum(is.na(t$`Cut Col`))
+    num_filtered_out <- sum(!is.na(t$`Cut Col`) & !t$`Cut Col` %in% c('Ideal', 'Premium', 'Good'))
+    expect_true(str_detect(filter_results[[2]][[2]], "Cut Col:"))
+    expect_true(str_detect(filter_results[[2]][[2]], "Ideal, Premium, Good"))
+    expect_true(str_detect(filter_results[[2]][[2]], paste(my_number_format(num_na), "rows with missing values")))
+    expect_true(str_detect(filter_results[[2]][[2]], paste(my_number_format(num_filtered_out), "rows")))
+    
+    expect_equal(filter_results[[2]][[3]], "Color Col: Not Filtering")
+    
+    ##########################################################################################################
+    filter_selections <- test_helper__convert_names(c('carat', 'cut', 'color', 'price'))
+    filter_results <- filter_data(dataset=dataset,
+                                  filter_list=global_filter_list[filter_selections],
+                                  callback=NULL)
+    # still the same as above since price doesn't have any NAs and the filter values include min/max i.e. all
+    expected_filtered <- dataset %>% filter(!is.na(`Carat Col`),
+                                            `Carat Col` >= 0.5,
+                                            `Carat Col` <= 2,
+                                            `Cut Col` %in% c('Ideal', 'Premium', 'Good'))
+    expect_true(rt_are_dataframes_equal(expected_filtered, filter_results[[1]]))
+    expect_false(any(filter_results[[1]]$`Carat Col` < 0.5))
+    expect_false(any(filter_results[[1]]$`Carat Col` > 2))
+    expect_true(all(filter_results[[1]]$`Cut Col` %in% c('Ideal', 'Premium', 'Good')))
+    expect_equal(length(filter_results[[2]]), length(filter_selections))
+    
+    # caret should have the same checks as above since it is the first filter
+    # more than 19443 values will be removed from other filters, but not from the carat filter directly
+    num_na <- sum(is.na(dataset$`Carat Col`))
+    num_filtered_out <- sum(dataset$`Carat Col` < 0.5 | dataset$`Carat Col` > 2, na.rm = TRUE)
+    expect_true(str_detect(filter_results[[2]][[1]], "Carat Col:"))
+    expect_true(str_detect(filter_results[[2]][[1]], "0.5"))
+    expect_true(str_detect(filter_results[[2]][[1]], "2"))
+    expect_true(str_detect(filter_results[[2]][[1]], paste(my_number_format(num_na), "rows with missing values")))
+    expect_true(str_detect(filter_results[[2]][[1]], paste(my_number_format(num_filtered_out), "rows")))
+    
+    # dataset at time of cut being filtered
+    t <- dataset %>% filter(!is.na(`Carat Col`),
+                            `Carat Col` >= 0.5,
+                            `Carat Col` <= 2)
+    num_na <- sum(is.na(t$`Cut Col`))
+    num_filtered_out <- sum(!is.na(t$`Cut Col`) & !t$`Cut Col` %in% c('Ideal', 'Premium', 'Good'))
+    expect_true(str_detect(filter_results[[2]][[2]], "Cut Col:"))
+    expect_true(str_detect(filter_results[[2]][[2]], "Ideal, Premium, Good"))
+    expect_true(str_detect(filter_results[[2]][[2]], paste(my_number_format(num_na), "rows with missing values")))
+    expect_true(str_detect(filter_results[[2]][[2]], paste(my_number_format(num_filtered_out), "rows")))
+    
+    expect_equal(filter_results[[2]][[3]], "Color Col: Not Filtering")
+    
+    expect_true(str_detect(filter_results[[2]][[4]], "Price Col:"))
+    expect_true(str_detect(filter_results[[2]][[4]], "326"))
+    expect_true(str_detect(filter_results[[2]][[4]], "18,823"))
+    expect_true(str_detect(filter_results[[2]][[4]], "Removing 0 rows"))
+    
+    ##########################################################################################################
+    filter_selections <- test_helper__convert_names(c('carat', 'cut', 'price'))
+    filter_results <- filter_data(dataset=dataset,
+                                  filter_list=global_filter_list[filter_selections],
+                                  callback=NULL)
+    # still the same as above since price doesn't have any NAs and the filter values include min/max i.e. all
+    expected_filtered <- dataset %>% filter(!is.na(`Carat Col`),
+                                            `Carat Col` >= 0.5,
+                                            `Carat Col` <= 2,
+                                            `Cut Col` %in% c('Ideal', 'Premium', 'Good'))
+    expect_true(rt_are_dataframes_equal(expected_filtered, filter_results[[1]]))
+    expect_false(any(filter_results[[1]]$`Carat Col` < 0.5))
+    expect_false(any(filter_results[[1]]$`Carat Col` > 2))
+    expect_true(all(filter_results[[1]]$`Cut Col` %in% c('Ideal', 'Premium', 'Good')))
+    expect_equal(length(filter_results[[2]]), length(filter_selections))
+    
+    # caret should have the same checks as above since it is the first filter
+    # more than 19443 values will be removed from other filters, but not from the carat filter directly
+    num_na <- sum(is.na(dataset$`Carat Col`))
+    num_filtered_out <- sum(dataset$`Carat Col` < 0.5 | dataset$`Carat Col` > 2, na.rm = TRUE)
+    expect_true(str_detect(filter_results[[2]][[1]], "Carat Col:"))
+    expect_true(str_detect(filter_results[[2]][[1]], "0.5"))
+    expect_true(str_detect(filter_results[[2]][[1]], "2"))
+    expect_true(str_detect(filter_results[[2]][[1]], paste(my_number_format(num_na), "rows with missing values")))
+    expect_true(str_detect(filter_results[[2]][[1]], paste(my_number_format(num_filtered_out), "rows")))
+    
+    # dataset at time of cut being filtered
+    t <- dataset %>% filter(!is.na(`Carat Col`),
+                            `Carat Col` >= 0.5,
+                            `Carat Col` <= 2)
+    num_na <- sum(is.na(t$`Cut Col`))
+    num_filtered_out <- sum(!is.na(t$`Cut Col`) & !t$`Cut Col` %in% c('Ideal', 'Premium', 'Good'))
+    expect_true(str_detect(filter_results[[2]][[2]], "Cut Col:"))
+    expect_true(str_detect(filter_results[[2]][[2]], "Ideal, Premium, Good"))
+    expect_true(str_detect(filter_results[[2]][[2]], paste(my_number_format(num_na), "rows with missing values")))
+    expect_true(str_detect(filter_results[[2]][[2]], paste(my_number_format(num_filtered_out), "rows")))
+
+    expect_true(str_detect(filter_results[[2]][[3]], "Price Col:"))
+    expect_true(str_detect(filter_results[[2]][[3]], "326"))
+    expect_true(str_detect(filter_results[[2]][[3]], "18,823"))
+    expect_true(str_detect(filter_results[[2]][[3]], "Removing 0 rows"))
+    ##########################################################################################################
+    filter_selections <- test_helper__convert_names(c('color', 'price'))
+    filter_results <- filter_data(dataset=dataset,
+                                  filter_list=global_filter_list[filter_selections],
+                                  callback=NULL)
+    # not actually filtering anything out (color is NULL and price is min/max of column)
+    expect_true(rt_are_dataframes_equal(dataset, filter_results[[1]]))
+    expect_equal(length(filter_results[[2]]), length(filter_selections))
+    
+    expect_equal(filter_results[[2]][[1]], "Color Col: Not Filtering")
+    
+    expect_true(str_detect(filter_results[[2]][[2]], "Price Col:"))
     expect_true(str_detect(filter_results[[2]][[2]], "326"))
     expect_true(str_detect(filter_results[[2]][[2]], "18,823"))
     expect_true(str_detect(filter_results[[2]][[2]], "Removing 0 rows"))
@@ -1123,6 +1398,7 @@ test_that("add_x_annotations", {
 
     # scatter
     local_dataset <- dataset_or_null('../example_datasets/credit.csv')
+    colnames(local_dataset) <- test_helper__column_names(local_dataset)
     
     vertical_annotations <- list(c(0, "Event 1"),
                                  c(2000, "Event 2"),
@@ -1132,8 +1408,8 @@ test_that("add_x_annotations", {
                                    c(30, "Event B"),
                                    c(40, "Event C"))
     
-    local_primary_variable <- 'months_loan_duration'
-    local_comparison_variable <- 'amount'
+    local_primary_variable <- 'Months Loan Duration Col'
+    local_comparison_variable <- 'Amount Col'
     local_y_zoom_min <- NULL
     local_x_zoom_min <- NULL
     ggplot_object <- local_dataset %>%
@@ -1511,6 +1787,164 @@ test_that("build_parse_url_params - filtering", {
     other_extracted_parameters <- extracted_parameters[which(names(extracted_parameters) %in% c('data', 'tab') | 
                                                                      str_starts(names(extracted_parameters),
                                                                                 global__url_params_filter_prefix))]
+    
+    expect_equal(length(expected_parameters), length(other_extracted_parameters))
+    expect_identical(names(expected_parameters), names(other_extracted_parameters))
+    for(param_name in names(expected_parameters)) {
+        expect_true(all(expected_parameters[[param_name]] == other_extracted_parameters[[param_name]]))
+    }
+})
+
+test_that("build_parse_url_params - filtering - column names", {
+    context("build_parse_url_params - filtering")
+    input <- var_plots__default_values
+    
+    filter_list <- list(
+        carat = c(0.5, 2),
+        cut = c('Ideal', 'Premium', 'Good'),
+        color = NULL,
+        price = c(326, 18823),
+        date = c(ymd('2013-02-05'), ymd('2013-10-31')),
+        time_hour = c(ymd('2013-03-05'), ymd('2013-11-30')),
+        hms = c("09:01", "18:59")
+    )
+    
+    parameters <- build_parameters_list(input=input, preloaded_dataset='flights', filter_list = filter_list)
+    
+    # removes NULL, which we want (don't send empty filters, even if they are selected, uses up url characters)
+    expect_equal(length(parameters), length(flatten(filter_list)) + 2)
+    expect_true(!is.null(parameters$data))
+    expect_equal(parameters$data, 'flights')
+    expect_true(!is.null(parameters$tab))
+    expect_equal(parameters$tab, 'Graphs')
+    
+    expected_names <- c(rep('carat', 2), rep('cut', 3), rep('price', 2), rep('date', 2), rep('time_hour', 2), rep('hms', 2))
+    expected_names <- paste0(global__url_params_filter_prefix, expected_names)
+    expect_identical(names(parameters) %>% rt_remove_val(c('data', 'tab')), expected_names)
+    
+    # TO URL
+    custom_url <- build_custom_url(base_url = 'http://127.0.0.1:3158/', parameters_list = parameters)
+    expected_url <- "http://127.0.0.1:3158/?data=flights&tab=Graphs&%21%21_carat=0.5&%21%21_carat=2&%21%21_cut=Ideal&%21%21_cut=Premium&%21%21_cut=Good&%21%21_price=326&%21%21_price=18823&%21%21_date=2013-02-05&%21%21_date=2013-10-31&%21%21_time_hour=2013-03-05&%21%21_time_hour=2013-11-30&%21%21_hms=09%3A01&%21%21_hms=18%3A59"
+    expect_equal(custom_url, expected_url)
+    expect_equal(nchar(custom_url), 306)
+    
+    # BACK TO PARAMETERS
+    url_search <- str_replace(expected_url, 'http://127.0.0.1:3158/', '')
+    extracted_parameters <- extract_url_parameters(url_search = url_search)
+    
+    expected_parameters <- filter_list
+    # remove `color` which has NULL value
+    expected_parameters <- expected_parameters[which(names(expected_parameters) != 'color')]
+    # add expected prefix
+    names(expected_parameters) <- paste0(global__url_params_filter_prefix, names(expected_parameters))
+    # add other values
+    expected_parameters <- c(list('data'='flights', 'tab'='Graphs'), expected_parameters)
+    expect_equal(length(expected_parameters), length(extracted_parameters))
+    expect_identical(names(expected_parameters), names(extracted_parameters))
+    for(param_name in names(expected_parameters)) {
+        expect_true(all(expected_parameters[[param_name]] == extracted_parameters[[param_name]]))
+    }
+    
+    # Now Test with var_plots__
+    mock_input <- list(
+        'var_plots__variable' = 'Test values with spaces and sh*&%t.!',
+        'var_plots__comparison' = 'expected_value_comparison',
+        'var_plots__sum_by_variable' = 'expected_value_sum_by_variable',
+        'var_plots__color_variable' = 'expected_value_color_variable',
+        'var_plots__facet_variable' = 'expected_value_facet_variable',
+        'var_plots__size_variable' = 'expected_value_size_variable',
+        'var_plots__numeric_group_comp_variable' = TRUE,
+        'var_plots__numeric_aggregation_function' = 'month',
+        'var_plots__numeric_aggregation' = 'week',
+        'var_plots__multi_value_delimiter' = "; ",
+        'var_plots__filter_factor_lump_number'=20,
+        'var_plots__label_variables' = c('this', 'has', 'multiple', 'values'),
+        'var_plots__annotate_points' = FALSE,
+        'var_plots__show_points' = FALSE,
+        'var_plots__ts_graph_type' = "NotStandard",
+        'var_plots__include_zero_y_axis' = FALSE,
+        'var_plots__numeric_graph_type' = "Boxplot Whoot",
+        'var_plots__categoric_view_type' = "Bar Whoot",
+        'var_plots__order_by_variable' = "Default Whoot",
+        'var_plots__show_variable_totals' = FALSE,
+        'var_plots__show_comparison_totals' = FALSE,
+        'var_plots__histogram_bins' = 1000,
+        'var_plots__transparency' = 1999,
+        'var_plots__jitter' = TRUE,
+        'var_plots__numeric_aggregation_count_minimum' = 3009,
+        'var_plots__numeric_show_resampled_conf_int' = TRUE,
+        'var_plots__trend_line' = 'None Whoot',
+        'var_plots__trend_line_se' = 'Yes Whoot',
+        'var_plots__ts_date_floor' = 'None Whoot',
+        'var_plots__ts_date_break_format' = 'Auto Whoot',
+        'var_plots__ts_breaks_width' = 'not null',
+        'var_plots__scale_x_log_base_10' = TRUE,
+        'var_plots__x_zoom_min' = 'not NA',
+        'var_plots__x_zoom_max' = 40,
+        'var_plots__scale_y_log_base_10' = TRUE,
+        'var_plots__y_zoom_min' = 'not NA',
+        'var_plots__y_zoom_max' = 'not NA',
+        'var_plots__custom_title' = "This is my title",
+        'var_plots__custom_subtitle' = "This is my subtitle",
+        'var_plots__custom_x_axis_label' = "This is my X Axis Label",
+        'var_plots__custom_y_axis_label' = "This is my Y Axis Label",
+        'var_plots__custom_caption' = "This is my caption",
+        'var_plots__custom_tag' = "This is my Tag",
+        'var_plots__pretty_text' = TRUE,
+        'var_plots__base_size' = 155,
+        'var_plots__vertical_annotations' = "vertical annotations",
+        'var_plots__horizontal_annotations' = "horizontal annotations"
+    )
+    parameters <- build_parameters_list(input=mock_input, preloaded_dataset='flights', filter_list = filter_list)
+    
+    filter_variable_names <- c('!!_carat', '!!_cut', '!!_price', '!!_date', '!!_time_hour', '!!_hms')
+    expected_names <- str_replace(c('data', 'tab', names(mock_input), filter_variable_names), 'var_plots__', '')
+    # need unique(names) because var_plots__label_variables has multiple values which should be expanded
+    expect_identical(unique(names(parameters)), expected_names)
+    # this list should have been converted to 4 list elements with the same names and different values
+    label_variable_list <- parameters[which(names(parameters) == 'label_variables')]
+    expect_equal(length(label_variable_list), length(mock_input$var_plots__label_variables))
+    expect_equal(label_variable_list[[1]], mock_input$var_plots__label_variables[1])
+    expect_equal(label_variable_list[[2]], mock_input$var_plots__label_variables[2])
+    expect_equal(label_variable_list[[3]], mock_input$var_plots__label_variables[3])
+    expect_equal(label_variable_list[[4]], mock_input$var_plots__label_variables[4])
+    
+    for(variable in names(parameters) %>% rt_remove_val(c('data', 'tab', 'label_variables', filter_variable_names))) {
+        expect_equal(parameters[[variable]], mock_input[[paste0('var_plots__',variable)]])
+    }
+    
+    custom_url <- build_custom_url(base_url = 'http://127.0.0.1:3158/', parameters_list = parameters)
+    expected_url <- "http://127.0.0.1:3158/?data=flights&tab=Graphs&variable=Test%20values%20with%20spaces%20and%20sh%2A%26%25t.%21&comparison=expected_value_comparison&sum_by_variable=expected_value_sum_by_variable&color_variable=expected_value_color_variable&facet_variable=expected_value_facet_variable&size_variable=expected_value_size_variable&numeric_group_comp_variable=TRUE&numeric_aggregation_function=month&numeric_aggregation=week&multi_value_delimiter=%3B%20&filter_factor_lump_number=20&label_variables=this&label_variables=has&label_variables=multiple&label_variables=values&annotate_points=FALSE&show_points=FALSE&ts_graph_type=NotStandard&include_zero_y_axis=FALSE&numeric_graph_type=Boxplot%20Whoot&categoric_view_type=Bar%20Whoot&order_by_variable=Default%20Whoot&show_variable_totals=FALSE&show_comparison_totals=FALSE&histogram_bins=1000&transparency=1999&jitter=TRUE&numeric_aggregation_count_minimum=3009&numeric_show_resampled_conf_int=TRUE&trend_line=None%20Whoot&trend_line_se=Yes%20Whoot&ts_date_floor=None%20Whoot&ts_date_break_format=Auto%20Whoot&ts_breaks_width=not%20null&scale_x_log_base_10=TRUE&x_zoom_min=not%20NA&x_zoom_max=40&scale_y_log_base_10=TRUE&y_zoom_min=not%20NA&y_zoom_max=not%20NA&custom_title=This%20is%20my%20title&custom_subtitle=This%20is%20my%20subtitle&custom_x_axis_label=This%20is%20my%20X%20Axis%20Label&custom_y_axis_label=This%20is%20my%20Y%20Axis%20Label&custom_caption=This%20is%20my%20caption&custom_tag=This%20is%20my%20Tag&pretty_text=TRUE&base_size=155&vertical_annotations=vertical%20annotations&horizontal_annotations=horizontal%20annotations&%21%21_carat=0.5&%21%21_carat=2&%21%21_cut=Ideal&%21%21_cut=Premium&%21%21_cut=Good&%21%21_price=326&%21%21_price=18823&%21%21_date=2013-02-05&%21%21_date=2013-10-31&%21%21_time_hour=2013-03-05&%21%21_time_hour=2013-11-30&%21%21_hms=09%3A01&%21%21_hms=18%3A59"
+    expect_equal(custom_url, expected_url)
+    expect_equal(nchar(custom_url), 1845)
+    
+    
+    # extract_url_parameters only expects the ?.... part of the url
+    extracted_parameters <- extract_url_parameters(url_search=str_replace(custom_url, 'http://127.0.0.1:3158/', ''))
+    expect_identical(names(extracted_parameters), c('data', 'tab', names(mock_input), filter_variable_names))
+    
+    var_plots_extracted_parameters <- extracted_parameters[which(!names(extracted_parameters) %in% c('data', 'tab') & 
+                                                                     !str_starts(names(extracted_parameters),
+                                                                                 global__url_params_filter_prefix))]
+    expect_identical(names(var_plots_extracted_parameters), names(mock_input))
+    
+    # test var_plots__
+    for(variable in names(mock_input)) {
+        expect_true(all(var_plots_extracted_parameters[[variable]] == mock_input[[variable]]))
+    }
+    
+    # test_filters & data/tab
+    expected_parameters <- filter_list
+    # remove color since it was null
+    expected_parameters <- expected_parameters[which(names(expected_parameters) != 'color')]
+    # append expected prefix
+    names(expected_parameters) <- paste0(global__url_params_filter_prefix, names(expected_parameters))
+    # add default parameters
+    expected_parameters <- c(list('data'='flights', 'tab'='Graphs'), expected_parameters)
+    
+    other_extracted_parameters <- extracted_parameters[which(names(extracted_parameters) %in% c('data', 'tab') | 
+                                                                 str_starts(names(extracted_parameters),
+                                                                            global__url_params_filter_prefix))]
     
     expect_equal(length(expected_parameters), length(other_extracted_parameters))
     expect_identical(names(expected_parameters), names(other_extracted_parameters))
@@ -2011,6 +2445,8 @@ test_that("setting dynamic variables - trend_extend_date", {
 
     global__should_log_message <<- FALSE
     dataset <- select_preloaded_dataset("Flights", defualt_path = '../')$dataset
+    colnames(dataset) <- test_helper__column_names(dataset)
+
     trend_extend_date_default <- var_plots__default_values[['var_plots__trend_extend_date']]
     
     ########
@@ -2043,7 +2479,7 @@ test_that("setting dynamic variables - trend_extend_date", {
     ########
     # Date Primary Variable
     ########
-    primary_selection <- 'takeoff_datetime'
+    primary_selection <- 'Takeoff Datetime Col'
     date_selection <- var_plots__trend_extend_date__logic(dataset=dataset,
                                                           primary_variable=primary_selection,
                                                           current_value=NULL)
@@ -2059,8 +2495,7 @@ test_that("setting dynamic variables - trend_extend_date", {
                                                           primary_variable=primary_selection,
                                                           current_value=as.Date('0000-01-01'))
     expect_equal(date_selection, '2014-06-01')
-    
-    
+
     # if the currently selected value is less than the max value of the dataset, still default to max+6 months
     date_selection <- var_plots__trend_extend_date__logic(dataset=dataset,
                                                           primary_variable=primary_selection,
@@ -2078,7 +2513,7 @@ test_that("setting dynamic variables - trend_extend_date", {
     # should return default for NUMERIC OR CATEGORIC Primary Variable
     # All columns names should be available as possible choices for the date
     ########
-    primary_selection <- 'dep_delay'
+    primary_selection <- 'Dep Delay Col'
     date_selection <- var_plots__trend_extend_date__logic(dataset=dataset,
                                                          primary_variable=primary_selection,
                                                          current_value=NULL)
@@ -2089,7 +2524,7 @@ test_that("setting dynamic variables - trend_extend_date", {
                                                          current_value="Doesn't Matter")
     expect_equal(date_selection, trend_extend_date_default)
     
-    primary_selection <- 'origin'
+    primary_selection <- 'Origin Col'
     date_selection <- var_plots__trend_extend_date__logic(dataset=dataset,
                                                          primary_variable=primary_selection,
                                                          current_value=NULL)
@@ -2099,7 +2534,6 @@ test_that("setting dynamic variables - trend_extend_date", {
                                                          primary_variable=primary_selection,
                                                          current_value="Doesn't Matter")
     expect_equal(date_selection, trend_extend_date_default)
-
 })
 
 test_that("get_default_value_for_updating", {
@@ -2124,14 +2558,14 @@ test_that("create_ggplot_plot - numeric", {
     
     global__should_log_message <<- FALSE
     dataset <- select_preloaded_dataset("Credit", defualt_path = '../')$dataset
-    
+    colnames(dataset) <- test_helper__column_names(dataset)
     # single numeric
     plot_object <- create_ggplot_object(dataset = dataset,
-                                        primary_variable = 'months_loan_duration')
+                                        primary_variable = 'Months Loan Duration Col')
     test_save_plot(file_name='graphs/plot__box_plot_defaults.png', plot=plot_object)
 
     plot_object <- create_ggplot_object(dataset = dataset,
-                                        primary_variable = 'months_loan_duration',
+                                        primary_variable = 'Months Loan Duration Col',
                                         y_zoom_min = 10,
                                         y_zoom_max = 60,
                                         custom_title = "Title",
@@ -2146,12 +2580,12 @@ test_that("create_ggplot_plot - numeric", {
     test_save_plot(file_name='graphs/plot__box_plot_options.png', plot=plot_object)
         
     plot_object <- create_ggplot_object(dataset = dataset,
-                                        primary_variable = 'months_loan_duration',
+                                        primary_variable = 'Months Loan Duration Col',
                                         numeric_graph_type = 'Histogram')
     test_save_plot(file_name='graphs/plot__histogram_default.png', plot=plot_object)
     
     plot_object <- create_ggplot_object(dataset = dataset,
-                                        primary_variable = 'months_loan_duration',
+                                        primary_variable = 'Months Loan Duration Col',
                                         numeric_graph_type = 'Histogram',
                                         x_zoom_max = 60,
                                         custom_title = "Title",
@@ -2166,15 +2600,15 @@ test_that("create_ggplot_plot - numeric", {
     
     # scatter
     plot_object <- create_ggplot_object(dataset = dataset,
-                                        primary_variable = 'months_loan_duration',
-                                        comparison_variable = 'amount',
+                                        primary_variable = 'Months Loan Duration Col',
+                                        comparison_variable = 'Amount Col',
                                         scatter_add_histograms = FALSE)
     test_save_plot(file_name='graphs/plot__scatter_defaults.png', plot=plot_object)
     
     plot_object <- create_ggplot_object(dataset = dataset,
-                                        primary_variable = 'months_loan_duration',
-                                        comparison_variable = 'amount',
-                                        label_variables = c('age', 'purpose'),
+                                        primary_variable = 'Months Loan Duration Col',
+                                        comparison_variable = 'Amount Col',
+                                        label_variables = c('Age Col', 'Purpose Col'),
                                         transparency = 0.90,
                                         jitter = TRUE,
                                         scatter_add_histograms = FALSE,
@@ -2200,10 +2634,12 @@ test_that("create_ggplot_plot - numeric", {
 test_that("create_ggplot_plot - scatter - histograms", {
     global__should_log_message <<- FALSE
     dataset <- select_preloaded_dataset("Credit", defualt_path = '../')$dataset
+    colnames(dataset) <- test_helper__column_names(dataset)
+    
     plot_object <- create_ggplot_object(dataset = dataset,
-                                        primary_variable = 'months_loan_duration',
-                                        comparison_variable = 'amount',
-                                        label_variables = c('age', 'purpose'),
+                                        primary_variable = 'Months Loan Duration Col',
+                                        comparison_variable = 'Amount Col',
+                                        label_variables = c('Age Col', 'Purpose Col'),
                                         transparency = 0.90,
                                         jitter = TRUE,
                                         scatter_add_histograms = TRUE,
@@ -2231,9 +2667,10 @@ test_that("create_ggplot_plot - numeric categoric", {
   
     global__should_log_message <<- FALSE
     dataset <- select_preloaded_dataset("Credit", defualt_path = '../')$dataset
+    colnames(dataset) <- test_helper__column_names(dataset)
     
-    numeric_variable <- 'amount'
-    categoric_variable <- 'checking_balance'
+    numeric_variable <- 'Amount Col'
+    categoric_variable <- 'Checking Balance Col'
     
     # single numeric
     plot_object <- create_ggplot_object(dataset = dataset,
@@ -2266,58 +2703,58 @@ test_that("create_ggplot_plot - date projection", {
     
     global__should_log_message <<- FALSE
     dataset <- select_preloaded_dataset("Flights", defualt_path = '../')$dataset
+    colnames(dataset) <- test_helper__column_names(dataset)
     
     plot_object <- create_ggplot_object(dataset = dataset,
-                                        primary_variable = 'takeoff_datetime')
+                                        primary_variable = 'Takeoff Datetime Col')
     test_save_plot(file_name='graphs/plot__time_series__default.png', plot=plot_object)
     
     plot_object <- create_ggplot_object(dataset = dataset,
-                                        primary_variable = 'takeoff_datetime',
+                                        primary_variable = 'Takeoff Datetime Col',
                                         trend_line = 'Straight')
     test_save_plot(file_name='graphs/plot__time_series__straight.png', plot=plot_object)
 
     plot_object <- create_ggplot_object(dataset = dataset,
-                                        primary_variable = 'takeoff_datetime',
+                                        primary_variable = 'Takeoff Datetime Col',
                                         trend_line = 'Straight', trend_line_se = 'Yes')
     test_save_plot(file_name='graphs/plot__time_series__straight__ci.png', plot=plot_object)
         
     plot_object <- create_ggplot_object(dataset = dataset,
-                                        primary_variable = 'takeoff_datetime',
+                                        primary_variable = 'Takeoff Datetime Col',
                                         trend_line = 'Smooth')
     test_save_plot(file_name='graphs/plot__time_series__smooth.png', plot=plot_object)
     
     plot_object <- create_ggplot_object(dataset = dataset,
-                                        primary_variable = 'takeoff_datetime',
+                                        primary_variable = 'Takeoff Datetime Col',
                                         trend_line = 'Smooth', trend_line_se = 'Yes')
     test_save_plot(file_name='graphs/plot__time_series__smooth__ci.png', plot=plot_object)
     
     plot_object <- create_ggplot_object(dataset = dataset,
-                                        primary_variable = 'takeoff_datetime',
+                                        primary_variable = 'Takeoff Datetime Col',
                                         trend_line = 'Projection',
                                         trend_extend_date = as.Date('2015-01-01'))
     test_save_plot(file_name='graphs/plot__time_series__projection.png', plot=plot_object)
     
     plot_object <- create_ggplot_object(dataset = dataset,
-                                        primary_variable = 'takeoff_datetime',
+                                        primary_variable = 'Takeoff Datetime Col',
                                         trend_line = 'Projection',
                                         trend_extend_date = as.Date('2015-01-01'),
                                         trend_line_se = 'Yes')
     test_save_plot(file_name='graphs/plot__time_series__projection__ci.png', plot=plot_object)
     
     # test when min date is e.g. at the end of a given period
-    dataset <- dataset %>% filter(takeoff_datetime >= ymd('2013-02-16'))
+    dataset <- dataset %>% filter(`Takeoff Datetime Col` >= ymd('2013-02-16'))
     #min(dataset$takeoff_datetime)
     plot_object <- create_ggplot_object(dataset = dataset,
-                                        primary_variable = 'takeoff_datetime',
+                                        primary_variable = 'Takeoff Datetime Col',
                                         trend_line = 'Projection',
                                         trend_extend_date = as.Date('2015-01-01'),
                                         trend_line_se = 'Yes')
     test_save_plot(file_name='graphs/plot__time_series__projection__ci__half_period.png', plot=plot_object)
     
-    
     # test week, 2/15 was a friday
     plot_object <- create_ggplot_object(dataset = dataset,
-                                        primary_variable = 'takeoff_datetime',
+                                        primary_variable = 'Takeoff Datetime Col',
                                         trend_line = 'Projection',
                                         ts_date_floor='week',
                                         ts_date_breaks_width='4 weeks',
@@ -2327,7 +2764,7 @@ test_that("create_ggplot_plot - date projection", {
     
     # test week, 2/15 was a friday
     plot_object <- create_ggplot_object(dataset = dataset,
-                                        primary_variable = 'takeoff_datetime',
+                                        primary_variable = 'Takeoff Datetime Col',
                                         trend_line = 'Projection',
                                         ts_date_floor='quarter',
                                         #ts_date_breaks_width='4 weeks',
@@ -2337,7 +2774,7 @@ test_that("create_ggplot_plot - date projection", {
     
     # test week, 2/15 was a friday
     plot_object <- create_ggplot_object(dataset = dataset,
-                                        primary_variable = 'takeoff_datetime',
+                                        primary_variable = 'Takeoff Datetime Col',
                                         trend_line = 'Projection',
                                         ts_date_floor='day',
                                         ts_date_breaks_width='4 weeks',
@@ -2351,11 +2788,12 @@ test_that("create_ggplot_plot - date projection - POSIXct", {
     
     global__should_log_message <<- FALSE
     dataset <- select_preloaded_dataset("Flights", defualt_path = '../')$dataset
+    colnames(dataset) <- test_helper__column_names(dataset)
     
-    dataset$date <- as.POSIXct(dataset$takeoff_datetime)
+    dataset$`Date Col` <- as.POSIXct(dataset$`Takeoff Datetime Col`)
     
     plot_object <- create_ggplot_object(dataset = dataset,
-                                        primary_variable = 'takeoff_datetime',
+                                        primary_variable = 'Takeoff Datetime Col',
                                         trend_line = 'Projection',
                                         trend_extend_date = as.Date('2015-01-01'),
                                         trend_line_se = 'Yes')
@@ -2367,42 +2805,26 @@ test_that("create_ggplot_plot - time-series-change - POSIXct", {
     
     global__should_log_message <<- FALSE
     conversion_data <- select_preloaded_dataset("Mock Conversions", defualt_path = '../')$dataset
-    conversion_data[c(1, 2, 3, 4), 'create_date_time'] <- NA
-    
+    conversion_data[c(1, 2, 3, 4), 'Create Date Time'] <- NA
+    colnames(conversion_data) <- test_helper__column_names(conversion_data)
+
     aggregation_function_sum <- function(values) {
         return (sum(values, na.rm = TRUE))
     }
     
-    conversion_data$create_date_time <- as.POSIXct(conversion_data$create_date_time)
+    conversion_data$`Create Date Time Col` <- as.POSIXct(conversion_data$`Create Date Time Col`)
     
     plot_object <- create_ggplot_object(dataset=conversion_data %>%
-                                            filter(create_date_time >= ymd('2019-01-01')) %>%
-                                            mutate(continent=fct_lump(continent, n=2),
-                                                   lead_source=fct_lump(lead_source, n=3)),
-                                        primary_variable='create_date_time',
+                                            filter(`Create Date Time Col` >= ymd('2019-01-01')) %>%
+                                            mutate(`Continent Col`=fct_lump(`Continent Col`, n=2),
+                                                   `Lead Source Col`=fct_lump(`Lead Source Col`, n=3)),
+                                        primary_variable='Create Date Time Col',
                                         ts_graph_type = global__ts_graph_type__period_change,
-                                        color_variable='lead_source',
-                                        facet_variable='continent',
+                                        color_variable='Lead Source Col',
+                                        facet_variable='Continent Col',
                                         ts_date_floor='quarter',
                                         annotate_points=TRUE,
-                                        comparison_variable='amount',
-                                        numeric_aggregation='Total')
-    test_save_plot(file_name='graphs/plot__time_series__percent_change__POSIXct.png', plot=plot_object)
-    
-    colnames(conversion_data) <- rt_pretty_text(colnames(conversion_data))
-    plot_object <- create_ggplot_object(dataset=conversion_data %>%
-                                            rename(`The Continent`=Continent,
-                                                   `The Amount`=Amount) %>%
-                                            filter(`Create Date Time` >= ymd('2019-01-01')) %>%
-                                            mutate(`The Continent`=fct_lump(`The Continent`, n=2),
-                                                   `Lead Source`=fct_lump(`Lead Source`, n=3)),
-                                        primary_variable='Create Date Time',
-                                        ts_graph_type = global__ts_graph_type__period_change,
-                                        color_variable='Lead Source',
-                                        facet_variable='The Continent',
-                                        ts_date_floor='quarter',
-                                        annotate_points=TRUE,
-                                        comparison_variable='The Amount',
+                                        comparison_variable='Amount Col',
                                         numeric_aggregation='Total')
     test_save_plot(file_name='graphs/plot__time_series__percent_change__POSIXct.png', plot=plot_object)
 })
@@ -2412,7 +2834,9 @@ test_that("create_ggplot_plot - convert date to categoric", {
     
     global__should_log_message <<- FALSE
     dataset <- select_preloaded_dataset("Flights", defualt_path = '../')$dataset
-    primary_variable <- 'takeoff_datetime'
+    colnames(dataset) <- test_helper__column_names(dataset)
+
+    primary_variable <- 'Takeoff Datetime Col'
     dataset[[primary_variable]] <- rt_floor_date_factor(dataset[[primary_variable]], date_floor='month')
     
     
@@ -2423,20 +2847,20 @@ test_that("create_ggplot_plot - convert date to categoric", {
     
     plot_object <- create_ggplot_object(dataset = dataset,
                                         primary_variable = primary_variable,
-                                        comparison_variable = 'dep_delay',
+                                        comparison_variable = 'Dep Delay Col',
                                         convert_primary_date_to_categoric=TRUE)
     test_save_plot(file_name='graphs/plot__date_as_categoric__prim_num.png', plot=plot_object)
     
     plot_object <- create_ggplot_object(dataset = dataset,
                                         primary_variable = primary_variable,
-                                        comparison_variable = 'dep_delay',
+                                        comparison_variable = 'Dep Delay Col',
                                         num_cat_aggregation_type = 'Average Value Per Record',
                                         convert_primary_date_to_categoric=TRUE)
     test_save_plot(file_name='graphs/plot__date_as_categoric__prim_num_avg.png', plot=plot_object)
     
     plot_object <- create_ggplot_object(dataset = dataset,
                                         primary_variable = primary_variable,
-                                        comparison_variable = 'origin',
+                                        comparison_variable = 'Origin Col',
                                         categoric_view_type = "Stack",
                                         convert_primary_date_to_categoric=TRUE)
     test_save_plot(file_name='graphs/plot__date_as_categoric__prim_cat_stack.png', plot=plot_object)
@@ -2447,7 +2871,9 @@ test_that("create_ggplot_plot - convert date to categoric - order by", {
     
     global__should_log_message <<- FALSE
     dataset <- select_preloaded_dataset("Flights", defualt_path = '../')$dataset
-    primary_variable <- 'takeoff_datetime'
+    colnames(dataset) <- test_helper__column_names(dataset)
+
+    primary_variable <- 'Takeoff Datetime Col'
     dataset[[primary_variable]] <- rt_floor_date_factor(dataset[[primary_variable]], date_floor='month')
 
     # date : order by Freq
@@ -2461,13 +2887,13 @@ test_that("create_ggplot_plot - convert date to categoric - order by", {
     plot_object <- create_ggplot_object(dataset = dataset,
                                         primary_variable = primary_variable,
                                         convert_primary_date_to_categoric=TRUE,
-                                        order_by_variable = 'dep_delay')
+                                        order_by_variable = 'Dep Delay Col')
     test_save_plot(file_name='graphs/plot__date_as_categoric__prim__order_by_dep_delay.png', plot=plot_object)
     
     # date/numeric : order by freq
     plot_object <- create_ggplot_object(dataset = dataset,
                                         primary_variable = primary_variable,
-                                        comparison_variable = 'dep_delay',
+                                        comparison_variable = 'Dep Delay Col',
                                         convert_primary_date_to_categoric=TRUE,
                                         order_by_variable = 'Frequency')
     test_save_plot(file_name='graphs/plot__date_as_categoric__prim_num__order_by_freq.png', plot=plot_object)
@@ -2475,33 +2901,33 @@ test_that("create_ggplot_plot - convert date to categoric - order by", {
     # date/numeric : order by numeric
     plot_object <- create_ggplot_object(dataset = dataset,
                                         primary_variable = primary_variable,
-                                        comparison_variable = 'dep_delay',
+                                        comparison_variable = 'Dep Delay Col',
                                         convert_primary_date_to_categoric=TRUE,
-                                        order_by_variable = 'dep_delay')
+                                        order_by_variable = 'Dep Delay Col')
     test_save_plot(file_name='graphs/plot__date_as_categoric__prim_num__order_by_dep_delay.png', plot=plot_object)
     
     # date/numeric : order by freq
     plot_object <- create_ggplot_object(dataset = dataset,
                                         primary_variable = primary_variable,
-                                        comparison_variable = 'dep_delay',
+                                        comparison_variable = 'Dep Delay Col',
                                         convert_primary_date_to_categoric=TRUE,
-                                        color_variable='dest',
+                                        color_variable='Dest Col',
                                         order_by_variable = 'Frequency')
     test_save_plot(file_name='graphs/plot__date_as_categoric__prim_num_col__order_by_freq.png', plot=plot_object)
     
     # date/numeric : order by numeric
     plot_object <- create_ggplot_object(dataset = dataset,
                                         primary_variable = primary_variable,
-                                        comparison_variable = 'dep_delay',
+                                        comparison_variable = 'Dep Delay Col',
                                         convert_primary_date_to_categoric=TRUE,
-                                        color_variable='dest',
-                                        order_by_variable = 'dep_delay')
+                                        color_variable='Dest Col',
+                                        order_by_variable = 'Dep Delay Col')
     test_save_plot(file_name='graphs/plot__date_as_categoric__prim_num_col__order_by_dep_delay.png', plot=plot_object)
     
     # date/categoric : order by freq
     plot_object <- create_ggplot_object(dataset = dataset,
                                         primary_variable = primary_variable,
-                                        comparison_variable = 'dest',
+                                        comparison_variable = 'Dest Col',
                                         filter_factor_lump_number = 3,
                                         convert_primary_date_to_categoric=TRUE,
                                         order_by_variable = 'Frequency')
@@ -2510,36 +2936,31 @@ test_that("create_ggplot_plot - convert date to categoric - order by", {
     # date/categoric : order by numeric
     plot_object <- create_ggplot_object(dataset = dataset,
                                         primary_variable = primary_variable,
-                                        comparison_variable = 'dest',
+                                        comparison_variable = 'Dest Col',
                                         filter_factor_lump_number = 3,
                                         convert_primary_date_to_categoric=TRUE,
-                                        order_by_variable = 'dep_delay')
+                                        order_by_variable = 'Dep Delay Col')
     test_save_plot(file_name='graphs/plot__date_as_categoric__prim_categoric__order_by_dep_delay.png', plot=plot_object)
     
     # date/categoric/categoric : order by freq
     plot_object <- create_ggplot_object(dataset = dataset,
                                         primary_variable = primary_variable,
-                                        comparison_variable = 'dest',
+                                        comparison_variable = 'Dest Col',
                                         filter_factor_lump_number = 3,
                                         convert_primary_date_to_categoric=TRUE,
-                                        facet_variable = 'origin',
+                                        facet_variable = 'Origin Col',
                                         order_by_variable = 'Frequency')
     test_save_plot(file_name='graphs/plot__date_as_categoric__prim_categoric_facet__order_by_freq.png', plot=plot_object)
     
     # date/categoric/categoric : order by numeric
     plot_object <- create_ggplot_object(dataset = dataset,
                                         primary_variable = primary_variable,
-                                        comparison_variable = 'dest',
+                                        comparison_variable = 'Dest Col',
                                         filter_factor_lump_number = 3,
                                         convert_primary_date_to_categoric=TRUE,
-                                        facet_variable = 'origin',
-                                        order_by_variable = 'dep_delay')
+                                        facet_variable = 'Origin Col',
+                                        order_by_variable = 'Dep Delay Col')
     test_save_plot(file_name='graphs/plot__date_as_categoric__prim_categoric_facet__order_by_dep_delay.png', plot=plot_object)
-    
-    
-    ##########################################################################################################
-    # Equivalent "Actual" Categoric Graphs
-    ##########################################################################################################
 })
 
 test_that("create_ggplot_plot - bar", { 
@@ -2547,58 +2968,60 @@ test_that("create_ggplot_plot - bar", {
     
     global__should_log_message <<- FALSE
     dataset <- select_preloaded_dataset("Credit", defualt_path = '../')$dataset
+    colnames(dataset) <- test_helper__column_names(dataset)
+
     set.seed(42)
-    dataset$ids_not_unique <- as.character(sample(1:100, 1000, replace=T))
-    dataset$ids_unique <- as.character(1:1000)
+    dataset$`Ids Not Unique Col` <- as.character(sample(1:100, 1000, replace=T))
+    dataset$`Ids Unique Col` <- as.character(1:1000)
     
     plot_object <- create_ggplot_object(dataset = dataset,
-                                        primary_variable = 'checking_balance')
+                                        primary_variable = 'Checking Balance Col')
     test_save_plot(file_name='graphs/create_ggplot_object__single_categoric.png', plot=plot_object)
     
     plot_object <- create_ggplot_object(dataset = dataset,
-                                        primary_variable = 'checking_balance',
-                                        count_distinct_variable = 'ids_unique')
+                                        primary_variable = 'Checking Balance Col',
+                                        count_distinct_variable = 'Ids Unique Col')
     test_save_plot(file_name='graphs/create_ggplot_object__single_categoric__unique_id.png', plot=plot_object)
     
     plot_object <- create_ggplot_object(dataset = dataset,
-                                        primary_variable = 'checking_balance',
-                                        count_distinct_variable = 'ids_not_unique')
+                                        primary_variable = 'Checking Balance Col',
+                                        count_distinct_variable = 'Ids Not Unique Col')
     test_save_plot(file_name='graphs/create_ggplot_object__single_categoric__distinct_ids.png', plot=plot_object)
     
     plot_object <- create_ggplot_object(dataset = dataset,
-                                        primary_variable = 'checking_balance',
-                                        comparison_variable = 'default')
+                                        primary_variable = 'Checking Balance Col',
+                                        comparison_variable = 'Default Col')
     test_save_plot(file_name='graphs/create_ggplot_object__double_categoric.png', plot=plot_object)
     
     plot_object <- create_ggplot_object(dataset = dataset,
-                                        primary_variable = 'checking_balance',
-                                        comparison_variable = 'default',
-                                        count_distinct_variable = 'ids_unique')
+                                        primary_variable = 'Checking Balance Col',
+                                        comparison_variable = 'Default Col',
+                                        count_distinct_variable = 'Ids Unique Col')
     test_save_plot(file_name='graphs/create_ggplot_object__double_categoric__unique_id.png', plot=plot_object)
     
     plot_object <- create_ggplot_object(dataset = dataset,
-                                        primary_variable = 'checking_balance',
-                                        comparison_variable = 'default',
-                                        count_distinct_variable = 'ids_not_unique')
+                                        primary_variable = 'Checking Balance Col',
+                                        comparison_variable = 'Default Col',
+                                        count_distinct_variable = 'Ids Not Unique Col')
     test_save_plot(file_name='graphs/create_ggplot_object__double_categoric__distinct_ids.png', plot=plot_object)
     
     plot_object <- create_ggplot_object(dataset = dataset,
-                                        primary_variable = 'checking_balance',
-                                        comparison_variable = 'default',
-                                        sum_by_variable = 'amount')
+                                        primary_variable = 'Checking Balance Col',
+                                        comparison_variable = 'Default Col',
+                                        sum_by_variable = 'Amount Col')
     test_save_plot(file_name='graphs/create_ggplot_object__double_categoric__sum_by.png', plot=plot_object)
 
     plot_object <- create_ggplot_object(dataset = dataset,
-                                        primary_variable = 'checking_balance',
-                                        comparison_variable = 'default',
-                                        sum_by_variable = 'amount',
+                                        primary_variable = 'Checking Balance Col',
+                                        comparison_variable = 'Default Col',
+                                        sum_by_variable = 'Amount Col',
                                         categoric_view_type = 'Stack')
     test_save_plot(file_name='graphs/create_ggplot_object__double_categoric__sum_by__stack.png', plot=plot_object)
     
     plot_object <- create_ggplot_object(dataset = dataset,
-                                        primary_variable = 'checking_balance',
-                                        comparison_variable = 'default',
-                                        sum_by_variable = 'amount',
+                                        primary_variable = 'Checking Balance Col',
+                                        comparison_variable = 'Default Col',
+                                        sum_by_variable = 'Amount Col',
                                         categoric_view_type = 'Stack Percent')
     test_save_plot(file_name='graphs/create_ggplot_object__double_categoric__sum_by__stack_perc.png', plot=plot_object)
 })
@@ -2608,68 +3031,70 @@ test_that("create_ggplot_plot - bar - facet", {
     
     global__should_log_message <<- FALSE
     dataset <- select_preloaded_dataset("Credit", defualt_path = '../')$dataset
+    colnames(dataset) <- test_helper__column_names(dataset)
+
     set.seed(42)
-    dataset$ids_not_unique <- as.character(sample(1:100, 1000, replace=T))
-    dataset$ids_unique <- as.character(1:1000)
-    
+    dataset$`Ids Not Unique Col` <- as.character(sample(1:100, 1000, replace=T))
+    dataset$`Ids Unique Col` <- as.character(1:1000)
+
     plot_object <- create_ggplot_object(dataset = dataset,
-                                        primary_variable = 'checking_balance',
-                                        facet_variable = 'default')
+                                        primary_variable = 'Checking Balance Col',
+                                        facet_variable = 'Default Col')
     test_save_plot(file_name='graphs/create_ggplot_object__single_categoric__facet.png', plot=plot_object)
     
     plot_object <- create_ggplot_object(dataset = dataset,
-                                        primary_variable = 'checking_balance',
-                                        count_distinct_variable = 'ids_unique',
-                                        facet_variable = 'default')
+                                        primary_variable = 'Checking Balance Col',
+                                        count_distinct_variable = 'Ids Unique Col',
+                                        facet_variable = 'Default Col')
     test_save_plot(file_name='graphs/create_ggplot_object__single_categoric__unique_id__facet.png', plot=plot_object)
     
     plot_object <- create_ggplot_object(dataset = dataset,
-                                        primary_variable = 'checking_balance',
-                                        count_distinct_variable = 'ids_not_unique',
-                                        facet_variable = 'default')
+                                        primary_variable = 'Checking Balance Col',
+                                        count_distinct_variable = 'Ids Not Unique Col',
+                                        facet_variable = 'Default Col')
     test_save_plot(file_name='graphs/create_ggplot_object__single_categoric__distinct_ids__facet.png', plot=plot_object)
     
     plot_object <- create_ggplot_object(dataset = dataset,
-                                        primary_variable = 'checking_balance',
-                                        comparison_variable = 'credit_history',
-                                        facet_variable = 'default')
+                                        primary_variable = 'Checking Balance Col',
+                                        comparison_variable = 'Credit History Col',
+                                        facet_variable = 'Default Col')
     test_save_plot(file_name='graphs/create_ggplot_object__double_categoric__facet.png', plot=plot_object)
     
     plot_object <- create_ggplot_object(dataset = dataset,
-                                        primary_variable = 'checking_balance',
-                                        comparison_variable = 'credit_history',
-                                        count_distinct_variable = 'ids_unique',
-                                        facet_variable = 'default')
+                                        primary_variable = 'Checking Balance Col',
+                                        comparison_variable = 'Credit History Col',
+                                        count_distinct_variable = 'Ids Unique Col',
+                                        facet_variable = 'Default Col')
     test_save_plot(file_name='graphs/create_ggplot_object__double_categoric__unique_id__facet.png', plot=plot_object)
     
     plot_object <- create_ggplot_object(dataset = dataset,
-                                        primary_variable = 'checking_balance',
-                                        comparison_variable = 'credit_history',
-                                        count_distinct_variable = 'ids_not_unique',
-                                        facet_variable = 'default')
+                                        primary_variable = 'Checking Balance Col',
+                                        comparison_variable = 'Credit History Col',
+                                        count_distinct_variable = 'Ids Not Unique Col',
+                                        facet_variable = 'Default Col')
     test_save_plot(file_name='graphs/create_ggplot_object__double_categoric__distinct_ids__facet.png', plot=plot_object)
     
     plot_object <- create_ggplot_object(dataset = dataset,
-                                        primary_variable = 'checking_balance',
-                                        #comparison_variable = 'credit_history',
-                                        sum_by_variable = 'amount',
-                                        facet_variable = 'default')
+                                        primary_variable = 'Checking Balance Col',
+                                        #comparison_variable = 'Credit History Col',
+                                        sum_by_variable = 'Amount Col',
+                                        facet_variable = 'Default Col')
     test_save_plot(file_name='graphs/create_ggplot_object__double_categoric__sum_by__facet.png', plot=plot_object)
     
     plot_object <- create_ggplot_object(dataset = dataset,
-                                        primary_variable = 'checking_balance',
-                                        comparison_variable = 'credit_history',
-                                        sum_by_variable = 'amount',
+                                        primary_variable = 'Checking Balance Col',
+                                        comparison_variable = 'Credit History Col',
+                                        sum_by_variable = 'Amount Col',
                                         categoric_view_type = 'Stack',
-                                        facet_variable = 'default')
+                                        facet_variable = 'Default Col')
     test_save_plot(file_name='graphs/create_ggplot_object__double_categoric__sum_by__stack__facet.png', plot=plot_object)
     
     plot_object <- create_ggplot_object(dataset = dataset,
-                                        primary_variable = 'checking_balance',
-                                        comparison_variable = 'credit_history',
-                                        sum_by_variable = 'amount',
+                                        primary_variable = 'Checking Balance Col',
+                                        comparison_variable = 'Credit History Col',
+                                        sum_by_variable = 'Amount Col',
                                         categoric_view_type = 'Stack Percent',
-                                        facet_variable = 'default')
+                                        facet_variable = 'Default Col')
     test_save_plot(file_name='graphs/create_ggplot_object__double_categoric__sum_by__stack_perc__facet.png', plot=plot_object)
 })
 
@@ -2678,68 +3103,69 @@ test_that("create_ggplot_plot - bar - order by", {
     
     global__should_log_message <<- FALSE
     dataset <- select_preloaded_dataset("Credit", defualt_path = '../')$dataset
+    colnames(dataset) <- test_helper__column_names(dataset)
 
     plot_object <- create_ggplot_object(dataset = dataset,
-                                        primary_variable = 'checking_balance',
+                                        primary_variable = 'Checking Balance Col',
                                         order_by_variable = 'Frequency')
     test_save_plot(file_name='graphs/create_ggplot_object__bar__order_by__freq.png', plot=plot_object)
 
     plot_object <- create_ggplot_object(dataset = dataset,
-                                        primary_variable = 'checking_balance',
+                                        primary_variable = 'Checking Balance Col',
                                         order_by_variable = 'Default')
     test_save_plot(file_name='graphs/create_ggplot_object__bar__order_by__no_freq.png', plot=plot_object)
     
     plot_object <- create_ggplot_object(dataset = dataset,
-                                        primary_variable = 'checking_balance',
-                                        facet_variable = 'default',
+                                        primary_variable = 'Checking Balance Col',
+                                        facet_variable = 'Default Col',
                                         order_by_variable = 'Frequency')
     test_save_plot(file_name='graphs/create_ggplot_object__bar__order_by__freq__facet.png', plot=plot_object)
 
     plot_object <- create_ggplot_object(dataset = dataset,
-                                        primary_variable = 'checking_balance',
-                                        facet_variable = 'default',
+                                        primary_variable = 'Checking Balance Col',
+                                        facet_variable = 'Default Col',
                                         order_by_variable = 'Default')
     test_save_plot(file_name='graphs/create_ggplot_object__bar__order_by__no_freq__facet.png', plot=plot_object)
     
     plot_object <- create_ggplot_object(dataset = dataset,
-                                        primary_variable = 'checking_balance',
-                                        comparison_variable = 'credit_history',
-                                        facet_variable = 'default',
+                                        primary_variable = 'Checking Balance Col',
+                                        comparison_variable = 'Credit History Col',
+                                        facet_variable = 'Default Col',
                                         order_by_variable = 'Frequency')
     test_save_plot(file_name='graphs/create_ggplot_object__bar__order_by__freq__facet__comp.png', plot=plot_object)
     
     plot_object <- create_ggplot_object(dataset = dataset,
-                                        primary_variable = 'checking_balance',
-                                        comparison_variable = 'credit_history',
-                                        facet_variable = 'default',
+                                        primary_variable = 'Checking Balance Col',
+                                        comparison_variable = 'Credit History Col',
+                                        facet_variable = 'Default Col',
                                         order_by_variable = 'Default')
     test_save_plot(file_name='graphs/create_ggplot_object__bar__order_by__no_freq__facet__comp.png', plot=plot_object)
     
     plot_object <- create_ggplot_object(dataset = dataset,
-                                        primary_variable = 'checking_balance',
-                                        comparison_variable = 'months_loan_duration',
-                                        facet_variable = 'default',
+                                        primary_variable = 'Checking Balance Col',
+                                        comparison_variable = 'Months Loan Duration Col',
+                                        facet_variable = 'Default Col',
                                         order_by_variable = 'Frequency')
     test_save_plot(file_name='graphs/create_ggplot_object__bar__order_by__freq__facet__comp_numeric.png', plot=plot_object)
     
     plot_object <- create_ggplot_object(dataset = dataset,
-                                        primary_variable = 'checking_balance',
-                                        comparison_variable = 'months_loan_duration',
-                                        facet_variable = 'default',
+                                        primary_variable = 'Checking Balance Col',
+                                        comparison_variable = 'Months Loan Duration Col',
+                                        facet_variable = 'Default Col',
                                         order_by_variable = 'Default')
     test_save_plot(file_name='graphs/create_ggplot_object__bar__order_by__no_freq__facet__comp_numeric.png', plot=plot_object)
     
     plot_object <- create_ggplot_object(dataset = dataset,
-                                        comparison_variable = 'checking_balance',
-                                        primary_variable = 'months_loan_duration',
-                                        facet_variable = 'default',
+                                        comparison_variable = 'Checking Balance Col',
+                                        primary_variable = 'Months Loan Duration Col',
+                                        facet_variable = 'Default Col',
                                         order_by_variable = 'Frequency')
     test_save_plot(file_name='graphs/create_ggplot_object__bar__order_by__freq__facet__comp_numeric_swap.png', plot=plot_object)
     
     plot_object <- create_ggplot_object(dataset = dataset,
-                                        comparison_variable = 'checking_balance',
-                                        primary_variable = 'months_loan_duration',
-                                        facet_variable = 'default',
+                                        comparison_variable = 'Checking Balance Col',
+                                        primary_variable = 'Months Loan Duration Col',
+                                        facet_variable = 'Default Col',
                                         order_by_variable = 'Default')
     test_save_plot(file_name='graphs/create_ggplot_object__bar__order_by__no_freq__facet__comp_numeric_swap.png', plot=plot_object)
 })
@@ -2748,22 +3174,22 @@ test_that("create_ggplot_plot - bar - order by", {
 # Test graph_functions.R
 ##############################################################################################################
 test_that('private__fill_missing_periods', {
-    
-    
+
     global__should_log_message <<- FALSE
     conversion_data <- select_preloaded_dataset("Mock Conversions", defualt_path = '../')$dataset
-    
+    colnames(conversion_data) <- test_helper__column_names(conversion_data)
+
     ##############################
     ### test scenario when no periods are missing
     ##############################
     date_floor <- 'quarter'
     aggregated_dataset <- private__plot_time_series_change__floor_date(dataset=conversion_data,
-                                                                          date_variable='create_date_time',
+                                                                          date_variable='Create Date Time Col',
                                                                           date_floor=date_floor) %>%
-        count(create_date_time)
+        count(`Create Date Time Col`)
     found_dataset <- private__fill_missing_periods(aggregated_dataset=aggregated_dataset,
                                                    date_floor=date_floor,
-                                                   date_variable='create_date_time',
+                                                   date_variable='Create Date Time Col',
                                                    color_variable=NULL,
                                                    facet_variable=NULL)
     expect_true(rt_are_dataframes_equal(aggregated_dataset, found_dataset))
@@ -2773,46 +3199,45 @@ test_that('private__fill_missing_periods', {
     ##############################
     remove_period_values <- ymd(c('2018-01-01', '2019-01-01')) 
     aggregated_dataset <- private__plot_time_series_change__floor_date(dataset=conversion_data,
-                                                                       date_variable='create_date_time',
+                                                                       date_variable='Create Date Time Col',
                                                                        date_floor=date_floor) %>%
-        count(create_date_time) %>%
-        filter(!create_date_time %in% remove_period_values)
+        count(`Create Date Time Col`) %>%
+        filter(!`Create Date Time Col` %in% remove_period_values)
     found_dataset <- private__fill_missing_periods(aggregated_dataset=aggregated_dataset,
                                                    date_floor=date_floor,
-                                                   date_variable='create_date_time',
+                                                   date_variable='Create Date Time Col',
                                                    color_variable=NULL,
                                                    facet_variable=NULL)
     # test that the non-missing values are untouched
     expect_true(rt_are_dataframes_equal(aggregated_dataset,
-                                        found_dataset %>% filter(!create_date_time %in% remove_period_values)))
+                                        found_dataset %>% filter(!`Create Date Time Col` %in% remove_period_values)))
     
-    found_missing_rows <- found_dataset %>% filter(create_date_time %in% remove_period_values)
+    found_missing_rows <- found_dataset %>% filter(`Create Date Time Col` %in% remove_period_values)
     expect_equal(length(remove_period_values), nrow(found_missing_rows))
     expect_true(all(0 == found_missing_rows$n))
-    
-    
+
     ##############################
     ### remove periods and test; facet_variable
     ##############################
     remove_period_values <- ymd(c('2018-01-01', '2019-01-01'))
     aggregated_dataset <- private__plot_time_series_change__floor_date(dataset=conversion_data,
-                                                                       date_variable='create_date_time',
+                                                                       date_variable='Create Date Time Col',
                                                                        date_floor=date_floor) %>%
-        count(create_date_time, continent) %>%
-        filter(!create_date_time %in% remove_period_values)
+        count(`Create Date Time Col`, `Continent Col`) %>%
+        filter(!`Create Date Time Col` %in% remove_period_values)
     # remove a single facet value from the first and last time period
-    remove_a <- which(with(aggregated_dataset, create_date_time == ymd(min(create_date_time)) & continent == 'Africa'))
-    remove_b <- which(with(aggregated_dataset, create_date_time == ymd(max(create_date_time)) & continent == 'Asia'))
+    remove_a <- which(with(aggregated_dataset, `Create Date Time Col` == ymd(min(`Create Date Time Col`)) & `Continent Col` == 'Africa'))
+    remove_b <- which(with(aggregated_dataset, `Create Date Time Col` == ymd(max(`Create Date Time Col`)) & `Continent Col` == 'Asia'))
     aggregated_dataset <- aggregated_dataset[-c(remove_a, remove_b),]
     
     found_dataset <- private__fill_missing_periods(aggregated_dataset=aggregated_dataset,
                                                    date_floor=date_floor,
-                                                   date_variable='create_date_time',
+                                                   date_variable='Create Date Time Col',
                                                    color_variable=NULL,
-                                                   facet_variable='continent')
+                                                   facet_variable='Continent Col')
     
-    remove_a <- which(with(found_dataset, create_date_time == ymd(min(create_date_time)) & continent == 'Africa'))
-    remove_b <- which(with(found_dataset, create_date_time == ymd(max(create_date_time)) & continent == 'Asia'))
+    remove_a <- which(with(found_dataset, `Create Date Time Col` == ymd(min(`Create Date Time Col`)) & `Continent Col` == 'Africa'))
+    remove_b <- which(with(found_dataset, `Create Date Time Col` == ymd(max(`Create Date Time Col`)) & `Continent Col` == 'Asia'))
     
     expect_equal(length(remove_a), 1)
     expect_equal(length(remove_b), 1)
@@ -2820,19 +3245,19 @@ test_that('private__fill_missing_periods', {
     # test that the non-missing values are untouched
     expect_true(rt_are_dataframes_equal(aggregated_dataset,
                                         found_dataset[-c(remove_a, remove_b),] %>% 
-                                            filter(!create_date_time %in% remove_period_values)))
+                                            filter(!`Create Date Time Col` %in% remove_period_values)))
     
-    found_missing_rows_periods <- found_dataset %>% filter(create_date_time %in% remove_period_values)
-    expect_equal(length(remove_period_values) * length(unique(aggregated_dataset$continent)), nrow(found_missing_rows_periods))
+    found_missing_rows_periods <- found_dataset %>% filter(`Create Date Time Col` %in% remove_period_values)
+    expect_equal(length(remove_period_values) * length(unique(aggregated_dataset$`Continent Col`)), nrow(found_missing_rows_periods))
     expect_true(all(0 == found_missing_rows_periods$n))
     
     df_a <- found_dataset[remove_a,]
     df_b <- found_dataset[remove_b,]
     
-    expect_equal(df_a$create_date_time, ymd(min(aggregated_dataset$create_date_time)))
-    expect_equal(df_b$create_date_time, ymd(max(aggregated_dataset$create_date_time)))
-    expect_equal(df_a$continent, 'Africa')
-    expect_equal(df_b$continent, 'Asia')
+    expect_equal(df_a$`Create Date Time Col`, ymd(min(aggregated_dataset$`Create Date Time Col`)))
+    expect_equal(df_b$`Create Date Time Col`, ymd(max(aggregated_dataset$`Create Date Time Col`)))
+    expect_equal(df_a$`Continent Col`, 'Africa')
+    expect_equal(df_b$`Continent Col`, 'Asia')
     expect_equal(df_a$n, 0)
     expect_equal(df_b$n, 0)
 
@@ -2841,23 +3266,23 @@ test_that('private__fill_missing_periods', {
     ##############################
     remove_period_values <- ymd(c('2018-01-01', '2019-01-01'))
     aggregated_dataset <- private__plot_time_series_change__floor_date(dataset=conversion_data,
-                                                                       date_variable='create_date_time',
+                                                                       date_variable='Create Date Time Col',
                                                                        date_floor=date_floor) %>%
-        count(create_date_time, continent) %>%
-        filter(!create_date_time %in% remove_period_values)
+        count(`Create Date Time Col`, `Continent Col`) %>%
+        filter(!`Create Date Time Col` %in% remove_period_values)
     # remove a single facet value from the first and last time period
-    remove_a <- which(with(aggregated_dataset, create_date_time == ymd(min(create_date_time)) & continent == 'Africa'))
-    remove_b <- which(with(aggregated_dataset, create_date_time == ymd(max(create_date_time)) & continent == 'Asia'))
+    remove_a <- which(with(aggregated_dataset, `Create Date Time Col` == ymd(min(`Create Date Time Col`)) & `Continent Col` == 'Africa'))
+    remove_b <- which(with(aggregated_dataset, `Create Date Time Col` == ymd(max(`Create Date Time Col`)) & `Continent Col` == 'Asia'))
     aggregated_dataset <- aggregated_dataset[-c(remove_a, remove_b),]
     
     found_dataset <- private__fill_missing_periods(aggregated_dataset=aggregated_dataset,
                                                    date_floor=date_floor,
-                                                   date_variable='create_date_time',
-                                                   color_variable='continent',
+                                                   date_variable='Create Date Time Col',
+                                                   color_variable='Continent Col',
                                                    facet_variable=NULL)
     
-    remove_a <- which(with(found_dataset, create_date_time == ymd(min(create_date_time)) & continent == 'Africa'))
-    remove_b <- which(with(found_dataset, create_date_time == ymd(max(create_date_time)) & continent == 'Asia'))
+    remove_a <- which(with(found_dataset, `Create Date Time Col` == ymd(min(`Create Date Time Col`)) & `Continent Col` == 'Africa'))
+    remove_b <- which(with(found_dataset, `Create Date Time Col` == ymd(max(`Create Date Time Col`)) & `Continent Col` == 'Asia'))
     
     expect_equal(length(remove_a), 1)
     expect_equal(length(remove_b), 1)
@@ -2865,117 +3290,115 @@ test_that('private__fill_missing_periods', {
     # test that the non-missing values are untouched
     expect_true(rt_are_dataframes_equal(aggregated_dataset,
                                         found_dataset[-c(remove_a, remove_b),] %>% 
-                                            filter(!create_date_time %in% remove_period_values)))
+                                            filter(!`Create Date Time Col` %in% remove_period_values)))
     
-    found_missing_rows_periods <- found_dataset %>% filter(create_date_time %in% remove_period_values)
-    expect_equal(length(remove_period_values) * length(unique(aggregated_dataset$continent)), nrow(found_missing_rows_periods))
+    found_missing_rows_periods <- found_dataset %>% filter(`Create Date Time Col` %in% remove_period_values)
+    expect_equal(length(remove_period_values) * length(unique(aggregated_dataset$`Continent Col`)), nrow(found_missing_rows_periods))
     expect_true(all(0 == found_missing_rows_periods$n))
     
     df_a <- found_dataset[remove_a,]
     df_b <- found_dataset[remove_b,]
     
-    expect_equal(df_a$create_date_time, ymd(min(aggregated_dataset$create_date_time)))
-    expect_equal(df_b$create_date_time, ymd(max(aggregated_dataset$create_date_time)))
-    expect_equal(df_a$continent, 'Africa')
-    expect_equal(df_b$continent, 'Asia')
+    expect_equal(df_a$`Create Date Time Col`, ymd(min(aggregated_dataset$`Create Date Time Col`)))
+    expect_equal(df_b$`Create Date Time Col`, ymd(max(aggregated_dataset$`Create Date Time Col`)))
+    expect_equal(df_a$`Continent Col`, 'Africa')
+    expect_equal(df_b$`Continent Col`, 'Asia')
     expect_equal(df_a$n, 0)
     expect_equal(df_b$n, 0)
-    
-    
+
     ##############################
     ### remove periods and test; color_variable; facet_variable
     ##############################
     remove_period_values <- ymd(c('2018-01-01', '2019-01-01'))
     aggregated_dataset <- private__plot_time_series_change__floor_date(dataset=conversion_data,
-                                                                       date_variable='create_date_time',
+                                                                       date_variable='Create Date Time Col',
                                                                        date_floor=date_floor) %>%
-        count(create_date_time, lead_source, continent) %>%
-        filter(!create_date_time %in% remove_period_values)
+        count(`Create Date Time Col`, `Lead Source Col`, `Continent Col`) %>%
+        filter(!`Create Date Time Col` %in% remove_period_values)
     # remove a single facet value from the first and last time period
-    remove_a <- which(with(aggregated_dataset, create_date_time == ymd(min(create_date_time)) & continent == 'Africa'))
-    remove_b <- which(with(aggregated_dataset, create_date_time == ymd(max(create_date_time)) & continent == 'Asia'))
+    remove_a <- which(with(aggregated_dataset, `Create Date Time Col` == ymd(min(`Create Date Time Col`)) & `Continent Col` == 'Africa'))
+    remove_b <- which(with(aggregated_dataset, `Create Date Time Col` == ymd(max(`Create Date Time Col`)) & `Continent Col` == 'Asia'))
     aggregated_dataset <- aggregated_dataset[-c(remove_a, remove_b),]
     
     found_dataset <- private__fill_missing_periods(aggregated_dataset=aggregated_dataset,
                                                    date_floor=date_floor,
-                                                   date_variable='create_date_time',
-                                                   color_variable='lead_source',
-                                                   facet_variable='continent')
+                                                   date_variable='Create Date Time Col',
+                                                   color_variable='Lead Source Col',
+                                                   facet_variable='Continent Col')
     
-    remove_a <- which(with(found_dataset, create_date_time == ymd(min(create_date_time)) & continent == 'Africa'))
-    remove_b <- which(with(found_dataset, create_date_time == ymd(max(create_date_time)) & continent == 'Asia'))
+    remove_a <- which(with(found_dataset, `Create Date Time Col` == ymd(min(`Create Date Time Col`)) & `Continent Col` == 'Africa'))
+    remove_b <- which(with(found_dataset, `Create Date Time Col` == ymd(max(`Create Date Time Col`)) & `Continent Col` == 'Asia'))
     
-    expect_equal(length(remove_a), length(unique(aggregated_dataset$lead_source)))
-    expect_equal(length(remove_b), length(unique(aggregated_dataset$lead_source)))
+    expect_equal(length(remove_a), length(unique(aggregated_dataset$`Lead Source Col`)))
+    expect_equal(length(remove_b), length(unique(aggregated_dataset$`Lead Source Col`)))
     
     # test that the non-missing values are untouched
     expect_true(rt_are_dataframes_equal(aggregated_dataset,
                                         found_dataset %>% filter(n != 0)))
     
     # the the dataset that has the missing periods only
-    found_missing_rows_periods <- found_dataset %>% filter(create_date_time %in% remove_period_values)
-    expect_equal(length(remove_period_values) * length(unique(aggregated_dataset$continent)) * length(unique(aggregated_dataset$lead_source)), 
+    found_missing_rows_periods <- found_dataset %>% filter(`Create Date Time Col` %in% remove_period_values)
+    expect_equal(length(remove_period_values) * length(unique(aggregated_dataset$`Continent Col`)) * length(unique(aggregated_dataset$`Lead Source Col`)), 
                  nrow(found_missing_rows_periods))
     expect_true(all(0 == found_missing_rows_periods$n))
     
     df_a <- found_dataset[remove_a,]
     df_b <- found_dataset[remove_b,]
     
-    expect_true(all(df_a$create_date_time == ymd(min(aggregated_dataset$create_date_time))))
-    expect_true(all(df_b$create_date_time == ymd(max(aggregated_dataset$create_date_time))))
-    expect_true(all(df_a$continent == 'Africa'))
-    expect_true(all(df_b$continent == 'Asia'))
+    expect_true(all(df_a$`Create Date Time Col` == ymd(min(aggregated_dataset$`Create Date Time Col`))))
+    expect_true(all(df_b$`Create Date Time Col` == ymd(max(aggregated_dataset$`Create Date Time Col`))))
+    expect_true(all(df_a$`Continent Col` == 'Africa'))
+    expect_true(all(df_b$`Continent Col` == 'Asia'))
     expect_true(all(df_a$n == 0))
     expect_true(all(df_b$n == 0))
-    
-    
+
     ##############################
     ### remove periods and test; color_variable; facet_variable; same as before, but switch order of variables
     ##############################
     remove_period_values <- ymd(c('2018-01-01', '2019-01-01'))
     aggregated_dataset <- private__plot_time_series_change__floor_date(dataset=conversion_data,
-                                                                       date_variable='create_date_time',
+                                                                       date_variable='Create Date Time Col',
                                                                        date_floor=date_floor) %>%
-        count(create_date_time, lead_source, continent) %>%
-        filter(!create_date_time %in% remove_period_values) %>%
-        select(n, continent, create_date_time, lead_source)
+        count(`Create Date Time Col`, `Lead Source Col`, `Continent Col`) %>%
+        filter(!`Create Date Time Col` %in% remove_period_values) %>%
+        select(n, `Continent Col`, `Create Date Time Col`, `Lead Source Col`)
     # remove a single facet value from the first and last time period
-    remove_a <- which(with(aggregated_dataset, create_date_time == ymd(min(create_date_time)) & continent == 'Africa'))
-    remove_b <- which(with(aggregated_dataset, create_date_time == ymd(max(create_date_time)) & continent == 'Asia'))
+    remove_a <- which(with(aggregated_dataset, `Create Date Time Col` == ymd(min(`Create Date Time Col`)) & `Continent Col` == 'Africa'))
+    remove_b <- which(with(aggregated_dataset, `Create Date Time Col` == ymd(max(`Create Date Time Col`)) & `Continent Col` == 'Asia'))
     aggregated_dataset <- aggregated_dataset[-c(remove_a, remove_b),]
     
     found_dataset <- private__fill_missing_periods(aggregated_dataset=aggregated_dataset,
                                                    date_floor=date_floor,
-                                                   date_variable='create_date_time',
-                                                   color_variable='lead_source',
-                                                   facet_variable='continent')
+                                                   date_variable='Create Date Time Col',
+                                                   color_variable='Lead Source Col',
+                                                   facet_variable='Continent Col')
     
     # switch back to original order
-    aggregated_dataset <- aggregated_dataset %>% select(create_date_time, lead_source, continent, n)
+    aggregated_dataset <- aggregated_dataset %>% select(`Create Date Time Col`, `Lead Source Col`, `Continent Col`, n)
     
-    remove_a <- which(with(found_dataset, create_date_time == ymd(min(create_date_time)) & continent == 'Africa'))
-    remove_b <- which(with(found_dataset, create_date_time == ymd(max(create_date_time)) & continent == 'Asia'))
+    remove_a <- which(with(found_dataset, `Create Date Time Col` == ymd(min(`Create Date Time Col`)) & `Continent Col` == 'Africa'))
+    remove_b <- which(with(found_dataset, `Create Date Time Col` == ymd(max(`Create Date Time Col`)) & `Continent Col` == 'Asia'))
     
-    expect_equal(length(remove_a), length(unique(aggregated_dataset$lead_source)))
-    expect_equal(length(remove_b), length(unique(aggregated_dataset$lead_source)))
+    expect_equal(length(remove_a), length(unique(aggregated_dataset$`Lead Source Col`)))
+    expect_equal(length(remove_b), length(unique(aggregated_dataset$`Lead Source Col`)))
     
     # test that the non-missing values are untouched
     expect_true(rt_are_dataframes_equal(aggregated_dataset,
                                         found_dataset %>% filter(n != 0)))
     
     # the the dataset that has the missing periods only
-    found_missing_rows_periods <- found_dataset %>% filter(create_date_time %in% remove_period_values)
-    expect_equal(length(remove_period_values) * length(unique(aggregated_dataset$continent)) * length(unique(aggregated_dataset$lead_source)), 
+    found_missing_rows_periods <- found_dataset %>% filter(`Create Date Time Col` %in% remove_period_values)
+    expect_equal(length(remove_period_values) * length(unique(aggregated_dataset$`Continent Col`)) * length(unique(aggregated_dataset$`Lead Source Col`)), 
                  nrow(found_missing_rows_periods))
     expect_true(all(0 == found_missing_rows_periods$n))
     
     df_a <- found_dataset[remove_a,]
     df_b <- found_dataset[remove_b,]
     
-    expect_true(all(df_a$create_date_time == ymd(min(aggregated_dataset$create_date_time))))
-    expect_true(all(df_b$create_date_time == ymd(max(aggregated_dataset$create_date_time))))
-    expect_true(all(df_a$continent == 'Africa'))
-    expect_true(all(df_b$continent == 'Asia'))
+    expect_true(all(df_a$`Create Date Time Col` == ymd(min(aggregated_dataset$`Create Date Time Col`))))
+    expect_true(all(df_b$`Create Date Time Col` == ymd(max(aggregated_dataset$`Create Date Time Col`))))
+    expect_true(all(df_a$`Continent Col` == 'Africa'))
+    expect_true(all(df_b$`Continent Col` == 'Asia'))
     expect_true(all(df_a$n == 0))
     expect_true(all(df_b$n == 0))
 })
