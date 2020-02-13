@@ -1089,7 +1089,7 @@ test_that("add_x_annotations", {
     local_y_zoom_min <- NULL
     local_y_zoom_max <- NULL
     ggplot_object <- local_dataset %>%
-        select_all_of(local_primary_variable) %>%
+        rt_select_all_of(local_primary_variable) %>%
         mutate_factor_lump(factor_lump_number=10) %>%
         rt_explore_plot_time_series(variable=local_primary_variable,
                                     comparison_variable=NULL,
@@ -1181,7 +1181,7 @@ test_that("add_x_annotations:POSIXct", {
     local_y_zoom_min <- NULL
     local_y_zoom_max <- NULL
     ggplot_object <- local_dataset %>%
-        select_all_of(local_primary_variable) %>%
+        rt_select_all_of(local_primary_variable) %>%
         mutate_factor_lump(factor_lump_number=10) %>%
         rt_explore_plot_time_series(variable=local_primary_variable,
                                     comparison_variable=NULL,
