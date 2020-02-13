@@ -299,7 +299,7 @@ test_that("filter - column name spaces", {
     dataset[1:500, 'carat'] <- NA
     dataset[501:1000, 'cut'] <- NA
     dataset[1001:1500, 'color'] <- NA
-    colnames(dataset) <- test_helper__names(dataset)
+    colnames(dataset) <- test_helper__column_names(dataset)
     
     # build filter list
     # build filter selection list (to mimic shiny and also reuse list)
@@ -1954,24 +1954,22 @@ test_that("build_parse_url_params - filtering - column names", {
 })
 
 test_that("apply_r_code_to_dataset", {
-    
-    results <- select_preloaded_dataset("Credit", defualt_path = '../')
-    original_dataset <- results$dataset
-    
-    expected_dataset <- original_dataset %>% mutate(months_loan_duration = months_loan_duration / 10)
+
+    original_dataset <- select_preloaded_dataset("Credit", defualt_path = '../')$dataset
+    expected_dataset <- original_dataset %>% mutate(`Months Loan Duration` = `Months Loan Duration` / 10)
 
     # success
-    code_string <- 'dataset <- dataset %>% mutate(months_loan_duration = months_loan_duration / 10)'    
+    code_string <- 'dataset <- dataset %>% mutate(`Months Loan Duration` = `Months Loan Duration` / 10)'
     results <- original_dataset %>% apply_r_code_to_dataset(r_code_string = code_string)
     expect_null(results$error_message)
     actual_dataset <- results$dataset
     expect_true(rt_are_dataframes_equal(expected_dataset, actual_dataset))
     
     # error
-    code_string <- 'dataset <- dataset %>% mutateaaaa(months_loan_duration = months_loan_duration / 10)'
+    code_string <- 'dataset <- dataset %>% mutateaaaa(`Months Loan Duration` = `Months Loan Duration` / 10)'
     results <- original_dataset %>% apply_r_code_to_dataset(r_code_string = code_string)
     expect_equal(results$error_message,
-                 "Error in mutateaaaa(., months_loan_duration = months_loan_duration/10): could not find function \"mutateaaaa\"")
+                 "Error in mutateaaaa(., `Months Loan Duration` = `Months Loan Duration`/10): could not find function \"mutateaaaa\"")
     actual_dataset <- results$dataset
     expect_true(rt_are_dataframes_equal(original_dataset, actual_dataset))
 })
@@ -1981,6 +1979,7 @@ test_that("setting dynamic variables - comparison", {
 
     global__should_log_message <<- FALSE
     results <- select_preloaded_dataset("Credit", defualt_path = '../')
+    colnames(results$dataset) <- test_helper__column_names(results$dataset)
     expect_equal(nrow(results$dataset), 1000)
     expect_equal(ncol(results$dataset), 17)
     expect_true(nchar(results$description) > 0)
@@ -2075,7 +2074,7 @@ test_that("setting dynamic variables - comparison", {
     # Numeric Primary Variable
     # All columns names should be available as possible choices for the comparison
     ########
-    primary_selection <- 'amount'
+    primary_selection <- 'Amount Col'
     comparison_selection <- var_plots__comparison__logic(dataset=dataset,
                                                          primary_variable=primary_selection,
                                                          current_value=NULL)
@@ -2090,12 +2089,12 @@ test_that("setting dynamic variables - comparison", {
     
     comparison_selection <- var_plots__comparison__logic(dataset=dataset,
                                                          primary_variable=primary_selection,
-                                                         current_value='phone')
+                                                         current_value='Phone Col')
     expect_identical(comparison_selection$choices, c(global__select_variable_optional, column_names))
-    expect_equal(comparison_selection$selected, 'phone')
+    expect_equal(comparison_selection$selected, 'Phone Col')
     
     
-    primary_selection <- 'amount'
+    primary_selection <- 'Amount Col'
     comparison_selection <- var_plots__comparison__logic(dataset=dataset,
                                                          primary_variable=primary_selection,
                                                          current_value=NULL,
@@ -2112,16 +2111,16 @@ test_that("setting dynamic variables - comparison", {
     
     comparison_selection <- var_plots__comparison__logic(dataset=dataset,
                                                          primary_variable=primary_selection,
-                                                         current_value='phone',
+                                                         current_value='Phone Col',
                                                          primary_date_converted_to_categoric=TRUE)
     expect_identical(comparison_selection$choices, c(global__select_variable_optional, column_names))
-    expect_equal(comparison_selection$selected, 'phone')
+    expect_equal(comparison_selection$selected, 'Phone Col')
     
     ########
     # Categoric Primary Variable
     # All columns names should be available as possible choices for the comparison
     ########
-    primary_selection <- 'purpose'
+    primary_selection <- 'Purpose Col'
     comparison_selection <- var_plots__comparison__logic(dataset=dataset,
                                                          primary_variable=primary_selection,
                                                          current_value=NULL)
@@ -2136,12 +2135,12 @@ test_that("setting dynamic variables - comparison", {
     
     comparison_selection <- var_plots__comparison__logic(dataset=dataset,
                                                          primary_variable=primary_selection,
-                                                         current_value='dependents')
+                                                         current_value='Dependents Col')
     expect_identical(comparison_selection$choices, c(global__select_variable_optional, column_names))
-    expect_equal(comparison_selection$selected, 'dependents')
+    expect_equal(comparison_selection$selected, 'Dependents Col')
 
 
-    primary_selection <- 'purpose'
+    primary_selection <- 'Purpose Col'
     comparison_selection <- var_plots__comparison__logic(dataset=dataset,
                                                          primary_variable=primary_selection,
                                                          current_value=NULL,
@@ -2158,21 +2157,22 @@ test_that("setting dynamic variables - comparison", {
     
     comparison_selection <- var_plots__comparison__logic(dataset=dataset,
                                                          primary_variable=primary_selection,
-                                                         current_value='dependents',
+                                                         current_value='Dependents Col',
                                                          primary_date_converted_to_categoric=TRUE)
     expect_identical(comparison_selection$choices, c(global__select_variable_optional, column_names))
-    expect_equal(comparison_selection$selected, 'dependents')
+    expect_equal(comparison_selection$selected, 'Dependents Col')
     
     ########
     # Date Primary Variable
     # only numeric names should be available as possible choices for the comparison
     ########
     results <- select_preloaded_dataset("Flights", defualt_path = '../')
+    colnames(results$dataset) <- test_helper__column_names(results$dataset)
     dataset <- results$dataset
     column_names <- colnames(dataset)
     numeric_column_names <- colnames(dataset %>% select_if(is.numeric))
     
-    primary_selection <- 'takeoff_datetime'
+    primary_selection <- 'Takeoff Datetime Col'
     comparison_selection <- var_plots__comparison__logic(dataset=dataset,
                                                          primary_variable=primary_selection,
                                                          current_value=NULL)
@@ -2187,12 +2187,12 @@ test_that("setting dynamic variables - comparison", {
     
     comparison_selection <- var_plots__comparison__logic(dataset=dataset,
                                                          primary_variable=primary_selection,
-                                                         current_value='dep_delay')
+                                                         current_value='Dep Delay Col')
     expect_identical(comparison_selection$choices, c(global__select_variable_optional, numeric_column_names))
-    expect_equal(comparison_selection$selected, 'dep_delay')
+    expect_equal(comparison_selection$selected, 'Dep Delay Col')
     
     # if the date is converted to a categoric, we need to show all variables categoric/numeric
-    primary_selection <- 'takeoff_datetime'
+    primary_selection <- 'Takeoff Datetime Col'
     comparison_selection <- var_plots__comparison__logic(dataset=dataset,
                                                          primary_variable=primary_selection,
                                                          current_value=NULL,
@@ -2209,15 +2209,15 @@ test_that("setting dynamic variables - comparison", {
     
     comparison_selection <- var_plots__comparison__logic(dataset=dataset,
                                                          primary_variable=primary_selection,
-                                                         current_value='dep_delay',
+                                                         current_value='Dep Delay Col',
                                                          primary_date_converted_to_categoric=TRUE)
     expect_identical(comparison_selection$choices, c(global__select_variable_optional, column_names))
-    expect_equal(comparison_selection$selected, 'dep_delay')
+    expect_equal(comparison_selection$selected, 'Dep Delay Col')
     
     # if the current value is categoric, but we switched primary_date_converted_to_categoric off, then
     # the current value should be switched back to default
-    primary_selection <- 'takeoff_datetime'
-    current_comparison <- 'origin'
+    primary_selection <- 'Takeoff Datetime Col'
+    current_comparison <- 'Origin Col'
     expect_true(is_categoric(dataset[[current_comparison]]))
     comparison_selection <- var_plots__comparison__logic(dataset=dataset,
                                                          primary_variable=primary_selection,
@@ -2232,6 +2232,7 @@ test_that("setting dynamic variables - color", {
     
     global__should_log_message <<- FALSE
     results <- select_preloaded_dataset("Credit", defualt_path = '../')
+    colnames(results$dataset) <- test_helper__column_names(results$dataset)
     expect_equal(nrow(results$dataset), 1000)
     expect_equal(ncol(results$dataset), 17)
     expect_true(nchar(results$description) > 0)
@@ -2297,7 +2298,7 @@ test_that("setting dynamic variables - color", {
     ########
     # Categoric Primary Variable, Default Comaprison variable
     ########
-    primary_variable <- 'credit_history'
+    primary_variable <- 'Credit History Col'
     selection <- var_plots__color__logic(dataset=dataset,
                                          primary_variable=primary_variable,
                                          comparison_variable=comparison_variable_default,
@@ -2308,14 +2309,14 @@ test_that("setting dynamic variables - color", {
     selection <- var_plots__color__logic(dataset=dataset,
                                          primary_variable=primary_variable,
                                          comparison_variable=comparison_variable_default,
-                                         current_value='purpose')
+                                         current_value='Purpose Col')
     expect_identical(selection$choices, c(global__select_variable_optional, column_names))
-    expect_equal(selection$selected, 'purpose')
+    expect_equal(selection$selected, 'Purpose Col')
     
     ########
     # Numeric Primary Variable, Default Comaprison variable
     ########
-    primary_variable <- 'amount'
+    primary_variable <- 'Amount Col'
     selection <- var_plots__color__logic(dataset=dataset,
                                          primary_variable=primary_variable,
                                          comparison_variable=comparison_variable_default,
@@ -2326,15 +2327,15 @@ test_that("setting dynamic variables - color", {
     selection <- var_plots__color__logic(dataset=dataset,
                                          primary_variable=primary_variable,
                                          comparison_variable=comparison_variable_default,
-                                         current_value='purpose')
+                                         current_value='Purpose Col')
     expect_identical(selection$choices, c(global__select_variable_optional, categoric_column_names))
-    expect_equal(selection$selected, 'purpose')
+    expect_equal(selection$selected, 'Purpose Col')
 
     ########
     # Categoric Primary Variable, Numeric Comaprison variable
     ########
-    primary_variable <- 'credit_history'
-    comparison_variable <- 'amount'
+    primary_variable <- 'Credit History Col'
+    comparison_variable <- 'Amount Col'
     selection <- var_plots__color__logic(dataset=dataset,
                                          primary_variable=primary_variable,
                                          comparison_variable=comparison_variable,
@@ -2345,15 +2346,15 @@ test_that("setting dynamic variables - color", {
     selection <- var_plots__color__logic(dataset=dataset,
                                          primary_variable=primary_variable,
                                          comparison_variable=comparison_variable,
-                                         current_value='purpose')
+                                         current_value='Purpose Col')
     expect_identical(selection$choices, c(global__select_variable_optional, categoric_column_names))
-    expect_equal(selection$selected, 'purpose')
+    expect_equal(selection$selected, 'Purpose Col')
     
     ########
     # Numeric Primary Variable, Categoric Comaprison variable
     ########
-    primary_variable <- 'amount'
-    comparison_variable <- 'credit_history'
+    primary_variable <- 'Amount Col'
+    comparison_variable <- 'Credit History Col'
     selection <- var_plots__color__logic(dataset=dataset,
                                          primary_variable=primary_variable,
                                          comparison_variable=comparison_variable,
@@ -2364,15 +2365,15 @@ test_that("setting dynamic variables - color", {
     selection <- var_plots__color__logic(dataset=dataset,
                                          primary_variable=primary_variable,
                                          comparison_variable=comparison_variable,
-                                         current_value='purpose')
+                                         current_value='Purpose Col')
     expect_identical(selection$choices, c(global__select_variable_optional, categoric_column_names))
-    expect_equal(selection$selected, 'purpose')
+    expect_equal(selection$selected, 'Purpose Col')
     
     ########
     # Numeric Primary Variable, Categoric Comaprison variable
     ########
-    primary_variable <- 'amount'
-    comparison_variable <- 'amount'
+    primary_variable <- 'Amount Col'
+    comparison_variable <- 'Amount Col'
     selection <- var_plots__color__logic(dataset=dataset,
                                          primary_variable=primary_variable,
                                          comparison_variable=comparison_variable,
@@ -2383,9 +2384,9 @@ test_that("setting dynamic variables - color", {
     selection <- var_plots__color__logic(dataset=dataset,
                                          primary_variable=primary_variable,
                                          comparison_variable=comparison_variable,
-                                         current_value='purpose')
+                                         current_value='Purpose Col')
     expect_identical(selection$choices, c(global__select_variable_optional, column_names))
-    expect_equal(selection$selected, 'purpose')
+    expect_equal(selection$selected, 'Purpose Col')
     
     
     ########
@@ -2394,13 +2395,14 @@ test_that("setting dynamic variables - color", {
     # only categoric columns should be available as possible choices for the color
     ########
     results <- select_preloaded_dataset("Flights", defualt_path = '../')
+    colnames(results$dataset) <- test_helper__column_names(results$dataset)
     dataset <- results$dataset
     
     column_names <- colnames(dataset)
     categoric_column_names <- colnames(dataset %>% select_if(is_categoric))
     numeric_column_names <- colnames(dataset %>% select_if(is.numeric))
     
-    primary_selection <- 'takeoff_datetime'
+    primary_selection <- 'Takeoff Datetime Col'
     comparison_variable <- NULL
     selection <- var_plots__color__logic(dataset=dataset,
                                          primary_variable=primary_selection,
@@ -2416,8 +2418,8 @@ test_that("setting dynamic variables - color", {
     expect_identical(selection$choices, c(global__select_variable_optional, categoric_column_names))
     expect_equal(selection$selected, global__select_variable_optional)
 
-    primary_selection <- 'takeoff_datetime'
-    comparison_variable <- 'dep_delay'
+    primary_selection <- 'Takeoff Datetime Col'
+    comparison_variable <- 'Dep Delay Col'
     selection <- var_plots__color__logic(dataset=dataset,
                                          primary_variable=primary_selection,
                                          comparison_variable=comparison_variable,
@@ -2435,9 +2437,9 @@ test_that("setting dynamic variables - color", {
     selection <- var_plots__color__logic(dataset=dataset,
                                          primary_variable=primary_selection,
                                          comparison_variable=comparison_variable,
-                                         current_value='origin')
+                                         current_value='Origin Col')
     expect_identical(selection$choices, c(global__select_variable_optional, categoric_column_names))
-    expect_equal(selection$selected, 'origin')
+    expect_equal(selection$selected, 'Origin Col')
 })
 
 test_that("setting dynamic variables - trend_extend_date", {
@@ -4054,3 +4056,4 @@ test_that('rt_explore_plot_time_series_change', {
                                                       aggregation_function_name='TOTAL')
     test_save_plot(file_name='graphs/rt_explore_plot_time_series_change__quarter__color_facet__agg_no_label.png', plot=plot_object)
 })
+
