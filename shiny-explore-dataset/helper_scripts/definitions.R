@@ -176,5 +176,4 @@ var_plots__variable_types <- list(
     'var_plots__map_format' = 'updateCheckboxInput',
     'var_plots__map_borders_database' = 'updateTextInput',
     'var_plots__map_borders_regions' = 'updateTextInput'
-
 )

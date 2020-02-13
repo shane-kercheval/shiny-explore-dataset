@@ -3298,6 +3298,9 @@ update_var_plot_variables_from_url_params <- function(session, params, dataset, 
     update_text_area_input(session, params, 'var_plots__horizontal_annotations')
     update_slider_text_input(session, params, 'var_plots__transparency', c(seq(0, 90, 10), 99))
     update_slider_text_input(session, params, 'var_plots__base_size', seq(6, 20, 1))
+    update_checkbox_input(session, params, 'var_plots__map_format')
+    update_text_input(session, params, 'var_plots__map_borders_database')
+    update_text_input(session, params, 'var_plots__map_borders_regions')
 
     if (!is.null(params[['var_plots__filter_factor_lump_number']])) {
 
