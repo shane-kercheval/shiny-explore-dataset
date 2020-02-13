@@ -34,21 +34,21 @@ rt_explore_plot_time_series_change <- function(dataset,
     dataset <- private__plot_time_series_change__floor_date(dataset, date_variable, date_floor)
 
     change_gain_loss_total <- suppressWarnings(private_create_gain_loss_total(dataset,
-                                                             date_variable,
-                                                             date_floor,
-                                                             facet_variable,
-                                                             percent_change,
-                                                             aggregation_variable,
-                                                             aggregation_function))
+                                                                              date_variable,
+                                                                              date_floor,
+                                                                              facet_variable,
+                                                                              percent_change,
+                                                                              aggregation_variable,
+                                                                              aggregation_function))
 
     change_gain_loss_by_group <- suppressWarnings(private_create_gain_loss_total_by_group(dataset,
-                                                                         date_variable,
-                                                                         date_floor,
-                                                                         color_variable,
-                                                                         facet_variable,
-                                                                         percent_change,
-                                                                         aggregation_variable,
-                                                                         aggregation_function))
+                                                                          date_variable,
+                                                                          date_floor,
+                                                                          color_variable,
+                                                                          facet_variable,
+                                                                          percent_change,
+                                                                          aggregation_variable,
+                                                                          aggregation_function))
 
     if(is.null(color_variable)) {
 
@@ -115,7 +115,7 @@ rt_explore_plot_time_series_change <- function(dataset,
                  x=label_x,
                  title=paste0(label_y, " (", date_variable,")"),
                  subtitle = paste0("by `", facet_variable, "`"))+
-            facet_wrap(facets = facet_variable , ncol = 1, scales = 'free_y', strip.position = "right")
+            facet_wrap(facets = paste0("`",facet_variable, "`") , ncol = 1, scales = 'free_y', strip.position = "right")
 
     } else if (!is.null(color_variable) && is.null(facet_variable)) {
 
