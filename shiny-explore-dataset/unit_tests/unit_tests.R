@@ -3937,7 +3937,8 @@ test_that('rt_explore_plot_time_series_change', {
     
     global__should_log_message <<- FALSE
     conversion_data <- select_preloaded_dataset("Mock Conversions", defualt_path = '../')$dataset
-    conversion_data[c(1, 2, 3, 4), 'create_date_time'] <- NA
+    colnames(conversion_data) <- test_helper__column_names(conversion_data)
+    conversion_data[c(1, 2, 3, 4), 'Create Date Time Col'] <- NA
     
     aggregation_function_sum <- function(values) {
         return (sum(values, na.rm = TRUE))
@@ -3947,26 +3948,26 @@ test_that('rt_explore_plot_time_series_change', {
     # Quarter
     ####################
     plot_object <- rt_explore_plot_time_series_change(dataset=conversion_data,
-                                                      date_variable='create_date_time',
+                                                      date_variable='Create Date Time Col',
                                                       date_floor='quarter',
                                                       show_labels=TRUE)
     test_save_plot(file_name='graphs/rt_explore_plot_time_series_change__quarter.png', plot=plot_object)
     
     plot_object <- rt_explore_plot_time_series_change(dataset=conversion_data %>%
-                                                          filter(create_date_time >= ymd('2019-01-01')) %>%
-                                                          mutate(lead_source=fct_lump(lead_source, n=3)),
-                                                      date_variable='create_date_time',
-                                                      color_variable='lead_source',
+                                                          filter(`Create Date Time Col` >= ymd('2019-01-01')) %>%
+                                                          mutate(`Lead Source Col`=fct_lump(`Lead Source Col`, n=3)),
+                                                      date_variable='Create Date Time Col',
+                                                      color_variable='Lead Source Col',
                                                       #facet_variable='continent',
                                                       date_floor='quarter',
                                                       show_labels=TRUE)
     test_save_plot(file_name='graphs/rt_explore_plot_time_series_change__quarter__color.png', plot=plot_object)
     
     plot_object <- rt_explore_plot_time_series_change(dataset=conversion_data %>%
-                                                          filter(create_date_time >= ymd('2019-01-01')) %>%
-                                                          mutate(lead_source=fct_lump(lead_source, n=3)),
-                                                      date_variable='create_date_time',
-                                                      color_variable='lead_source',
+                                                          filter(`Create Date Time Col` >= ymd('2019-01-01')) %>%
+                                                          mutate(`Lead Source Col`=fct_lump(`Lead Source Col`, n=3)),
+                                                      date_variable='Create Date Time Col',
+                                                      color_variable='Lead Source Col',
                                                       #facet_variable = 'continent',
                                                       date_floor='quarter',
                                                       show_labels=TRUE,
@@ -3977,78 +3978,78 @@ test_that('rt_explore_plot_time_series_change', {
     test_save_plot(file_name='graphs/rt_explore_plot_time_series_change__quarter__color__perc_change.png', plot=plot_object)
     
     plot_object <- rt_explore_plot_time_series_change(dataset=conversion_data %>%
-                                                          filter(create_date_time >= ymd('2019-01-01')) %>%
-                                                          mutate(lead_source=fct_lump(lead_source, n=3)),
-                                                      date_variable='create_date_time',
-                                                      color_variable='lead_source',
+                                                          filter(`Create Date Time Col` >= ymd('2019-01-01')) %>%
+                                                          mutate(`Lead Source Col`=fct_lump(`Lead Source Col`, n=3)),
+                                                      date_variable='Create Date Time Col',
+                                                      color_variable='Lead Source Col',
                                                       #facet_variable = 'continent',
                                                       date_floor='quarter',
                                                       show_labels=TRUE,
                                                       percent_change=FALSE,
-                                                      aggregation_variable='amount',
+                                                      aggregation_variable='Amount Col',
                                                       aggregation_function=aggregation_function_sum,
                                                       aggregation_function_name='TOTAL')
     test_save_plot(file_name='graphs/rt_explore_plot_time_series_change__quarter__color__agg.png', plot=plot_object)
     
     
     plot_object <- rt_explore_plot_time_series_change(dataset=conversion_data %>%
-                                                          filter(create_date_time >= ymd('2019-01-01')) %>%
-                                                          mutate(continent=fct_lump(continent, n=2)),
-                                                      date_variable='create_date_time',
+                                                          filter(`Create Date Time Col` >= ymd('2019-01-01')) %>%
+                                                          mutate(`Continent Col`=fct_lump(`Continent Col`, n=2)),
+                                                      date_variable='Create Date Time Col',
                                                       #color_variable='lead_source',
-                                                      facet_variable='continent',
+                                                      facet_variable='Continent Col',
                                                       date_floor='quarter',
                                                       show_labels=TRUE)
     test_save_plot(file_name='graphs/rt_explore_plot_time_series_change__quarter__facet.png', plot=plot_object)
     
     plot_object <- rt_explore_plot_time_series_change(dataset=conversion_data %>%
-                                                          filter(create_date_time >= ymd('2019-01-01')) %>%
-                                                          mutate(continent=fct_lump(continent, n=2)),
-                                                      date_variable='create_date_time',
+                                                          filter(`Create Date Time Col` >= ymd('2019-01-01')) %>%
+                                                          mutate(`Continent Col`=fct_lump(`Continent Col`, n=2)),
+                                                      date_variable='Create Date Time Col',
                                                       #color_variable='lead_source',
-                                                      facet_variable='continent',
+                                                      facet_variable='Continent Col',
                                                       date_floor='quarter',
                                                       show_labels=TRUE,
-                                                      aggregation_variable='amount',
+                                                      aggregation_variable='Amount Col',
                                                       aggregation_function=aggregation_function_sum,
                                                       aggregation_function_name='TOTAL')
     test_save_plot(file_name='graphs/rt_explore_plot_time_series_change__quarter__facet__agg.png', plot=plot_object)
     
     plot_object <- rt_explore_plot_time_series_change(dataset=conversion_data %>%
-                                                          filter(create_date_time >= ymd('2019-01-01')) %>%
-                                                          mutate(continent=fct_lump(continent, n=2),
-                                                                 lead_source=fct_lump(lead_source, n=3)),
-                                                      date_variable='create_date_time',
-                                                      color_variable='lead_source',
-                                                      facet_variable='continent',
+                                                          filter(`Create Date Time Col` >= ymd('2019-01-01')) %>%
+                                                          mutate(`Continent Col`=fct_lump(`Continent Col`, n=2),
+                                                                 `Lead Source Col`=fct_lump(`Lead Source Col`, n=3)),
+                                                      date_variable='Create Date Time Col',
+                                                      color_variable='Lead Source Col',
+                                                      facet_variable='Continent Col',
                                                       date_floor='quarter',
                                                       show_labels=TRUE)
     test_save_plot(file_name='graphs/rt_explore_plot_time_series_change__quarter__color_facet.png', plot=plot_object)
     
     plot_object <- rt_explore_plot_time_series_change(dataset=conversion_data %>%
-                                                          filter(create_date_time >= ymd('2019-01-01')) %>%
-                                                          mutate(continent=fct_lump(continent, n=2),
-                                                                 lead_source=fct_lump(lead_source, n=3)),
-                                                      date_variable='create_date_time',
-                                                      color_variable='lead_source',
-                                                      facet_variable='continent',
+                                                          filter(`Create Date Time Col` >= ymd('2019-01-01')) %>%
+                                                          mutate(`Continent Col`=fct_lump(`Continent Col`, n=2),
+                                                                 `Lead Source Col`=fct_lump(`Lead Source Col`, n=3)),
+                                                      date_variable='Create Date Time Col',
+                                                      color_variable='Lead Source Col',
+                                                      facet_variable='Continent Col',
                                                       date_floor='quarter',
                                                       show_labels=TRUE,
-                                                      aggregation_variable='amount',
+                                                      aggregation_variable='Amount Col',
                                                       aggregation_function=aggregation_function_sum,
                                                       aggregation_function_name='TOTAL')
     test_save_plot(file_name='graphs/rt_explore_plot_time_series_change__quarter__color_facet__agg.png', plot=plot_object)
     
     plot_object <- rt_explore_plot_time_series_change(dataset=conversion_data %>%
-                                                          filter(create_date_time >= ymd('2019-01-01')) %>%
-                                                          mutate(continent=fct_lump(continent, n=2),
-                                                                 lead_source=fct_lump(lead_source, n=3)),
-                                                      date_variable='create_date_time',
-                                                      color_variable='lead_source',
-                                                      facet_variable='continent',
+                                                          filter(`Create Date Time Col` >= ymd('2019-01-01')) %>%
+                                                          mutate(`Continent Col`=fct_lump(`Continent Col`, n=2),
+                                                                 `Lead Source Col`=fct_lump(`Lead Source Col`, n=3)),
+                                                      date_variable='Create Date Time Col',
+                                                      color_variable='Lead Source Col',
+                                                      facet_variable='Continent Col',
                                                       date_floor='quarter',
                                                       show_labels=FALSE,
-                                                      aggregation_variable='amount',
+                                                      aggregation_variable='Amount Col',
                                                       aggregation_function=aggregation_function_sum,
                                                       aggregation_function_name='TOTAL')
     test_save_plot(file_name='graphs/rt_explore_plot_time_series_change__quarter__color_facet__agg_no_label.png', plot=plot_object)
