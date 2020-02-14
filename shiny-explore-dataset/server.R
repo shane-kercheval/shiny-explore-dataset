@@ -11,7 +11,6 @@ library(fpp2)
 #library(ggfortify)
 library(stringr)
 library(tidyverse)
-
 library(scales)
 library(lattice)
 library(lubridate)
