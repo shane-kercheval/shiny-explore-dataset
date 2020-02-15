@@ -115,7 +115,7 @@ rt_explore_plot_time_series_change <- function(dataset,
                  x=label_x,
                  title=paste0(label_y, " (", date_variable,")"),
                  subtitle = paste0("by `", facet_variable, "`"))+
-            facet_wrap(facets = paste0("`",facet_variable, "`") , ncol = 1, scales = 'free_y', strip.position = "right")
+            facet_wrap(facets = paste0("`",facet_variable, "`"), ncol = 1, scales = 'free_y', strip.position = "right")
 
     } else if (!is.null(color_variable) && is.null(facet_variable)) {
 
@@ -170,7 +170,7 @@ rt_explore_plot_time_series_change <- function(dataset,
                  x=label_x,
                  title=paste0(label_y, " (", date_variable,")"),
                  subtitle = paste0("by `", color_variable, "` & `", facet_variable,"`")) +
-            facet_wrap(facets = paste0("`",facet_variable, "`") , ncol = 1, scales = 'free_y', strip.position = "right")
+            facet_wrap(facets = paste0("`",facet_variable, "`"), ncol = 1, scales = 'free_y', strip.position = "right")
     }
 
     if(is.null(facet_variable)) {
