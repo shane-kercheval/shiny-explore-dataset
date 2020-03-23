@@ -1919,6 +1919,17 @@ create_ggplot_object <- function(dataset,
                                          scale_y=scale_y_log_base_10)
                 } else {
 
+                    if(!is_null_or_empty_string(size_variable) && any(is.na(dataset[[size_variable]]))) {
+
+                        showModal(modalDialog(title = paste0("`Size` variable (`", size_variable,"`) cannot have missing values.")))
+                        # updateRadioButtons(session,
+                        #                'var_plots__ts_graph_type',
+                        #                choices=global__ts_graph_type__options,
+                        #                inline=TRUE,
+                        #                selected=global__ts_graph_type__default)
+                        return (NULL)
+                    }
+
                     add_confidence_interval <- !is.null(trend_line_se) && trend_line_se == 'Yes'
 
                     # Here, I don't want to lump the label variables, EXCEPT if one of the label variables
