@@ -961,9 +961,8 @@ helper__plot_numeric_categoric <- function(dataset,
                                         #simple_mode=simple_mode,
                                         y_zoom_min=y_zoom_min,
                                         y_zoom_max=y_zoom_max,
+                                        log_scale_y=scale_y_log_base_10,
                                         base_size=base_size) %>%
-                scale_axes_log10(scale_x=FALSE,
-                                 scale_y=scale_y_log_base_10) %>%
                 add_horizontal_annotations(horizontal_annotations,
                                            x_location=annotation_x_location)
             
@@ -976,9 +975,8 @@ helper__plot_numeric_categoric <- function(dataset,
                                           num_bins=histogram_bins,
                                           x_zoom_min=x_zoom_min,
                                           x_zoom_max=x_zoom_max,
-                                          base_size=base_size) %>%
-                scale_axes_log10(scale_x=scale_x_log_base_10,
-                                 scale_y=FALSE)
+                                          log_scale_x=scale_x_log_base_10,
+                                          base_size=base_size)
         }
     } else {
 
@@ -1914,9 +1912,9 @@ create_ggplot_object <- function(dataset,
                                                              x_zoom_max=x_zoom_max,
                                                              y_zoom_min=y_zoom_min,
                                                              y_zoom_max=y_zoom_max,
-                                                             base_size=base_size) %>%
-                        scale_axes_log10(scale_x=scale_x_log_base_10,
-                                         scale_y=scale_y_log_base_10)
+                                                             log_scale_x=scale_x_log_base_10,
+                                                             log_scale_y=scale_y_log_base_10,
+                                                             base_size=base_size)
                 } else {
 
                     if(!is_null_or_empty_string(size_variable) && any(is.na(dataset[[size_variable]]))) {
@@ -1959,9 +1957,9 @@ create_ggplot_object <- function(dataset,
                                                 x_zoom_max=x_zoom_max,
                                                 y_zoom_min=y_zoom_min,
                                                 y_zoom_max=y_zoom_max,
+                                                log_scale_x=scale_x_log_base_10,
+                                                log_scale_y=scale_y_log_base_10,
                                                 base_size=base_size) %>%
-                        scale_axes_log10(scale_x=scale_x_log_base_10,
-                                         scale_y=scale_y_log_base_10) %>%
                         add_trend_line(trend_line_type=trend_line,
                                        confidence_interval=add_confidence_interval,
                                        color_variable=color_variable)
