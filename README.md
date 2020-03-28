@@ -8,6 +8,8 @@ The app is currently hosted at https://kercheval.shinyapps.io/shiny-explore-data
 
 `shinyapps.io` gives a limited number of uptime hours per month at the free level, so it might be sporatically unavailable.
 
+![loading](./docs/explorer-demo.gif)
+
 ## Run Locally
 
 This app utilitizes my [`rtools`](https://github.com/shane-kercheval/rtools) package which is a personal library of code that I typically re-use.
