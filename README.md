@@ -8,7 +8,7 @@ The app is currently hosted at https://kercheval.shinyapps.io/shiny-explore-data
 
 `shinyapps.io` gives a limited number of uptime hours per month at the free level, so it might be sporatically unavailable.
 
-![loading](./docs/explorer-demo.gif)
+![loading](./docs/explorer-demo2.gif)
 
 ## Run Locally
 
