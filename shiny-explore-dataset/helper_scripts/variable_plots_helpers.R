@@ -1519,6 +1519,7 @@ create_ggplot_object <- function(dataset,
                                 ) {
 
     ggplot_object <- NULL
+    legend_num_values <- NULL
 
     if(!is.null(primary_variable)  &&
             primary_variable != global__select_variable &&
@@ -1742,9 +1743,11 @@ create_ggplot_object <- function(dataset,
 
                 if(ts_graph_type == global__ts_graph_type__period_change) {
 
-                    ggplot_object <- dataset %>%
+                    temp_dataset <- dataset %>%
                         rt_select_all_of(primary_variable, comparison_variable, color_variable, facet_variable) %>%
-                        mutate_factor_lump(factor_lump_number=filter_factor_lump_number) %>%
+                        mutate_factor_lump(factor_lump_number=filter_factor_lump_number)
+
+                    ggplot_object <- temp_dataset %>%
                         rt_explore_plot_time_series_change(date_variable=primary_variable,
                                                            date_floor=ts_date_floor,
                                                            aggregation_variable=comparison_variable,
@@ -1758,11 +1761,18 @@ create_ggplot_object <- function(dataset,
                         scale_axes_log10(scale_x=FALSE,
                                          scale_y=scale_y_log_base_10)
 
+                    if(!is.null(color_variable)) {
+
+                        legend_num_values <- length(unique(temp_dataset[[color_variable]]))
+                    }
+
                 } else {
 
-                    ggplot_object <- dataset %>%
+                    temp_dataset <- dataset %>%
                         rt_select_all_of(primary_variable, comparison_variable, color_variable, facet_variable) %>%
-                        mutate_factor_lump(factor_lump_number=filter_factor_lump_number) %>%
+                        mutate_factor_lump(factor_lump_number=filter_factor_lump_number)
+
+                    ggplot_object <- temp_dataset %>%
                         rt_explore_plot_time_series(variable=primary_variable,
                                                     comparison_variable=comparison_variable,
                                                     comparison_function=comparison_function,
@@ -1791,6 +1801,11 @@ create_ggplot_object <- function(dataset,
                         add_horizontal_annotations(horizontal_annotations,
                                                    x_location=min(dataset[[primary_variable]], na.rm=TRUE),
                                                    x_location_is_date=TRUE)
+
+                    if(!is.null(color_variable)) {
+
+                        legend_num_values <- length(unique(temp_dataset[[color_variable]]))
+                    }
                 }
 
             ##########################################################################################
@@ -2104,7 +2119,7 @@ create_ggplot_object <- function(dataset,
 
                 } else {
 
-                    ggplot_object <- dataset %>%
+                    temp_dataset <- dataset %>%
                         rt_select_all_of(primary_variable,
                                          comparison_variable,
                                          sum_by_variable,
@@ -2119,7 +2134,9 @@ create_ggplot_object <- function(dataset,
                         mutate_factor_reorder(variable_to_order_by=order_by_variable,
                                               variable_to_order=comparison_variable) %>%
                         mutate_factor_reorder(variable_to_order_by=order_by_variable,
-                                              variable_to_order=facet_variable) %>%
+                                              variable_to_order=facet_variable)
+
+                    ggplot_object <- temp_dataset %>%
                         rt_explore_plot_value_totals(variable=primary_variable,
                                                      comparison_variable=comparison_variable,
                                                      sum_by_variable=sum_by_variable,
@@ -2135,10 +2152,15 @@ create_ggplot_object <- function(dataset,
                                                      reverse_stack=reverse_stack_order,
                                                      simple_mode=simple_mode,
                                                      base_size=base_size)
+
+
+                    if(!is.null(comparison_variable)) {
+
+                        legend_num_values <- length(unique(temp_dataset[[comparison_variable]]))
+                    }
                 }
             }
         }
-
 
         if(is.null(categoric_view_type) || categoric_view_type != "Heatmap") {
 
@@ -2171,6 +2193,15 @@ create_ggplot_object <- function(dataset,
 
             ggplot_object <- ggMarginal(ggplot_object, type = "histogram", fill="transparent")
         }
+    }
+
+    if(!is.null(ggplot_object) && !is.null(legend_num_values)) {
+
+        log_message_variable('legend_num_values', legend_num_values)
+
+        ggplot_object <- ggplot_object +
+            guides(color=guide_legend(ncol=ceiling(legend_num_values / 26)),
+                   fill=guide_legend(ncol=ceiling(legend_num_values / 26)))
     }
 
     return (ggplot_object)
