@@ -1724,10 +1724,16 @@ create_ggplot_object <- function(dataset,
                 anti_join(stop_words, by = 'word')
 
 
-            if(text__stem_words) {
+            if(text__stem_words == global__text__stemming_type__SnowballC) {
 
                 text_dataset <- text_dataset %>%
                     mutate(word = wordStem(word))
+
+            } else if(text__stem_words == global__text__stemming_type__Hunspell) {
+
+                text_dataset <- text_dataset %>%
+                    mutate(word = hunspell_stem(word)) %>%
+                    unnest(word)
             }
 
             axes_short <- function(x) suppressWarnings(map_chr(x, ~ rt_pretty_numbers_short(.)))
