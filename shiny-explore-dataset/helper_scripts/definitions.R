@@ -33,9 +33,9 @@ global__ts_graph_type__period_change <- "Period Change"
 global__ts_graph_type__options <- c(global__ts_graph_type__default, global__ts_graph_type__yoy, global__ts_graph_type__period_change)
 
 global__text__stemming_type__none <- "None"
-global__text__stemming_type__SnowballC <- "SnowballC"
 global__text__stemming_type__Hunspell <- "Hunspell"
-global__text__stemming_types <- c(global__text__stemming_type__none, global__text__stemming_type__SnowballC, global__text__stemming_type__Hunspell)
+global__text__stemming_type__SnowballC <- "SnowballC"
+global__text__stemming_types <- c(global__text__stemming_type__none, global__text__stemming_type__Hunspell, global__text__stemming_type__SnowballC)
 
 var_plots__default_values <- list(
 
@@ -64,7 +64,7 @@ var_plots__default_values <- list(
     'var_plots__show_points' = TRUE,
     'var_plots__ts_graph_type' = global__ts_graph_type__default,
     'var_plots__include_zero_y_axis' = TRUE,
-    'var_plots__text__stem_words' = global__text__stemming_type__SnowballC,
+    'var_plots__text__stem_words' = global__text__stemming_type__Hunspell,
     'var_plots__text__scale_free_facet' = FALSE,
     'var_plots__date_cr__plot_type' = global__date_cr_options[1],
     'var_plots__date_cr__snapshots__values' = "1, 7, 14",

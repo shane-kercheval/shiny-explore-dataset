@@ -1723,7 +1723,6 @@ create_ggplot_object <- function(dataset,
                 unnest_tokens(word, !!sym(primary_variable)) %>%
                 anti_join(stop_words, by = 'word')
 
-
             if(text__stem_words == global__text__stemming_type__SnowballC) {
 
                 text_dataset <- text_dataset %>%
@@ -1731,9 +1730,23 @@ create_ggplot_object <- function(dataset,
 
             } else if(text__stem_words == global__text__stemming_type__Hunspell) {
 
+                word_stem <- hunspell_stem(text_dataset$word)
+                #correct <- hunspell_check(text_dataset$word)
+                #hunspell_suggest(words[!correct])
+                # hunspell_stem seems to give the "most stemmed" i.e. version last
+                stemmed_words <- map_chr(word_stem, ~ {
+                    if(length(.) > 0) {
+                        
+                        .[length(.)]
+                        
+                    } else {
+                        
+                        NA_character_
+                    }
+                })
+                
                 text_dataset <- text_dataset %>%
-                    mutate(word = hunspell_stem(word)) %>%
-                    unnest(word)
+                    mutate(word = ifelse(is.na(stemmed_words), word, stemmed_words))
             }
 
             axes_short <- function(x) suppressWarnings(map_chr(x, ~ rt_pretty_numbers_short(.)))
