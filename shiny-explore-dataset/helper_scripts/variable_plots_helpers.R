@@ -208,6 +208,15 @@ reset_hide_var_plot_option <- function(session, option_name, hide_option=TRUE) {
 
     log_message_variable('reseting', option_name)
 
+    if(!option_name %in% names(var_plots__default_values)) {
+
+        log_message_variable('ERROR: FALSE - option_name %in% names(var_plots__default_values)', option_name)        
+    }
+
+    if(!option_name %in% names(var_plots__variable_types)) {
+
+        log_message_variable('ERROR: FALSE - option_name %in% names(var_plots__variable_types)', option_name)        
+    }
     stopifnot(option_name %in% names(var_plots__default_values) && 
               option_name %in% names(var_plots__variable_types))
 
@@ -289,6 +298,8 @@ helper__restore_defaults_graph_options <- function(session) {
     reset_hide_var_plot_option(session, option_name='var_plots__ts_graph_type', hide_option=FALSE)
     reset_hide_var_plot_option(session, option_name='var_plots__include_zero_y_axis', hide_option=FALSE)
     reset_hide_var_plot_option(session, option_name='var_plots__numeric_graph_type', hide_option=FALSE)
+    reset_hide_var_plot_option(session, option_name='var_plots__text__stem_words', hide_option=FALSE)
+    reset_hide_var_plot_option(session, option_name='var_plots__text__scale_free_facet', hide_option=FALSE)
     reset_hide_var_plot_option(session, option_name='var_plots__date_cr__plot_type', hide_option=FALSE)
     reset_hide_var_plot_option(session, option_name='var_plots__date_cr__snapshots__values', hide_option=FALSE)
     reset_hide_var_plot_option(session, option_name='var_plots__date_cr__snapshots__units', hide_option=FALSE)
@@ -353,6 +364,8 @@ hide_graph_options <- function(session) {
     reset_hide_var_plot_option(session, 'var_plots__ts_graph_type')
     reset_hide_var_plot_option(session, 'var_plots__include_zero_y_axis')
     reset_hide_var_plot_option(session, 'var_plots__numeric_graph_type')
+    reset_hide_var_plot_option(session, 'var_plots__text__stem_words')
+    reset_hide_var_plot_option(session, 'var_plots__text__scale_free_facet')
     reset_hide_var_plot_option(session, 'var_plots__date_cr__plot_type')
     reset_hide_var_plot_option(session, 'var_plots__date_cr__snapshots__values')
     reset_hide_var_plot_option(session, 'var_plots__date_cr__snapshots__units')
@@ -398,6 +411,8 @@ observeEvent__var_plots__graph_options__any_used__function <- function(input, se
                    input$var_plots__ts_graph_type,
                    input$var_plots__include_zero_y_axis,
                    input$var_plots__numeric_graph_type,
+                   input$var_plots__text__stem_words,
+                   input$var_plots__text__scale_free_facet,
                    input$var_plots__date_cr__plot_type,
                    input$var_plots__date_cr__snapshots__values,
                    input$var_plots__date_cr__snapshots__units,
@@ -1168,6 +1183,8 @@ reactive__var_plots__ggplot__creator <- function(input,
         scatter_add_histograms <- isolate(input$var_plots__scatter_add_histograms)
         order_by_variable <- isolate(input$var_plots__order_by_variable)
         numeric_graph_type <- isolate(input$var_plots__numeric_graph_type)
+        text__stem_words <- isolate(input$var_plots__text__stem_words)
+        text__scale_free_facet <- isolate(input$var_plots__text__scale_free_facet)
         date_cr__plot_type <- isolate(input$var_plots__date_cr__plot_type)
         date_cr__snapshots__values <- isolate(input$var_plots__date_cr__snapshots__values)
         date_cr__snapshots__units <- isolate(input$var_plots__date_cr__snapshots__units)
@@ -1247,7 +1264,12 @@ reactive__var_plots__ggplot__creator <- function(input,
         if(primary_variable != global__select_variable &&
                 primary_variable %in% colnames(dataset)) {
 
-            if(is_date_type(dataset[[primary_variable]])) {
+
+            if(is_text(dataset[[primary_variable]])) {
+
+                hide_show_text(session, input)
+
+            } else if(is_date_type(dataset[[primary_variable]])) {
 
                 hide_show_date(session, input)
 
@@ -1365,6 +1387,8 @@ reactive__var_plots__ggplot__creator <- function(input,
                                               order_by_variable=order_by_variable,
                                               filter_factor_lump_number=filter_factor_lump_number,
                                               numeric_graph_type=numeric_graph_type,
+                                              text__stem_words=text__stem_words,
+                                              text__scale_free_facet=text__scale_free_facet,
                                               date_cr__plot_type=date_cr__plot_type,
                                               date_cr__snapshots__values=date_cr__snapshots__values,
                                               date_cr__snapshots__units=date_cr__snapshots__units,
@@ -1472,6 +1496,8 @@ create_ggplot_object <- function(dataset,
                                  order_by_variable='Default',
                                  filter_factor_lump_number=10,
                                  numeric_graph_type='Boxplot',
+                                 text__stem_words=TRUE,
+                                 text__scale_free_facet=FALSE,
                                  date_cr__plot_type="Snapshots",
                                  date_cr__snapshots__values="1, 7, 14",
                                  date_cr__snapshots__units="Days",
@@ -1691,7 +1717,96 @@ create_ggplot_object <- function(dataset,
             log_message_generic('column names', paste0(colnames(dataset), collapse = '; '))
         }
 
-        if(is_date_type(dataset[[primary_variable]])) {
+        if(is_text(dataset[[primary_variable]])) {
+
+            text_dataset <- dataset %>%
+                unnest_tokens(word, !!sym(primary_variable)) %>%
+                anti_join(stop_words, by = 'word')
+
+
+            if(text__stem_words) {
+
+                text_dataset <- text_dataset %>%
+                    mutate(word = wordStem(word))
+            }
+
+            axes_short <- function(x) suppressWarnings(map_chr(x, ~ rt_pretty_numbers_short(.)))
+
+            if(is_null_or_empty_string(facet_variable)) {
+
+                num_breaks <- 10
+
+                text_dataset <- text_dataset %>%
+                    count(word, sort = TRUE) %>%
+                    head(filter_factor_lump_number) %>%
+                        mutate(word = fct_reorder(word, n, .desc = TRUE))
+
+                 ggplot_object <- text_dataset %>%
+                    ggplot(aes(x=word, y=n)) +
+                    geom_col(alpha=0.75) +
+                    scale_y_continuous(breaks = pretty_breaks(num_breaks), labels = axes_short) +
+                    theme_light(base_size = base_size) +
+                        theme(axis.text.x=element_text(angle=30, hjust=1),
+                              legend.position = 'none') +
+                        labs(y="Count",
+                             x=NULL)
+
+            } else {
+
+                num_breaks <- 5
+
+                text_dataset <- text_dataset %>%
+                    count(word, !!sym(facet_variable), sort = TRUE) 
+
+                if(text__scale_free_facet) {
+
+                    facet_scale_type <- 'free'
+                    text_dataset <- text_dataset %>%
+                        group_by(!!sym(facet_variable)) %>%
+                        top_n(filter_factor_lump_number, n) %>%
+                        ungroup() %>%
+                        mutate(word = reorder_within(word, -n, !!sym(facet_variable))) %>%
+                        arrange(word)
+
+                    ggplot_object <- text_dataset %>%
+                        ggplot(aes(x=word, y=n, fill=word)) +
+                        geom_col(alpha=0.75) +
+                        scale_x_reordered() +
+                        scale_y_continuous(breaks = pretty_breaks(num_breaks), labels = axes_short) +
+                        scale_fill_manual(values=get_colors_from_word_df(text_dataset)) +
+                        theme_light(base_size = base_size) +
+                            theme(axis.text.x=element_text(angle=30, hjust=1),
+                                  legend.position = 'none') +
+                            labs(y="Count",
+                                 x=NULL)
+
+                } else {
+
+                    facet_scale_type <- 'free_y'
+                    text_dataset <- text_dataset %>%
+                        head(filter_factor_lump_number) %>%
+                        mutate(word = fct_reorder(word, n, .desc = TRUE))
+
+                    ggplot_object <- text_dataset %>%
+                        ggplot(aes(x=word, y=n)) +
+                        geom_col(alpha=0.75) +
+                        scale_y_continuous(breaks = pretty_breaks(num_breaks), labels = axes_short) +
+                        theme_light(base_size = base_size) +
+                            theme(axis.text.x=element_text(angle=30, hjust=1),
+                                  legend.position = 'none') +
+                            labs(y="Count",
+                                 x=NULL)
+                }
+
+                ggplot_object <- ggplot_object +
+                    facet_wrap(as.formula(paste0("~ `", facet_variable, "`")), ncol = 1, scales = facet_scale_type)
+            }
+            
+            ggplot_object <- ggplot_object +
+                geom_text(aes(label=n), vjust=-0.3, check_overlap = TRUE)
+    
+
+        } else if(is_date_type(dataset[[primary_variable]])) {
 
             date_limits <- NULL
             if(!is.null(trend_line) && trend_line == "Projection") {
@@ -2417,6 +2532,99 @@ helper__show_hide_trend_line <- function(session, input, show=TRUE) {
     }
 }
 
+hide_show_text <- function(session, input) {
+
+    log_message('hide_show_text')
+
+    shinyjs::show('var_plots__filter_factor_lump_number')
+    shinyjs::show('var_plots__facet_variable')
+    shinyjs::show('var_plots__text__stem_words')
+
+    facet_variable <- null_if_select_variable_optional(input$var_plots__facet_variable)
+
+    if(is.null(facet_variable)) {
+
+        reset_hide_var_plot_option(session, 'var_plots__text__scale_free_facet')
+
+    } else {
+
+        shinyjs::show('var_plots__text__scale_free_facet')
+    }
+
+    reset_hide_var_plot_option(session, 'var_plots__count_distinct_variable')
+    reset_hide_var_plot_option(session, 'var_plots__color_variable')
+    reset_hide_var_plot_option(session, 'var_plots__sum_by_variable')
+    
+    shinyjs::show('var_plots__variables_buttons_clear')
+    
+    shinyjs::hide('var_plots__variables_buttons_swap')
+    shinyjs::hide('var_plots__color_facet_buttons_swap')
+    
+    reset_hide_var_plot_option(session, 'var_plots__multi_value_delimiter')
+    reset_hide_var_plot_option(session, 'var_plots__reverse_stack_order')
+    reset_hide_var_plot_option(session, 'var_plots__convert_primary_date_to_categoric')
+    reset_hide_var_plot_option(session, 'var_plots__ts_date_floor')
+    reset_hide_var_plot_option(session, 'var_plots__convert_primary_date_to_categoric')
+
+    reset_hide_var_plot_option(session, 'var_plots__convert_numerics_to_categoric')
+    reset_hide_var_plot_option(session, 'var_plots__convert_numerics_to_categoric__num_groups')
+    reset_hide_var_plot_option(session, 'var_plots__convert_numerics_to_categoric__x_cut_sequence')
+    reset_hide_var_plot_option(session, 'var_plots__convert_numerics_to_categoric__y_cut_sequence')
+    shinyjs::hide('var_plots__convert_numerics_to_categoric__cut_seq_apply')
+
+    reset_hide_var_plot_option(session, 'var_plots__date_conversion_variable')
+    reset_hide_var_plot_option(session, 'var_plots__date_cr__snapshots__group_variable')
+    reset_hide_var_plot_option(session, 'var_plots__date_cr__plot_type')
+    reset_hide_var_plot_option(session, 'var_plots__date_cr__snapshots__values')
+    reset_hide_var_plot_option(session, 'var_plots__date_cr__snapshots__units')
+    reset_hide_var_plot_option(session, 'var_plots__date_cr__snapshots__color_or_facet')
+    reset_hide_var_plot_option(session, 'var_plots__date_cr__last_n_cohorts')
+    reset_hide_var_plot_option(session, 'var_plots__date_cr__n_units_after_first_date')
+    reset_hide_var_plot_option(session, 'var_plots__date_cr__separate_colors')
+    reset_hide_var_plot_option(session, 'var_plots__ts_graph_type')
+    reset_hide_var_plot_option(session, 'var_plots__include_zero_y_axis')
+    reset_hide_var_plot_option(session, 'var_plots__size_variable')
+    reset_hide_var_plot_option(session, 'var_plots__label_variables')
+    reset_hide_var_plot_option(session, 'var_plots__num_cat_aggregation_type')
+    reset_hide_var_plot_option(session, 'var_plots__numeric_group_comp_variable')
+    reset_hide_var_plot_option(session, 'var_plots__numeric_aggregation_function')
+    reset_hide_var_plot_option(session, 'var_plots__numeric_aggregation_count_minimum')
+    reset_hide_var_plot_option(session, 'var_plots__numeric_show_resampled_conf_int')
+    reset_hide_var_plot_option(session, 'var_plots__categoric_view_type')
+    reset_hide_var_plot_option(session, 'var_plots__show_variable_totals')
+    reset_hide_var_plot_option(session, 'var_plots__show_comparison_totals')
+    reset_hide_var_plot_option(session, 'var_plots__order_by_variable')
+    reset_hide_var_plot_option(session, 'var_plots__base_size')
+    reset_hide_var_plot_option(session, 'var_plots__vertical_annotations')
+    reset_hide_var_plot_option(session, 'var_plots__horizontal_annotations')
+    reset_hide_var_plot_option(session, 'var_plots__numeric_aggregation')
+    reset_hide_var_plot_option(session, 'var_plots__scale_x_log_base_10')
+    reset_hide_var_plot_option(session, 'var_plots__x_zoom_min')
+    reset_hide_var_plot_option(session, 'var_plots__x_zoom_max')
+    reset_hide_var_plot_option(session, 'var_plots__scale_y_log_base_10')
+    reset_hide_var_plot_option(session, 'var_plots__y_zoom_min')
+    reset_hide_var_plot_option(session, 'var_plots__y_zoom_max')
+    updateCheckboxInput(session, 'var_plots__scale_x_log_base_10', value=FALSE)
+    updateCheckboxInput(session, 'var_plots__scale_y_log_base_10', value=FALSE)
+
+    reset_hide_var_plot_option(session, 'var_plots__transparency')
+    reset_hide_var_plot_option(session, 'var_plots__jitter')
+    reset_hide_var_plot_option(session, 'var_plots__scatter_add_histograms')
+    reset_hide_var_plot_option(session, 'var_plots__trend_line')
+    reset_hide_var_plot_option(session, 'var_plots__trend_extend_date')
+    reset_hide_var_plot_option(session, 'var_plots__trend_line_se')
+    reset_hide_var_plot_option(session, 'var_plots__ts_date_break_format')
+    reset_hide_var_plot_option(session, 'var_plots__ts_breaks_width')
+    reset_hide_var_plot_option(session, 'var_plots__histogram_bins')
+    reset_hide_var_plot_option(session, 'var_plots__numeric_graph_type')
+    reset_hide_var_plot_option(session, 'var_plots__annotate_points')
+    reset_hide_var_plot_option(session, 'var_plots__show_points')
+    updateCollapse(session, 'var_plots__bscollapse', close="Map Options")
+    reset_hide_var_plot_option(session, 'var_plots__map_format')
+    reset_hide_var_plot_option(session, 'var_plots__map_borders_database')
+    reset_hide_var_plot_option(session, 'var_plots__map_borders_regions')
+}
+
 hide_show_date <- function(session, input) {
 
     log_message('hide_show_date')
@@ -2546,6 +2754,8 @@ hide_show_date <- function(session, input) {
         reset_hide_var_plot_option(session, 'var_plots__numeric_aggregation')
     }
 
+    reset_hide_var_plot_option(session, 'var_plots__text__stem_words')
+    reset_hide_var_plot_option(session, 'var_plots__text__scale_free_facet')
     reset_hide_var_plot_option(session, 'var_plots__convert_numerics_to_categoric')
     reset_hide_var_plot_option(session, 'var_plots__convert_numerics_to_categoric__num_groups')
     reset_hide_var_plot_option(session, 'var_plots__convert_numerics_to_categoric__x_cut_sequence')
@@ -2676,6 +2886,8 @@ hide_show_numeric_numeric <- function(session,
     shinyjs::show('var_plots__vertical_annotations')
     shinyjs::show('var_plots__horizontal_annotations')
     
+    reset_hide_var_plot_option(session, 'var_plots__text__stem_words')
+    reset_hide_var_plot_option(session, 'var_plots__text__scale_free_facet')
     reset_hide_var_plot_option(session, 'var_plots__facet_variable')
     reset_hide_var_plot_option(session, 'var_plots__date_conversion_variable')
     reset_hide_var_plot_option(session, 'var_plots__date_cr__snapshots__group_variable')
@@ -2789,6 +3001,8 @@ hide_show_numeric_categoric <- function(session,
         reset_hide_var_plot_option(session, 'var_plots__ts_date_floor')
     }
 
+    reset_hide_var_plot_option(session, 'var_plots__text__stem_words')
+    reset_hide_var_plot_option(session, 'var_plots__text__scale_free_facet')
     reset_hide_var_plot_option(session, 'var_plots__convert_numerics_to_categoric')
     reset_hide_var_plot_option(session, 'var_plots__convert_numerics_to_categoric__num_groups')
     reset_hide_var_plot_option(session, 'var_plots__convert_numerics_to_categoric__x_cut_sequence')
@@ -2941,6 +3155,8 @@ hide_show_categoric_categoric <- function(session,
         shinyjs::show('var_plots__multi_value_delimiter')
     }
 
+    reset_hide_var_plot_option(session, 'var_plots__text__stem_words')
+    reset_hide_var_plot_option(session, 'var_plots__text__scale_free_facet')
     reset_hide_var_plot_option(session, 'var_plots__date_conversion_variable')
     reset_hide_var_plot_option(session, 'var_plots__date_cr__snapshots__group_variable')
     reset_hide_var_plot_option(session, 'var_plots__date_cr__plot_type')
@@ -3023,7 +3239,6 @@ observe__var_plots__hide_show_uncollapse_on_primary_vars <- function(session, in
             shinyjs::hide('var_plots__variables_buttons_swap') 
             shinyjs::hide('var_plots__color_facet_buttons_swap')
 
-
             reset_hide_var_plot_option(session, 'var_plots__comparison')
             reset_hide_var_plot_option(session, 'var_plots__numeric_aggregation')
             reset_hide_var_plot_option(session, 'var_plots__sum_by_variable')
@@ -3045,6 +3260,8 @@ observe__var_plots__hide_show_uncollapse_on_primary_vars <- function(session, in
             shinyjs::hide('var_plots__convert_numerics_to_categoric__cut_seq_apply')
             reset_hide_var_plot_option(session, 'var_plots__ts_date_floor')
             reset_hide_var_plot_option(session, 'var_plots__date_conversion_variable')
+            reset_hide_var_plot_option(session, 'var_plots__text__stem_words')
+            reset_hide_var_plot_option(session, 'var_plots__text__scale_free_facet')
             reset_hide_var_plot_option(session, 'var_plots__date_cr__snapshots__group_variable')
             reset_hide_var_plot_option(session, 'var_plots__date_cr__plot_type')
             reset_hide_var_plot_option(session, 'var_plots__date_cr__snapshots__values')
@@ -3296,6 +3513,8 @@ update_var_plot_variables_from_url_params <- function(session, params, dataset, 
     update_text_input(session, params, 'var_plots__multi_value_delimiter')
     update_checkbox_input(session, params, 'var_plots__annotate_points')
     update_checkbox_input(session, params, 'var_plots__show_points')
+    update_checkbox_input(session, params, 'var_plots__text__stem_words')
+    update_checkbox_input(session, params, 'var_plots__text__scale_free_facet')
     update_select_input(session, params, 'var_plots__date_cr__plot_type')
     update_text_input(session, params, 'var_plots__date_cr__snapshots__values')
     update_select_input(session, params, 'var_plots__date_cr__snapshots__units')

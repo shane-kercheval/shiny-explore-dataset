@@ -80,3 +80,21 @@ scale_axes_log10 <- function(plot, scale_x, scale_y) {
     
     return (plot)
 }
+
+get_colors_from_word_df <- function(text_dataset) {
+                
+    text_dataset <- text_dataset %>%
+        arrange(word) %>%
+        separate(word, c('word_single', 'word_mis'), sep = '___', remove = FALSE)
+    
+    custom_colors <- rep(rt_colors(), 20)
+    sorted_values <- sort(as.character(unique(text_dataset$word_single)))
+    
+    stopifnot(length(custom_colors) >= length(sorted_values))
+    
+    
+    custom_colors <- custom_colors[1:length(sorted_values)]
+    names(custom_colors) <- sorted_values
+    
+    return (map_chr(text_dataset$word_single, ~ custom_colors[.]))
+}

@@ -66,7 +66,17 @@ select_preloaded_dataset <- function(dataset_name, defualt_path='') {
     loaded_dataset <- NULL
     data_description <- NULL
 
-    if(dataset_name == 'Credit') {
+    if(dataset_name == "Jane Austen") {
+        
+        library(janeaustenr)
+        loaded_dataset <- austen_books() %>%
+            group_by(book) %>%
+            mutate(linenumber = row_number(),
+                   chapter = cumsum(str_detect(text, regex("^chapter [\\divxlc]",
+                                                           ignore_case = TRUE)))) %>%
+            ungroup()
+
+    } else if(dataset_name == 'Credit') {
 
         loaded_dataset <- dataset_or_null(paste0(defualt_path, 'example_datasets/credit.csv')) %>%
             mutate(default = ifelse(default == 'yes', TRUE, FALSE),

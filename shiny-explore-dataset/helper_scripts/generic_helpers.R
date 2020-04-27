@@ -52,10 +52,17 @@ dataset_or_null_RDS <- function(file) {
 }
 
 is_date_type <- function(x) {
+
     return (is.Date(x) || is.POSIXct(x) || is.POSIXlt(x))
 }
 
+is_text <- function(x) {
+
+    return (length(unique(x)) / length(x) > 0.50)
+}
+
 is_categoric <- function(x) {
+
     return (is.character(x) || is.factor(x) || is.logical(x))
 }
 

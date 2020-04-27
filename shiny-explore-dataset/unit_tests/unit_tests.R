@@ -2,6 +2,7 @@ library('testthat')
 library(tidyverse)
 library(rtools)
 library(hms)
+library(janeaustenr)
 
 source('../helper_scripts/generic_helpers.R', chdir = TRUE)
 source('../helper_scripts/definitions.R', chdir = TRUE)
@@ -25,6 +26,22 @@ test_helper__convert_names <- function(.names) {
 test_helper__column_names <- function(.df) {
     return (test_helper__convert_names(colnames(.df)))
 }
+
+test_that("is_text",  {
+    
+    dataset <- dataset_or_null('../example_datasets/credit.csv')
+
+    book_text <- austen_books() %>%
+        group_by(book) %>%
+        mutate(linenumber = row_number(),
+               chapter = cumsum(str_detect(text, regex("^chapter [\\divxlc]",
+                                                       ignore_case = TRUE)))) %>%
+        ungroup() %>%
+        pull(text)
+
+    expect_false(is_text(dataset$credit_history))
+    expect_true(is_text(book_text))
+})
 
 test_that("filter", {
     context("generic_helpers::filter_data")

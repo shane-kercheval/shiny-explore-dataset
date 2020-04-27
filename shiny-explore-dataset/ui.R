@@ -28,7 +28,8 @@ shinyUI(fluidPage(theme="custom.css",
                     tags$div(style='margin-bottom: 40px !important;',
                         selectInput(inputId='preloaded_dataset',
                                     label='Choose a Dataset:',
-                                    choices=c('Credit',
+                                    choices=c('Jane Austen',
+                                              'Credit',
                                               'Mock Conversions',
                                               'Diamonds',
                                               'Housing',
@@ -37,7 +38,7 @@ shinyUI(fluidPage(theme="custom.css",
                                               'Flights',
                                               'Wine Ratings',
                                               'Gapminder'),
-                                    selected='Credit'))
+                                    selected='Jane Austen'))
                 ),
                 tabPanel(
                     'Load .csv/.RDS',
@@ -353,6 +354,17 @@ shinyUI(fluidPage(theme="custom.css",
                                 actionButton(inputId='var_plots__graph_options_clear',
                                              label='Clear'))
                         ),
+                        ######################################################################################
+                        # Text Options
+                        ######################################################################################
+                        checkboxInput(inputId='var_plots__text__stem_words',
+                                      label='Stem Words',
+                                      value=var_plots__default_values[['var_plots__text__stem_words']],
+                                      width=250),
+                        checkboxInput(inputId='var_plots__text__scale_free_facet',
+                                      label='Allow Unique Values per Facet',
+                                      value=var_plots__default_values[['var_plots__text__scale_free_facet']],
+                                      width=250),
                         ######################################################################################
                         # Date Conversion Rate Options
                         ######################################################################################
