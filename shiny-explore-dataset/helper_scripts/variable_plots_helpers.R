@@ -1815,9 +1815,9 @@ create_ggplot_object <- function(dataset,
                     select(-n) %>% 
                     spread(!!sym(comparison_variable), proportion) %>% 
                     gather(comparison_group, proportion, -c(!!sym(text__freq_comp_group), word))
-                
+
                 max_value <- max(abs(frequency[[text__freq_comp_group]] - frequency$proportion), na.rm = TRUE)
-                    
+
                 ggplot_object <- frequency %>%
                     filter(!is.na(!!sym(text__freq_comp_group)) & !is.na(proportion)) %>%
                     mutate(comparison_group = paste(text__freq_comp_group, "vs.", comparison_group)) %>%
