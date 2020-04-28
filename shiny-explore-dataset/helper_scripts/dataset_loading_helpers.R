@@ -74,7 +74,8 @@ select_preloaded_dataset <- function(dataset_name, defualt_path='') {
             mutate(linenumber = row_number(),
                    chapter = cumsum(str_detect(text, regex("^chapter [\\divxlc]",
                                                            ignore_case = TRUE)))) %>%
-            ungroup()
+            ungroup() %>%
+            mutate(text = str_remove_all(text, "_"))
 
     } else if(dataset_name == 'Credit') {
 

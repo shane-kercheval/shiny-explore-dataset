@@ -56,7 +56,7 @@ is_date_type <- function(x) {
     return (is.Date(x) || is.POSIXct(x) || is.POSIXlt(x))
 }
 
-is_text <- function(x) {
+is_text_type <- function(x) {
 
     return (length(unique(x)) / length(x) > 0.50)
 }

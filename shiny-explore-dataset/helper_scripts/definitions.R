@@ -37,6 +37,11 @@ global__text__stemming_type__Hunspell <- "Hunspell"
 global__text__stemming_type__SnowballC <- "SnowballC"
 global__text__stemming_types <- c(global__text__stemming_type__none, global__text__stemming_type__Hunspell, global__text__stemming_type__SnowballC)
 
+global__text__graph_type__count <- "Count"
+global__text__graph_type__freq_record <- "Frequency (Per Record)"
+global__text__graph_type__freq_all_words <- "Frequency (all words)"
+global__text__graph_type__values <- c(global__text__graph_type__count, global__text__graph_type__freq_record, global__text__graph_type__freq_all_words)
+
 var_plots__default_values <- list(
 
     'var_plots__variable' = global__select_variable,
@@ -66,7 +71,9 @@ var_plots__default_values <- list(
     'var_plots__include_zero_y_axis' = TRUE,
     'var_plots__text__stem_words' = global__text__stemming_type__Hunspell,
     'var_plots__text__graph_type' = "Count",
+    'var_plots__text__freq_comp_group' = "",
     'var_plots__text__scale_free_facet' = FALSE,
+    'var_plots__text__top_n_words' = 20,
     'var_plots__date_cr__plot_type' = global__date_cr_options[1],
     'var_plots__date_cr__snapshots__values' = "1, 7, 14",
     'var_plots__date_cr__snapshots__units' = global__date_cr__unit_options[3],
@@ -142,7 +149,9 @@ var_plots__variable_types <- list(
     'var_plots__include_zero_y_axis' = 'updateCheckboxInput',
     'var_plots__text__stem_words' = 'updateRadioButtons',
     'var_plots__text__graph_type' = 'updateSelectInput',
+    'var_plots__text__freq_comp_group' = 'updateSelectInput',
     'var_plots__text__scale_free_facet' = 'updateCheckboxInput',
+    'var_plots__text__top_n_words' = 'updateSliderInput',
     'var_plots__date_cr__plot_type' = 'updateSelectInput',
     'var_plots__date_cr__snapshots__values' = 'updateTextInput',
     'var_plots__date_cr__snapshots__units' = 'updateSelectInput',

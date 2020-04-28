@@ -43,6 +43,11 @@ test_that("is_text",  {
     expect_true(is_text(book_text))
 })
 
+test_that("fct_lump_n_exclude",  {
+    
+    fct_lump_n_exclude
+})
+
 test_that("filter", {
     context("generic_helpers::filter_data")
 

@@ -300,7 +300,9 @@ helper__restore_defaults_graph_options <- function(session) {
     reset_hide_var_plot_option(session, option_name='var_plots__numeric_graph_type', hide_option=FALSE)
     reset_hide_var_plot_option(session, option_name='var_plots__text__stem_words', hide_option=FALSE)
     reset_hide_var_plot_option(session, option_name='var_plots__text__graph_type', hide_option=FALSE)
+    reset_hide_var_plot_option(session, option_name='var_plots__text__freq_comp_group', hide_option=FALSE)
     reset_hide_var_plot_option(session, option_name='var_plots__text__scale_free_facet', hide_option=FALSE)
+    reset_hide_var_plot_option(session, option_name='var_plots__text__top_n_words', hide_option=FALSE)
     reset_hide_var_plot_option(session, option_name='var_plots__date_cr__plot_type', hide_option=FALSE)
     reset_hide_var_plot_option(session, option_name='var_plots__date_cr__snapshots__values', hide_option=FALSE)
     reset_hide_var_plot_option(session, option_name='var_plots__date_cr__snapshots__units', hide_option=FALSE)
@@ -367,7 +369,9 @@ hide_graph_options <- function(session) {
     reset_hide_var_plot_option(session, 'var_plots__numeric_graph_type')
     reset_hide_var_plot_option(session, 'var_plots__text__stem_words')
     reset_hide_var_plot_option(session, 'var_plots__text__graph_type')
+    reset_hide_var_plot_option(session, 'var_plots__text__freq_comp_group')
     reset_hide_var_plot_option(session, 'var_plots__text__scale_free_facet')
+    reset_hide_var_plot_option(session, 'var_plots__text__top_n_words')
     reset_hide_var_plot_option(session, 'var_plots__date_cr__plot_type')
     reset_hide_var_plot_option(session, 'var_plots__date_cr__snapshots__values')
     reset_hide_var_plot_option(session, 'var_plots__date_cr__snapshots__units')
@@ -415,7 +419,9 @@ observeEvent__var_plots__graph_options__any_used__function <- function(input, se
                    input$var_plots__numeric_graph_type,
                    input$var_plots__text__stem_words,
                    input$var_plots__text__graph_type,
+                   input$var_plots__text__freq_comp_group,
                    input$var_plots__text__scale_free_facet,
+                   input$var_plots__text__top_n_words,
                    input$var_plots__date_cr__plot_type,
                    input$var_plots__date_cr__snapshots__values,
                    input$var_plots__date_cr__snapshots__units,
@@ -1188,7 +1194,9 @@ reactive__var_plots__ggplot__creator <- function(input,
         numeric_graph_type <- isolate(input$var_plots__numeric_graph_type)
         text__stem_words <- isolate(input$var_plots__text__stem_words)
         text__graph_type <- isolate(input$var_plots__text__graph_type)
+        text__freq_comp_group <- isolate(input$var_plots__text__freq_comp_group)
         text__scale_free_facet <- isolate(input$var_plots__text__scale_free_facet)
+        text__top_n_words <- isolate(input$var_plots__text__top_n_words)
         date_cr__plot_type <- isolate(input$var_plots__date_cr__plot_type)
         date_cr__snapshots__values <- isolate(input$var_plots__date_cr__snapshots__values)
         date_cr__snapshots__units <- isolate(input$var_plots__date_cr__snapshots__units)
@@ -1269,9 +1277,9 @@ reactive__var_plots__ggplot__creator <- function(input,
                 primary_variable %in% colnames(dataset)) {
 
 
-            if(is_text(dataset[[primary_variable]])) {
+            if(is_text_type(dataset[[primary_variable]])) {
 
-                hide_show_text(session, input)
+                hide_show_text(session, input, dataset, comparison_variable, facet_variable, text__freq_comp_group)
 
             } else if(is_date_type(dataset[[primary_variable]])) {
 
@@ -1393,7 +1401,9 @@ reactive__var_plots__ggplot__creator <- function(input,
                                               numeric_graph_type=numeric_graph_type,
                                               text__stem_words=text__stem_words,
                                               text__graph_type=text__graph_type,
+                                              text__freq_comp_group=text__freq_comp_group,
                                               text__scale_free_facet=text__scale_free_facet,
+                                              text__top_n_words=text__top_n_words,
                                               date_cr__plot_type=date_cr__plot_type,
                                               date_cr__snapshots__values=date_cr__snapshots__values,
                                               date_cr__snapshots__units=date_cr__snapshots__units,
@@ -1503,7 +1513,9 @@ create_ggplot_object <- function(dataset,
                                  numeric_graph_type='Boxplot',
                                  text__stem_words=TRUE,
                                  text__graph_type="Count",
+                                 text__freq_comp_group="",
                                  text__scale_free_facet=FALSE,
+                                 text__top_n_words=20,
                                  date_cr__plot_type="Snapshots",
                                  date_cr__snapshots__values="1, 7, 14",
                                  date_cr__snapshots__units="Days",
@@ -1723,10 +1735,13 @@ create_ggplot_object <- function(dataset,
             log_message_generic('column names', paste0(colnames(dataset), collapse = '; '))
         }
 
-        if(is_text(dataset[[primary_variable]])) {
+        if(is_text_type(dataset[[primary_variable]])) {
 
 # TODO: Refactor to cleaning function
+
             text_dataset <- dataset %>%
+                rt_select_all_of(primary_variable, comparison_variable, facet_variable) %>%
+                mutate_factor_lump(factor_lump_number=filter_factor_lump_number, ignore_columns=c(primary_variable, comparison_variable)) %>%
                 unnest_tokens(word, !!sym(primary_variable)) %>%
                 anti_join(stop_words, by = 'word')
 
@@ -1762,127 +1777,188 @@ create_ggplot_object <- function(dataset,
 
             #text__graph_type
             
-            if(text__graph_type == "Count") {
+            if(!is_null_or_empty_string(comparison_variable)) {
+
+                if(is_null_or_empty_string(text__freq_comp_group)) {
+
+                    #text__freq_comp_group <- "Sense & Sensibility"
+                    text__freq_comp_group <- as.character(sort(unique(dataset[[comparison_variable]]))[1])
+                }
                 
-                text_dataset <- text_dataset %>%
-                    group_by_at(c('word', facet_variable)) %>%
+                # we don't want to filter out the selected comparison group, but we still have to fct_lump the rest of the values
+                fct_lump_n_exclude <- function(x, n, exclude_value) {
+
+                    category_levels <- names(sort(table(as.character(x)), decreasing = TRUE))
+                    index_of_exclude <- which(category_levels == exclude_value)
+                    names(category_levels) <- category_levels
+
+                    # if(index_of_exclude <= n) {
+                    #     # if we are including
+                    # }
+
+                    category_levels[category_levels != exclude_value & 1:length(category_levels) > n] <- "Other"
+                    x <- factor(x)
+                    levels(x) <- as.character(category_levels[levels(x)])
+                    
+                    return (x)
+                }
+
+                text_dataset[[comparison_variable]] <- fct_lump_n_exclude(x=text_dataset[[comparison_variable]],
+                                                                          n=filter_factor_lump_number,
+                                                                          exclude_value=text__freq_comp_group)
+                frequency <- text_dataset %>%
+                    group_by_at(c('word', comparison_variable)) %>%
                     summarise(n = n()) %>%
-                    ungroup()
+                    ungroup() %>%
+                    group_by_at(comparison_variable) %>%
+                    mutate(proportion = n / sum(n)) %>% 
+                    select(-n) %>% 
+                    spread(!!sym(comparison_variable), proportion) %>% 
+                    gather(comparison_group, proportion, -c(!!sym(text__freq_comp_group), word))
                 
-                axes_format_function <- axes_short
-                label_format_function <- axes_short
+                max_value <- max(abs(frequency[[text__freq_comp_group]] - frequency$proportion), na.rm = TRUE)
+                    
+                ggplot_object <- frequency %>%
+                    filter(!is.na(!!sym(text__freq_comp_group)) & !is.na(proportion)) %>%
+                    mutate(comparison_group = paste(text__freq_comp_group, "vs.", comparison_group)) %>%
+                    ggplot(aes(x = proportion, y = !!sym(text__freq_comp_group), color = abs(!!sym(text__freq_comp_group) - proportion))) +
+                        geom_abline(color = "gray40", lty = 2) +
+                        geom_jitter(alpha = 0.2, size = 1.5, position=position_jitter(seed = 1, width = 0.3, height=0.3)) +
+                        geom_text(aes(label = word), check_overlap = TRUE, vjust=1, size=4, color='black', position=position_jitter(seed = 1, width = 0.3, height=0.3)) +
+                        scale_x_log10(labels = rt_pretty_axes_percent) +
+                        scale_y_log10(labels = rt_pretty_axes_percent) +
+                        scale_color_gradient(limits = c(0, 0.001), low = "darkslategray4", high = "gray75") +
+                        facet_wrap(~comparison_group, ncol = 3) +
+                        theme_light(base_size = base_size - 2) +
+                        theme(legend.position="none") +
+                        labs(y = paste0("Frequency (", text__freq_comp_group, ")"),
+                             x = "Frequency (Other Groups)",
+                             caption="Words that are close to the line in these plots have similar frequencies in both sets of texts.")
+                #library(plotly)
+                #ggplot_object <- ggplotly(ggplot_object)
                 
-                
-            } else if(text__graph_type == "Frequency (Per Record)") {
-                
-                # this is percent of all records (e.g. lines in a book, whatever a row represents)
-                
-                text_dataset <- text_dataset %>%
-                    group_by_at(c('word', facet_variable)) %>%
-                    summarise(n = n() / nrow(dataset)) %>%
-                    ungroup()
-                
-                axes_format_function <- rt_pretty_axes_percent
-                label_format_function <- rt_pretty_axes_percent
-                
-            } else if (text__graph_type == "Frequency (all words)") {
-                
-                # this is percent of all words
-                
-                text_dataset <- text_dataset %>%
-                    group_by_at(c('word', facet_variable)) %>%
-                    summarise(n = n() / nrow(.)) %>%
-                    ungroup()
-                
-                axes_format_function <- rt_pretty_axes_percent
-                label_format_function <- rt_pretty_axes_percent
-            }
-
-            if(is_null_or_empty_string(facet_variable)) {
-
-                num_breaks <- 10
-                
-                text_dataset <- text_dataset %>%
-                    #arrange(-n) %>%
-                    top_n(filter_factor_lump_number, n) %>%
-                    mutate(word = fct_reorder(word, n, .desc = TRUE))
-
-                ggplot_object <- text_dataset %>%
-                    ggplot(aes(x=word, y=n)) +
-                    geom_col(alpha=0.75) +
-                    scale_y_continuous(breaks = pretty_breaks(num_breaks), labels = axes_format_function) +
-                    theme_light(base_size = base_size) +
-                        theme(axis.text.x=element_text(angle=30, hjust=1),
-                              legend.position = 'none') +
-                        labs(y="Count",
-                             x=NULL)
             } else {
-
-                num_breaks <- 5
-
-                if(text__scale_free_facet) {
-
-                    facet_scale_type <- 'free'
+                
+                if(text__graph_type == global__text__graph_type__count) {
+                    
                     text_dataset <- text_dataset %>%
-                        #arrange(-n) %>%
-                        group_by(!!sym(facet_variable)) %>%
-                        top_n(filter_factor_lump_number, n) %>%
-                        ungroup() %>%
-                        mutate(word = reorder_within(word, -n, !!sym(facet_variable))) %>%
-                        arrange(word)
-
-                    ggplot_object <- text_dataset %>%
-                        ggplot(aes(x=word, y=n, fill=word)) +
-                        geom_col(alpha=0.75) +
-                        scale_x_reordered() +
-                        scale_y_continuous(breaks = pretty_breaks(num_breaks), labels = axes_format_function) +
-                        scale_fill_manual(values=get_colors_from_word_df(text_dataset)) +
-                        theme_light(base_size = base_size) +
-                            theme(axis.text.x=element_text(angle=30, hjust=1),
-                                  legend.position = 'none') +
-                            labs(y="Count",
-                                 x=NULL)
-
-                } else {
-
-                    facet_scale_type <- 'free_y'
+                        group_by_at(c('word', facet_variable)) %>%
+                        summarise(n = n()) %>%
+                        ungroup()
+                    
+                    axes_format_function <- axes_short
+                    label_format_function <- axes_short
+                    
+                    
+                } else if(text__graph_type == global__text__graph_type__freq_record) {
+                    
+                    # this is percent of all records (e.g. lines in a book, whatever a row represents)
+                    
+                    text_dataset <- text_dataset %>%
+                        group_by_at(c('word', facet_variable)) %>%
+                        summarise(n = n() / nrow(dataset)) %>%
+                        ungroup()
+                    
+                    axes_format_function <- rt_pretty_axes_percent
+                    label_format_function <- rt_pretty_axes_percent
+                    
+                } else if (text__graph_type == global__text__graph_type__freq_all_words) {
+                    
+                    # this is percent of all words
+                    
+                    text_dataset <- text_dataset %>%
+                        group_by_at(c('word', facet_variable)) %>%
+                        summarise(n = n() / nrow(.)) %>%
+                        ungroup()
+                    
+                    axes_format_function <- rt_pretty_axes_percent
+                    label_format_function <- rt_pretty_axes_percent
+                }
+                
+                if(is_null_or_empty_string(facet_variable)) {
+                    
+                    num_breaks <- 10
                     
                     text_dataset <- text_dataset %>%
                         #arrange(-n) %>%
-                        top_n(filter_factor_lump_number, n) %>%
+                        top_n(text__top_n_words, n) %>%
                         mutate(word = fct_reorder(word, n, .desc = TRUE))
-
+                    
                     ggplot_object <- text_dataset %>%
                         ggplot(aes(x=word, y=n)) +
                         geom_col(alpha=0.75) +
                         scale_y_continuous(breaks = pretty_breaks(num_breaks), labels = axes_format_function) +
                         theme_light(base_size = base_size) +
+                        theme(axis.text.x=element_text(angle=30, hjust=1),
+                              legend.position = 'none') +
+                        labs(y="Count",
+                             x=NULL)
+                } else {
+
+                    num_breaks <- 5
+
+                    if(text__scale_free_facet) {
+                        
+                        facet_scale_type <- 'free'
+                        text_dataset <- text_dataset %>%
+                            #arrange(-n) %>%
+                            group_by(!!sym(facet_variable)) %>%
+                            top_n(text__top_n_words, n) %>%
+                            ungroup() %>%
+                            mutate(word = reorder_within(word, -n, !!sym(facet_variable))) %>%
+                            arrange(word)
+
+                        ggplot_object <- text_dataset %>%
+                            ggplot(aes(x=word, y=n, fill=word)) +
+                            geom_col(alpha=0.75) +
+                            scale_x_reordered() +
+                            scale_y_continuous(breaks = pretty_breaks(num_breaks), labels = axes_format_function) +
+                            scale_fill_manual(values=get_colors_from_word_df(text_dataset)) +
+                            theme_light(base_size = base_size) +
                             theme(axis.text.x=element_text(angle=30, hjust=1),
                                   legend.position = 'none') +
                             labs(y="Count",
                                  x=NULL)
+                    } else {
+                        
+                        facet_scale_type <- 'free_y'
+                        
+                        text_dataset <- text_dataset %>%
+                            #arrange(-n) %>%
+                            top_n(text__top_n_words, n) %>%
+                            mutate(word = fct_reorder(word, n, .desc = TRUE))
+
+                        ggplot_object <- text_dataset %>%
+                            ggplot(aes(x=word, y=n)) +
+                            geom_col(alpha=0.75) +
+                            scale_y_continuous(breaks = pretty_breaks(num_breaks), labels = axes_format_function) +
+                            theme_light(base_size = base_size) +
+                            theme(axis.text.x=element_text(angle=30, hjust=1),
+                                  legend.position = 'none') +
+                            labs(y="Count",
+                                 x=NULL)
+                    }
+                    
+                    if(text__top_n_words <= 10) {
+                        
+                        number_of_facet_columns <- 3
+
+                    } else if(text__top_n_words <= 25) {
+                        
+                        number_of_facet_columns <- 2
+
+                    } else {
+
+                        number_of_facet_columns <- 1
+                    }
+                    
+                    ggplot_object <- ggplot_object +
+                        facet_wrap(as.formula(paste0("~ `", facet_variable, "`")), ncol = number_of_facet_columns, scales = facet_scale_type)
                 }
-
-                if(filter_factor_lump_number <= 10) {
-
-                    number_of_facet_columns <- 3
-
-                } else if(filter_factor_lump_number <= 25) {
-
-                    number_of_facet_columns <- 2
-
-                } else {
-
-                    number_of_facet_columns <- 1
-                }
-
+                
                 ggplot_object <- ggplot_object +
-                    facet_wrap(as.formula(paste0("~ `", facet_variable, "`")), ncol = number_of_facet_columns, scales = facet_scale_type)
+                    geom_text(aes(label=map_chr(n, ~ label_format_function(.))), vjust=-0.3, check_overlap = TRUE)
             }
-    
-            ggplot_object <- ggplot_object +
-                geom_text(aes(label=map_chr(n, ~ label_format_function(.))), vjust=-0.3, check_overlap = TRUE)
-
         } else if(is_date_type(dataset[[primary_variable]])) {
 
             date_limits <- NULL
@@ -2609,24 +2685,51 @@ helper__show_hide_trend_line <- function(session, input, show=TRUE) {
     }
 }
 
-hide_show_text <- function(session, input) {
+hide_show_text <- function(session, input, dataset, comparison_variable, facet_variable, text__freq_comp_group) {
 
     log_message('hide_show_text')
 
+    updateSelectInput(session, 'var_plots__comparison', label="Comparison Variable")
+    shinyjs::show('var_plots__comparison')
+    shinyjs::show('var_plots__text__top_n_words')
     shinyjs::show('var_plots__filter_factor_lump_number')
     shinyjs::show('var_plots__facet_variable')
     shinyjs::show('var_plots__text__stem_words')
     shinyjs::show('var_plots__text__graph_type')
 
-    facet_variable <- null_if_select_variable_optional(input$var_plots__facet_variable)
+    if(is_null_or_empty_string(comparison_variable)) {
 
-    if(is.null(facet_variable)) {
+        reset_hide_var_plot_option(session, 'var_plots__text__freq_comp_group')
+        shinyjs::show('var_plots__facet_variable')
+
+    }  else {
+
+        shinyjs::show('var_plots__text__freq_comp_group')
+        reset_hide_var_plot_option(session, 'var_plots__facet_variable')
+        reset_hide_var_plot_option(session, 'var_plots__text__top_n_words')
+        reset_hide_var_plot_option(session, 'var_plots__text__graph_type')
+        
+        unique_comparison_values <- as.character(sort(unique(dataset[[comparison_variable]])))
+
+        if(is_null_or_empty_string(text__freq_comp_group)) {
+
+            updateSelectInput(session, 'var_plots__text__freq_comp_group', selected=unique_comparison_values[1], choices=unique_comparison_values)
+        }
+    }
+
+    if(is_null_or_empty_string(facet_variable)) {
 
         reset_hide_var_plot_option(session, 'var_plots__text__scale_free_facet')
 
     } else {
 
         shinyjs::show('var_plots__text__scale_free_facet')
+
+    }
+
+    if(is_null_or_empty_string(comparison_variable) && is_null_or_empty_string(facet_variable)) {
+
+        reset_hide_var_plot_option(session, 'var_plots__filter_factor_lump_number')
     }
 
     reset_hide_var_plot_option(session, 'var_plots__count_distinct_variable')
@@ -2834,7 +2937,9 @@ hide_show_date <- function(session, input) {
 
     reset_hide_var_plot_option(session, 'var_plots__text__stem_words')
     reset_hide_var_plot_option(session, 'var_plots__text__graph_type')
+    reset_hide_var_plot_option(session, 'var_plots__text__freq_comp_group')
     reset_hide_var_plot_option(session, 'var_plots__text__scale_free_facet')
+    reset_hide_var_plot_option(session, 'var_plots__text__top_n_words')
     reset_hide_var_plot_option(session, 'var_plots__convert_numerics_to_categoric')
     reset_hide_var_plot_option(session, 'var_plots__convert_numerics_to_categoric__num_groups')
     reset_hide_var_plot_option(session, 'var_plots__convert_numerics_to_categoric__x_cut_sequence')
@@ -2967,7 +3072,9 @@ hide_show_numeric_numeric <- function(session,
     
     reset_hide_var_plot_option(session, 'var_plots__text__stem_words')
     reset_hide_var_plot_option(session, 'var_plots__text__graph_type')
+    reset_hide_var_plot_option(session, 'var_plots__text__freq_comp_group')
     reset_hide_var_plot_option(session, 'var_plots__text__scale_free_facet')
+    reset_hide_var_plot_option(session, 'var_plots__text__top_n_words')
     reset_hide_var_plot_option(session, 'var_plots__facet_variable')
     reset_hide_var_plot_option(session, 'var_plots__date_conversion_variable')
     reset_hide_var_plot_option(session, 'var_plots__date_cr__snapshots__group_variable')
@@ -3083,7 +3190,9 @@ hide_show_numeric_categoric <- function(session,
 
     reset_hide_var_plot_option(session, 'var_plots__text__stem_words')
     reset_hide_var_plot_option(session, 'var_plots__text__graph_type')
+    reset_hide_var_plot_option(session, 'var_plots__text__freq_comp_group')
     reset_hide_var_plot_option(session, 'var_plots__text__scale_free_facet')
+    reset_hide_var_plot_option(session, 'var_plots__text__top_n_words')
     reset_hide_var_plot_option(session, 'var_plots__convert_numerics_to_categoric')
     reset_hide_var_plot_option(session, 'var_plots__convert_numerics_to_categoric__num_groups')
     reset_hide_var_plot_option(session, 'var_plots__convert_numerics_to_categoric__x_cut_sequence')
@@ -3238,7 +3347,9 @@ hide_show_categoric_categoric <- function(session,
 
     reset_hide_var_plot_option(session, 'var_plots__text__stem_words')
     reset_hide_var_plot_option(session, 'var_plots__text__graph_type')
+    reset_hide_var_plot_option(session, 'var_plots__text__freq_comp_group')
     reset_hide_var_plot_option(session, 'var_plots__text__scale_free_facet')
+    reset_hide_var_plot_option(session, 'var_plots__text__top_n_words')
     reset_hide_var_plot_option(session, 'var_plots__date_conversion_variable')
     reset_hide_var_plot_option(session, 'var_plots__date_cr__snapshots__group_variable')
     reset_hide_var_plot_option(session, 'var_plots__date_cr__plot_type')
@@ -3344,7 +3455,9 @@ observe__var_plots__hide_show_uncollapse_on_primary_vars <- function(session, in
             reset_hide_var_plot_option(session, 'var_plots__date_conversion_variable')
             reset_hide_var_plot_option(session, 'var_plots__text__stem_words')
             reset_hide_var_plot_option(session, 'var_plots__text__graph_type')
+            reset_hide_var_plot_option(session, 'var_plots__text__freq_comp_group')
             reset_hide_var_plot_option(session, 'var_plots__text__scale_free_facet')
+            reset_hide_var_plot_option(session, 'var_plots__text__top_n_words')
             reset_hide_var_plot_option(session, 'var_plots__date_cr__snapshots__group_variable')
             reset_hide_var_plot_option(session, 'var_plots__date_cr__plot_type')
             reset_hide_var_plot_option(session, 'var_plots__date_cr__snapshots__values')
@@ -3443,7 +3556,6 @@ update_var_plot_variables_from_url_params <- function(session, params, dataset, 
     updateSelectInput(session, 'var_plots__variable',
                       choices=c(global__select_variable, column_names),
                       selected=selected_variable)   
-    
 
     #######################################################################
     # Update Comparison Variable - cache selected for comparison variable
@@ -3598,7 +3710,9 @@ update_var_plot_variables_from_url_params <- function(session, params, dataset, 
     update_checkbox_input(session, params, 'var_plots__show_points')
     update_checkbox_input(session, params, 'var_plots__text__stem_words')
     update_checkbox_input(session, params, 'var_plots__text__graph_type')
+    update_checkbox_input(session, params, 'var_plots__text__freq_comp_group')
     update_checkbox_input(session, params, 'var_plots__text__scale_free_facet')
+    update_checkbox_input(session, params, 'var_plots__text__top_n_words')
     update_select_input(session, params, 'var_plots__date_cr__plot_type')
     update_text_input(session, params, 'var_plots__date_cr__snapshots__values')
     update_select_input(session, params, 'var_plots__date_cr__snapshots__units')

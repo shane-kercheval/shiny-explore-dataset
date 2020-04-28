@@ -308,6 +308,8 @@ shinyServer(function(input, output, session) {
         numeric_column_names <- colnames(reactive__source_data$data %>% select_if(is.numeric))
         categoric_column_names <- colnames(reactive__source_data$data %>% select_if(is_categoric))
         date_column_names <- colnames(reactive__source_data$data %>% select_if(is_date_type))
+        text_column_names <- colnames(reactive__source_data$data %>% select_if(is_text_type))
+        categoric_column_names <- categoric_column_names %>% rt_remove_val(text_column_names)
 
         updateSelectInput(session, 'var_plots__variable',
                           choices=c(global__select_variable, column_names),
@@ -319,7 +321,7 @@ shinyServer(function(input, output, session) {
                           choices=c(global__select_variable_optional, numeric_column_names),
                           selected=global__select_variable_optional)
         updateSelectInput(session, 'var_plots__count_distinct_variable',
-                          choices=c(global__select_variable_optional, categoric_column_names),
+                          choices=c(global__select_variable_optional, categoric_column_names, text_column_names),
                           selected=global__select_variable_optional)
         updateSelectInput(session, 'var_plots__facet_variable',
                           choices=c(global__select_variable_optional, categoric_column_names),
