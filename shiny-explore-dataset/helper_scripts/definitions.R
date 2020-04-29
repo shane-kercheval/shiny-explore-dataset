@@ -49,8 +49,11 @@ global__text__graph_type_count__values <- c(global__text__graph_type_count__coun
 global__text__sentiment_dictionary__bing <- "Bing"
 global__text__sentiment_dictionary__NRC <- "NRC"
 global__text__sentiment_dictionary__AFINN <- "AFINN"
-
 global__text__sentiment_dictionary__values <- c(global__text__sentiment_dictionary__bing, global__text__sentiment_dictionary__NRC, global__text__sentiment_dictionary__AFINN)
+
+global__text__sentiment__bing__overall <- "Overall"
+global__text__sentiment__bing__top_words <- "Top Words"
+global__text__sentiment__bing__values <- c(global__text__sentiment__bing__overall, global__text__sentiment__bing__top_words)
 
 var_plots__default_values <- list(
 
@@ -83,6 +86,7 @@ var_plots__default_values <- list(
     'var_plots__text__graph_type' = global__text__graph_type__values[1],
     'var_plots__text__count_type' = global__text__graph_type_count__values[1],
     'var_plots__text__sentiment_dictionary' = global__text__sentiment_dictionary__values[1],
+    'var_plots__text__sentiment__bing' = global__text__sentiment__bing__values[1],
     'var_plots__text__freq_comp_group' = "",
     'var_plots__text__scale_free_facet' = FALSE,
     'var_plots__text__top_n_words' = 20,
@@ -163,6 +167,7 @@ var_plots__variable_types <- list(
     'var_plots__text__graph_type' = 'updateRadioButtons',
     'var_plots__text__count_type' = 'updateRadioButtons',
     'var_plots__text__sentiment_dictionary' = 'updateRadioButtons',
+    'var_plots__text__sentiment__bing' = 'updateRadioButtons',
     'var_plots__text__freq_comp_group' = 'updateSelectInput',
     'var_plots__text__scale_free_facet' = 'updateCheckboxInput',
     'var_plots__text__top_n_words' = 'updateSliderInput',

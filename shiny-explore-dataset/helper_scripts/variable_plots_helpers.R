@@ -302,6 +302,7 @@ helper__restore_defaults_graph_options <- function(session) {
     reset_hide_var_plot_option(session, option_name='var_plots__text__graph_type', hide_option=FALSE)
     reset_hide_var_plot_option(session, option_name='var_plots__text__count_type', hide_option=FALSE)
     reset_hide_var_plot_option(session, option_name='var_plots__text__sentiment_dictionary', hide_option=FALSE)
+    reset_hide_var_plot_option(session, option_name='var_plots__text__sentiment__bing', hide_option=FALSE)
     reset_hide_var_plot_option(session, option_name='var_plots__text__freq_comp_group', hide_option=FALSE)
     reset_hide_var_plot_option(session, option_name='var_plots__text__scale_free_facet', hide_option=FALSE)
     reset_hide_var_plot_option(session, option_name='var_plots__text__top_n_words', hide_option=FALSE)
@@ -373,6 +374,7 @@ hide_graph_options <- function(session) {
     reset_hide_var_plot_option(session, 'var_plots__text__graph_type')
     reset_hide_var_plot_option(session, 'var_plots__text__count_type')
     reset_hide_var_plot_option(session, 'var_plots__text__sentiment_dictionary')
+    reset_hide_var_plot_option(session, 'var_plots__text__sentiment__bing')
     reset_hide_var_plot_option(session, 'var_plots__text__freq_comp_group')
     reset_hide_var_plot_option(session, 'var_plots__text__scale_free_facet')
     reset_hide_var_plot_option(session, 'var_plots__text__top_n_words')
@@ -425,6 +427,7 @@ observeEvent__var_plots__graph_options__any_used__function <- function(input, se
                    input$var_plots__text__graph_type,
                    input$var_plots__text__count_type,
                    input$var_plots__text__sentiment_dictionary,
+                   input$var_plots__text__sentiment__bing,
                    input$var_plots__text__freq_comp_group,
                    input$var_plots__text__scale_free_facet,
                    input$var_plots__text__top_n_words,
@@ -1202,6 +1205,7 @@ reactive__var_plots__ggplot__creator <- function(input,
         text__graph_type <- isolate(input$var_plots__text__graph_type)
         text__count_type <- isolate(input$var_plots__text__count_type)
         text__sentiment_dictionary <- isolate(input$var_plots__text__sentiment_dictionary)
+        text__sentiment__bing <- isolate(input$var_plots__text__sentiment__bing)
         text__freq_comp_group <- isolate(input$var_plots__text__freq_comp_group)
         text__scale_free_facet <- isolate(input$var_plots__text__scale_free_facet)
         text__top_n_words <- isolate(input$var_plots__text__top_n_words)
@@ -1411,6 +1415,7 @@ reactive__var_plots__ggplot__creator <- function(input,
                                               text__graph_type=text__graph_type,
                                               text__count_type=text__count_type,
                                               text__sentiment_dictionary=text__sentiment_dictionary,
+                                              text__sentiment__bing=text__sentiment__bing,
                                               text__freq_comp_group=text__freq_comp_group,
                                               text__scale_free_facet=text__scale_free_facet,
                                               text__top_n_words=text__top_n_words,
@@ -1525,6 +1530,7 @@ create_ggplot_object <- function(dataset,
                                  text__graph_type="Count",
                                  text__count_type="",
                                  text__sentiment_dictionary="",
+                                 text__sentiment__bing="",
                                  text__freq_comp_group="",
                                  text__scale_free_facet=FALSE,
                                  text__top_n_words=20,
@@ -1976,37 +1982,127 @@ create_ggplot_object <- function(dataset,
                 } else if (text__graph_type == global__text__graph_type__sentiment) {
 
                     if(text__sentiment_dictionary == global__text__sentiment_dictionary__bing) {
-                    
-                        sentiment_names <- c('positive',
-                                             'negative')
-                        # sentiment_colors <- rt_colors(color_names = c("custom_green",
-                        #                                               "tomato"))
-                        sentiment_colors <- rt_colors_good_bad()
-                        #rt_plot_colors()
-                        temp_sentiments <- suppressWarnings(text_dataset %>%
-                            #left_join(get_sentiments("bing"), by = 'word') %>%
-                            inner_join(get_sentiments("bing"), by = 'word') %>%
-                            mutate(sentiment = factor(sentiment, levels=sentiment_names)) %>%
-                            group_by_at(c('sentiment', facet_variable)) %>%
-                            summarise(n = n())) %>%
-                            ungroup()
-
-                        ggplot_object <- temp_sentiments %>%
-                            ggplot(aes(x=sentiment, y=n, fill=sentiment)) +
-                            geom_col(alpha=0.75) +
-                            scale_y_continuous(breaks = pretty_breaks(num_breaks), labels = rt_pretty_axes) +
-                            scale_fill_manual(values=sentiment_colors, na.value='black') +
-                            theme_light(base_size = base_size) +
-                            theme(axis.text.x=element_text(angle=30, hjust=1),
-                                  legend.position = 'none') +
-                            labs(caption="Note: words without sentiment values are not included.",
-                                 y="Word Count")
                         
-                        if(!is.null(facet_variable)) {
-                            ggplot_object <- ggplot_object +
-                                facet_wrap(as.formula(paste0("~ `", facet_variable, "`")), ncol = 4, scales = 'free_y')
-                        }
+                        if(text__sentiment__bing == global__text__sentiment__bing__overall) {
+                            
+                            sentiment_names <- c('positive',
+                                                 'negative')
+                            # sentiment_colors <- rt_colors(color_names = c("custom_green",
+                            #                                               "tomato"))
+                            sentiment_colors <- rt_colors_good_bad()
+                            #rt_plot_colors()
+                            temp_sentiments <- suppressWarnings(text_dataset %>%
+                                                                    #left_join(get_sentiments("bing"), by = 'word') %>%
+                                                                    inner_join(get_sentiments("bing"), by = 'word') %>%
+                                                                    mutate(sentiment = factor(sentiment, levels=sentiment_names)) %>%
+                                                                    group_by_at(c('sentiment', facet_variable)) %>%
+                                                                    summarise(n = n())) %>%
+                                ungroup()
+                            
+                            ggplot_object <- temp_sentiments %>%
+                                ggplot(aes(x=sentiment, y=n, fill=sentiment)) +
+                                geom_col(alpha=0.75) +
+                                scale_fill_manual(values=sentiment_colors, na.value='black') +
+                                theme_light(base_size = base_size) +
+                                theme(axis.text.x=element_text(angle=30, hjust=1),
+                                      legend.position = 'none') +
+                                labs(caption="Note: words without sentiment values are not included.",
+                                     y="Word Count")
+                            
+                            if(is.null(facet_variable)) {
+                                
+                                ggplot_object <- ggplot_object +
+                                    scale_y_continuous(breaks = pretty_breaks(10), labels = rt_pretty_axes)
 
+                            } else {
+                                ggplot_object <- ggplot_object +
+                                    scale_y_continuous(breaks = pretty_breaks(5), labels = rt_pretty_axes) +
+                                    facet_wrap(as.formula(paste0("~ `", facet_variable, "`")), ncol = 4, scales = 'free_y')
+                            }
+
+                        } else if (text__sentiment__bing == global__text__sentiment__bing__top_words) {
+                            
+                            sentiment_names <- c('positive',
+                                                 'negative')
+                            # sentiment_colors <- rt_colors(color_names = c("custom_green",
+                            #                                               "tomato"))
+                            sentiment_colors <- rt_colors_good_bad()
+                            #rt_plot_colors()
+                            temp_sentiments <- suppressWarnings(text_dataset %>%
+                                                                    #left_join(get_sentiments("bing"), by = 'word') %>%
+                                                                    inner_join(get_sentiments("bing"), by = 'word') %>%
+                                                                    mutate(sentiment = factor(sentiment, levels=sentiment_names)) %>%
+                                                                    group_by_at(c('word', 'sentiment', facet_variable)) %>%
+                                                                    summarise(n = n())) %>%
+                                ungroup() %>%
+                                # i considered grouping by only sentiment for non-facet option and only facet
+                                # for facet option, but in the case where e.g. the top 20 words are positivie
+                                # and you only have 20 words selected to show, you would not see any negative
+                                # words.
+                                # this way, you always see e.g. top 10 positive and negative for each facet
+                                group_by_at(c('sentiment', facet_variable)) %>%
+                                top_n(text__top_n_words, n) %>%
+                                ungroup()
+
+                            if(is.null(facet_variable)) {
+
+                                temp_sentiments <- temp_sentiments %>%
+                                    mutate(word = reorder(word, -n))
+
+                            } else {
+
+                                temp_sentiments <- temp_sentiments %>%
+                                    mutate(word = reorder_within(word, -n, !!sym(facet_variable)))
+                            }
+
+                            ggplot_object <- temp_sentiments %>%
+                                ggplot(aes(x=word, y=n, fill=sentiment)) +
+                                geom_col(alpha=0.75) +
+                                scale_fill_manual(values=sentiment_colors, na.value='black') +
+                                theme_light(base_size = base_size) +
+                                theme(axis.text.x=element_text(angle=30, hjust=1),
+                                      legend.position = 'none') +
+                                labs(caption="Note: words without sentiment values are not included.",
+                                     y="Word Count")
+
+                            if(is.null(facet_variable)) {
+
+                                if(text__top_n_words > 25) {
+                                    number_of_columns <- 1
+                                } else {
+                                    number_of_columns <- 2
+                                }
+                                
+                                ggplot_object <- ggplot_object +
+                                    scale_y_continuous(breaks = pretty_breaks(10), labels = rt_pretty_axes) +
+                                    facet_wrap(~ sentiment, ncol = number_of_columns, scales = 'free_x')
+
+                            } else {
+
+                                #top n words is per sentiment, so double
+                                if(text__top_n_words >= 20) {
+
+                                    number_of_columns <- 1
+
+                                } else if(text__top_n_words >= 10) {
+
+                                    number_of_columns <- 2
+
+                                } else {
+
+                                    number_of_columns <- 3
+                                }
+
+                                ggplot_object <- ggplot_object +
+                                    scale_x_reordered() +
+                                    scale_y_continuous(breaks = pretty_breaks(5), labels = rt_pretty_axes) +
+                                    facet_wrap(as.formula(paste0("~ `", facet_variable, "`")), ncol = number_of_columns, scales = 'free')
+                            }
+
+                        } else {
+
+                            stopifnot(FALSE)
+                        }
                     } else if(text__sentiment_dictionary == global__text__sentiment_dictionary__NRC) {
                         
                     } else  if(text__sentiment_dictionary == global__text__sentiment_dictionary__AFINN) {
@@ -2767,12 +2863,49 @@ hide_show_text <- function(session, input, dataset, comparison_variable, facet_v
         if(local_graph_type == global__text__graph_type__count) {
 
             shinyjs::show('var_plots__text__count_type')
+            shinyjs::show('var_plots__comparison')
             reset_hide_var_plot_option(session, 'var_plots__text__sentiment_dictionary')
+            reset_hide_var_plot_option(session, 'var_plots__text__sentiment__bing')
 
         } else if (local_graph_type == global__text__graph_type__sentiment){
 
+            reset_hide_var_plot_option(session, 'var_plots__comparison')
             reset_hide_var_plot_option(session, 'var_plots__text__count_type')
             shinyjs::show('var_plots__text__sentiment_dictionary')
+
+            local_sentiment_dictionary <- isolate(input$var_plots__text__sentiment_dictionary)
+
+            if(local_sentiment_dictionary == global__text__sentiment_dictionary__bing) {
+
+                shinyjs::show('var_plots__text__sentiment__bing')
+
+                local_sentiment_bing_options <- isolate(input$var_plots__text__sentiment__bing)
+
+                if(local_sentiment_bing_options == global__text__sentiment__bing__overall) {
+
+                    reset_hide_var_plot_option(session, 'var_plots__text__top_n_words')
+
+                } else if(local_sentiment_bing_options == global__text__sentiment__bing__top_words) {
+
+                    shinyjs::show('var_plots__text__top_n_words')
+
+                } else {
+
+                    stopifnot(FALSE)
+                }
+
+            } else if (local_sentiment_dictionary == global__text__sentiment_dictionary__NRC) {
+
+                reset_hide_var_plot_option(session, 'var_plots__text__sentiment__bing')
+
+            } else if (local_sentiment_dictionary == global__text__sentiment_dictionary__AFINN) {
+
+                reset_hide_var_plot_option(session, 'var_plots__text__sentiment__bing')
+
+            } else {
+            
+                stopifnot(FALSE)                    
+            }
 
         } else {
             stopifnot(FALSE)
@@ -2786,6 +2919,7 @@ hide_show_text <- function(session, input, dataset, comparison_variable, facet_v
         reset_hide_var_plot_option(session, 'var_plots__text__graph_type')
         reset_hide_var_plot_option(session, 'var_plots__text__count_type')
         reset_hide_var_plot_option(session, 'var_plots__text__sentiment_dictionary')
+        reset_hide_var_plot_option(session, 'var_plots__text__sentiment__bing')
         
         unique_comparison_values <- as.character(sort(unique(dataset[[comparison_variable]])))
 
@@ -2795,7 +2929,7 @@ hide_show_text <- function(session, input, dataset, comparison_variable, facet_v
         }
     }
 
-    if(is_null_or_empty_string(facet_variable)) {
+    if(is_null_or_empty_string(facet_variable) || local_graph_type == global__text__graph_type__sentiment) {
 
         reset_hide_var_plot_option(session, 'var_plots__text__scale_free_facet')
 
@@ -3016,6 +3150,7 @@ hide_show_date <- function(session, input) {
     reset_hide_var_plot_option(session, 'var_plots__text__graph_type')
     reset_hide_var_plot_option(session, 'var_plots__text__count_type')
     reset_hide_var_plot_option(session, 'var_plots__text__sentiment_dictionary')
+    reset_hide_var_plot_option(session, 'var_plots__text__sentiment__bing')
     reset_hide_var_plot_option(session, 'var_plots__text__freq_comp_group')
     reset_hide_var_plot_option(session, 'var_plots__text__scale_free_facet')
     reset_hide_var_plot_option(session, 'var_plots__text__top_n_words')
@@ -3153,6 +3288,7 @@ hide_show_numeric_numeric <- function(session,
     reset_hide_var_plot_option(session, 'var_plots__text__graph_type')
     reset_hide_var_plot_option(session, 'var_plots__text__count_type')
     reset_hide_var_plot_option(session, 'var_plots__text__sentiment_dictionary')
+    reset_hide_var_plot_option(session, 'var_plots__text__sentiment__bing')
     reset_hide_var_plot_option(session, 'var_plots__text__freq_comp_group')
     reset_hide_var_plot_option(session, 'var_plots__text__scale_free_facet')
     reset_hide_var_plot_option(session, 'var_plots__text__top_n_words')
@@ -3273,6 +3409,7 @@ hide_show_numeric_categoric <- function(session,
     reset_hide_var_plot_option(session, 'var_plots__text__graph_type')
     reset_hide_var_plot_option(session, 'var_plots__text__count_type')
     reset_hide_var_plot_option(session, 'var_plots__text__sentiment_dictionary')
+    reset_hide_var_plot_option(session, 'var_plots__text__sentiment__bing')
     reset_hide_var_plot_option(session, 'var_plots__text__freq_comp_group')
     reset_hide_var_plot_option(session, 'var_plots__text__scale_free_facet')
     reset_hide_var_plot_option(session, 'var_plots__text__top_n_words')
@@ -3432,6 +3569,7 @@ hide_show_categoric_categoric <- function(session,
     reset_hide_var_plot_option(session, 'var_plots__text__graph_type')
     reset_hide_var_plot_option(session, 'var_plots__text__count_type')
     reset_hide_var_plot_option(session, 'var_plots__text__sentiment_dictionary')
+    reset_hide_var_plot_option(session, 'var_plots__text__sentiment__bing')
     reset_hide_var_plot_option(session, 'var_plots__text__freq_comp_group')
     reset_hide_var_plot_option(session, 'var_plots__text__scale_free_facet')
     reset_hide_var_plot_option(session, 'var_plots__text__top_n_words')
@@ -3542,6 +3680,7 @@ observe__var_plots__hide_show_uncollapse_on_primary_vars <- function(session, in
             reset_hide_var_plot_option(session, 'var_plots__text__graph_type')
             reset_hide_var_plot_option(session, 'var_plots__text__count_type')
             reset_hide_var_plot_option(session, 'var_plots__text__sentiment_dictionary')
+            reset_hide_var_plot_option(session, 'var_plots__text__sentiment__bing')
             reset_hide_var_plot_option(session, 'var_plots__text__freq_comp_group')
             reset_hide_var_plot_option(session, 'var_plots__text__scale_free_facet')
             reset_hide_var_plot_option(session, 'var_plots__text__top_n_words')
@@ -3795,13 +3934,14 @@ update_var_plot_variables_from_url_params <- function(session, params, dataset, 
     update_text_input(session, params, 'var_plots__multi_value_delimiter')
     update_checkbox_input(session, params, 'var_plots__annotate_points')
     update_checkbox_input(session, params, 'var_plots__show_points')
-    update_checkbox_input(session, params, 'var_plots__text__stem_words')
-    update_checkbox_input(session, params, 'var_plots__text__graph_type')
-    update_checkbox_input(session, params, 'var_plots__text__count_type')
-    update_checkbox_input(session, params, 'var_plots__text__sentiment_dictionary')
-    update_checkbox_input(session, params, 'var_plots__text__freq_comp_group')
+    update_radio_buttons(session, params, 'var_plots__text__stem_words')
+    update_radio_buttons(session, params, 'var_plots__text__graph_type')
+    update_radio_buttons(session, params, 'var_plots__text__count_type')
+    update_radio_buttons(session, params, 'var_plots__text__sentiment_dictionary')
+    update_radio_buttons(session, params, 'var_plots__text__sentiment__bing')
+    update_select_input(session, params, 'var_plots__text__freq_comp_group')
     update_checkbox_input(session, params, 'var_plots__text__scale_free_facet')
-    update_checkbox_input(session, params, 'var_plots__text__top_n_words')
+    update_slider_input(session, params, 'var_plots__text__top_n_words')
     update_select_input(session, params, 'var_plots__date_cr__plot_type')
     update_text_input(session, params, 'var_plots__date_cr__snapshots__values')
     update_select_input(session, params, 'var_plots__date_cr__snapshots__units')
