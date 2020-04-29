@@ -394,7 +394,6 @@ shinyServer(function(input, output, session) {
         }
     }, suspended=TRUE)
 
-
     observeEvent_color <- observeEvent(c(input$var_plots__variable, input$var_plots__comparison), {
 
         req(!isolate(url_parameter_info$currently_updating))  # should never update if we have params (until set to false)

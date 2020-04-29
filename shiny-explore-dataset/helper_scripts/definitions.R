@@ -37,10 +37,20 @@ global__text__stemming_type__Hunspell <- "Hunspell"
 global__text__stemming_type__SnowballC <- "SnowballC"
 global__text__stemming_types <- c(global__text__stemming_type__none, global__text__stemming_type__Hunspell, global__text__stemming_type__SnowballC)
 
-global__text__graph_type__count <- "Count"
-global__text__graph_type__freq_record <- "Frequency (Per Record)"
-global__text__graph_type__freq_all_words <- "Frequency (all words)"
-global__text__graph_type__values <- c(global__text__graph_type__count, global__text__graph_type__freq_record, global__text__graph_type__freq_all_words)
+global__text__graph_type__count <- "Word Count"
+global__text__graph_type__sentiment <- "Sentiment"
+global__text__graph_type__values <- c(global__text__graph_type__count, global__text__graph_type__sentiment)
+
+global__text__graph_type_count__count <- "Count"
+global__text__graph_type_count__freq_record <- "Freq (Per Record)"
+global__text__graph_type_count__freq_all_words <- "Freq (All Words)"
+global__text__graph_type_count__values <- c(global__text__graph_type_count__count, global__text__graph_type_count__freq_record, global__text__graph_type_count__freq_all_words)
+
+global__text__sentiment_dictionary__bing <- "Bing"
+global__text__sentiment_dictionary__NRC <- "NRC"
+global__text__sentiment_dictionary__AFINN <- "AFINN"
+
+global__text__sentiment_dictionary__values <- c(global__text__sentiment_dictionary__bing, global__text__sentiment_dictionary__NRC, global__text__sentiment_dictionary__AFINN)
 
 var_plots__default_values <- list(
 
@@ -70,7 +80,9 @@ var_plots__default_values <- list(
     'var_plots__ts_graph_type' = global__ts_graph_type__default,
     'var_plots__include_zero_y_axis' = TRUE,
     'var_plots__text__stem_words' = global__text__stemming_type__Hunspell,
-    'var_plots__text__graph_type' = "Count",
+    'var_plots__text__graph_type' = global__text__graph_type__values[1],
+    'var_plots__text__count_type' = global__text__graph_type_count__values[1],
+    'var_plots__text__sentiment_dictionary' = global__text__sentiment_dictionary__values[1],
     'var_plots__text__freq_comp_group' = "",
     'var_plots__text__scale_free_facet' = FALSE,
     'var_plots__text__top_n_words' = 20,
@@ -148,7 +160,9 @@ var_plots__variable_types <- list(
     'var_plots__ts_graph_type' = 'updateRadioButtons',
     'var_plots__include_zero_y_axis' = 'updateCheckboxInput',
     'var_plots__text__stem_words' = 'updateRadioButtons',
-    'var_plots__text__graph_type' = 'updateSelectInput',
+    'var_plots__text__graph_type' = 'updateRadioButtons',
+    'var_plots__text__count_type' = 'updateRadioButtons',
+    'var_plots__text__sentiment_dictionary' = 'updateRadioButtons',
     'var_plots__text__freq_comp_group' = 'updateSelectInput',
     'var_plots__text__scale_free_facet' = 'updateCheckboxInput',
     'var_plots__text__top_n_words' = 'updateSliderInput',
