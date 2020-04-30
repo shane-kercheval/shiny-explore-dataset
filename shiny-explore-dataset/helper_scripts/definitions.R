@@ -37,14 +37,13 @@ global__text__stemming_type__Hunspell <- "Hunspell"
 global__text__stemming_type__SnowballC <- "SnowballC"
 global__text__stemming_types <- c(global__text__stemming_type__none, global__text__stemming_type__Hunspell, global__text__stemming_type__SnowballC)
 
-global__text__graph_type__count <- "Word Count"
+global__text__graph_type__count <- "Frequency"
 global__text__graph_type__sentiment <- "Sentiment"
 global__text__graph_type__values <- c(global__text__graph_type__count, global__text__graph_type__sentiment)
 
 global__text__graph_type_count__count <- "Count"
-global__text__graph_type_count__freq_record <- "Freq (Per Record)"
-global__text__graph_type_count__freq_all_words <- "Freq (All Words)"
-global__text__graph_type_count__values <- c(global__text__graph_type_count__count, global__text__graph_type_count__freq_record, global__text__graph_type_count__freq_all_words)
+global__text__graph_type_count__freq_all_words <- "Proportion of all Words"
+global__text__graph_type_count__values <- c(global__text__graph_type_count__count, global__text__graph_type_count__freq_all_words)
 
 global__text__sentiment_dictionary__bing <- "Bing"
 global__text__sentiment_dictionary__NRC <- "NRC"
@@ -84,7 +83,7 @@ var_plots__default_values <- list(
     'var_plots__include_zero_y_axis' = TRUE,
     'var_plots__text__stem_words' = global__text__stemming_type__Hunspell,
     'var_plots__text__graph_type' = global__text__graph_type__values[1],
-    'var_plots__text__count_type' = global__text__graph_type_count__values[1],
+    'var_plots__text__count_type' = global__text__graph_type_count__values[2],
     'var_plots__text__sentiment_dictionary' = global__text__sentiment_dictionary__values[1],
     'var_plots__text__sentiment__bing' = global__text__sentiment__bing__values[1],
     'var_plots__text__freq_comp_group' = "",

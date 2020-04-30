@@ -1820,7 +1820,7 @@ create_ggplot_object <- function(dataset,
                     
                     return (x)
                 }
-
+                # we don't want to filter out the selected comparison group, but we still have to fct_lump the rest of the values
                 text_dataset[[comparison_variable]] <- fct_lump_n_exclude(x=text_dataset[[comparison_variable]],
                                                                           n=filter_factor_lump_number,
                                                                           exclude_value=text__freq_comp_group)
@@ -1829,6 +1829,9 @@ create_ggplot_object <- function(dataset,
                     summarise(n = n()) %>%
                     ungroup() %>%
                     group_by_at(comparison_variable) %>%
+                    # right now, we are calculating proportion based on all words (i.e. / sum(n)) but we should add ability
+                    # to give results in terms of % of records (e.g. lines) (i.e. / nrow(dataset))
+                    # note that `/ sum(n)` isn't unique words, it is total words used i.e. total amount of words per (e.g. book)
                     mutate(proportion = n / sum(n)) %>% 
                     select(-n) %>% 
                     spread(!!sym(comparison_variable), proportion) %>% 
@@ -1858,64 +1861,62 @@ create_ggplot_object <- function(dataset,
             } else {
                 
                 if(text__graph_type == global__text__graph_type__count) {
-                    
+
+                    # word count, by facet if supplied
+                    text_dataset <- text_dataset %>%
+                        group_by_at(c('word', facet_variable)) %>%
+                        summarise(n = n()) %>%
+                        ungroup()                    
+
                     if(text__count_type == global__text__graph_type_count__count) {
 
-                         text_dataset <- text_dataset %>%
-                            group_by_at(c('word', facet_variable)) %>%
-                            summarise(n = n()) %>%
-                            ungroup()
-                        
                         axes_format_function <- axes_short
                         label_format_function <- axes_short
                         
-                        
-                    } else if(text__count_type == global__text__graph_type_count__freq_record) {
-                        
-                        # this is percent of all records (e.g. lines in a book, whatever a row represents)
-                        
-                        text_dataset <- text_dataset %>%
-                            group_by_at(c('word', facet_variable)) %>%
-                            summarise(n = n() / nrow(dataset)) %>%
-                            ungroup()
-                        
-                        axes_format_function <- rt_pretty_axes_percent
-                        label_format_function <- rt_pretty_axes_percent
-                        
                     } else if (text__count_type == global__text__graph_type_count__freq_all_words) {
                         
-                        # this is percent of all words
-                        
-                        text_dataset <- text_dataset %>%
-                            group_by_at(c('word', facet_variable)) %>%
-                            summarise(n = n() / nrow(.)) %>%
-                            ungroup()
-                        
                         axes_format_function <- rt_pretty_axes_percent
                         label_format_function <- rt_pretty_axes_percent
+                    } else {
+
+                        stopifnot(FALSE)
                     }
                     
                     if(is_null_or_empty_string(facet_variable)) {
                         
                         num_breaks <- 10
                         
+                        if (text__count_type == global__text__graph_type_count__freq_all_words) {
+
+                            text_dataset <- text_dataset %>% mutate(n = n / sum(n))
+                        }
+
                         text_dataset <- text_dataset %>%
                             #arrange(-n) %>%
                             top_n(text__top_n_words, n) %>%
                             mutate(word = fct_reorder(word, n, .desc = TRUE))
-                        
+
                         ggplot_object <- text_dataset %>%
                             ggplot(aes(x=word, y=n)) +
                             geom_col(alpha=0.75) +
+                            geom_text(aes(label=map_chr(n, ~ label_format_function(.))), vjust=-0.3, check_overlap = TRUE) +
                             scale_y_continuous(breaks = pretty_breaks(num_breaks), labels = axes_format_function) +
                             theme_light(base_size = base_size) +
                             theme(axis.text.x=element_text(angle=30, hjust=1),
                                   legend.position = 'none') +
-                            labs(y=paste("Word ", text__count_type),
+                            labs(y=text__count_type,
                                  x=NULL)
                     } else {
 
                         num_breaks <- 5
+                        
+                        if (text__count_type == global__text__graph_type_count__freq_all_words) {
+                            
+                            text_dataset <- text_dataset %>%
+                                group_by(!!sym(facet_variable)) %>%
+                                mutate(n = n / sum(n)) %>%
+                                ungroup()
+                        }
 
                         if(text__scale_free_facet) {
                             
@@ -1937,7 +1938,7 @@ create_ggplot_object <- function(dataset,
                                 theme_light(base_size = base_size) +
                                 theme(axis.text.x=element_text(angle=30, hjust=1),
                                       legend.position = 'none') +
-                                labs(y=paste("Word ", text__count_type),
+                                labs(y=text__count_type,
                                      x=NULL)
                         } else {
                             
@@ -1955,7 +1956,7 @@ create_ggplot_object <- function(dataset,
                                 theme_light(base_size = base_size) +
                                 theme(axis.text.x=element_text(angle=30, hjust=1),
                                       legend.position = 'none') +
-                                labs(y=paste("Word ", text__count_type),
+                                labs(y=text__count_type,
                                      x=NULL)
                         }
 
@@ -1981,6 +1982,18 @@ create_ggplot_object <- function(dataset,
 
                 } else if (text__graph_type == global__text__graph_type__sentiment) {
 
+                    if(text__count_type == global__text__graph_type_count__count) {
+                        
+                        axes_format_function <- axes_short
+                        label_format_function <- axes_short
+                        
+                    } else if (text__count_type == global__text__graph_type_count__freq_all_words) {
+                        
+                        # this is percent of all words (not all unique words)
+                        axes_format_function <- rt_pretty_axes_percent
+                        label_format_function <- rt_pretty_axes_percent
+                    }
+
                     if(text__sentiment_dictionary == global__text__sentiment_dictionary__bing) {
                         
                         if(text__sentiment__bing == global__text__sentiment__bing__overall) {
@@ -1992,22 +2005,41 @@ create_ggplot_object <- function(dataset,
                             sentiment_colors <- rt_colors_good_bad()
                             #rt_plot_colors()
                             temp_sentiments <- suppressWarnings(text_dataset %>%
-                                                                    #left_join(get_sentiments("bing"), by = 'word') %>%
-                                                                    inner_join(get_sentiments("bing"), by = 'word') %>%
+                                                                    # need to do left-join, so that if transforming to frequency/proportion
+                                                                    # then we need the total number of words,
+                                                                    # not just the words that have sentiment
+                                                                    left_join(get_sentiments("bing"), by = 'word') %>%
                                                                     mutate(sentiment = factor(sentiment, levels=sentiment_names)) %>%
                                                                     group_by_at(c('sentiment', facet_variable)) %>%
                                                                     summarise(n = n())) %>%
                                 ungroup()
                             
+                            if(text__count_type == global__text__graph_type_count__freq_all_words) {
+                                if(is.null(facet_variable)) {
+                                    
+                                    temp_sentiments <- temp_sentiments %>% mutate(n = n / sum(n))
+
+                                } else {
+                                    
+                                    temp_sentiments <- temp_sentiments %>%
+                                        group_by(!!sym(facet_variable)) %>%
+                                        mutate(n = n / sum(n)) %>%
+                                        ungroup()
+                                }
+                            }
+
                             ggplot_object <- temp_sentiments %>%
+                                # need to do this after we calculate frequency
+                                filter(!is.na(sentiment)) %>%
                                 ggplot(aes(x=sentiment, y=n, fill=sentiment)) +
                                 geom_col(alpha=0.75) +
+                                geom_text(aes(label=map_chr(n, ~ label_format_function(.))), vjust=-0.3, check_overlap = TRUE) +
                                 scale_fill_manual(values=sentiment_colors, na.value='black') +
                                 theme_light(base_size = base_size) +
                                 theme(axis.text.x=element_text(angle=30, hjust=1),
                                       legend.position = 'none') +
-                                labs(caption="Note: words without sentiment values are not included.",
-                                     y="Word Count")
+                                labs(caption="Note: words without sentiment values are not included; therefore, percentages do not add up to 100%.",
+                                     y=text__count_type)
                             
                             if(is.null(facet_variable)) {
                                 
@@ -2021,7 +2053,7 @@ create_ggplot_object <- function(dataset,
                             }
 
                         } else if (text__sentiment__bing == global__text__sentiment__bing__top_words) {
-                            
+
                             sentiment_names <- c('positive',
                                                  'negative')
                             # sentiment_colors <- rt_colors(color_names = c("custom_green",
@@ -2029,20 +2061,39 @@ create_ggplot_object <- function(dataset,
                             sentiment_colors <- rt_colors_good_bad()
                             #rt_plot_colors()
                             temp_sentiments <- suppressWarnings(text_dataset %>%
-                                                                    #left_join(get_sentiments("bing"), by = 'word') %>%
-                                                                    inner_join(get_sentiments("bing"), by = 'word') %>%
+                                                                    # need to do left-join, so that if transforming to frequency/proportion
+                                                                    # then we need the total number of words,
+                                                                    # not just the words that have sentiment
+                                                                    left_join(get_sentiments("bing"), by = 'word') %>%
                                                                     mutate(sentiment = factor(sentiment, levels=sentiment_names)) %>%
                                                                     group_by_at(c('word', 'sentiment', facet_variable)) %>%
-                                                                    summarise(n = n())) %>%
-                                ungroup() %>%
-                                # i considered grouping by only sentiment for non-facet option and only facet
-                                # for facet option, but in the case where e.g. the top 20 words are positivie
-                                # and you only have 20 words selected to show, you would not see any negative
-                                # words.
-                                # this way, you always see e.g. top 10 positive and negative for each facet
+                                                                    summarise(n = n()) %>%
+                                ungroup())
+
+                            if(text__count_type == global__text__graph_type_count__freq_all_words) {
+                                if(is.null(facet_variable)) {
+                                    
+                                    temp_sentiments <- temp_sentiments %>% mutate(n = n / sum(n))
+
+                                } else {
+                                    
+                                    temp_sentiments <- temp_sentiments %>%
+                                        group_by(!!sym(facet_variable)) %>%
+                                        mutate(n = n / sum(n)) %>%
+                                        ungroup()
+                                }
+                            }
+
+                            # i considered grouping by only sentiment for non-facet option and only facet
+                            # for facet option, but in the case where e.g. the top 20 words are positivie
+                            # and you only have 20 words selected to show, you would not see any negative
+                            # words.
+                            # this way, you always see e.g. top 10 positive and negative for each facet
+                            temp_sentiments <- suppressWarnings(
+                                temp_sentiments %>%
                                 group_by_at(c('sentiment', facet_variable)) %>%
                                 top_n(text__top_n_words, n) %>%
-                                ungroup()
+                                ungroup())
 
                             if(is.null(facet_variable)) {
 
@@ -2056,8 +2107,10 @@ create_ggplot_object <- function(dataset,
                             }
 
                             ggplot_object <- temp_sentiments %>%
+                                filter(!is.na(sentiment)) %>%
                                 ggplot(aes(x=word, y=n, fill=sentiment)) +
                                 geom_col(alpha=0.75) +
+                                geom_text(aes(label=map_chr(n, ~ label_format_function(.))), vjust=-0.3, check_overlap = TRUE) +
                                 scale_fill_manual(values=sentiment_colors, na.value='black') +
                                 theme_light(base_size = base_size) +
                                 theme(axis.text.x=element_text(angle=30, hjust=1),
@@ -2072,9 +2125,9 @@ create_ggplot_object <- function(dataset,
                                 } else {
                                     number_of_columns <- 2
                                 }
-                                
+
                                 ggplot_object <- ggplot_object +
-                                    scale_y_continuous(breaks = pretty_breaks(10), labels = rt_pretty_axes) +
+                                    scale_y_continuous(breaks = pretty_breaks(10), labels = axes_format_function) +
                                     facet_wrap(~ sentiment, ncol = number_of_columns, scales = 'free_x')
 
                             } else {
@@ -2095,7 +2148,7 @@ create_ggplot_object <- function(dataset,
 
                                 ggplot_object <- ggplot_object +
                                     scale_x_reordered() +
-                                    scale_y_continuous(breaks = pretty_breaks(5), labels = rt_pretty_axes) +
+                                    scale_y_continuous(breaks = pretty_breaks(5), labels = axes_format_function) +
                                     facet_wrap(as.formula(paste0("~ `", facet_variable, "`")), ncol = number_of_columns, scales = 'free')
                             }
 
@@ -2858,11 +2911,11 @@ hide_show_text <- function(session, input, dataset, comparison_variable, facet_v
 
         reset_hide_var_plot_option(session, 'var_plots__text__freq_comp_group')
         shinyjs::show('var_plots__facet_variable')
+        shinyjs::show('var_plots__text__count_type')
 
         local_graph_type <- isolate(input$var_plots__text__graph_type)
         if(local_graph_type == global__text__graph_type__count) {
 
-            shinyjs::show('var_plots__text__count_type')
             shinyjs::show('var_plots__comparison')
             reset_hide_var_plot_option(session, 'var_plots__text__sentiment_dictionary')
             reset_hide_var_plot_option(session, 'var_plots__text__sentiment__bing')
@@ -2870,7 +2923,6 @@ hide_show_text <- function(session, input, dataset, comparison_variable, facet_v
         } else if (local_graph_type == global__text__graph_type__sentiment){
 
             reset_hide_var_plot_option(session, 'var_plots__comparison')
-            reset_hide_var_plot_option(session, 'var_plots__text__count_type')
             shinyjs::show('var_plots__text__sentiment_dictionary')
 
             local_sentiment_dictionary <- isolate(input$var_plots__text__sentiment_dictionary)
