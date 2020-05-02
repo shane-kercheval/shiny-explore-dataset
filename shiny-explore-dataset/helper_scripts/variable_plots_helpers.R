@@ -2099,15 +2099,41 @@ create_ggplot_object <- function(dataset,
                             sentiment_names <- c('positive',
                                                  'negative')
                             sentiment_colors <- rt_colors_good_bad()
-                            temp_sentiments <- suppressWarnings(text_dataset %>%
-                                                                    # need to do left-join, so that if transforming to frequency/proportion
-                                                                    # then we need the total number of words,
-                                                                    # not just the words that have sentiment
-                                                                    left_join(get_sentiments("bing"), by = 'word') %>%
-                                                                    mutate(sentiment = factor(sentiment, levels=sentiment_names)) %>%
-                                                                    group_by_at(c('word', 'sentiment', facet_variable)) %>%
-                                                                    summarise(n = n()) %>%
-                                ungroup())
+                            
+                            if(text__sentiment_dictionary == global__text__sentiment_dictionary__bing) {
+                                
+                                temp_sentiments <- suppressWarnings(text_dataset %>%
+                                                                        # need to do left-join, so that if transforming to frequency/proportion
+                                                                        # then we need the total number of words,
+                                                                        # not just the words that have sentiment
+                                                                        left_join(get_sentiments("bing"), by = 'word') %>%
+                                                                        mutate(sentiment = factor(sentiment, levels=sentiment_names)) %>%
+                                                                        group_by_at(c('word', 'sentiment', facet_variable)) %>%
+                                                                        summarise(n = n())) %>%
+                                    ungroup()
+                                
+                            } else if (text__sentiment_dictionary == global__text__sentiment_dictionary__NRC) {
+                                
+                                pos_neg_sentiments <- get_sentiments("nrc") %>%
+                                    filter(sentiment %in% sentiment_names)
+                                
+                                words_both_pos_neg <- pos_neg_sentiments[which(duplicated(pos_neg_sentiments$word)),] %>% pull(word)
+                                pos_neg_sentiments <- pos_neg_sentiments %>% filter(!word %in% words_both_pos_neg)
+                                
+                                temp_sentiments <- suppressWarnings(text_dataset %>%
+                                                                        # need to do left-join, so that if transforming to frequency/proportion
+                                                                        # then we need the total number of words,
+                                                                        # not just the words that have sentiment
+                                                                        left_join(pos_neg_sentiments, by = 'word') %>%
+                                                                        mutate(sentiment = factor(sentiment, levels=sentiment_names)) %>%
+                                                                        group_by_at(c('word', 'sentiment', facet_variable)) %>%
+                                                                        summarise(n = n())) %>%
+                                    ungroup()
+
+                            } else {
+                                
+                                stop("text__sentiment_dictionary not found")
+                            }
 
                             if(text__count_type == global__text__graph_type_count__freq_all_words) {
                                 if(is.null(facet_variable)) {
@@ -2197,10 +2223,79 @@ create_ggplot_object <- function(dataset,
                         }
                     } else if(text__sentiment_dictionary == global__text__sentiment_dictionary__NRC) {
                         
-                        var_plots__text__sentiment__NRC
-
-
+                        
+                        sentiment_names <- c('joy',
+                                             'trust',
+                                             'surprise',
+                                             'anticipation',
+                                             'sadness',
+                                             'disgust',
+                                             'fear',
+                                             'anger')
+                        
+                        sentiment_colors <- rt_colors(color_names = c("custom_purple",
+                                                                      "pastel_blue",
+                                                                      "tuplip_tree",
+                                                                      "dove_gray",
+                                                                      "mariner",
+                                                                      "sunflower",
+                                                                      "cadmium_orange",
+                                                                      "crail"))
+                            
+                        granular_sentiments <- get_sentiments("nrc") %>%
+                            filter(sentiment %in% sentiment_names)
+                        
+                        temp_sentiments <- suppressWarnings(text_dataset %>%
+                                                                # need to do left-join, so that if transforming to frequency/proportion
+                                                                # then we need the total number of words,
+                                                                # not just the words that have sentiment
+                                                                left_join(granular_sentiments, by = 'word') %>%
+                                                                mutate(sentiment = factor(sentiment, levels=sentiment_names)) %>%
+                                                                group_by_at(c('sentiment', facet_variable)) %>%
+                                                                summarise(n = n())) %>%
+                            ungroup()
+                        
+                        if(text__count_type == global__text__graph_type_count__freq_all_words) {
+                            if(is.null(facet_variable)) {
+                                
+                                temp_sentiments <- temp_sentiments %>% mutate(n = n / sum(n))
+                                
+                            } else {
+                                
+                                temp_sentiments <- temp_sentiments %>%
+                                    group_by(!!sym(facet_variable)) %>%
+                                    mutate(n = n / sum(n)) %>%
+                                    ungroup()
+                            }
+                        }
+                        
+                        ggplot_object <- temp_sentiments %>%
+                            # need to do this after we calculate frequency
+                            filter(!is.na(sentiment)) %>%
+                            ggplot(aes(x=sentiment, y=n, fill=sentiment)) +
+                            geom_col(alpha=0.75) +
+                            geom_text(aes(label=map_chr(n, ~ label_format_function(.))), vjust=-0.3, check_overlap = TRUE) +
+                            scale_fill_manual(values=sentiment_colors, na.value='black') +
+                            theme_light(base_size = base_size) +
+                            theme(axis.text.x=element_text(angle=30, hjust=1),
+                                  legend.position = 'none') +
+                            labs(caption="Note: words without sentiment values are not included, words can have multiple sentiment categories; therefore, percentages do not add up to 100%.",
+                                 y=text__count_type)
+                        
+                        if(is.null(facet_variable)) {
+                            
+                            ggplot_object <- ggplot_object +
+                                scale_y_continuous(breaks = pretty_breaks(10), labels = rt_pretty_axes)
+                            
+                        } else {
+                            ggplot_object <- ggplot_object +
+                                scale_y_continuous(breaks = pretty_breaks(5), labels = rt_pretty_axes) +
+                                facet_wrap(as.formula(paste0("~ `", facet_variable, "`")), ncol = 4, scales = 'free_y')
+                        }
+    
                     } else  if(text__sentiment_dictionary == global__text__sentiment_dictionary__AFINN) {
+                        
+                        stop("AFINN not implemented")
                         
                     } else {
                         stop("text__sentiment_dictionary option not found")
@@ -2972,6 +3067,7 @@ hide_show_text <- function(session, input, dataset, comparison_variable, facet_v
             if(local_sentiment_dictionary == global__text__sentiment_dictionary__bing) {
 
                 shinyjs::show('var_plots__text__sentiment__bing')
+                reset_hide_var_plot_option(session, 'var_plots__text__sentiment__NRC')
 
                 local_sentiment_bing_options <- isolate(input$var_plots__text__sentiment__bing)
                 if(local_sentiment_bing_options == global__text__sentiment__bing__overall) {
