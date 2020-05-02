@@ -2223,7 +2223,6 @@ create_ggplot_object <- function(dataset,
                         }
                     } else if(text__sentiment_dictionary == global__text__sentiment_dictionary__NRC) {
                         
-                        
                         sentiment_names <- c('joy',
                                              'trust',
                                              'surprise',
@@ -2245,54 +2244,156 @@ create_ggplot_object <- function(dataset,
                         granular_sentiments <- get_sentiments("nrc") %>%
                             filter(sentiment %in% sentiment_names)
                         
-                        temp_sentiments <- suppressWarnings(text_dataset %>%
-                                                                # need to do left-join, so that if transforming to frequency/proportion
-                                                                # then we need the total number of words,
-                                                                # not just the words that have sentiment
-                                                                left_join(granular_sentiments, by = 'word') %>%
-                                                                mutate(sentiment = factor(sentiment, levels=sentiment_names)) %>%
-                                                                group_by_at(c('sentiment', facet_variable)) %>%
-                                                                summarise(n = n())) %>%
-                            ungroup()
-                        
-                        if(text__count_type == global__text__graph_type_count__freq_all_words) {
+                        if(text__sentiment__NRC == global__text__sentiment__NRC__overall_granular) {
+                            
+                            temp_sentiments <- suppressWarnings(text_dataset %>%
+                                                                    # need to do left-join, so that if transforming to frequency/proportion
+                                                                    # then we need the total number of words,
+                                                                    # not just the words that have sentiment
+                                                                    left_join(granular_sentiments, by = 'word') %>%
+                                                                    mutate(sentiment = factor(sentiment, levels=sentiment_names)) %>%
+                                                                    group_by_at(c('sentiment', facet_variable)) %>%
+                                                                    summarise(n = n())) %>%
+                                ungroup()
+                            
+                            if(text__count_type == global__text__graph_type_count__freq_all_words) {
+                                if(is.null(facet_variable)) {
+                                    
+                                    temp_sentiments <- temp_sentiments %>% mutate(n = n / sum(n))
+                                    
+                                } else {
+                                    
+                                    temp_sentiments <- temp_sentiments %>%
+                                        group_by(!!sym(facet_variable)) %>%
+                                        mutate(n = n / sum(n)) %>%
+                                        ungroup()
+                                }
+                            }
+                            
+                            ggplot_object <- temp_sentiments %>%
+                                # need to do this after we calculate frequency
+                                filter(!is.na(sentiment)) %>%
+                                ggplot(aes(x=sentiment, y=n, fill=sentiment)) +
+                                geom_col(alpha=0.75) +
+                                geom_text(aes(label=map_chr(n, ~ label_format_function(.))), vjust=-0.3, check_overlap = TRUE) +
+                                scale_fill_manual(values=sentiment_colors, na.value='black') +
+                                theme_light(base_size = base_size) +
+                                theme(axis.text.x=element_text(angle=30, hjust=1),
+                                      legend.position = 'none') +
+                                labs(caption="Note: words without sentiment values are not included, words can have multiple sentiment categories; therefore, percentages do not add up to 100%.",
+                                     y=text__count_type)
+                            
                             if(is.null(facet_variable)) {
                                 
-                                temp_sentiments <- temp_sentiments %>% mutate(n = n / sum(n))
+                                ggplot_object <- ggplot_object +
+                                    scale_y_continuous(breaks = pretty_breaks(10), labels = rt_pretty_axes)
                                 
                             } else {
-                                
-                                temp_sentiments <- temp_sentiments %>%
-                                    group_by(!!sym(facet_variable)) %>%
-                                    mutate(n = n / sum(n)) %>%
-                                    ungroup()
+                                ggplot_object <- ggplot_object +
+                                    scale_y_continuous(breaks = pretty_breaks(5), labels = rt_pretty_axes) +
+                                    facet_wrap(as.formula(paste0("~ `", facet_variable, "`")), ncol = 4, scales = 'free_y')
                             }
-                        }
-                        
-                        ggplot_object <- temp_sentiments %>%
-                            # need to do this after we calculate frequency
-                            filter(!is.na(sentiment)) %>%
-                            ggplot(aes(x=sentiment, y=n, fill=sentiment)) +
-                            geom_col(alpha=0.75) +
-                            geom_text(aes(label=map_chr(n, ~ label_format_function(.))), vjust=-0.3, check_overlap = TRUE) +
-                            scale_fill_manual(values=sentiment_colors, na.value='black') +
-                            theme_light(base_size = base_size) +
-                            theme(axis.text.x=element_text(angle=30, hjust=1),
-                                  legend.position = 'none') +
-                            labs(caption="Note: words without sentiment values are not included, words can have multiple sentiment categories; therefore, percentages do not add up to 100%.",
-                                 y=text__count_type)
-                        
-                        if(is.null(facet_variable)) {
+                        } else if (text__sentiment__NRC == global__text__sentiment__NRC__top_words_granular) {
                             
-                            ggplot_object <- ggplot_object +
-                                scale_y_continuous(breaks = pretty_breaks(10), labels = rt_pretty_axes)
-                            
+                                
+                            temp_sentiments <- suppressWarnings(text_dataset %>%
+                                                                    # need to do left-join, so that if transforming to frequency/proportion
+                                                                    # then we need the total number of words,
+                                                                    # not just the words that have sentiment
+                                                                    left_join(granular_sentiments, by = 'word') %>%
+                                                                    mutate(sentiment = factor(sentiment, levels=sentiment_names)) %>%
+                                                                    group_by_at(c('word', 'sentiment', facet_variable)) %>%
+                                                                    summarise(n = n())) %>%
+                                ungroup()
+
+                        
+
+                            if(text__count_type == global__text__graph_type_count__freq_all_words) {
+                                if(is.null(facet_variable)) {
+                                    
+                                    temp_sentiments <- temp_sentiments %>% mutate(n = n / sum(n))
+
+                                } else {
+                                    
+                                    temp_sentiments <- temp_sentiments %>%
+                                        group_by(!!sym(facet_variable)) %>%
+                                        mutate(n = n / sum(n)) %>%
+                                        ungroup()
+                                }
+                            }
+
+                            # i considered grouping by only sentiment for non-facet option and only facet
+                            # for facet option, but in the case where e.g. the top 20 words are positivie
+                            # and you only have 20 words selected to show, you would not see any negative
+                            # words.
+                            # this way, you always see e.g. top 10 positive and negative for each facet
+                            temp_sentiments <- suppressWarnings(
+                                temp_sentiments %>%
+                                group_by_at(c('sentiment', facet_variable)) %>%
+                                top_n(text__top_n_words, n) %>%
+                                ungroup())
+
+                            if(is.null(facet_variable)) {
+
+                                temp_sentiments <- temp_sentiments %>%
+                                    mutate(word = reorder(word, -n))
+
+                            } else {
+
+                                temp_sentiments <- temp_sentiments %>%
+                                    mutate(word = reorder_within(word, -n, !!sym(facet_variable)))
+                            }
+
+                            ggplot_object <- temp_sentiments %>%
+                                filter(!is.na(sentiment)) %>%
+                                ggplot(aes(x=word, y=n, fill=sentiment)) +
+                                geom_col(alpha=0.75) +
+                                geom_text(aes(label=map_chr(n, ~ label_format_function(.))), vjust=-0.3, check_overlap = TRUE) +
+                                scale_fill_manual(values=sentiment_colors, na.value='black') +
+                                theme_light(base_size = base_size) +
+                                labs(caption="Note: words without sentiment values are not included.",
+                                     y="Word Count")
+
+                            if(is.null(facet_variable)) {
+
+                                if(text__top_n_words > 25) {
+                                    number_of_columns <- 2
+                                } else {
+                                    number_of_columns <- 4
+                                }
+
+                                ggplot_object <- ggplot_object +
+                                    scale_y_continuous(breaks = pretty_breaks(5), labels = axes_format_function) +
+                                    theme(axis.text.x=element_text(angle=30, hjust=1),
+                                          legend.position = 'none') +
+                                    facet_wrap(~ sentiment, ncol = number_of_columns, scales = 'free_x')
+
+                            } else {
+                                number_of_columns <- 1
+                                
+                                #top n words is per sentiment, so double
+                                # if(text__top_n_words >= 20) {
+                                # 
+                                #     number_of_columns <- 1
+                                # 
+                                # } else if(text__top_n_words >= 10) {
+                                # 
+                                #     number_of_columns <- 2
+                                # 
+                                # } else {
+                                # 
+                                #     number_of_columns <- 3
+                                # }
+
+                                ggplot_object <- ggplot_object +
+                                    scale_x_reordered() +
+                                    scale_y_continuous(breaks = pretty_breaks(5), labels = axes_format_function) +
+                                    theme(axis.text.x=element_text(angle=30, hjust=1)) +
+                                    facet_wrap(as.formula(paste0("~ `", facet_variable, "`")), ncol = number_of_columns, scales = 'free')
+                            }
                         } else {
-                            ggplot_object <- ggplot_object +
-                                scale_y_continuous(breaks = pretty_breaks(5), labels = rt_pretty_axes) +
-                                facet_wrap(as.formula(paste0("~ `", facet_variable, "`")), ncol = 4, scales = 'free_y')
+                            stop("text__sentiment__NRC option not found")
                         }
-    
                     } else  if(text__sentiment_dictionary == global__text__sentiment_dictionary__AFINN) {
                         
                         stop("AFINN not implemented")
