@@ -48,7 +48,7 @@ global__text__graph_type_count__values <- c(global__text__graph_type_count__coun
 global__text__sentiment_dictionary__bing <- "Bing"
 global__text__sentiment_dictionary__NRC <- "NRC"
 global__text__sentiment_dictionary__AFINN <- "AFINN"
-global__text__sentiment_dictionary__values <- c(global__text__sentiment_dictionary__bing, global__text__sentiment_dictionary__NRC, global__text__sentiment_dictionary__AFINN)
+global__text__sentiment_dictionary__values <- c(global__text__sentiment_dictionary__bing, global__text__sentiment_dictionary__NRC)#, global__text__sentiment_dictionary__AFINN)
 
 global__text__sentiment__bing__overall <- "Overall"
 global__text__sentiment__bing__top_words <- "Top Words"
