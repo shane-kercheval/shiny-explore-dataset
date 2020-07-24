@@ -1,5 +1,6 @@
 library('testthat')
 library(tidyverse)
+options(dplyr.summarise.inform=F)
 library(rtools)
 library(hms)
 
@@ -3245,6 +3246,7 @@ test_that('private__fill_missing_periods', {
     expect_equal(length(remove_b), 1)
     
     # test that the non-missing values are untouched
+    row.names(aggregated_dataset) <- NULL
     expect_true(rt_are_dataframes_equal(aggregated_dataset,
                                         found_dataset[-c(remove_a, remove_b),] %>% 
                                             filter(!`Create Date Time Col` %in% remove_period_values)))
@@ -3290,6 +3292,7 @@ test_that('private__fill_missing_periods', {
     expect_equal(length(remove_b), 1)
     
     # test that the non-missing values are untouched
+    row.names(aggregated_dataset) <- NULL
     expect_true(rt_are_dataframes_equal(aggregated_dataset,
                                         found_dataset[-c(remove_a, remove_b),] %>% 
                                             filter(!`Create Date Time Col` %in% remove_period_values)))
@@ -3335,6 +3338,7 @@ test_that('private__fill_missing_periods', {
     expect_equal(length(remove_b), length(unique(aggregated_dataset$`Lead Source Col`)))
     
     # test that the non-missing values are untouched
+    row.names(aggregated_dataset) <- NULL
     expect_true(rt_are_dataframes_equal(aggregated_dataset,
                                         found_dataset %>% filter(n != 0)))
     
@@ -3385,6 +3389,7 @@ test_that('private__fill_missing_periods', {
     expect_equal(length(remove_b), length(unique(aggregated_dataset$`Lead Source Col`)))
     
     # test that the non-missing values are untouched
+    row.names(aggregated_dataset) <- NULL
     expect_true(rt_are_dataframes_equal(aggregated_dataset,
                                         found_dataset %>% filter(n != 0)))
     
