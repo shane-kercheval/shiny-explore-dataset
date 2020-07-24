@@ -30,7 +30,7 @@ dataset_or_null <- function(file) {
 
     if(file.exists(file)) {
 
-        return (read.csv(file, header=TRUE))
+        return (read.csv(file, header=TRUE, stringsAsFactors = TRUE))
 
     } else {
 
