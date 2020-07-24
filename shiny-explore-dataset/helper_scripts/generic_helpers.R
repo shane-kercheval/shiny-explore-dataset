@@ -30,7 +30,7 @@ dataset_or_null <- function(file) {
 
     if(file.exists(file)) {
 
-        return (read.csv(file, header=TRUE))
+        return (read.csv(file, header=TRUE, stringsAsFactors = TRUE))
 
     } else {
 
@@ -79,6 +79,16 @@ null_if_select_variable_optional <- function(value) {
 is_null_or_empty_string <- function(value) {
 
     return(identical(value, character(0)) || is.null(value) || value == "")
+}
+
+append_that_doesnt_fucking_suck <- function(.list_a, .values) {
+    # `append` appears not to work with dates any longer... in 4.0.2.. perhaps they will fix
+    # selections <- list()
+    # append(selections, Sys.Date())  # do not know how to convert 'e' to class “Date”
+    # selections <- list(Sys.Date())
+    # append(selections, Sys.Date())  # adds date as numeric.. this use to work
+
+    return (c(.list_a, list(.values)))
 }
 
 default_if_null_or_empty_string <- function(value, string_values_as_null=NULL, default=NULL) {

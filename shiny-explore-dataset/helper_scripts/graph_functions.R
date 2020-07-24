@@ -343,7 +343,7 @@ private__fill_missing_periods <- function(aggregated_dataset,
     colnames(expected_date_facet_values) <- c(date_variable, color_variable, facet_variable)
     
     # get the missing combinations, if any
-    missing_dates_df <- dplyr::setdiff(expected_date_facet_values, aggregated_dataset[, c(date_variable, color_variable, facet_variable)])
+    missing_dates_df <- dplyr::setdiff(expected_date_facet_values, aggregated_dataset %>% rt_select_all_of(date_variable, color_variable, facet_variable))
     
     if(nrow(missing_dates_df) > 0) {
         

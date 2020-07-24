@@ -1,5 +1,6 @@
 library('testthat')
 library(tidyverse)
+options(dplyr.summarise.inform=F)
 library(rtools)
 library(hms)
 library(janeaustenr)
@@ -1365,6 +1366,37 @@ test_that("generic_helpers::str_convert_to_column_name", {
 
     x <- "`a1~!@#$%^&*(){}`_+:\"<>?,./;'[]-=This is a Sentence.11"
     expect_equal(str_convert_to_column_name(x),  "a1_.ThisisaSentence.11")
+})
+
+test_that("generic_helpers::append_that_doesnt_fucking_suck", {
+    current_date <- Sys.Date()
+    
+    my_list <- list()
+    my_list <- append_that_doesnt_fucking_suck(my_list, c(current_date, current_date + days(1)))
+    my_list <- append_that_doesnt_fucking_suck(my_list, c(1, 2))
+    my_list <- append_that_doesnt_fucking_suck(my_list, c('a', 'b'))
+    my_list <- append_that_doesnt_fucking_suck(my_list, c(TRUE, FALSE))
+    my_list <- append_that_doesnt_fucking_suck(my_list, as.POSIXct(current_date))
+    my_list <- append_that_doesnt_fucking_suck(my_list, 1)
+    my_list <- append_that_doesnt_fucking_suck(my_list, 'a')
+    my_list <- append_that_doesnt_fucking_suck(my_list, FALSE)
+    my_list <- append_that_doesnt_fucking_suck(my_list, NA)
+    
+    my_list <- append_that_doesnt_fucking_suck(my_list, c(TRUE, NA))
+    my_list <- append_that_doesnt_fucking_suck(my_list, c(current_date, NA))
+    
+    expect_identical(my_list[[1]], c(current_date, current_date + days(1)))
+    expect_identical(my_list[[2]], c(1, 2))
+    expect_identical(my_list[[3]], c('a', 'b'))
+    expect_identical(my_list[[4]], c(TRUE, FALSE))
+    expect_equal(my_list[[5]], as.POSIXct(current_date))
+    expect_equal(my_list[[6]], 1)
+    expect_equal(my_list[[7]], 'a')
+    expect_equal(my_list[[8]], FALSE)
+    expect_true(is.na(my_list[[9]]))
+    
+    expect_identical(my_list[[10]], c(TRUE, NA))
+    expect_identical(my_list[[11]], c(current_date, NA))
 })
 
 test_that("add_x_annotations", {
@@ -3267,6 +3299,7 @@ test_that('private__fill_missing_periods', {
     expect_equal(length(remove_b), 1)
     
     # test that the non-missing values are untouched
+    row.names(aggregated_dataset) <- NULL
     expect_true(rt_are_dataframes_equal(aggregated_dataset,
                                         found_dataset[-c(remove_a, remove_b),] %>% 
                                             filter(!`Create Date Time Col` %in% remove_period_values)))
@@ -3312,6 +3345,7 @@ test_that('private__fill_missing_periods', {
     expect_equal(length(remove_b), 1)
     
     # test that the non-missing values are untouched
+    row.names(aggregated_dataset) <- NULL
     expect_true(rt_are_dataframes_equal(aggregated_dataset,
                                         found_dataset[-c(remove_a, remove_b),] %>% 
                                             filter(!`Create Date Time Col` %in% remove_period_values)))
@@ -3357,6 +3391,7 @@ test_that('private__fill_missing_periods', {
     expect_equal(length(remove_b), length(unique(aggregated_dataset$`Lead Source Col`)))
     
     # test that the non-missing values are untouched
+    row.names(aggregated_dataset) <- NULL
     expect_true(rt_are_dataframes_equal(aggregated_dataset,
                                         found_dataset %>% filter(n != 0)))
     
@@ -3407,6 +3442,7 @@ test_that('private__fill_missing_periods', {
     expect_equal(length(remove_b), length(unique(aggregated_dataset$`Lead Source Col`)))
     
     # test that the non-missing values are untouched
+    row.names(aggregated_dataset) <- NULL
     expect_true(rt_are_dataframes_equal(aggregated_dataset,
                                         found_dataset %>% filter(n != 0)))
     

@@ -600,7 +600,7 @@ observe__var_plots__bscollapse__dynamic_inputs <- function(input, session, datas
         selections <- list()
         for(column_name in colnames(dataset$data)) {
             value <- input[[str_convert_to_dynamic_filter(column_name)]]
-            selections <- append(selections, value)
+            selections <- append_that_doesnt_fucking_suck(selections, value)
         }
 
         # only update if we are using the filter
