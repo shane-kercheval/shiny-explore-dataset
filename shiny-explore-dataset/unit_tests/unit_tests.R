@@ -2863,6 +2863,41 @@ test_that("create_ggplot_plot - time-series-change - POSIXct", {
     test_save_plot(file_name='graphs/plot__time_series__percent_change__POSIXct.png', plot=plot_object)
 })
 
+test_that("create_ggplot_plot - time-series-change - POSIXct - Missing Period", { 
+    context("create_ggplot_plot - time-series-change - POSIXct")
+    
+    global__should_log_message <<- FALSE
+    conversion_data <- select_preloaded_dataset("Mock Conversions", defualt_path = '../')$dataset
+    conversion_data[c(1, 2, 3, 4), 'Create Date Time'] <- NA
+    colnames(conversion_data) <- test_helper__column_names(conversion_data)
+    
+    
+    #floor_date(ymd('2019-07-01'), unit='quarter')
+    conversion_data <- conversion_data %>%
+        # exclude 2019-Q3
+        filter(floor_date(`Create Date Time Col`, unit = 'quarter') != ymd('2019-07-01'))
+    
+    aggregation_function_sum <- function(values) {
+        return (sum(values, na.rm = TRUE))
+    }
+    
+    conversion_data$`Create Date Time Col` <- as.POSIXct(conversion_data$`Create Date Time Col`)
+    
+    plot_object <- create_ggplot_object(dataset=conversion_data %>%
+                                            filter(`Create Date Time Col` >= ymd('2019-01-01')) %>%
+                                            mutate(`Continent Col`=fct_lump(`Continent Col`, n=2),
+                                                   `Lead Source Col`=fct_lump(`Lead Source Col`, n=3)),
+                                        primary_variable='Create Date Time Col',
+                                        ts_graph_type = global__ts_graph_type__period_change,
+                                        color_variable='Lead Source Col',
+                                        facet_variable='Continent Col',
+                                        ts_date_floor='quarter',
+                                        annotate_points=TRUE,
+                                        comparison_variable='Amount Col',
+                                        numeric_aggregation='Total')
+    test_save_plot(file_name='graphs/plot__time_series__percent_change__POSIXct_missing_period.png', plot=plot_object)
+})
+
 test_that("create_ggplot_plot - convert date to categoric", {
     context("create_ggplot_plot - convert date to categoric")
     
