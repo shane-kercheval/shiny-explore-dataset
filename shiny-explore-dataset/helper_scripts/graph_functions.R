@@ -349,7 +349,7 @@ private__fill_missing_periods <- function(aggregated_dataset,
         
         missing_dates_df$n <- 0
         aggregated_dataset <- bind_rows(# ensure same order
-                                        aggregated_dataset[, c(date_variable, color_variable, facet_variable, 'n')],
+                                        aggregated_dataset %>% rt_select_all_of(date_variable, color_variable, facet_variable, 'n'),
                                         missing_dates_df)
     }
     
