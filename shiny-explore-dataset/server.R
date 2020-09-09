@@ -724,7 +724,10 @@ shinyServer(function(input, output, session) {
             value <- input[[str_convert_to_dynamic_filter(variable_name)]]
 
             log_message_variable(str_convert_to_dynamic_filter(variable_name), value)
-            selections <- append(selections, value)
+            
+            # https://github.com/shane-kercheval/shiny-explore-dataset/issues/57
+            # selections <- append(selections, value)
+            selections <- append_that_doesnt_fucking_suck(selections, value)
         }
 
         # only update if we are using the filter
