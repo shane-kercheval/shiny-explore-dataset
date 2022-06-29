@@ -8,7 +8,7 @@ docker_compose:
 	docker compose -f docker-compose.yml up --build
 
 run:
-	open 'http://0.0.0.0:3838'
+	open 'http://localhost:3838'
 
 docker_shiny:
 	docker compose -f docker-compose.yml up --build shiny
