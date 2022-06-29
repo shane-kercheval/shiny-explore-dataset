@@ -17,4 +17,4 @@ zsh:
 	docker exec -it shiny-explore-dataset-bash-1 /bin/zsh
 
 tests:
-	R --quiet -e "devtools::test('/code/shiny-explore-dataset/unit_tests')"
+	R --quiet -e "testthat::test_dir('/code/shiny-explore-dataset/unit_tests')"
