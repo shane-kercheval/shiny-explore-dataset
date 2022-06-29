@@ -4127,4 +4127,3 @@ test_that('rt_explore_plot_time_series_change', {
                                                       aggregation_function_name='TOTAL')
     test_save_plot(file_name='graphs/rt_explore_plot_time_series_change__quarter__color_facet__agg_no_label.png', plot=plot_object)
 })
-
