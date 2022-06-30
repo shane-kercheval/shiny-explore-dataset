@@ -1,6 +1,7 @@
 library(hms)
 library(tidyverse)
 library(dplyr)
+library(lubridate)
 
 ##########################################################################################################
 # MAIN DATASET
@@ -19,7 +20,27 @@ observeEvent__source_data__upload <- function(session, input, output, reactive__
                 if(str_sub(upload_file_path, -4) == '.csv') {
                     
                     loaded_dataset <- read.csv(upload_file_path, header=TRUE)
-
+                    # try to convert columns to datetime
+                    # not sure of a better way to do this except to try to convert, and if it fails, skip
+                    # I first check to see if `as.Date` works, because this seems to succeed/fail in all the
+                    # correct cases that I've observed; the downside is that it truncates the time.
+                    # on the other hand, `as_datetime` doesn't seem to succeed/fail in the correct scnenarios,
+                    # but does keep the time. So i first see if the column can be transformed via as.Date
+                    # and if it can, I use as_datetime.
+                    for (column_name in colnames(loaded_dataset)) {
+                        result <- tryCatch(
+                            {
+                                x <- as.Date(loaded_dataset[[column_name]])
+                                TRUE
+                            }, error = function(e) {
+                                FALSE
+                            }
+                        )
+                        log_message(paste("Converting to Date-Time:", column_name))
+                        if (result) {
+                            loaded_dataset[[column_name]] <- as_datetime(loaded_dataset[[column_name]])
+                        }
+                    }
                 } else if(str_sub(upload_file_path, -4) == '.RDS') {
                 
                     loaded_dataset <- readRDS(file=upload_file_path)
