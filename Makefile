@@ -1,11 +1,12 @@
 ####
 # DOCKER
 ####
-docker_build:
-	docker build -t shiny-explore-dataset .
 
 docker_compose:
 	docker compose -f docker-compose.yml up --build
+
+docker_rebuild:
+	docker compose -f docker-compose.yml build --no-cache
 
 run:
 	open 'http://localhost:3838'

@@ -11,8 +11,8 @@ global__select_variable_optional <- "<Select (optional)>"
 
 global__golden_ratio <- 0.618
 
-global__date_part_vector <- c('day', 'week', 'month', 'quarter', 'year')
-names(global__date_part_vector) <- c("Day", "Week", "Month", "Quarter", "Year")
+global__date_part_vector <- c('day', 'week', 'month', 'quarter', 'fiscal quarter', 'year', 'fiscal year')
+names(global__date_part_vector) <- c("Day", "Week", "Month", "Quarter", "Fis. Quar.", "Year", "Fis. Year")
 
 global__date_break_format_vector <- c('Auto', '%Y-%m-%d', '%Y-%W', '%Y-%m', '%Y')
 names(global__date_break_format_vector) <- c("Auto", "Day", "Week", "Month", "Year")

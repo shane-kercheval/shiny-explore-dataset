@@ -29,9 +29,7 @@ RUN R -e "install.packages('Lahman')"
 RUN R -e "install.packages('devtools')"
 RUN R -e "devtools::install_github('dgrtwo/ebbr')"
 RUN R -e "devtools::install_github('davidsjoberg/ggsankey')"
-RUN R -e "devtools::install_github('shane-kercheval/rtools')"
 RUN R -e "install.packages('languageserver')"
-
 RUN R -e "install.packages('DT')"
 RUN R -e "install.packages('shiny')"
 RUN R -e "install.packages('shinyWidgets')"
@@ -46,6 +44,8 @@ RUN R -e "install.packages('shiny')"
 RUN R -e "install.packages('shinyWidgets')"
 RUN R -e "install.packages('shinyjs')"
 RUN R -e "install.packages('shinyBS')"
+
+RUN R -e "devtools::install_github('shane-kercheval/rtools')"
 
 RUN mkdir shiny-explore-dataset 
 COPY ./shiny-explore-dataset ./shiny-explore-dataset

@@ -154,8 +154,11 @@ shinyServer(function(input, output, session) {
 
         if(is_date_type(local_dataset[[input$var_plots__variable]]) && input$var_plots__convert_primary_date_to_categoric) {
 
-            local_dataset[[input$var_plots__variable]] <- rt_floor_date_factor(local_dataset[[input$var_plots__variable]],
-                                                                               date_floor=input$var_plots__ts_date_floor)
+            local_dataset[[input$var_plots__variable]] <- rt_floor_date_factor(
+                local_dataset[[input$var_plots__variable]],
+                date_floor=input$var_plots__ts_date_floor,
+                fiscal_start=2  # hard-code to okta fiscal quarter; add setting in future
+            )
         }
 
         if(is.numeric(local_dataset[[input$var_plots__variable]]) &&
