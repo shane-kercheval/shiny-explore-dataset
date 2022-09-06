@@ -1572,11 +1572,11 @@ create_ggplot_object <- function(dataset,
         log_message_variable('trend_extend_date', trend_extend_date)
         log_message_variable('trend_line_se', trend_line_se)
 
-        if(x_zoom_min == 0 && x_zoom_max == 0){
+        if(!is.na(x_zoom_min) && x_zoom_min == 0 && !is.na(x_zoom_max) && x_zoom_max == 0){
             x_zoom_min <- NA
             x_zoom_max <- NA
         }
-        if(y_zoom_min == 0 && y_zoom_max == 0){
+        if(!is.na(y_zoom_min) && y_zoom_min == 0 && !is.na(y_zoom_max) && y_zoom_max == 0){
             y_zoom_min <- NA
             y_zoom_max <- NA
         }

@@ -33,7 +33,7 @@ select <- dplyr::select
 
 options(dplyr.summarise.inform=F)
 options(scipen=999)
-options(shiny.maxRequestSize=200*1024^2)
+options(shiny.maxRequestSize=1000*1024^2)
 # options(shiny.reactlog=TRUE) 
 
 # Define server logic required to draw a histogram
