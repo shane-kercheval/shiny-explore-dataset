@@ -27,18 +27,38 @@ observeEvent__source_data__upload <- function(session, input, output, reactive__
                     # on the other hand, `as_datetime` doesn't seem to succeed/fail in the correct scnenarios,
                     # but does keep the time. So i first see if the column can be transformed via as.Date
                     # and if it can, I use as_datetime.
+
+                    # Function to check if all non-missing values in a column can be converted to dates
+                    check_all_values_as_dates <- function(column) {
+                      non_missing_values <- column[!is.na(column)]
+                      
+                      if (length(non_missing_values) == 0) {
+                        return(FALSE)  # No non-missing values to check
+                      }
+                      
+                      all_dates <- all(sapply(non_missing_values, function(value) {
+                        is.character(value) && !is.numeric(value) &&
+                        !is.na(as.Date(value, format = "%Y-%m-%d", tryFormats = c("%Y-%m-%d", "%Y/%m/%d")))
+                      }))
+                      
+                      return(all_dates)
+                    }
+
                     for (column_name in colnames(loaded_dataset)) {
-                        result <- tryCatch(
-                            {
-                                x <- as.Date(loaded_dataset[[column_name]])
-                                TRUE
-                            }, error = function(e) {
-                                FALSE
+                        log_message_variable('column_name', column_name)
+                        if (check_all_values_as_dates(loaded_dataset[[column_name]])) {
+                            result <- tryCatch(
+                                {
+                                    x <- as.Date(loaded_dataset[[column_name]])
+                                    TRUE
+                                }, error = function(e) {
+                                    FALSE
+                                }
+                            )
+                            log_message(paste("Converting to Date-Time:", column_name))
+                            if (result) {
+                                loaded_dataset[[column_name]] <- as_datetime(loaded_dataset[[column_name]])
                             }
-                        )
-                        log_message(paste("Converting to Date-Time:", column_name))
-                        if (result) {
-                            loaded_dataset[[column_name]] <- as_datetime(loaded_dataset[[column_name]])
                         }
                     }
                 } else if(str_sub(upload_file_path, -4) == '.RDS') {

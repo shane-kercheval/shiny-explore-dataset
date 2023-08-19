@@ -7,7 +7,21 @@ RUN mkdir /code
 WORKDIR /code
 ENV PATH "$PATH:/code"
 
-RUN apt-get install -y libxml2-dev libcurl4-openssl-dev libssl-dev libgit2-dev pandoc
+RUN apt-get update && apt-get install -y \
+    libxml2-dev \
+    libcurl4-openssl-dev \
+    libssl-dev \
+    libgit2-dev \
+    pandoc \
+    libfontconfig1-dev \
+    libharfbuzz-dev \
+    libfribidi-dev \
+    libfreetype6-dev \
+    libpng-dev \
+    libtiff5-dev \
+    libjpeg-dev \
+    pkg-config
+
 
 RUN R -e "install.packages('dplyr')"
 RUN R -e "install.packages('tidyverse')"
